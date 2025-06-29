@@ -14,7 +14,7 @@ import {
 
 interface ExportOptions {
   type: 'purchases' | 'contributions' | 'users' | 'summary';
-  format: 'csv' | 'json';
+  format: 'csv' | 'json' | 'pdf';
   startDate?: string;
   endDate?: string;
   userId?: string;
@@ -79,7 +79,9 @@ export function DataExport({ userRole }: DataExportProps) {
       const response = await fetch(`/api/export?${params}`);
 
       if (!response.ok) {
-        throw new Error('Export failed');
+        const errorText = await response.text();
+        console.error('Export failed:', response.status, errorText);
+        throw new Error(`Export failed: ${response.status} - ${errorText}`);
       }
 
       const blob = await response.blob();
@@ -110,7 +112,12 @@ export function DataExport({ userRole }: DataExportProps) {
     }
   };
 
-  const exportTypes = [
+  const exportTypes: Array<{
+    id: 'purchases' | 'contributions' | 'users' | 'summary';
+    name: string;
+    description: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [
     {
       id: 'purchases' as const,
       name: 'Token Purchases',
@@ -200,7 +207,7 @@ export function DataExport({ userRole }: DataExportProps) {
               onChange={(e) =>
                 setExportOptions({
                   ...exportOptions,
-                  format: e.target.value as 'csv' | 'json',
+                  format: e.target.value as 'csv' | 'json' | 'pdf',
                 })
               }
               className="mr-2"
@@ -217,13 +224,30 @@ export function DataExport({ userRole }: DataExportProps) {
               onChange={(e) =>
                 setExportOptions({
                   ...exportOptions,
-                  format: e.target.value as 'csv' | 'json',
+                  format: e.target.value as 'csv' | 'json' | 'pdf',
                 })
               }
               className="mr-2"
             />
             <FileText className="h-4 w-4 mr-1" />
             JSON
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="format"
+              value="pdf"
+              checked={exportOptions.format === 'pdf'}
+              onChange={(e) =>
+                setExportOptions({
+                  ...exportOptions,
+                  format: e.target.value as 'csv' | 'json' | 'pdf',
+                })
+              }
+              className="mr-2"
+            />
+            <FileText className="h-4 w-4 mr-1" />
+            PDF Report
           </label>
         </div>
       </div>

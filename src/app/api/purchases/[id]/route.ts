@@ -11,11 +11,11 @@ import {
   checkPermissions,
 } from '@/lib/validation-middleware';
 
-interface RouteContext {
-  params: { id: string };
-}
-
-export async function GET(request: NextRequest, { params }: RouteContext) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       {
         params: idParamSchema,
       },
-      params
+      { id }
     );
 
     if (!validation.success) {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     }
 
     const purchase = await prisma.tokenPurchase.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         creator: {
           select: {
@@ -86,7 +86,11 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -110,7 +114,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         body: updateTokenPurchaseSchema,
         params: idParamSchema,
       },
-      params
+      { id }
     );
 
     if (!validation.success) {
@@ -136,7 +140,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     // Check if purchase exists
     const existingPurchase = await prisma.tokenPurchase.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existingPurchase) {
@@ -177,7 +181,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     }
 
     const updatedPurchase = await prisma.tokenPurchase.update({
-      where: { id: params.id },
+      where: { id: id },
       data: updateData,
       include: {
         creator: {
@@ -207,7 +211,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         userId: permissionCheck.user!.id,
         action: 'UPDATE',
         entityType: 'TokenPurchase',
-        entityId: params.id,
+        entityId: id,
         oldValues: existingPurchase,
         newValues: updatedPurchase,
       },
@@ -223,7 +227,11 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -246,7 +254,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       {
         params: idParamSchema,
       },
-      params
+      { id }
     );
 
     if (!validation.success) {
@@ -255,7 +263,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
     // Check if purchase exists
     const existingPurchase = await prisma.tokenPurchase.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         contributions: true,
       },
@@ -288,7 +296,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     }
 
     await prisma.tokenPurchase.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Create audit log entry
@@ -297,7 +305,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
         userId: permissionCheck.user!.id,
         action: 'DELETE',
         entityType: 'TokenPurchase',
-        entityId: params.id,
+        entityId: id,
         oldValues: existingPurchase,
       },
     });

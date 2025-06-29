@@ -121,8 +121,8 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 - [x] CSV export functionality
 - [x] Bulk data import feature
-- [ ] PDF report generation
-- [ ] Data backup/restore utilities
+- [x] PDF report generation
+- [x] Data backup/restore utilities
 
 ### Checkpoint 5: Reporting and Analytics
 

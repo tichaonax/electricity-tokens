@@ -11,11 +11,11 @@ import {
   checkPermissions,
 } from '@/lib/validation-middleware';
 
-interface RouteContext {
-  params: { id: string };
-}
-
-export async function GET(request: NextRequest, { params }: RouteContext) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       {
         params: idParamSchema,
       },
-      params
+      { id }
     );
 
     if (!validation.success) {
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
     // Users can view their own profile, admins can view any profile
     if (
-      permissionCheck.user!.id !== params.id &&
+      permissionCheck.user!.id !== id &&
       permissionCheck.user!.role !== 'ADMIN'
     ) {
       return NextResponse.json(
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         id: true,
         email: true,
@@ -89,7 +89,11 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -113,7 +117,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         body: updateUserSchema,
         params: idParamSchema,
       },
-      params
+      { id }
     );
 
     if (!validation.success) {
@@ -136,7 +140,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existingUser) {
@@ -144,7 +148,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     }
 
     // Permission checks
-    const isOwnProfile = permissionCheck.user!.id === params.id;
+    const isOwnProfile = permissionCheck.user!.id === id;
     const isAdmin = permissionCheck.user!.role === 'ADMIN';
 
     if (!isOwnProfile && !isAdmin) {
@@ -209,7 +213,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: params.id },
+      where: { id: id },
       data: updateData,
       select: {
         id: true,
@@ -234,7 +238,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         userId: permissionCheck.user!.id,
         action: 'UPDATE',
         entityType: 'User',
-        entityId: params.id,
+        entityId: id,
         oldValues: existingUser,
         newValues: updatedUser,
       },
@@ -250,7 +254,11 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -273,7 +281,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       {
         params: idParamSchema,
       },
-      params
+      { id }
     );
 
     if (!validation.success) {
@@ -282,7 +290,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         contributions: true,
         createdPurchases: true,
@@ -294,7 +302,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     }
 
     // Prevent admin from deleting themselves
-    if (permissionCheck.user!.id === params.id) {
+    if (permissionCheck.user!.id === id) {
       return NextResponse.json(
         { message: 'Cannot delete your own account' },
         { status: 400 }
@@ -330,7 +338,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     }
 
     await prisma.user.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Create audit log entry
@@ -339,7 +347,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
         userId: permissionCheck.user!.id,
         action: 'DELETE',
         entityType: 'User',
-        entityId: params.id,
+        entityId: id,
         oldValues: existingUser,
       },
     });

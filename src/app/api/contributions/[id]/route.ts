@@ -4,11 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { UpdateData } from '@/types/api';
 
-interface RouteContext {
-  params: { id: string };
-}
-
-export async function GET(request: NextRequest, { params }: RouteContext) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     }
 
     const contribution = await prisma.userContribution.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -66,7 +66,11 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -79,7 +83,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     // Check if contribution exists
     const existingContribution = await prisma.userContribution.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         purchase: true,
       },
@@ -138,7 +142,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       const otherContributions = await prisma.userContribution.aggregate({
         where: {
           purchaseId: existingContribution.purchaseId,
-          id: { not: params.id },
+          id: { not: id },
         },
         _sum: { tokensConsumed: true },
       });
@@ -157,7 +161,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     }
 
     const updatedContribution = await prisma.userContribution.update({
-      where: { id: params.id },
+      where: { id: id },
       data: updateData,
       include: {
         user: {
@@ -185,7 +189,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         userId: session.user.id,
         action: 'UPDATE',
         entityType: 'UserContribution',
-        entityId: params.id,
+        entityId: id,
         oldValues: existingContribution,
         newValues: updatedContribution,
       },
@@ -201,7 +205,11 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -211,7 +219,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
     // Check if contribution exists
     const existingContribution = await prisma.userContribution.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existingContribution) {
@@ -233,7 +241,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     }
 
     await prisma.userContribution.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     // Create audit log entry
@@ -242,7 +250,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
         userId: session.user.id,
         action: 'DELETE',
         entityType: 'UserContribution',
-        entityId: params.id,
+        entityId: id,
         oldValues: existingContribution,
       },
     });

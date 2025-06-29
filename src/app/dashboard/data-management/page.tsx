@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { DataExport } from '@/components/data-export';
 import { DataImport } from '@/components/data-import';
-import { ArrowLeft, Download, Upload, Shield } from 'lucide-react';
+import { DataBackup } from '@/components/data-backup';
+import { ArrowLeft, Download, Upload, Shield, HardDrive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function DataManagementPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'export' | 'import'>('export');
+  const [activeTab, setActiveTab] = useState<'export' | 'import' | 'backup'>(
+    'export'
+  );
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -74,9 +77,10 @@ export default function DataManagementPage() {
               Data Export & Import
             </h2>
             <p className="text-slate-600 dark:text-slate-400">
-              Export your data for analysis or import bulk data from CSV files.
+              Export your data for analysis, import bulk data from CSV files, or
+              create database backups.
               {!isAdmin &&
-                ' Import functionality requires administrator privileges.'}
+                ' Import and backup functionality requires administrator privileges.'}
             </p>
           </div>
 
@@ -112,6 +116,23 @@ export default function DataManagementPage() {
                     <span className="ml-1 text-xs">(Admin Only)</span>
                   )}
                 </button>
+                <button
+                  onClick={() => setActiveTab('backup')}
+                  disabled={!isAdmin}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'backup' && isAdmin
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : !isAdmin
+                        ? 'border-transparent text-slate-300 cursor-not-allowed dark:text-slate-600'
+                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300'
+                  }`}
+                >
+                  <HardDrive className="h-4 w-4 inline mr-2" />
+                  Backup & Restore
+                  {!isAdmin && (
+                    <span className="ml-1 text-xs">(Admin Only)</span>
+                  )}
+                </button>
               </nav>
             </div>
           </div>
@@ -141,6 +162,26 @@ export default function DataManagementPage() {
                 )}
               </>
             )}
+
+            {activeTab === 'backup' && (
+              <>
+                {isAdmin ? (
+                  <DataBackup />
+                ) : (
+                  <div className="text-center py-12">
+                    <Shield className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                      Administrator Access Required
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Backup and restore functionality is restricted to
+                      administrators only. Please contact your system
+                      administrator for assistance.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Help Section */}
@@ -148,7 +189,7 @@ export default function DataManagementPage() {
             <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
               Data Management Guidelines
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
               <div>
                 <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
                   Export Best Practices
@@ -157,6 +198,7 @@ export default function DataManagementPage() {
                   <li>• Use date filters to export specific time periods</li>
                   <li>• CSV format is recommended for spreadsheet analysis</li>
                   <li>• JSON format preserves exact data structure</li>
+                  <li>• PDF format creates professional reports</li>
                   <li>• Regular exports can serve as data backups</li>
                 </ul>
               </div>
@@ -169,6 +211,19 @@ export default function DataManagementPage() {
                   <li>• Ensure CSV headers match expected format</li>
                   <li>• Import creates or updates existing records</li>
                   <li>• Backup existing data before large imports</li>
+                  <li>• Use preview feature to check data quality</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                  Backup & Restore
+                </h4>
+                <ul className="space-y-1 text-blue-700 dark:text-blue-300">
+                  <li>• Create regular full database backups</li>
+                  <li>• Store backups in secure, separate locations</li>
+                  <li>• Test restore procedures periodically</li>
+                  <li>• Backup before major data operations</li>
+                  <li>• Document backup and restore procedures</li>
                 </ul>
               </div>
             </div>

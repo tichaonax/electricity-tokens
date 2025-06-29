@@ -8,10 +8,11 @@ import {
   checkPermissions,
 } from '@/lib/validation-middleware';
 import { z } from 'zod';
+import { PDFGenerator } from '@/lib/pdf-generator';
 
 const exportQuerySchema = z.object({
   type: z.enum(['purchases', 'contributions', 'users', 'summary']),
-  format: z.enum(['csv', 'json']).default('csv'),
+  format: z.enum(['csv', 'json', 'pdf']).default('csv'),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   userId: z.string().cuid().optional(),
@@ -19,7 +20,9 @@ const exportQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Export API called');
     const session = await getServerSession(authOptions);
+    console.log('Session:', session ? 'authenticated' : 'not authenticated');
 
     // Check authentication
     const permissionCheck = checkPermissions(
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
     const { query } = validation.data as {
       query: {
         type: 'purchases' | 'contributions' | 'users' | 'summary';
-        format: 'csv' | 'json';
+        format: 'csv' | 'json' | 'pdf';
         startDate?: string;
         endDate?: string;
         userId?: string;
@@ -54,22 +57,31 @@ export async function GET(request: NextRequest) {
     };
 
     const { type, format, startDate, endDate, userId } = query;
+    console.log('Export params:', { type, format, startDate, endDate, userId });
 
     // Build date filter
-    const dateFilter =
-      startDate && endDate
-        ? {
-            gte: new Date(startDate),
-            lte: new Date(endDate),
-          }
-        : {};
+    const dateFilter: Record<string, unknown> = {};
+    if (startDate && endDate) {
+      dateFilter.gte = new Date(startDate);
+      dateFilter.lte = new Date(endDate);
+    } else if (startDate) {
+      dateFilter.gte = new Date(startDate);
+    } else if (endDate) {
+      dateFilter.lte = new Date(endDate);
+    }
 
     let data: Record<string, unknown>[] = [];
     let filename = '';
 
     switch (type) {
       case 'purchases':
+        console.log('Exporting purchases with dateFilter:', dateFilter);
         const purchasesResult = await exportPurchases(dateFilter);
+        console.log(
+          'Purchases result:',
+          purchasesResult.data.length,
+          'records'
+        );
         data = purchasesResult.data;
         filename = `purchases_${new Date().toISOString().split('T')[0]}`;
         break;
@@ -124,6 +136,58 @@ export async function GET(request: NextRequest) {
           'Content-Disposition': `attachment; filename="${filename}.csv"`,
         },
       });
+    } else if (format === 'pdf') {
+      try {
+        console.log(
+          'Generating PDF for type:',
+          type,
+          'with',
+          data.length,
+          'records'
+        );
+        const pdfGenerator = new PDFGenerator();
+        let pdfBlob: Blob;
+
+        switch (type) {
+          case 'purchases':
+            console.log('Generating purchase PDF report');
+            pdfBlob = await pdfGenerator.generatePurchaseReport(data);
+            break;
+          case 'contributions':
+            console.log('Generating contribution PDF report');
+            pdfBlob = await pdfGenerator.generateContributionReport(data);
+            break;
+          case 'summary':
+            console.log('Generating summary PDF report');
+            pdfBlob = await pdfGenerator.generateUserSummaryReport(data);
+            break;
+          default:
+            console.log('Generating generic PDF report');
+            pdfBlob = await pdfGenerator.generateUsageSummaryReport({
+              title: `${type.charAt(0).toUpperCase() + type.slice(1)} Report`,
+              data,
+            });
+        }
+
+        console.log('PDF blob generated, converting to buffer');
+        const arrayBuffer = await pdfBlob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        console.log('PDF buffer created, size:', buffer.length);
+        return new NextResponse(buffer, {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="${filename}.pdf"`,
+          },
+        });
+      } catch (pdfError) {
+        console.error('PDF generation error:', pdfError);
+        return NextResponse.json(
+          { message: 'PDF generation failed', error: String(pdfError) },
+          { status: 500 }
+        );
+      }
     } else {
       return new NextResponse(JSON.stringify(data, null, 2), {
         status: 200,
@@ -150,6 +214,9 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
         }
       : {};
 
+  console.log('exportPurchases whereClause:', whereClause);
+  console.log('dateFilter keys:', Object.keys(dateFilter));
+
   const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
@@ -172,6 +239,8 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
     },
     orderBy: { purchaseDate: 'desc' },
   });
+
+  console.log('Found purchases in exportPurchases:', purchases.length);
 
   const data = purchases.map((purchase) => {
     const totalContributions = purchase.contributions.reduce(
@@ -370,8 +439,18 @@ async function exportSummary(
   });
 
   // Group by user
+  interface UserSummary {
+    userName: string;
+    userEmail: string;
+    contributionCount: number;
+    totalContributions: number;
+    totalTokensConsumed: number;
+    totalTrueCost: number;
+    emergencyContributions: number;
+  }
+
   const userSummaries = contributions.reduce(
-    (acc: Record<string, Record<string, unknown>>, contribution) => {
+    (acc: Record<string, UserSummary>, contribution) => {
       const userId = contribution.userId;
 
       if (!acc[userId]) {
@@ -404,39 +483,37 @@ async function exportSummary(
     {}
   );
 
-  const data = Object.values(userSummaries).map(
-    (summary: Record<string, unknown>) => {
-      const totalContributions = summary.totalContributions as number;
-      const totalTrueCost = summary.totalTrueCost as number;
-      const contributionCount = summary.contributionCount as number;
-      const emergencyContributions = summary.emergencyContributions as number;
-      const totalTokensConsumed = summary.totalTokensConsumed as number;
+  const data = Object.values(userSummaries).map((summary: UserSummary) => {
+    const totalContributions = summary.totalContributions;
+    const totalTrueCost = summary.totalTrueCost;
+    const contributionCount = summary.contributionCount;
+    const emergencyContributions = summary.emergencyContributions;
+    const totalTokensConsumed = summary.totalTokensConsumed;
 
-      const efficiency =
-        totalContributions > 0 ? (totalTrueCost / totalContributions) * 100 : 0;
-      const overpayment = totalContributions - totalTrueCost;
-      const emergencyRate =
-        contributionCount > 0
-          ? (emergencyContributions / contributionCount) * 100
-          : 0;
-      const avgCostPerToken =
-        totalTokensConsumed > 0 ? totalTrueCost / totalTokensConsumed : 0;
+    const efficiency =
+      totalContributions > 0 ? (totalTrueCost / totalContributions) * 100 : 0;
+    const overpayment = totalContributions - totalTrueCost;
+    const emergencyRate =
+      contributionCount > 0
+        ? (emergencyContributions / contributionCount) * 100
+        : 0;
+    const avgCostPerToken =
+      totalTokensConsumed > 0 ? totalTrueCost / totalTokensConsumed : 0;
 
-      return {
-        userName: summary.userName,
-        userEmail: summary.userEmail,
-        contributionCount,
-        totalContributions: totalContributions.toFixed(2),
-        totalTokensConsumed: totalTokensConsumed.toFixed(2),
-        totalTrueCost: totalTrueCost.toFixed(2),
-        efficiency: efficiency.toFixed(2) + '%',
-        overpayment: overpayment.toFixed(2),
-        emergencyContributions,
-        emergencyRate: emergencyRate.toFixed(1) + '%',
-        avgCostPerToken: avgCostPerToken.toFixed(4),
-      };
-    }
-  );
+    return {
+      userName: summary.userName,
+      userEmail: summary.userEmail,
+      contributionCount,
+      totalContributions: totalContributions.toFixed(2),
+      totalTokensConsumed: totalTokensConsumed.toFixed(2),
+      totalTrueCost: totalTrueCost.toFixed(2),
+      efficiency: efficiency.toFixed(2) + '%',
+      overpayment: overpayment.toFixed(2),
+      emergencyContributions,
+      emergencyRate: emergencyRate.toFixed(1) + '%',
+      avgCostPerToken: avgCostPerToken.toFixed(4),
+    };
+  });
 
   return { data };
 }
