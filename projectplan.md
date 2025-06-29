@@ -117,11 +117,11 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - [x] Cost breakdown visualization
 - [x] Meter reading history
 
-#### 4.3 Data Export/Import
+#### 4.3 Data Export/Import ✅
 
-- [ ] CSV export functionality
+- [x] CSV export functionality
+- [x] Bulk data import feature
 - [ ] PDF report generation
-- [ ] Bulk data import feature
 - [ ] Data backup/restore utilities
 
 ### Checkpoint 5: Reporting and Analytics
