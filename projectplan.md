@@ -82,10 +82,10 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 #### 3.2 User Contribution Interface
 
-- [ ] Multi-user contribution input interface
-- [ ] Meter reading capture per user
-- [ ] Real-time cost calculation display
-- [ ] Contribution amount validation
+- [x] Multi-user contribution input interface
+- [x] Meter reading capture per user
+- [x] Real-time cost calculation display
+- [x] Contribution amount validation
 
 #### 3.3 Cost Calculation Engine
 

@@ -147,12 +147,15 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Coming Soon Card */}
-            <div className="bg-white overflow-hidden shadow rounded-lg opacity-75">
+            {/* User Contributions Card */}
+            <div
+              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => router.push('/dashboard/contributions')}
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-gray-400 rounded-md flex items-center justify-center">
+                    <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
                       <svg
                         className="w-5 h-5 text-white"
                         fill="none"
@@ -163,7 +166,7 @@ export default function Dashboard() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
                         />
                       </svg>
                     </div>
@@ -171,10 +174,10 @@ export default function Dashboard() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Usage Reports
+                        User Contributions
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        Coming Soon
+                        Track Usage
                       </dd>
                     </dl>
                   </div>
@@ -182,9 +185,9 @@ export default function Dashboard() {
               </div>
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
-                  <span className="font-medium text-gray-500">
-                    View usage analytics
-                  </span>
+                  <a className="font-medium text-purple-700 hover:text-purple-900">
+                    View contributions
+                  </a>
                 </div>
               </div>
             </div>

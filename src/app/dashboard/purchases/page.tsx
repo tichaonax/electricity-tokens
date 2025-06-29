@@ -174,16 +174,33 @@ export default function PurchasesPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-slate-900 dark:text-slate-100">
-                            $
-                            {(
-                              purchase.totalPayment / purchase.totalTokens
-                            ).toFixed(4)}
-                            /token
-                          </p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">
-                            by {purchase.creator.name}
-                          </p>
+                          <div className="flex items-center space-x-3">
+                            <div>
+                              <p className="text-sm text-slate-900 dark:text-slate-100">
+                                $
+                                {(
+                                  purchase.totalPayment / purchase.totalTokens
+                                ).toFixed(4)}
+                                /token
+                              </p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                                by {purchase.creator.name}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(
+                                  `/dashboard/contributions/new?purchaseId=${purchase.id}`
+                                );
+                              }}
+                              className="text-xs"
+                            >
+                              Add Contribution
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
