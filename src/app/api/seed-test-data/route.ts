@@ -16,10 +16,10 @@ export async function POST(request: NextRequest) {
 
     // Create test users if they don't exist
     const testUsers = [
-      { name: 'Alice Johnson', email: 'alice@test.com', role: 'user' },
-      { name: 'Bob Smith', email: 'bob@test.com', role: 'user' },
-      { name: 'Carol Davis', email: 'carol@test.com', role: 'user' },
-      { name: 'David Wilson', email: 'david@test.com', role: 'user' },
+      { name: 'Alice Johnson', email: 'alice@test.com', role: 'USER' as const },
+      { name: 'Bob Smith', email: 'bob@test.com', role: 'USER' as const },
+      { name: 'Carol Davis', email: 'carol@test.com', role: 'USER' as const },
+      { name: 'David Wilson', email: 'david@test.com', role: 'USER' as const },
     ];
 
     const users = [];
@@ -30,10 +30,7 @@ export async function POST(request: NextRequest) {
       
       if (!existingUser) {
         const user = await prisma.user.create({
-          data: {
-            ...userData,
-            hashedPassword: 'test-hash', // Not used in our auth system
-          }
+          data: userData
         });
         users.push(user);
       } else {

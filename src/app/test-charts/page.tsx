@@ -97,6 +97,12 @@ export default function TestChartsPage() {
               Test Usage Reports
             </Button>
             <Button 
+              onClick={() => window.location.href = '/dashboard/reports/financial'}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Test Financial Reports
+            </Button>
+            <Button 
               onClick={() => window.location.href = '/dashboard'}
               variant="outline"
             >
