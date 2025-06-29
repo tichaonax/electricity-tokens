@@ -92,12 +92,12 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - [x] Purchase dropdown highlighting for already-contributed purchases
 - [x] Enhanced UX with dismissible warnings and form clearing options
 
-#### 3.3 Cost Calculation Engine
+#### 3.3 Cost Calculation Engine ✅
 
-- [ ] Implement proportional cost calculation based on usage
-- [ ] Handle multiple purchases within same period
-- [ ] Calculate true cost per kWh for each user
-- [ ] Emergency purchase rate calculations
+- [x] Implement proportional cost calculation based on usage
+- [x] Handle multiple purchases within same period
+- [x] Calculate true cost per kWh for each user
+- [x] Emergency purchase rate calculations
 
 ### Checkpoint 4: Data Display and Management
 
