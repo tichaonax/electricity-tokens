@@ -56,11 +56,11 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 #### 2.2 API Routes
 
-- [ ] /api/purchases - CRUD operations for token purchases
-- [ ] /api/contributions - User contribution management
-- [ ] /api/users - User management (admin only)
-- [ ] /api/reports - Data aggregation endpoints
-- [ ] /api/audit - Audit trail retrieval
+- [x] /api/purchases - CRUD operations for token purchases
+- [x] /api/contributions - User contribution management
+- [x] /api/users - User management (admin only)
+- [x] /api/reports - Data aggregation endpoints
+- [x] /api/audit - Audit trail retrieval
 
 #### 2.3 Data Validation
 

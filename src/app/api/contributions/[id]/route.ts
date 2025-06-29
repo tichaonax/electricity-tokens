@@ -1,0 +1,261 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import type { UpdateData } from '@/types/api';
+
+interface RouteContext {
+  params: { id: string };
+}
+
+export async function GET(request: NextRequest, { params }: RouteContext) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const contribution = await prisma.userContribution.findUnique({
+      where: { id: params.id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        purchase: {
+          select: {
+            id: true,
+            totalTokens: true,
+            totalPayment: true,
+            purchaseDate: true,
+            isEmergency: true,
+          },
+        },
+      },
+    });
+
+    if (!contribution) {
+      return NextResponse.json(
+        { message: 'Contribution not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check permissions - users can only see their own contributions
+    if (
+      contribution.userId !== session.user.id &&
+      session.user.role !== 'ADMIN'
+    ) {
+      return NextResponse.json(
+        { message: 'Forbidden: You can only view your own contributions' },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json(contribution);
+  } catch (error) {
+    console.error('Error fetching contribution:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest, { params }: RouteContext) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { contributionAmount, meterReading, tokensConsumed } =
+      await request.json();
+
+    // Check if contribution exists
+    const existingContribution = await prisma.userContribution.findUnique({
+      where: { id: params.id },
+      include: {
+        purchase: true,
+      },
+    });
+
+    if (!existingContribution) {
+      return NextResponse.json(
+        { message: 'Contribution not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check permissions - users can only edit their own contributions
+    if (
+      existingContribution.userId !== session.user.id &&
+      session.user.role !== 'ADMIN'
+    ) {
+      return NextResponse.json(
+        { message: 'Forbidden: You can only edit your own contributions' },
+        { status: 403 }
+      );
+    }
+
+    // Validate data if provided
+    const updateData: UpdateData = {};
+
+    if (contributionAmount !== undefined) {
+      if (typeof contributionAmount !== 'number' || contributionAmount <= 0) {
+        return NextResponse.json(
+          { message: 'contributionAmount must be a positive number' },
+          { status: 400 }
+        );
+      }
+      updateData.contributionAmount = parseFloat(contributionAmount.toString());
+    }
+
+    if (meterReading !== undefined) {
+      if (typeof meterReading !== 'number' || meterReading < 0) {
+        return NextResponse.json(
+          { message: 'meterReading must be a non-negative number' },
+          { status: 400 }
+        );
+      }
+      updateData.meterReading = parseFloat(meterReading.toString());
+    }
+
+    if (tokensConsumed !== undefined) {
+      if (typeof tokensConsumed !== 'number' || tokensConsumed < 0) {
+        return NextResponse.json(
+          { message: 'tokensConsumed must be a non-negative number' },
+          { status: 400 }
+        );
+      }
+
+      // Validate that updated tokens consumed doesn't exceed available tokens
+      const otherContributions = await prisma.userContribution.aggregate({
+        where: {
+          purchaseId: existingContribution.purchaseId,
+          id: { not: params.id },
+        },
+        _sum: { tokensConsumed: true },
+      });
+
+      const totalConsumed =
+        (otherContributions._sum.tokensConsumed || 0) + tokensConsumed;
+
+      if (totalConsumed > existingContribution.purchase.totalTokens) {
+        return NextResponse.json(
+          { message: 'Total tokens consumed cannot exceed available tokens' },
+          { status: 400 }
+        );
+      }
+
+      updateData.tokensConsumed = parseFloat(tokensConsumed.toString());
+    }
+
+    const updatedContribution = await prisma.userContribution.update({
+      where: { id: params.id },
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        purchase: {
+          select: {
+            id: true,
+            totalTokens: true,
+            totalPayment: true,
+            purchaseDate: true,
+            isEmergency: true,
+          },
+        },
+      },
+    });
+
+    // Create audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'UPDATE',
+        entityType: 'UserContribution',
+        entityId: params.id,
+        oldValues: existingContribution,
+        newValues: updatedContribution,
+      },
+    });
+
+    return NextResponse.json(updatedContribution);
+  } catch (error) {
+    console.error('Error updating contribution:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if contribution exists
+    const existingContribution = await prisma.userContribution.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingContribution) {
+      return NextResponse.json(
+        { message: 'Contribution not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check permissions - users can only delete their own contributions
+    if (
+      existingContribution.userId !== session.user.id &&
+      session.user.role !== 'ADMIN'
+    ) {
+      return NextResponse.json(
+        { message: 'Forbidden: You can only delete your own contributions' },
+        { status: 403 }
+      );
+    }
+
+    await prisma.userContribution.delete({
+      where: { id: params.id },
+    });
+
+    // Create audit log entry
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'DELETE',
+        entityType: 'UserContribution',
+        entityId: params.id,
+        oldValues: existingContribution,
+      },
+    });
+
+    return NextResponse.json(
+      { message: 'Contribution deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error deleting contribution:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
