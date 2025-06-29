@@ -3,29 +3,67 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { PurchaseWhereInput } from '@/types/api';
+import {
+  createTokenPurchaseSchema,
+  purchaseQuerySchema,
+} from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  sanitizeInput,
+  checkPermissions,
+} from '@/lib/validation-middleware';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const isEmergency = searchParams.get('isEmergency');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    // Validate query parameters
+    const validation = await validateRequest(request, {
+      query: purchaseQuerySchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { query } = validation.data as {
+      query?: {
+        page?: number;
+        limit?: number;
+        isEmergency?: boolean;
+        startDate?: string;
+        endDate?: string;
+      };
+    };
+    const {
+      page = 1,
+      limit = 10,
+      isEmergency,
+      startDate,
+      endDate,
+    } = query || {};
 
     const skip = (page - 1) * limit;
 
     // Build filter conditions
     const where: PurchaseWhereInput = {};
 
-    if (isEmergency !== null && isEmergency !== undefined) {
-      where.isEmergency = isEmergency === 'true';
+    if (isEmergency !== undefined) {
+      where.isEmergency = isEmergency;
     }
 
     if (startDate && endDate) {
@@ -87,42 +125,48 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
+    // Validate request body
+    const validation = await validateRequest(request, {
+      body: createTokenPurchaseSchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { body } = validation.data as {
+      body: {
+        totalTokens: number;
+        totalPayment: number;
+        purchaseDate: string | Date;
+        isEmergency?: boolean;
+      };
+    };
+    const sanitizedData = sanitizeInput(body);
     const {
       totalTokens,
       totalPayment,
       purchaseDate,
       isEmergency = false,
-    } = await request.json();
-
-    // Validate required fields
-    if (!totalTokens || !totalPayment || !purchaseDate) {
-      return NextResponse.json(
-        {
-          message:
-            'Missing required fields: totalTokens, totalPayment, purchaseDate',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate data types and values
-    if (typeof totalTokens !== 'number' || totalTokens <= 0) {
-      return NextResponse.json(
-        { message: 'totalTokens must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof totalPayment !== 'number' || totalPayment <= 0) {
-      return NextResponse.json(
-        { message: 'totalPayment must be a positive number' },
-        { status: 400 }
-      );
-    }
+    } = sanitizedData as {
+      totalTokens: number;
+      totalPayment: number;
+      purchaseDate: string | Date;
+      isEmergency: boolean;
+    };
 
     const purchase = await prisma.tokenPurchase.create({
       data: {
@@ -130,7 +174,7 @@ export async function POST(request: NextRequest) {
         totalPayment: parseFloat(totalPayment.toString()),
         purchaseDate: new Date(purchaseDate),
         isEmergency: Boolean(isEmergency),
-        createdBy: session.user.id,
+        createdBy: permissionCheck.user!.id,
       },
       include: {
         creator: {
@@ -146,7 +190,7 @@ export async function POST(request: NextRequest) {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: permissionCheck.user!.id,
         action: 'CREATE',
         entityType: 'TokenPurchase',
         entityId: purchase.id,

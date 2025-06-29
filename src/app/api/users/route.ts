@@ -3,41 +3,61 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { UserWhereInput } from '@/types/api';
+import { userQuerySchema } from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  checkPermissions,
+} from '@/lib/validation-middleware';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Only admin users can access user management
-    if (session.user.role !== 'ADMIN') {
+    // Check authentication and admin permission
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true, requireAdmin: true }
+    );
+    if (!permissionCheck.success) {
       return NextResponse.json(
-        { message: 'Forbidden: Admin access required' },
-        { status: 403 }
+        { message: permissionCheck.error },
+        { status: 401 }
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const role = searchParams.get('role');
-    const locked = searchParams.get('locked');
-    const search = searchParams.get('search');
+    // Validate query parameters
+    const validation = await validateRequest(request, {
+      query: userQuerySchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { query } = validation.data as {
+      query?: {
+        page?: number;
+        limit?: number;
+        role?: string;
+        locked?: boolean;
+        search?: string;
+      };
+    };
+    const { page = 1, limit = 10, role, locked, search } = query || {};
 
     const skip = (page - 1) * limit;
 
     // Build filter conditions
     const where: UserWhereInput = {};
 
-    if (role && ['ADMIN', 'USER'].includes(role)) {
+    if (role) {
       where.role = role as 'ADMIN' | 'USER';
     }
 
-    if (locked !== null && locked !== undefined) {
-      where.locked = locked === 'true';
+    if (locked !== undefined) {
+      where.locked = locked;
     }
 
     if (search) {

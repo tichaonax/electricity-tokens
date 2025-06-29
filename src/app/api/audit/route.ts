@@ -3,32 +3,61 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { AuditWhereInput } from '@/types/api';
+import { auditQuerySchema } from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  checkPermissions,
+} from '@/lib/validation-middleware';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Only admin users can access audit logs
-    if (session.user.role !== 'ADMIN') {
+    // Check authentication and admin permission
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true, requireAdmin: true }
+    );
+    if (!permissionCheck.success) {
       return NextResponse.json(
-        { message: 'Forbidden: Admin access required' },
-        { status: 403 }
+        { message: permissionCheck.error },
+        { status: 401 }
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const userId = searchParams.get('userId');
-    const action = searchParams.get('action');
-    const entityType = searchParams.get('entityType');
-    const entityId = searchParams.get('entityId');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    // Validate query parameters
+    const validation = await validateRequest(request, {
+      query: auditQuerySchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { query } = validation.data as {
+      query?: {
+        page?: number;
+        limit?: number;
+        userId?: string;
+        action?: string;
+        entityType?: string;
+        entityId?: string;
+        startDate?: string;
+        endDate?: string;
+      };
+    };
+    const {
+      page = 1,
+      limit = 20,
+      userId,
+      action,
+      entityType,
+      entityId,
+      startDate,
+      endDate,
+    } = query || {};
 
     const skip = (page - 1) * limit;
 
@@ -39,14 +68,11 @@ export async function GET(request: NextRequest) {
       where.userId = userId;
     }
 
-    if (action && ['CREATE', 'UPDATE', 'DELETE'].includes(action)) {
+    if (action) {
       where.action = action as 'CREATE' | 'UPDATE' | 'DELETE';
     }
 
-    if (
-      entityType &&
-      ['User', 'TokenPurchase', 'UserContribution'].includes(entityType)
-    ) {
+    if (entityType) {
       where.entityType = entityType as
         | 'User'
         | 'TokenPurchase'

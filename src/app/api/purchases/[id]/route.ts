@@ -3,6 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { UpdateData } from '@/types/api';
+import { updateTokenPurchaseSchema, idParamSchema } from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  sanitizeInput,
+  checkPermissions,
+} from '@/lib/validation-middleware';
 
 interface RouteContext {
   params: { id: string };
@@ -12,8 +19,30 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
+    }
+
+    // Validate route parameters
+    const validation = await validateRequest(
+      request,
+      {
+        params: idParamSchema,
+      },
+      params
+    );
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
     }
 
     const purchase = await prisma.tokenPurchase.findUnique({
@@ -61,12 +90,49 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
+    // Validate request body and parameters
+    const validation = await validateRequest(
+      request,
+      {
+        body: updateTokenPurchaseSchema,
+        params: idParamSchema,
+      },
+      params
+    );
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { body } = validation.data as {
+      body: {
+        totalTokens?: number;
+        totalPayment?: number;
+        purchaseDate?: string | Date;
+        isEmergency?: boolean;
+      };
+    };
+    const sanitizedData = sanitizeInput(body);
     const { totalTokens, totalPayment, purchaseDate, isEmergency } =
-      await request.json();
+      sanitizedData as {
+        totalTokens?: number;
+        totalPayment?: number;
+        purchaseDate?: string | Date;
+        isEmergency?: boolean;
+      };
 
     // Check if purchase exists
     const existingPurchase = await prisma.tokenPurchase.findUnique({
@@ -82,8 +148,8 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     // Check permissions - only creator or admin can edit
     if (
-      existingPurchase.createdBy !== session.user.id &&
-      session.user.role !== 'ADMIN'
+      existingPurchase.createdBy !== permissionCheck.user!.id &&
+      permissionCheck.user!.role !== 'ADMIN'
     ) {
       return NextResponse.json(
         { message: 'Forbidden: You can only edit your own purchases' },
@@ -91,26 +157,14 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    // Validate data if provided
+    // Build update data from validated input
     const updateData: UpdateData = {};
 
     if (totalTokens !== undefined) {
-      if (typeof totalTokens !== 'number' || totalTokens <= 0) {
-        return NextResponse.json(
-          { message: 'totalTokens must be a positive number' },
-          { status: 400 }
-        );
-      }
       updateData.totalTokens = parseFloat(totalTokens.toString());
     }
 
     if (totalPayment !== undefined) {
-      if (typeof totalPayment !== 'number' || totalPayment <= 0) {
-        return NextResponse.json(
-          { message: 'totalPayment must be a positive number' },
-          { status: 400 }
-        );
-      }
       updateData.totalPayment = parseFloat(totalPayment.toString());
     }
 
@@ -150,7 +204,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: permissionCheck.user!.id,
         action: 'UPDATE',
         entityType: 'TokenPurchase',
         entityId: params.id,
@@ -173,8 +227,30 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
+    }
+
+    // Validate route parameters
+    const validation = await validateRequest(
+      request,
+      {
+        params: idParamSchema,
+      },
+      params
+    );
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
     }
 
     // Check if purchase exists
@@ -194,8 +270,8 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
     // Check permissions - only creator or admin can delete
     if (
-      existingPurchase.createdBy !== session.user.id &&
-      session.user.role !== 'ADMIN'
+      existingPurchase.createdBy !== permissionCheck.user!.id &&
+      permissionCheck.user!.role !== 'ADMIN'
     ) {
       return NextResponse.json(
         { message: 'Forbidden: You can only delete your own purchases' },
@@ -218,7 +294,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: permissionCheck.user!.id,
         action: 'DELETE',
         entityType: 'TokenPurchase',
         entityId: params.id,

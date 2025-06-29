@@ -3,6 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { UpdateData } from '@/types/api';
+import { updateUserSchema, idParamSchema } from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  sanitizeInput,
+  checkPermissions,
+} from '@/lib/validation-middleware';
 
 interface RouteContext {
   params: { id: string };
@@ -12,12 +19,37 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
+    }
+
+    // Validate route parameters
+    const validation = await validateRequest(
+      request,
+      {
+        params: idParamSchema,
+      },
+      params
+    );
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
     }
 
     // Users can view their own profile, admins can view any profile
-    if (session.user.id !== params.id && session.user.role !== 'ADMIN') {
+    if (
+      permissionCheck.user!.id !== params.id &&
+      permissionCheck.user!.role !== 'ADMIN'
+    ) {
       return NextResponse.json(
         { message: 'Forbidden: You can only view your own profile' },
         { status: 403 }
@@ -61,11 +93,46 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
-    const { name, role, locked } = await request.json();
+    // Validate request body and parameters
+    const validation = await validateRequest(
+      request,
+      {
+        body: updateUserSchema,
+        params: idParamSchema,
+      },
+      params
+    );
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { body } = validation.data as {
+      body: {
+        name?: string;
+        role?: string;
+        locked?: boolean;
+      };
+    };
+    const sanitizedData = sanitizeInput(body);
+    const { name, role, locked } = sanitizedData as {
+      name?: string;
+      role?: string;
+      locked?: boolean;
+    };
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -77,8 +144,8 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     }
 
     // Permission checks
-    const isOwnProfile = session.user.id === params.id;
-    const isAdmin = session.user.role === 'ADMIN';
+    const isOwnProfile = permissionCheck.user!.id === params.id;
+    const isAdmin = permissionCheck.user!.role === 'ADMIN';
 
     if (!isOwnProfile && !isAdmin) {
       return NextResponse.json(
@@ -92,12 +159,6 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     // Name can be updated by user or admin
     if (name !== undefined) {
-      if (typeof name !== 'string' || name.trim().length === 0) {
-        return NextResponse.json(
-          { message: 'Name must be a non-empty string' },
-          { status: 400 }
-        );
-      }
       updateData.name = name.trim();
     }
 
@@ -107,13 +168,6 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         return NextResponse.json(
           { message: 'Forbidden: Only admins can change user roles' },
           { status: 403 }
-        );
-      }
-
-      if (!['ADMIN', 'USER'].includes(role)) {
-        return NextResponse.json(
-          { message: 'Invalid role. Must be ADMIN or USER' },
-          { status: 400 }
         );
       }
 
@@ -177,7 +231,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: permissionCheck.user!.id,
         action: 'UPDATE',
         entityType: 'User',
         entityId: params.id,
@@ -200,16 +254,30 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication and admin permission
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true, requireAdmin: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
-    // Only admin can delete users
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { message: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
+    // Validate route parameters
+    const validation = await validateRequest(
+      request,
+      {
+        params: idParamSchema,
+      },
+      params
+    );
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
     }
 
     // Check if user exists
@@ -226,7 +294,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     }
 
     // Prevent admin from deleting themselves
-    if (session.user.id === params.id) {
+    if (permissionCheck.user!.id === params.id) {
       return NextResponse.json(
         { message: 'Cannot delete your own account' },
         { status: 400 }
@@ -268,7 +336,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: permissionCheck.user!.id,
         action: 'DELETE',
         entityType: 'User',
         entityId: params.id,

@@ -7,20 +7,48 @@ import type {
   UserBreakdown,
   PurchaseWhereInput,
 } from '@/types/api';
+import { reportQuerySchema } from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  checkPermissions,
+} from '@/lib/validation-middleware';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(request.url);
-    const reportType = searchParams.get('type');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-    const userId = searchParams.get('userId');
+    // Validate query parameters
+    const validation = await validateRequest(request, {
+      query: reportQuerySchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { query } = validation.data as {
+      query: {
+        type: string;
+        startDate?: string;
+        endDate?: string;
+        userId?: string;
+      };
+    };
+    const { type: reportType, startDate, endDate, userId } = query;
 
     // Build date filter
     const dateFilter =
@@ -40,19 +68,22 @@ export async function GET(request: NextRequest) {
       case 'user-breakdown':
         return await getUserBreakdownReport(
           dateFilter,
-          userId,
-          session.user.id,
-          session.user.role
+          userId || null,
+          permissionCheck.user!.id,
+          permissionCheck.user!.role
         );
 
       case 'monthly-trends':
-        return await getMonthlyTrendsReport(session.user.id, session.user.role);
+        return await getMonthlyTrendsReport(
+          permissionCheck.user!.id,
+          permissionCheck.user!.role
+        );
 
       case 'efficiency':
         return await getEfficiencyReport(
           dateFilter,
-          session.user.id,
-          session.user.role
+          permissionCheck.user!.id,
+          permissionCheck.user!.role
         );
 
       default:

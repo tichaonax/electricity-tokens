@@ -1,17 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { registerSchema } from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  sanitizeInput,
+  checkRateLimit,
+} from '@/lib/validation-middleware';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json();
+    // Rate limiting - 5 registration attempts per 15 minutes per IP
+    const clientIP =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
+    const rateLimit = checkRateLimit(`register:${clientIP}`, 5, 15 * 60 * 1000);
 
-    if (!name || !email || !password) {
+    if (!rateLimit.success) {
       return NextResponse.json(
-        { message: 'Missing required fields' },
-        { status: 400 }
+        { message: 'Too many registration attempts. Please try again later.' },
+        { status: 429 }
       );
     }
+
+    // Validate request body
+    const validation = await validateRequest(request, {
+      body: registerSchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { body } = validation.data as {
+      body: { name: string; email: string; password: string };
+    };
+    const sanitizedData = sanitizeInput(body) as {
+      name: string;
+      email: string;
+      password: string;
+    };
+    const { name, email, password } = sanitizedData;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({

@@ -3,20 +3,53 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { ContributionWhereInput } from '@/types/api';
+import {
+  createUserContributionSchema,
+  contributionQuerySchema,
+} from '@/lib/validations';
+import {
+  validateRequest,
+  createValidationErrorResponse,
+  sanitizeInput,
+  checkPermissions,
+  validateBusinessRules,
+} from '@/lib/validation-middleware';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const purchaseId = searchParams.get('purchaseId');
-    const userId = searchParams.get('userId');
+    // Validate query parameters
+    const validation = await validateRequest(request, {
+      query: contributionQuerySchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { query } = validation.data as {
+      query?: {
+        page?: number;
+        limit?: number;
+        purchaseId?: string;
+        userId?: string;
+      };
+    };
+    const { page = 1, limit = 10, purchaseId, userId } = query || {};
 
     const skip = (page - 1) * limit;
 
@@ -32,8 +65,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Non-admin users can only see their own contributions
-    if (session.user.role !== 'ADMIN') {
-      where.userId = session.user.id;
+    if (permissionCheck.user!.role !== 'ADMIN') {
+      where.userId = permissionCheck.user!.id;
     }
 
     const [contributions, total] = await Promise.all([
@@ -86,59 +119,57 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    // Check authentication
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
     }
 
+    // Validate request body
+    const validation = await validateRequest(request, {
+      body: createUserContributionSchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { body } = validation.data as {
+      body: {
+        purchaseId: string;
+        contributionAmount: number;
+        meterReading: number;
+        tokensConsumed: number;
+        userId?: string;
+      };
+    };
+    const sanitizedData = sanitizeInput(body);
     const {
       purchaseId,
-      userId,
       contributionAmount,
       meterReading,
       tokensConsumed,
-    } = await request.json();
-
-    // Validate required fields
-    if (
-      !purchaseId ||
-      !contributionAmount ||
-      !meterReading ||
-      !tokensConsumed
-    ) {
-      return NextResponse.json(
-        {
-          message:
-            'Missing required fields: purchaseId, contributionAmount, meterReading, tokensConsumed',
-        },
-        { status: 400 }
-      );
-    }
+      userId,
+    } = sanitizedData as {
+      purchaseId: string;
+      contributionAmount: number;
+      meterReading: number;
+      tokensConsumed: number;
+      userId?: string;
+    };
 
     // Use session user ID if userId not provided or if user is not admin
     const targetUserId =
-      session.user.role === 'ADMIN' && userId ? userId : session.user.id;
-
-    // Validate data types and values
-    if (typeof contributionAmount !== 'number' || contributionAmount <= 0) {
-      return NextResponse.json(
-        { message: 'contributionAmount must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof meterReading !== 'number' || meterReading < 0) {
-      return NextResponse.json(
-        { message: 'meterReading must be a non-negative number' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof tokensConsumed !== 'number' || tokensConsumed < 0) {
-      return NextResponse.json(
-        { message: 'tokensConsumed must be a non-negative number' },
-        { status: 400 }
-      );
-    }
+      permissionCheck.user!.role === 'ADMIN' && userId
+        ? userId
+        : permissionCheck.user!.id;
 
     // Check if purchase exists
     const purchase = await prisma.tokenPurchase.findUnique({
@@ -178,18 +209,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate that tokens consumed doesn't exceed available tokens
-    const totalContributions = await prisma.userContribution.aggregate({
-      where: { purchaseId },
-      _sum: { tokensConsumed: true },
-    });
+    // Validate business rules
+    const businessRuleCheck = await validateBusinessRules(
+      {
+        checkTokenAvailability: {
+          purchaseId,
+          requestedTokens: tokensConsumed,
+        },
+        checkDuplicateContribution: {
+          purchaseId,
+          userId: targetUserId,
+        },
+      },
+      prisma
+    );
 
-    const totalConsumed =
-      (totalContributions._sum.tokensConsumed || 0) + tokensConsumed;
-
-    if (totalConsumed > purchase.totalTokens) {
+    if (!businessRuleCheck.success) {
       return NextResponse.json(
-        { message: 'Total tokens consumed cannot exceed available tokens' },
+        { message: businessRuleCheck.error },
         { status: 400 }
       );
     }
@@ -225,7 +262,7 @@ export async function POST(request: NextRequest) {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: permissionCheck.user!.id,
         action: 'CREATE',
         entityType: 'UserContribution',
         entityId: contribution.id,
