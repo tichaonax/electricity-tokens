@@ -2,17 +2,42 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+interface QuickStats {
+  totalTokensUsed: number;
+  totalAmountPaid: number;
+  averageCostPerKwh: number;
+}
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
+    } else if (status === 'authenticated') {
+      fetchQuickStats();
     }
   }, [status, router]);
+
+  const fetchQuickStats = async () => {
+    try {
+      setLoadingStats(true);
+      const response = await fetch('/api/dashboard');
+      if (response.ok) {
+        const data = await response.json();
+        setQuickStats(data.personalSummary);
+      }
+    } catch (error) {
+      console.error('Error fetching quick stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   if (status === 'loading') {
     return (
@@ -56,7 +81,7 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {/* Token Purchases Card */}
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
@@ -236,6 +261,51 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {/* Personal Dashboard Card */}
+            <div
+              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => router.push('/dashboard/personal')}
+            >
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-teal-500 rounded-md flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Personal Dashboard
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        Your Overview
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-5 py-3">
+                <div className="text-sm">
+                  <a className="font-medium text-teal-700 hover:text-teal-900">
+                    View personal usage & trends
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Quick Stats */}
@@ -270,7 +340,10 @@ export default function Dashboard() {
                           Total Tokens
                         </dt>
                         <dd className="text-lg font-medium text-gray-900">
-                          Coming Soon
+                          {loadingStats
+                            ? '...'
+                            : quickStats?.totalTokensUsed.toLocaleString() ||
+                              '0'}
                         </dd>
                       </dl>
                     </div>
@@ -304,7 +377,11 @@ export default function Dashboard() {
                           Total Spent
                         </dt>
                         <dd className="text-lg font-medium text-gray-900">
-                          Coming Soon
+                          {loadingStats
+                            ? '...'
+                            : quickStats
+                              ? `$${quickStats.totalAmountPaid.toFixed(2)}`
+                              : '$0.00'}
                         </dd>
                       </dl>
                     </div>
@@ -338,7 +415,11 @@ export default function Dashboard() {
                           Average Cost/Token
                         </dt>
                         <dd className="text-lg font-medium text-gray-900">
-                          Coming Soon
+                          {loadingStats
+                            ? '...'
+                            : quickStats
+                              ? `$${quickStats.averageCostPerKwh.toFixed(4)}`
+                              : '$0.0000'}
                         </dd>
                       </dl>
                     </div>
