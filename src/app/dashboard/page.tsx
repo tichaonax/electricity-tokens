@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface QuickStats {
   totalTokensUsed: number;
@@ -13,6 +14,7 @@ interface QuickStats {
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { checkPermission, isAdmin } = usePermissions();
   const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -82,11 +84,12 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* Token Purchases Card */}
-            <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => router.push('/dashboard/purchases/history')}
-            >
+            {/* Token Purchases Card - Only show if user can add purchases */}
+            {checkPermission('canAddPurchases') && (
+              <div
+                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => router.push('/dashboard/purchases/history')}
+              >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -125,9 +128,11 @@ export default function Dashboard() {
                   </a>
                 </div>
               </div>
-            </div>
+              </div>
+            )}
 
-            {/* New Purchase Card */}
+            {/* New Purchase Card - Only show if user can add purchases */}
+            {checkPermission('canAddPurchases') && (
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/purchases/new')}
@@ -171,12 +176,14 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )}
 
-            {/* User Contributions Card */}
-            <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => router.push('/dashboard/contributions')}
-            >
+            {/* User Contributions Card - Only show if user can add contributions */}
+            {checkPermission('canAddContributions') && (
+              <div
+                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => router.push('/dashboard/contributions')}
+              >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -215,9 +222,11 @@ export default function Dashboard() {
                   </a>
                 </div>
               </div>
-            </div>
+              </div>
+            )}
 
             {/* Cost Analysis Card */}
+            {checkPermission('canViewCostAnalysis') && (
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/cost-analysis')}
@@ -261,8 +270,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Personal Dashboard Card */}
+            {checkPermission('canViewPersonalDashboard') && (
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/personal')}
@@ -306,8 +317,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Data Management Card */}
+            {checkPermission('canExportData') && (
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/data-management')}
@@ -351,8 +364,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Usage Reports Card */}
+            {checkPermission('canViewUsageReports') && (
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/reports/usage')}
@@ -396,8 +411,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Financial Reports Card */}
+            {checkPermission('canViewFinancialReports') && (
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/reports/financial')}
@@ -441,8 +458,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Efficiency Metrics Card */}
+            {checkPermission('canViewEfficiencyReports') && (
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/reports/efficiency')}
@@ -486,6 +505,54 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            )}
+
+            {/* Admin Panel Card - Only visible to admins */}
+            {isAdmin && (
+              <div
+                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200"
+                onClick={() => router.push('/dashboard/admin')}
+              >
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">
+                          Admin Panel
+                        </dt>
+                        <dd className="text-lg font-medium text-gray-900">
+                          System Management
+                        </dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-red-50 px-5 py-3">
+                  <div className="text-sm">
+                    <a className="font-medium text-red-700 hover:text-red-900">
+                      Manage users, settings & security
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick Stats */}

@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
           name: true,
           role: true,
           locked: true,
+          permissions: true,
           createdAt: true,
           updatedAt: true,
           _count: {

@@ -64,6 +64,7 @@ export async function GET(
         name: true,
         role: true,
         locked: true,
+        permissions: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -129,13 +130,15 @@ export async function PUT(
         name?: string;
         role?: string;
         locked?: boolean;
+        permissions?: any;
       };
     };
     const sanitizedData = sanitizeInput(body);
-    const { name, role, locked } = sanitizedData as {
+    const { name, role, locked, permissions } = sanitizedData as {
       name?: string;
       role?: string;
       locked?: boolean;
+      permissions?: any;
     };
 
     // Check if user exists
@@ -212,6 +215,21 @@ export async function PUT(
       updateData.locked = Boolean(locked);
     }
 
+    // Permissions can only be updated by admin
+    if (permissions !== undefined) {
+      if (!isAdmin) {
+        return NextResponse.json(
+          { message: 'Forbidden: Only admins can change user permissions' },
+          { status: 403 }
+        );
+      }
+
+      // Validate permissions object structure
+      if (typeof permissions === 'object' && permissions !== null) {
+        updateData.permissions = permissions;
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: id },
       data: updateData,
@@ -221,6 +239,7 @@ export async function PUT(
         name: true,
         role: true,
         locked: true,
+        permissions: true,
         createdAt: true,
         updatedAt: true,
         _count: {

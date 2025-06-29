@@ -1,9 +1,12 @@
+import { UserPermissions } from './permissions';
+
 export interface User {
   id: string;
   email: string;
   name: string;
   role: 'ADMIN' | 'USER';
   locked: boolean;
+  permissions: UserPermissions | null;
   createdAt: Date;
   updatedAt: Date;
 }
