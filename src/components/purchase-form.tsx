@@ -78,10 +78,10 @@ export function PurchaseForm({
       setSubmitError(null);
       setSubmitSuccess(false);
 
-      // Auto-capture timestamp - use current date if not provided
+      // Convert date to ISO string for API submission
       const submitData = {
         ...data,
-        purchaseDate: data.purchaseDate || new Date(),
+        purchaseDate: (data.purchaseDate || new Date()).toISOString(),
       };
 
       await onSubmit(submitData);

@@ -80,12 +80,17 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - [x] Handle emergency purchase flagging
 - [x] Auto-capture data entry timestamp
 
-#### 3.2 User Contribution Interface
+#### 3.2 User Contribution Interface ✅
 
 - [x] Multi-user contribution input interface
 - [x] Meter reading capture per user
 - [x] Real-time cost calculation display
 - [x] Contribution amount validation
+- [x] Automatic tokens consumed calculation from meter reading difference
+- [x] Expected contribution amount display based on actual usage
+- [x] Duplicate contribution prevention with user-friendly warnings
+- [x] Purchase dropdown highlighting for already-contributed purchases
+- [x] Enhanced UX with dismissible warnings and form clearing options
 
 #### 3.3 Cost Calculation Engine
 

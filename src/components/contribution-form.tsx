@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type CreateUserContributionInput } from '@/lib/validations';
@@ -21,6 +21,7 @@ import {
   Zap,
   Users,
   Calculator,
+  X,
 } from 'lucide-react';
 
 // Form-specific schema for react-hook-form
@@ -100,6 +101,13 @@ export function ContributionForm({
   );
   const [loadingPurchases, setLoadingPurchases] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [previousMeterReading, setPreviousMeterReading] = useState<number>(0);
+  const [loadingPreviousReading, setLoadingPreviousReading] = useState(false);
+  const [userHasContributed, setUserHasContributed] = useState(false);
+  const [contributedPurchaseIds, setContributedPurchaseIds] = useState<
+    Set<string>
+  >(new Set());
+  const [showContributionWarning, setShowContributionWarning] = useState(true);
 
   const {
     register,
@@ -121,6 +129,63 @@ export function ContributionForm({
 
   const watchedValues = watch();
 
+  // Fetch all contributed purchases for the current user
+  const fetchUserContributions = useCallback(async (userId: string) => {
+    try {
+      const response = await fetch(`/api/contributions?userId=${userId}`);
+      if (!response.ok) {
+        setContributedPurchaseIds(new Set());
+        return;
+      }
+
+      const data = await response.json();
+      const contributions = data.contributions || [];
+
+      // Create a set of purchase IDs that the user has already contributed to
+      const contributedIds = new Set<string>(
+        contributions.map((c: { purchaseId: string }) => c.purchaseId)
+      );
+      setContributedPurchaseIds(contributedIds);
+    } catch (error) {
+      console.error('Error fetching user contributions:', error);
+      setContributedPurchaseIds(new Set());
+    }
+  }, []);
+
+  // Define checkUserContribution before useEffect hooks
+  const checkUserContribution = useCallback(
+    async (purchaseId: string) => {
+      try {
+        const targetUserId =
+          isAdmin && watchedValues.userId
+            ? watchedValues.userId
+            : currentUserId;
+        if (!targetUserId) return;
+
+        const response = await fetch(
+          `/api/contributions?purchaseId=${purchaseId}&userId=${targetUserId}`
+        );
+        if (!response.ok) {
+          setUserHasContributed(false);
+          return;
+        }
+
+        const data = await response.json();
+        const contributions = data.contributions || [];
+
+        // Check if user has already contributed to this purchase
+        const hasContributed = contributions.length > 0;
+        setUserHasContributed(hasContributed);
+        setShowContributionWarning(hasContributed); // Show warning when contribution exists
+      } catch (error) {
+        console.error('Error checking user contribution:', error);
+        setUserHasContributed(false);
+        setShowContributionWarning(false);
+      }
+    },
+    [isAdmin, watchedValues.userId, currentUserId]
+  );
+
   // Fetch purchases on component mount
   useEffect(() => {
     fetchPurchases();
@@ -134,8 +199,46 @@ export function ContributionForm({
     if (watchedValues.purchaseId && purchases.length > 0) {
       const purchase = purchases.find((p) => p.id === watchedValues.purchaseId);
       setSelectedPurchase(purchase || null);
+
+      // Check if current user has already contributed to this purchase
+      if (purchase) {
+        checkUserContribution(purchase.id);
+      }
     }
-  }, [watchedValues.purchaseId, purchases]);
+  }, [watchedValues.purchaseId, purchases, checkUserContribution]);
+
+  // Fetch previous meter reading when user changes
+  useEffect(() => {
+    const targetUserId =
+      isAdmin && watchedValues.userId ? watchedValues.userId : currentUserId;
+    if (targetUserId) {
+      fetchPreviousMeterReading(targetUserId);
+      fetchUserContributions(targetUserId);
+
+      // Also check if this user has already contributed to the selected purchase
+      if (watchedValues.purchaseId) {
+        checkUserContribution(watchedValues.purchaseId);
+      }
+    }
+  }, [
+    watchedValues.userId,
+    currentUserId,
+    isAdmin,
+    watchedValues.purchaseId,
+    checkUserContribution,
+    fetchUserContributions,
+  ]);
+
+  // Auto-calculate tokens consumed when meter reading changes
+  useEffect(() => {
+    if (
+      watchedValues.meterReading &&
+      watchedValues.meterReading > previousMeterReading
+    ) {
+      const tokensConsumed = watchedValues.meterReading - previousMeterReading;
+      setValue('tokensConsumed', tokensConsumed);
+    }
+  }, [watchedValues.meterReading, previousMeterReading, setValue]);
 
   const fetchPurchases = async () => {
     try {
@@ -173,6 +276,35 @@ export function ContributionForm({
     }
   };
 
+  const fetchPreviousMeterReading = async (userId: string) => {
+    try {
+      setLoadingPreviousReading(true);
+      const response = await fetch(
+        `/api/contributions?userId=${userId}&limit=1`
+      );
+      if (!response.ok) {
+        // If no previous contributions found, start from 0
+        setPreviousMeterReading(0);
+        return;
+      }
+
+      const data = await response.json();
+      const contributions = data.contributions || [];
+
+      if (contributions.length > 0) {
+        // Get the most recent meter reading
+        setPreviousMeterReading(contributions[0].meterReading);
+      } else {
+        setPreviousMeterReading(0);
+      }
+    } catch (error) {
+      console.error('Error fetching previous meter reading:', error);
+      setPreviousMeterReading(0);
+    } finally {
+      setLoadingPreviousReading(false);
+    }
+  };
+
   // Calculate true cost and efficiency metrics
   const calculateMetrics = () => {
     if (!selectedPurchase || !watchedValues.tokensConsumed) {
@@ -205,6 +337,20 @@ export function ContributionForm({
       ) || 0;
 
     return selectedPurchase.totalTokens - usedTokens;
+  };
+
+  const clearFormAndSelection = () => {
+    reset();
+    setSelectedPurchase(null);
+    setUserHasContributed(false);
+    setShowContributionWarning(false);
+    setPreviousMeterReading(0);
+    setSubmitError(null);
+    setSubmitSuccess(false);
+  };
+
+  const dismissContributionWarning = () => {
+    setShowContributionWarning(false);
   };
 
   const handleFormSubmit = async (data: ContributionFormData) => {
@@ -279,6 +425,52 @@ export function ContributionForm({
         </div>
       )}
 
+      {userHasContributed && selectedPurchase && showContributionWarning && (
+        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md text-amber-700 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-400">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div>
+                <p className="font-medium">Contribution Already Exists</p>
+                <p className="text-sm mt-1">
+                  {isAdmin && watchedValues.userId
+                    ? `This user has already contributed to the selected purchase (${new Date(selectedPurchase.purchaseDate).toLocaleDateString()})`
+                    : `You have already contributed to this purchase (${new Date(selectedPurchase.purchaseDate).toLocaleDateString()})`}
+                  . The form is read-only to prevent duplicate entries.
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={clearFormAndSelection}
+                    className="text-xs"
+                  >
+                    Select Different Purchase
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={dismissContributionWarning}
+                    className="text-xs"
+                  >
+                    Dismiss Warning
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={dismissContributionWarning}
+              className="text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <Form onSubmit={handleSubmit(handleFormSubmit)}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Form Fields */}
@@ -291,19 +483,46 @@ export function ContributionForm({
               <select
                 id="purchaseId"
                 {...register('purchaseId')}
+                disabled={userHasContributed}
                 className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
+                style={{
+                  background: 'white',
+                  color: 'black',
+                }}
               >
                 <option value="">Select a purchase...</option>
-                {purchases.map((purchase) => (
-                  <option key={purchase.id} value={purchase.id}>
-                    {new Date(purchase.purchaseDate).toLocaleDateString()} -{' '}
-                    {purchase.totalTokens} tokens (
-                    {purchase.isEmergency ? 'Emergency' : 'Regular'})
-                  </option>
-                ))}
+                {purchases.map((purchase) => {
+                  const hasContributed = contributedPurchaseIds.has(
+                    purchase.id
+                  );
+                  return (
+                    <option
+                      key={purchase.id}
+                      value={purchase.id}
+                      style={{
+                        backgroundColor: hasContributed ? '#fef3c7' : 'white',
+                        color: hasContributed ? '#d97706' : 'black',
+                        fontWeight: hasContributed ? 'bold' : 'normal',
+                      }}
+                    >
+                      {hasContributed ? '✓ ' : ''}
+                      {new Date(
+                        purchase.purchaseDate
+                      ).toLocaleDateString()} - {purchase.totalTokens} tokens (
+                      {purchase.isEmergency ? 'Emergency' : 'Regular'})
+                      {hasContributed ? ' - Already Contributed' : ''}
+                    </option>
+                  );
+                })}
               </select>
               <FormDescription>
-                Select the token purchase you want to contribute to
+                Select the token purchase you want to contribute to.
+                {contributedPurchaseIds.size > 0 && (
+                  <span className="block text-amber-600 dark:text-amber-400 mt-1">
+                    ✓ Highlighted purchases show where you&apos;ve already
+                    contributed
+                  </span>
+                )}
               </FormDescription>
               {errors.purchaseId && (
                 <FormMessage>{errors.purchaseId.message}</FormMessage>
@@ -318,7 +537,7 @@ export function ContributionForm({
                   id="userId"
                   {...register('userId')}
                   className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
-                  disabled={loadingUsers}
+                  disabled={loadingUsers || userHasContributed}
                 >
                   <option value="">Select user...</option>
                   {users.map((user) => (
@@ -337,51 +556,108 @@ export function ContributionForm({
               </FormField>
             )}
 
-            {/* Meter Reading */}
+            {/* Previous Meter Reading Display */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-md dark:bg-slate-800 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Previous Meter Reading:
+                </span>
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  {loadingPreviousReading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-500 mr-2"></div>
+                      Loading...
+                    </div>
+                  ) : (
+                    `${previousMeterReading.toLocaleString()} kWh`
+                  )}
+                </span>
+              </div>
+            </div>
+
+            {/* Current Meter Reading */}
             <FormField>
               <FormLabel htmlFor="meterReading">
-                Meter Reading (kWh) *
+                Current Meter Reading (kWh) *
               </FormLabel>
               <Input
                 id="meterReading"
                 type="number"
                 step="0.01"
-                min="0"
+                min={previousMeterReading}
                 max="1000000"
-                placeholder="Enter meter reading"
+                placeholder={`Enter reading (min: ${previousMeterReading})`}
+                disabled={userHasContributed}
                 {...register('meterReading', { valueAsNumber: true })}
                 className={errors.meterReading ? 'border-red-500' : ''}
               />
               <FormDescription>
-                Enter your current meter reading in kWh
+                Enter your current meter reading. Must be greater than or equal
+                to previous reading ({previousMeterReading} kWh)
               </FormDescription>
               {errors.meterReading && (
                 <FormMessage>{errors.meterReading.message}</FormMessage>
               )}
             </FormField>
 
-            {/* Tokens Consumed */}
+            {/* Tokens Consumed (Auto-calculated) */}
             <FormField>
               <FormLabel htmlFor="tokensConsumed">
                 Tokens Consumed (kWh) *
               </FormLabel>
-              <Input
-                id="tokensConsumed"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100000"
-                placeholder="Enter tokens consumed"
-                {...register('tokensConsumed', { valueAsNumber: true })}
-                className={errors.tokensConsumed ? 'border-red-500' : ''}
-              />
+              <div className="relative">
+                <Input
+                  id="tokensConsumed"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100000"
+                  value={watchedValues.tokensConsumed || 0}
+                  readOnly
+                  disabled={userHasContributed}
+                  className="bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-not-allowed"
+                  {...register('tokensConsumed', { valueAsNumber: true })}
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <Calculator className="h-4 w-4 text-slate-400" />
+                </div>
+              </div>
               <FormDescription>
-                Enter the number of tokens you consumed (1 token = 1 kWh)
+                Automatically calculated: Current reading (
+                {watchedValues.meterReading || 0}) - Previous reading (
+                {previousMeterReading}) ={' '}
+                {(watchedValues.meterReading || 0) - previousMeterReading} kWh
               </FormDescription>
               {errors.tokensConsumed && (
                 <FormMessage>{errors.tokensConsumed.message}</FormMessage>
               )}
             </FormField>
+
+            {/* Expected Contribution Amount (Computed) */}
+            {watchedValues.tokensConsumed > 0 && selectedPurchase && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900 dark:border-blue-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Expected Contribution (based on usage):
+                  </span>
+                  <span className="text-sm font-bold text-blue-900 dark:text-blue-100">
+                    $
+                    {(
+                      (watchedValues.tokensConsumed /
+                        selectedPurchase.totalTokens) *
+                      selectedPurchase.totalPayment
+                    ).toFixed(2)}
+                  </span>
+                </div>
+                <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  {watchedValues.tokensConsumed} tokens × $
+                  {(
+                    selectedPurchase.totalPayment / selectedPurchase.totalTokens
+                  ).toFixed(4)}
+                  /token
+                </div>
+              </div>
+            )}
 
             {/* Contribution Amount */}
             <FormField>
@@ -396,13 +672,33 @@ export function ContributionForm({
                   step="0.01"
                   min="0"
                   max="1000000"
-                  placeholder="0.00"
+                  placeholder={
+                    watchedValues.tokensConsumed > 0 && selectedPurchase
+                      ? (
+                          (watchedValues.tokensConsumed /
+                            selectedPurchase.totalTokens) *
+                          selectedPurchase.totalPayment
+                        ).toFixed(2)
+                      : '0.00'
+                  }
+                  disabled={userHasContributed}
                   className={`pl-10 ${errors.contributionAmount ? 'border-red-500' : ''}`}
                   {...register('contributionAmount', { valueAsNumber: true })}
                 />
               </div>
               <FormDescription>
                 Enter the amount you are contributing for this usage
+                {watchedValues.tokensConsumed > 0 && selectedPurchase && (
+                  <span className="block text-blue-600 dark:text-blue-400 mt-1">
+                    💡 Suggested: $
+                    {(
+                      (watchedValues.tokensConsumed /
+                        selectedPurchase.totalTokens) *
+                      selectedPurchase.totalPayment
+                    ).toFixed(2)}{' '}
+                    based on your usage
+                  </span>
+                )}
               </FormDescription>
               {errors.contributionAmount && (
                 <FormMessage>{errors.contributionAmount.message}</FormMessage>
@@ -544,7 +840,7 @@ export function ContributionForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => reset()}
+            onClick={clearFormAndSelection}
             disabled={isLoading}
           >
             Clear Form
@@ -552,7 +848,9 @@ export function ContributionForm({
           <Button
             type="submit"
             disabled={
-              isLoading || watchedValues.tokensConsumed > getRemainingTokens()
+              isLoading ||
+              userHasContributed ||
+              watchedValues.tokensConsumed > getRemainingTokens()
             }
             className="min-w-[120px]"
           >
@@ -561,6 +859,8 @@ export function ContributionForm({
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Saving...
               </div>
+            ) : userHasContributed ? (
+              'Already Contributed'
             ) : (
               'Record Contribution'
             )}
