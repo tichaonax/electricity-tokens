@@ -116,6 +116,30 @@ export default function AdminPanel() {
               </CardContent>
             </Card>
 
+            {/* Security Dashboard Card */}
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => router.push('/dashboard/admin/security')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-lg font-medium">Security Dashboard</CardTitle>
+                  <CardDescription>
+                    Comprehensive security monitoring and threats
+                  </CardDescription>
+                </div>
+                <Shield className="h-8 w-8 text-red-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-gray-600">
+                  • Real-time threat detection<br />
+                  • Rate limiting & protection<br />
+                  • Security event monitoring<br />
+                  • System integrity checks
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Audit Trail Card */}
             <Card 
               className="hover:shadow-md transition-shadow cursor-pointer"

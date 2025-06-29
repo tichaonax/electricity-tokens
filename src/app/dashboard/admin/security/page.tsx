@@ -6,7 +6,21 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, ChevronLeft, Eye, Clock, User, Database, AlertTriangle, CheckCircle } from 'lucide-react';
+import { 
+  Shield, 
+  ChevronLeft, 
+  Eye, 
+  Clock, 
+  User, 
+  Database, 
+  AlertTriangle, 
+  CheckCircle,
+  Activity,
+  Lock,
+  RefreshCw,
+  TrendingUp,
+  Ban
+} from 'lucide-react';
 
 interface AuditLogEntry {
   id: string;
@@ -27,6 +41,23 @@ interface SecurityMetrics {
   activeAdmins: number;
   recentSuspiciousActivity: number;
   lastBackup: string;
+  totalSecurityEvents: number;
+  criticalEvents: number;
+  rateLimitViolations: number;
+  activeUsers: number;
+  recentEvents: SecurityEvent[];
+}
+
+interface SecurityEvent {
+  id: string;
+  type: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  timestamp: string;
+  ipAddress: string;
+  userAgent: string;
+  userId?: string;
+  userName?: string;
 }
 
 export default function SecurityAndAudit() {
@@ -51,13 +82,13 @@ export default function SecurityAndAudit() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
       router.push('/dashboard');
     }
   }, [status, session, router]);
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
       fetchSecurityData();
     }
   }, [status, session, currentPage]);
@@ -123,7 +154,7 @@ export default function SecurityAndAudit() {
     );
   }
 
-  if (!session || session.user?.role !== 'admin') {
+  if (!session || session.user?.role !== 'ADMIN') {
     return null;
   }
 
