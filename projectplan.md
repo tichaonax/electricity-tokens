@@ -64,9 +64,9 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 #### 2.3 Data Validation
 
-- [ ] Implement Zod schemas for all data types
-- [ ] Create input validation middleware
-- [ ] Add server-side validation for all API endpoints
+- [x] Implement Zod schemas for all data types
+- [x] Create input validation middleware
+- [x] Add server-side validation for all API endpoints
 
 ### Checkpoint 3: Token Purchase Management
 
@@ -74,11 +74,11 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 #### 3.1 Purchase Entry Form
 
-- [ ] Create token purchase form component
-- [ ] Implement date picker for purchase date
-- [ ] Add validation for required fields
-- [ ] Handle emergency purchase flagging
-- [ ] Auto-capture data entry timestamp
+- [x] Create token purchase form component
+- [x] Implement date picker for purchase date
+- [x] Add validation for required fields
+- [x] Handle emergency purchase flagging
+- [x] Auto-capture data entry timestamp
 
 #### 3.2 User Contribution Interface
 
