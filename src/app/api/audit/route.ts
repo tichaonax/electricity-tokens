@@ -27,6 +27,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check if this is an export request
+    const { searchParams } = new URL(request.url);
+    const isExport = searchParams.get('export') === 'csv';
+
     // Validate query parameters
     const validation = await validateRequest(request, {
       query: auditQuerySchema,
@@ -46,17 +50,19 @@ export async function GET(request: NextRequest) {
         entityId?: string;
         startDate?: string;
         endDate?: string;
+        search?: string;
       };
     };
     const {
       page = 1,
-      limit = 20,
+      limit = isExport ? 10000 : 20, // Higher limit for exports
       userId,
       action,
       entityType,
       entityId,
       startDate,
       endDate,
+      search,
     } = query || {};
 
     const skip = (page - 1) * limit;
@@ -90,6 +96,40 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Add search functionality
+    if (search) {
+      where.OR = [
+        {
+          user: {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        },
+        {
+          user: {
+            email: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        },
+        {
+          action: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          entityType: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
+
     const [auditLogs, total] = await Promise.all([
       prisma.auditLog.findMany({
         where,
@@ -103,7 +143,7 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: { timestamp: 'desc' },
-        skip,
+        skip: isExport ? 0 : skip, // No pagination for exports
         take: limit,
       }),
       prisma.auditLog.count({ where }),
@@ -112,7 +152,9 @@ export async function GET(request: NextRequest) {
     // Format the audit logs for better readability
     const formattedLogs = auditLogs.map((log) => ({
       id: log.id,
-      user: log.user,
+      userId: log.userId,
+      userName: log.user?.name || 'Unknown User',
+      userEmail: log.user?.email || 'Unknown Email',
       action: log.action,
       entityType: log.entityType,
       entityId: log.entityId,
@@ -120,10 +162,24 @@ export async function GET(request: NextRequest) {
       changes: formatChanges(log.action, log.oldValues, log.newValues),
       oldValues: log.oldValues,
       newValues: log.newValues,
+      metadata: log.metadata,
     }));
 
+    // Handle CSV export
+    if (isExport) {
+      const csvContent = generateCSV(formattedLogs);
+      
+      return new NextResponse(csvContent, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': `attachment; filename="audit-logs-${new Date().toISOString().split('T')[0]}.csv"`,
+        },
+      });
+    }
+
     return NextResponse.json({
-      auditLogs: formattedLogs,
+      logs: formattedLogs,
       pagination: {
         page,
         limit,
@@ -138,6 +194,55 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function generateCSV(logs: any[]): string {
+  if (logs.length === 0) {
+    return 'No data available';
+  }
+
+  // CSV headers
+  const headers = [
+    'Timestamp',
+    'User Name',
+    'User Email',
+    'Action',
+    'Entity Type',
+    'Entity ID',
+    'Summary',
+    'IP Address',
+    'User Agent',
+    'Details'
+  ];
+
+  // Convert logs to CSV rows
+  const rows = logs.map(log => {
+    const timestamp = new Date(log.timestamp).toISOString();
+    const summary = log.changes?.summary || '';
+    const ipAddress = log.metadata?.ipAddress || '';
+    const userAgent = log.metadata?.userAgent || '';
+    const details = JSON.stringify(log.changes?.details || {});
+
+    return [
+      timestamp,
+      log.userName,
+      log.userEmail,
+      log.action,
+      log.entityType,
+      log.entityId,
+      summary,
+      ipAddress,
+      userAgent,
+      details
+    ].map(field => `"${String(field).replace(/"/g, '""')}"`); // Escape quotes
+  });
+
+  // Combine headers and rows
+  const csvContent = [headers, ...rows]
+    .map(row => row.join(','))
+    .join('\n');
+
+  return csvContent;
 }
 
 function formatChanges(action: string, oldValues: unknown, newValues: unknown) {

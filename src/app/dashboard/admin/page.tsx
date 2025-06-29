@@ -116,6 +116,30 @@ export default function AdminPanel() {
               </CardContent>
             </Card>
 
+            {/* Audit Trail Card */}
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => router.push('/dashboard/admin/audit')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-lg font-medium">Audit Trail</CardTitle>
+                  <CardDescription>
+                    Complete audit log with detailed tracking
+                  </CardDescription>
+                </div>
+                <FileText className="h-8 w-8 text-indigo-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-gray-600">
+                  • Complete change history<br />
+                  • Advanced filtering & search<br />
+                  • Export capabilities<br />
+                  • Data integrity verification
+                </div>
+              </CardContent>
+            </Card>
+
             {/* System Configuration Card */}
             <Card 
               className="hover:shadow-md transition-shadow cursor-pointer"

@@ -10,6 +10,7 @@ import {
   sanitizeInput,
   checkPermissions,
 } from '@/lib/validation-middleware';
+import { auditUpdate, auditDelete, auditPermissionChange, auditAccountLockChange } from '@/lib/audit';
 
 export async function GET(
   request: NextRequest,
@@ -251,17 +252,55 @@ export async function PUT(
       },
     });
 
-    // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        userId: permissionCheck.user!.id,
-        action: 'UPDATE',
-        entityType: 'User',
-        entityId: id,
-        oldValues: existingUser,
-        newValues: updatedUser,
-      },
-    });
+    // Extract IP and User Agent for audit logging
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+
+    const auditContext = {
+      userId: permissionCheck.user!.id,
+      ipAddress,
+      userAgent,
+    };
+
+    // Create specific audit logs for different types of changes
+    if (permissions !== undefined) {
+      await auditPermissionChange(
+        auditContext,
+        id,
+        { permissions: existingUser.permissions },
+        { permissions: updatedUser.permissions },
+        { changedBy: permissionCheck.user!.name }
+      );
+    }
+
+    if (locked !== undefined) {
+      await auditAccountLockChange(
+        auditContext,
+        id,
+        Boolean(locked),
+        { 
+          targetUserName: existingUser.name,
+          reason: locked ? 'Account locked by admin' : 'Account unlocked by admin'
+        }
+      );
+    }
+
+    // General audit log for other changes
+    if (name !== undefined || role !== undefined) {
+      await auditUpdate(
+        auditContext,
+        'User',
+        id,
+        existingUser,
+        updatedUser,
+        { 
+          targetUserName: existingUser.name,
+          changesType: 'profile_update'
+        }
+      );
+    }
 
     return NextResponse.json(updatedUser);
   } catch (error) {
@@ -360,16 +399,28 @@ export async function DELETE(
       where: { id: id },
     });
 
-    // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
+    // Extract IP and User Agent for audit logging
+    const ipAddress = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+
+    // Create audit log entry using centralized utility
+    await auditDelete(
+      {
         userId: permissionCheck.user!.id,
-        action: 'DELETE',
-        entityType: 'User',
-        entityId: id,
-        oldValues: existingUser,
+        ipAddress,
+        userAgent,
       },
-    });
+      'User',
+      id,
+      existingUser,
+      {
+        deletedUserName: existingUser.name,
+        deletedUserEmail: existingUser.email,
+        reason: 'Account deleted by admin'
+      }
+    );
 
     return NextResponse.json(
       { message: 'User deleted successfully' },

@@ -31,6 +31,22 @@ export const createUserSchema = z.object({
     .max(100, 'Password must be less than 100 characters'),
 });
 
+// User permissions schema for validation
+export const userPermissionsSchema = z.object({
+  canAddPurchases: z.boolean(),
+  canEditPurchases: z.boolean(),
+  canDeletePurchases: z.boolean(),
+  canAddContributions: z.boolean(),
+  canEditContributions: z.boolean(),
+  canViewUsageReports: z.boolean(),
+  canViewFinancialReports: z.boolean(),
+  canViewEfficiencyReports: z.boolean(),
+  canViewPersonalDashboard: z.boolean(),
+  canViewCostAnalysis: z.boolean(),
+  canExportData: z.boolean(),
+  canImportData: z.boolean(),
+});
+
 export const updateUserSchema = z
   .object({
     name: z
@@ -40,6 +56,7 @@ export const updateUserSchema = z
       .optional(),
     role: userRoleSchema.optional(),
     locked: z.boolean().optional(),
+    permissions: userPermissionsSchema.optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided for update',
