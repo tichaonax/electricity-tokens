@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
         isEmergency?: boolean;
         startDate?: string;
         endDate?: string;
+        sortBy?: 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'creator';
+        sortDirection?: 'asc' | 'desc';
       };
     };
     const {
@@ -55,6 +57,8 @@ export async function GET(request: NextRequest) {
       isEmergency,
       startDate,
       endDate,
+      sortBy = 'purchaseDate',
+      sortDirection = 'desc',
     } = query || {};
 
     const skip = (page - 1) * limit;
@@ -71,6 +75,32 @@ export async function GET(request: NextRequest) {
         gte: new Date(startDate),
         lte: new Date(endDate),
       };
+    }
+
+    // Build orderBy clause based on sortBy parameter
+    let orderBy:
+      | { purchaseDate: 'asc' | 'desc' }
+      | { totalTokens: 'asc' | 'desc' }
+      | { totalPayment: 'asc' | 'desc' }
+      | { creator: { name: 'asc' | 'desc' } };
+    switch (sortBy) {
+      case 'creator':
+        orderBy = {
+          creator: {
+            name: sortDirection,
+          },
+        };
+        break;
+      case 'totalTokens':
+        orderBy = { totalTokens: sortDirection };
+        break;
+      case 'totalPayment':
+        orderBy = { totalPayment: sortDirection };
+        break;
+      case 'purchaseDate':
+      default:
+        orderBy = { purchaseDate: sortDirection };
+        break;
     }
 
     const [purchases, total] = await Promise.all([
@@ -96,7 +126,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { purchaseDate: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),

@@ -60,7 +60,7 @@ export default function Dashboard() {
             {/* Token Purchases Card */}
             <div
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => router.push('/dashboard/purchases')}
+              onClick={() => router.push('/dashboard/purchases/history')}
             >
               <div className="p-5">
                 <div className="flex items-center">
@@ -84,10 +84,10 @@ export default function Dashboard() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Token Purchases
+                        Purchase History
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        Manage Purchases
+                        View & Manage
                       </dd>
                     </dl>
                   </div>
@@ -96,7 +96,7 @@ export default function Dashboard() {
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
                   <a className="font-medium text-blue-700 hover:text-blue-900">
-                    View all purchases
+                    View purchase history with filters
                   </a>
                 </div>
               </div>

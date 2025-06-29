@@ -118,6 +118,10 @@ export const purchaseQuerySchema = z
       .optional(),
     startDate: z.string().datetime('Invalid start date format').optional(),
     endDate: z.string().datetime('Invalid end date format').optional(),
+    sortBy: z
+      .enum(['purchaseDate', 'totalTokens', 'totalPayment', 'creator'])
+      .optional(),
+    sortDirection: z.enum(['asc', 'desc']).optional(),
   })
   .refine(
     (data) => {

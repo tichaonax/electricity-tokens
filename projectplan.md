@@ -103,12 +103,12 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 **Timeline**: Week 4
 
-#### 4.1 Purchase History View
+#### 4.1 Purchase History View ✅
 
-- [ ] Paginated list of all token purchases
-- [ ] Filter by date range, user, emergency status
-- [ ] Sort by various columns
-- [ ] Quick edit/delete functionality (with permissions)
+- [x] Paginated list of all token purchases
+- [x] Filter by date range, user, emergency status
+- [x] Sort by various columns
+- [x] Quick edit/delete functionality (with permissions)
 
 #### 4.2 User Dashboard
 

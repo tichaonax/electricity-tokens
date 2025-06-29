@@ -35,13 +35,26 @@ const purchaseFormSchema = z.object({
 type PurchaseFormData = z.infer<typeof purchaseFormSchema>;
 
 interface PurchaseFormProps {
-  onSubmit: (data: CreateTokenPurchaseInput) => Promise<void>;
+  mode?: 'create' | 'edit';
+  purchaseId?: string;
+  onSubmit?: (data: CreateTokenPurchaseInput) => Promise<void>;
+  onSuccess?: () => void;
+  onCancel?: () => void;
   isLoading?: boolean;
-  initialData?: Partial<CreateTokenPurchaseInput>;
+  initialData?: {
+    totalTokens: number;
+    totalPayment: number;
+    purchaseDate: string;
+    isEmergency: boolean;
+  };
 }
 
 export function PurchaseForm({
+  mode = 'create',
+  purchaseId,
   onSubmit,
+  onSuccess,
+  onCancel,
   isLoading = false,
   initialData,
 }: PurchaseFormProps) {
@@ -84,19 +97,39 @@ export function PurchaseForm({
         purchaseDate: (data.purchaseDate || new Date()).toISOString(),
       };
 
-      await onSubmit(submitData);
-      setSubmitSuccess(true);
+      if (mode === 'edit' && purchaseId) {
+        // Update existing purchase
+        const response = await fetch(`/api/purchases/${purchaseId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submitData),
+        });
 
-      // Reset form after successful submission
-      setTimeout(() => {
-        reset();
-        setSubmitSuccess(false);
-      }, 2000);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update purchase');
+        }
+
+        setSubmitSuccess(true);
+        setTimeout(() => {
+          if (onSuccess) onSuccess();
+        }, 1500);
+      } else if (onSubmit) {
+        // Create new purchase (legacy path for existing usage)
+        await onSubmit(submitData);
+        setSubmitSuccess(true);
+
+        // Reset form after successful submission
+        setTimeout(() => {
+          reset();
+          setSubmitSuccess(false);
+        }, 2000);
+      }
     } catch (error) {
       setSubmitError(
         error instanceof Error
           ? error.message
-          : 'Failed to create purchase. Please try again.'
+          : `Failed to ${mode} purchase. Please try again.`
       );
     }
   };
@@ -106,10 +139,12 @@ export function PurchaseForm({
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
           <Zap className="h-6 w-6 text-blue-600" />
-          Token Purchase Entry
+          {mode === 'edit' ? 'Edit Token Purchase' : 'Token Purchase Entry'}
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Enter details for a new electricity token purchase
+          {mode === 'edit'
+            ? 'Update the details for this electricity token purchase'
+            : 'Enter details for a new electricity token purchase'}
         </p>
       </div>
 
@@ -123,7 +158,9 @@ export function PurchaseForm({
       {submitSuccess && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md flex items-center gap-2 text-green-700 dark:bg-green-950 dark:border-green-800 dark:text-green-400">
           <CheckCircle2 className="h-4 w-4" />
-          <span>Purchase created successfully!</span>
+          <span>
+            Purchase {mode === 'edit' ? 'updated' : 'created'} successfully!
+          </span>
         </div>
       )}
 
@@ -263,20 +300,33 @@ export function PurchaseForm({
 
         {/* Submit Button */}
         <div className="flex justify-end gap-4 mt-8">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => reset()}
-            disabled={isLoading}
-          >
-            Clear Form
-          </Button>
+          {mode === 'edit' && onCancel ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => reset()}
+              disabled={isLoading}
+            >
+              Clear Form
+            </Button>
+          )}
           <Button type="submit" disabled={isLoading} className="min-w-[120px]">
             {isLoading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Saving...
               </div>
+            ) : mode === 'edit' ? (
+              'Update Purchase'
             ) : (
               'Create Purchase'
             )}
