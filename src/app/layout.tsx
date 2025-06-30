@@ -4,6 +4,9 @@ import './globals.css';
 import { AuthProvider } from '@/components/providers/session-provider';
 import { CSRFProvider } from '@/components/security/CSRFProvider';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
+import { ToastProvider } from '@/components/ui/toast';
+import { ConfirmationProvider } from '@/components/ui/confirmation-dialog';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -40,8 +43,14 @@ export default function RootLayout({
       >
         <AuthProvider>
           <CSRFProvider>
-            {children}
-            <OfflineIndicator />
+            <ErrorBoundary>
+              <ToastProvider>
+                <ConfirmationProvider>
+                  {children}
+                  <OfflineIndicator />
+                </ConfirmationProvider>
+              </ToastProvider>
+            </ErrorBoundary>
           </CSRFProvider>
         </AuthProvider>
       </body>

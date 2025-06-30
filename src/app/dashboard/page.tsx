@@ -8,6 +8,8 @@ import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip } from '@/components/ui/tooltip';
+import { HelpPopover } from '@/components/ui/help-popover';
 import { Plus, TrendingUp, DollarSign, Zap, BarChart3, FileText, Users, Settings, AlertTriangle } from 'lucide-react';
 
 interface QuickStats {
@@ -64,14 +66,46 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
+          {/* Welcome Section */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Welcome back, {session?.user?.name}!
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Track your electricity usage and manage your token contributions
+                </p>
+              </div>
+              <HelpPopover
+                title="Getting Started"
+                items={[
+                  {
+                    title: "Track Purchases",
+                    description: "Add new electricity token purchases and track their usage across all users."
+                  },
+                  {
+                    title: "View Reports",
+                    description: "Analyze your usage patterns, costs, and efficiency with detailed reports and charts."
+                  },
+                  {
+                    title: "Manage Contributions",
+                    description: "Add your usage contributions to purchases and see your fair share calculations."
+                  }
+                ]}
+              />
+            </div>
+          </div>
+
           {/* Quick Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Token Purchases Card - Only show if user can add purchases */}
             {checkPermission('canAddPurchases') && (
-              <div
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => router.push('/dashboard/purchases/history')}
-              >
+              <Tooltip content="View and manage all electricity token purchases with advanced filtering and sorting">
+                <div
+                  className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => router.push('/dashboard/purchases/history')}
+                >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -110,7 +144,8 @@ export default function Dashboard() {
                   </a>
                 </div>
               </div>
-              </div>
+                </div>
+              </Tooltip>
             )}
 
             {/* New Purchase Card - Only show if user can add purchases */}

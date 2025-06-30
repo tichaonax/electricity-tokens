@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
+import { HelpPopover } from '@/components/ui/help-popover';
 import { Users, Shield, Settings, FileText } from 'lucide-react';
 
 export default function AdminPanel() {
@@ -49,7 +50,26 @@ export default function AdminPanel() {
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Panel</h2>
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-2xl font-bold text-gray-900">Admin Panel</h2>
+              <HelpPopover
+                title="Admin Panel Help"
+                items={[
+                  {
+                    title: "User Management",
+                    description: "Create, edit, and manage user accounts. Control permissions and roles for secure access."
+                  },
+                  {
+                    title: "Security Dashboard",
+                    description: "Monitor system security, view audit logs, and track suspicious activities."
+                  },
+                  {
+                    title: "System Settings",
+                    description: "Configure application settings, defaults, and system-wide preferences."
+                  }
+                ]}
+              />
+            </div>
             <p className="text-gray-600">
               Manage users, system settings, and monitor application security.
             </p>

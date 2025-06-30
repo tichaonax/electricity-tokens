@@ -3,6 +3,8 @@
 import { ReactNode } from 'react';
 import { Card, CardContent } from './card';
 import { Badge } from './badge';
+import { EmptyState } from './error-display';
+import { Zap } from 'lucide-react';
 
 interface Column {
   key: string;
@@ -41,9 +43,11 @@ export function ResponsiveTable({
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        {emptyMessage}
-      </div>
+      <EmptyState
+        icon={Zap}
+        title="No data found"
+        description={emptyMessage}
+      />
     );
   }
 

@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ResponsiveTable, TouchButton, MobileActions, ResponsiveBadge } from '@/components/ui/responsive-table';
+import { SkeletonTable } from '@/components/ui/skeleton';
+import { ErrorDisplay, EmptyState } from '@/components/ui/error-display';
+import { useToast } from '@/components/ui/toast';
+import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
 import {
   ChevronLeft,
   ChevronRight,
@@ -63,6 +67,8 @@ export function PurchaseHistoryTable({
   isAdmin = false,
 }: PurchaseHistoryTableProps) {
   const router = useRouter();
+  const { success, error: showError } = useToast();
+  const confirmDelete = useDeleteConfirmation();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -184,41 +190,35 @@ export function PurchaseHistoryTable({
     router.push(`/dashboard/purchases/${purchaseId}/edit`);
   };
 
-  const handleDelete = async (purchaseId: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this purchase? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleDelete = (purchaseId: string) => {
+    confirmDelete('purchase', async () => {
+      try {
+        const response = await fetch(`/api/purchases/${purchaseId}`, {
+          method: 'DELETE',
+        });
 
-    try {
-      const response = await fetch(`/api/purchases/${purchaseId}`, {
-        method: 'DELETE',
-      });
+        if (!response.ok) {
+          throw new Error('Failed to delete purchase');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to delete purchase');
+        success('Purchase deleted successfully');
+        fetchPurchases();
+      } catch (error) {
+        console.error('Error deleting purchase:', error);
+        showError('Failed to delete purchase. Please try again.');
       }
-
-      // Refresh the list
-      fetchPurchases();
-    } catch (error) {
-      console.error('Error deleting purchase:', error);
-      alert('Failed to delete purchase');
-    }
+    });
   };
 
   if (loading) {
     return (
       <div className="w-full bg-white rounded-lg shadow-lg dark:bg-slate-900 p-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <span className="ml-2 text-slate-600 dark:text-slate-400">
-            Loading purchase history...
-          </span>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            Purchase History
+          </h2>
         </div>
+        <SkeletonTable rows={5} columns={6} />
       </div>
     );
   }
@@ -226,12 +226,17 @@ export function PurchaseHistoryTable({
   if (error) {
     return (
       <div className="w-full bg-white rounded-lg shadow-lg dark:bg-slate-900 p-6">
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-400">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            <span>{error}</span>
-          </div>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            Purchase History
+          </h2>
         </div>
+        <ErrorDisplay 
+          error={error} 
+          title="Failed to load purchases"
+          showRetry
+          onRetry={fetchPurchases}
+        />
       </div>
     );
   }
