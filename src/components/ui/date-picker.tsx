@@ -32,7 +32,9 @@ export function DatePicker({
           variant={'outline'}
           className={cn(
             'w-full justify-start text-left font-normal',
-            !date && 'text-muted-foreground',
+            !date && 'text-slate-600 dark:text-slate-300',
+            // Enhanced text visibility
+            'text-slate-900 dark:text-slate-100',
             className
           )}
           disabled={disabled}

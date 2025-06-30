@@ -80,9 +80,13 @@ body {
 /* Improved contrast and visibility */
 .dark {
   /* Enhanced dark mode colors for better contrast */
-  --muted-foreground: 0 0% 70%; /* Lighter muted text */
-  --border: 0 0% 20%; /* Lighter borders */
-  --input: 0 0% 20%; /* Lighter input backgrounds */
+  --background: 0 0% 5.9%; /* Slightly lighter background */
+  --foreground: 0 0% 98%; /* Ensure bright white text */
+  --muted-foreground: 0 0% 75%; /* Even lighter muted text */
+  --border: 0 0% 25%; /* Lighter borders */
+  --input: 0 0% 8%; /* Lighter input backgrounds */
+  --popover: 0 0% 8%; /* Lighter popover backgrounds */
+  --card: 0 0% 8%; /* Lighter card backgrounds */
 }
 
 /* Better icon visibility */
@@ -103,17 +107,50 @@ button .lucide {
 
 /* Better dropdown contrast */
 [data-radix-select-content] {
-  background: hsl(var(--popover));
-  border: 1px solid hsl(var(--border));
+  background: hsl(var(--popover)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--popover-foreground)) !important;
 }
 
 [data-radix-select-item] {
-  color: hsl(var(--popover-foreground));
+  color: hsl(var(--popover-foreground)) !important;
 }
 
 [data-radix-select-item][data-highlighted] {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+/* Better input visibility */
+input,
+textarea,
+select {
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--background)) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+  opacity: 0.7;
+}
+
+/* Dark mode specific improvements */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Select trigger and value visibility */
+[data-radix-select-trigger] {
+  color: hsl(var(--foreground)) !important;
+}
+
+[data-radix-select-value] {
+  color: hsl(var(--foreground)) !important;
 }
 
 /* Enhanced focus states */
