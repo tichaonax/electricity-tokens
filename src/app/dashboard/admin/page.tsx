@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { Users, Shield, Settings, FileText } from 'lucide-react';
 
 export default function AdminPanel() {
@@ -32,34 +33,21 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Admin Panel - Electricity Tokens Tracker
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
-                Welcome, {session.user?.name}
-              </span>
-              <span className="text-sm text-gray-500 bg-red-100 px-2 py-1 rounded">
-                ADMIN
-              </span>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <ResponsiveNav 
+        title="Admin Panel" 
+        backPath="/dashboard" 
+        showBackButton={true}
+      >
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="hidden md:inline-flex bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        >
+          Back to Dashboard
+        </button>
+      </ResponsiveNav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Panel</h2>
             <p className="text-gray-600">
@@ -67,7 +55,7 @@ export default function AdminPanel() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* User Management Card */}
             <Card 
               className="hover:shadow-md transition-shadow cursor-pointer"

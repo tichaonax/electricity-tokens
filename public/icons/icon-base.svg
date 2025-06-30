@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="#4f46e5">
+  <rect width="512" height="512" rx="64" fill="#4f46e5"/>
+  <path d="M256 96c-88.4 0-160 71.6-160 160s71.6 160 160 160 160-71.6 160-160S344.4 96 256 96zm-32 256h-32v-32h32v32zm0-64h-32v-96h32v96zm64 64h-32v-32h64l-16-32h-16v-64h32l32 32v64l-32 32h-32z" fill="white"/>
+  <text x="256" y="320" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold">ET</text>
+</svg>

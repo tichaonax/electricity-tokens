@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/session-provider';
 import { CSRFProvider } from '@/components/security/CSRFProvider';
+import { OfflineIndicator } from '@/components/ui/offline-indicator';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -17,6 +18,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Electricity Tokens Tracker',
   description: 'Track and manage electricity usage with token-based billing',
+  manifest: '/manifest.json',
+  themeColor: '#4f46e5',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ET Tracker',
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +41,7 @@ export default function RootLayout({
         <AuthProvider>
           <CSRFProvider>
             {children}
+            <OfflineIndicator />
           </CSRFProvider>
         </AuthProvider>
       </body>

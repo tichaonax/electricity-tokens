@@ -1,9 +1,14 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { ResponsiveNav } from '@/components/ui/responsive-nav';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, TrendingUp, DollarSign, Zap, BarChart3, FileText, Users, Settings, AlertTriangle } from 'lucide-react';
 
 interface QuickStats {
   totalTokensUsed: number;
@@ -55,35 +60,12 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Electricity Tokens Tracker
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
-                Welcome, {session.user?.name}
-              </span>
-              <span className="text-sm text-gray-500">
-                ({session.user?.role})
-              </span>
-              <button
-                onClick={() => signOut()}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <ResponsiveNav title="Electricity Tokens Tracker" />
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-6">
+          {/* Quick Stats Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Token Purchases Card - Only show if user can add purchases */}
             {checkPermission('canAddPurchases') && (
               <div
@@ -506,7 +488,12 @@ export default function Dashboard() {
               </div>
             </div>
             )}
+          </div>
 
+          {/* Main Features Section */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Features & Tools</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {/* Admin Panel Card - Only visible to admins */}
             {isAdmin && (
               <div
@@ -673,6 +660,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>

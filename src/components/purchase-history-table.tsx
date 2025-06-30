@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ResponsiveTable, TouchButton, MobileActions, ResponsiveBadge } from '@/components/ui/responsive-table';
 import {
   ChevronLeft,
   ChevronRight,
@@ -354,8 +355,140 @@ export function PurchaseHistoryTable({
         )}
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Responsive Table */}
+      <ResponsiveTable
+        columns={[
+          {
+            key: 'purchaseDate',
+            label: 'Date',
+            render: (value, row) => (
+              <div>
+                <div className="text-sm font-medium text-slate-900">
+                  {new Date(value).toLocaleDateString()}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {new Date(row.createdAt).toLocaleTimeString()}
+                </div>
+              </div>
+            ),
+          },
+          {
+            key: 'totalTokens',
+            label: 'Tokens',
+            render: (value) => (
+              <span className="text-sm font-medium text-slate-900">
+                {value.toLocaleString()} kWh
+              </span>
+            ),
+          },
+          {
+            key: 'totalPayment',
+            label: 'Amount',
+            render: (value) => (
+              <span className="text-sm font-medium text-slate-900">
+                ${value.toFixed(2)}
+              </span>
+            ),
+          },
+          {
+            key: 'isEmergency',
+            label: 'Type',
+            render: (value) => (
+              <ResponsiveBadge
+                variant={value ? 'destructive' : 'secondary'}
+                className="inline-flex items-center gap-1"
+              >
+                {value && <AlertTriangle className="h-3 w-3" />}
+                {value ? 'Emergency' : 'Regular'}
+              </ResponsiveBadge>
+            ),
+          },
+          {
+            key: 'creator',
+            label: 'Creator',
+            mobileHide: true,
+            render: (value) => (
+              <span className="text-sm text-slate-900">{value?.name || 'Unknown'}</span>
+            ),
+          },
+          {
+            key: '_count',
+            label: 'Contributors',
+            mobileLabel: 'Contributors',
+            render: (value) => (
+              <span className="text-sm text-slate-600">
+                {value?.contributions || 0} users
+              </span>
+            ),
+          },
+          {
+            key: 'actions',
+            label: 'Actions',
+            mobileHide: true,
+            render: (value, row) => (
+              <div className="hidden md:flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/dashboard/purchases/edit/${row.id}`);
+                  }}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(row.id);
+                  }}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ),
+          },
+        ]}
+        data={purchases.map(purchase => ({
+          ...purchase,
+          actions: purchase.id, // Helper for actions column
+          // Add mobile actions
+          mobileActions: (
+            <MobileActions>
+              <TouchButton
+                onClick={() => router.push(`/dashboard/purchases/edit/${purchase.id}`)}
+                variant="secondary"
+                size="sm"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </TouchButton>
+              <TouchButton
+                onClick={() => handleDelete(purchase.id)}
+                variant="danger"
+                size="sm"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete
+              </TouchButton>
+            </MobileActions>
+          ),
+        }))}
+        loading={loading}
+        emptyMessage={
+          showFilters
+            ? 'No purchases found. Try adjusting your filters.'
+            : 'No purchases found. Get started by creating your first purchase.'
+        }
+        onRowClick={(row) => router.push(`/dashboard/purchases/${row.id}`)}
+        className="mt-4"
+      />
+
+      {/* Keep the table for reference but hide it */}
+      <div className="hidden overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50 dark:bg-slate-800">
             <tr>
