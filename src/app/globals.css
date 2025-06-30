@@ -144,6 +144,28 @@ button .lucide {
   opacity: 1;
 }
 
+/* Ensure all labels have proper contrast */
+label {
+  color: hsl(var(--foreground));
+}
+
+/* Form label specific improvements */
+[data-radix-label],
+.form-label,
+label[for] {
+  color: hsl(var(--foreground)) !important;
+  opacity: 1;
+}
+
+/* Better text contrast for form elements */
+.text-slate-500 {
+  color: rgb(100 116 139) !important;
+}
+
+.dark .text-slate-500 {
+  color: rgb(156 163 175) !important;
+}
+
 /* High contrast mode improvements */
 @media (prefers-contrast: high) {
   .dark {

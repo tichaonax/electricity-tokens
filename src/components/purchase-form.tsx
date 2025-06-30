@@ -191,7 +191,7 @@ export function PurchaseForm({
           <FormField>
             <FormLabel htmlFor="totalPayment">Total Payment ($) *</FormLabel>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-600 dark:text-slate-300" />
               <Input
                 id="totalPayment"
                 type="number"
