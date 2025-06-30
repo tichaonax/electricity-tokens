@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer base {
   :root {
@@ -75,4 +75,90 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Improved contrast and visibility */
+.dark {
+  /* Enhanced dark mode colors for better contrast */
+  --muted-foreground: 0 0% 70%; /* Lighter muted text */
+  --border: 0 0% 20%; /* Lighter borders */
+  --input: 0 0% 20%; /* Lighter input backgrounds */
+}
+
+/* Better icon visibility */
+.lucide {
+  color: currentColor;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.lucide:hover {
+  opacity: 1;
+}
+
+/* Improve button icon visibility */
+button .lucide {
+  opacity: 1;
+}
+
+/* Better dropdown contrast */
+[data-radix-select-content] {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+}
+
+[data-radix-select-item] {
+  color: hsl(var(--popover-foreground));
+}
+
+[data-radix-select-item][data-highlighted] {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+/* Enhanced focus states */
+.focus\:ring-2:focus {
+  ring-width: 2px;
+  ring-color: hsl(var(--ring));
+  ring-opacity: 0.8;
+}
+
+/* Better table row hover */
+.hover\:bg-muted\/50:hover {
+  background: hsl(var(--muted) / 0.7);
+}
+
+/* Improved button states */
+.bg-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.bg-secondary:hover {
+  background: hsl(var(--secondary) / 0.8);
+}
+
+/* Better contrast for muted text */
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+  opacity: 1;
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --muted-foreground: 0 0% 85%;
+    --border: 0 0% 30%;
+  }
+
+  .lucide {
+    opacity: 1;
+    stroke-width: 2.5;
+  }
+
+  button {
+    border: 2px solid currentColor;
+  }
 }
