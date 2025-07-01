@@ -571,35 +571,42 @@ export function PurchaseHistoryTable({
             key: 'actions',
             label: 'Actions',
             mobileHide: true,
-            render: (value, row) => (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(row);
-                  }}
-                  disabled={!!row.contribution}
-                  title={row.contribution ? 'Cannot edit: Purchase has a contribution' : 'Edit purchase'}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(row);
-                  }}
-                  disabled={!!row.contribution}
-                  title={row.contribution ? 'Cannot delete: Purchase has a contribution' : 'Delete purchase'}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ),
+            render: (value, row) => {
+              // Only show actions if user is admin or creator of the purchase
+              if (!isAdmin && row.creator.id !== userId) {
+                return null;
+              }
+              
+              return (
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(row);
+                    }}
+                    disabled={!!row.contribution}
+                    title={row.contribution ? 'Cannot edit: Purchase has a contribution' : 'Edit purchase'}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(row);
+                    }}
+                    disabled={!!row.contribution}
+                    title={row.contribution ? 'Cannot delete: Purchase has a contribution' : 'Delete purchase'}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            },
           },
         ]}
         data={purchases.map(purchase => ({
@@ -627,24 +634,29 @@ export function PurchaseHistoryTable({
                   Add Contribution
                 </TouchButton>
               )}
-              <TouchButton
-                onClick={() => handleEdit(purchase)}
-                variant="secondary"
-                size="sm"
-                disabled={!!purchase.contribution}
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Edit {purchase.contribution ? '(Locked)' : ''}
-              </TouchButton>
-              <TouchButton
-                onClick={() => handleDelete(purchase)}
-                variant="danger"
-                size="sm"
-                disabled={!!purchase.contribution}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete {purchase.contribution ? '(Locked)' : ''}
-              </TouchButton>
+              {/* Only show edit/delete if user is admin or creator */}
+              {(isAdmin || purchase.creator.id === userId) && (
+                <>
+                  <TouchButton
+                    onClick={() => handleEdit(purchase)}
+                    variant="secondary"
+                    size="sm"
+                    disabled={!!purchase.contribution}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit {purchase.contribution ? '(Locked)' : ''}
+                  </TouchButton>
+                  <TouchButton
+                    onClick={() => handleDelete(purchase)}
+                    variant="danger"
+                    size="sm"
+                    disabled={!!purchase.contribution}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete {purchase.contribution ? '(Locked)' : ''}
+                  </TouchButton>
+                </>
+              )}
             </MobileActions>
           ),
         }))}

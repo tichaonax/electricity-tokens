@@ -4,8 +4,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { PurchaseHistoryTable } from '@/components/purchase-history-table';
-import { ArrowLeft, History } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ResponsiveNav } from '@/components/ui/responsive-nav';
+import { History } from 'lucide-react';
 
 export default function PurchaseHistoryPage() {
   const { data: session, status } = useSession();
@@ -30,37 +30,12 @@ export default function PurchaseHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <nav className="bg-white shadow dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="flex items-center gap-2">
-                <History className="h-5 w-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                  Purchase History
-                </h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-slate-700 dark:text-slate-300">
-                {session.user?.name}
-              </span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                ({session.user?.role})
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <ResponsiveNav 
+        title="Purchase History" 
+        backPath="/dashboard"
+        showBackButton={true}
+      />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">

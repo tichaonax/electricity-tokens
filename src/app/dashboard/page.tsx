@@ -100,18 +100,9 @@ export default function Dashboard() {
           {/* Quick Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Token Purchases Card - Show to all users */}
-            <div
-              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => {
-                console.log('Purchase History clicked!');
-                try {
-                  router.push('/dashboard/purchases/history');
-                  console.log('Router.push executed');
-                } catch (error) {
-                  console.error('Router error:', error);
-                  window.location.href = '/dashboard/purchases/history';
-                }
-              }}
+            <a
+              href="/dashboard/purchases/history"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block"
               title="View and manage all electricity token purchases with advanced filtering and sorting"
             >
               <div className="p-5">
@@ -152,7 +143,7 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
-            </div>
+            </a>
 
             {/* New Purchase Card - Only show if user can add purchases */}
             {checkPermission('canAddPurchases') && (

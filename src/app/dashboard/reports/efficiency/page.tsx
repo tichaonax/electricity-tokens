@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { CalendarIcon, TrendingUp, Target, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -111,13 +112,21 @@ export default function EfficiencyReportsPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Efficiency Metrics</h1>
-        <p className="text-muted-foreground">
-          Analyze efficiency, optimize purchase timing, and predict future usage patterns.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <ResponsiveNav 
+        title="Efficiency Metrics" 
+        backPath="/dashboard" 
+        showBackButton={true}
+      />
+      
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0 space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">Efficiency Metrics</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Analyze efficiency, optimize purchase timing, and predict future usage patterns.
+            </p>
+          </div>
 
       {/* Controls */}
       <Card>
@@ -220,6 +229,8 @@ export default function EfficiencyReportsPage() {
           {renderChart()}
         </CardContent>
       </Card>
+        </div>
+      </main>
     </div>
   );
 }
