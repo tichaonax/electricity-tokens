@@ -104,7 +104,13 @@ export default function Dashboard() {
               className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => {
                 console.log('Purchase History clicked!');
-                window.location.href = '/dashboard/purchases/history';
+                try {
+                  router.push('/dashboard/purchases/history');
+                  console.log('Router.push executed');
+                } catch (error) {
+                  console.error('Router error:', error);
+                  window.location.href = '/dashboard/purchases/history';
+                }
               }}
               title="View and manage all electricity token purchases with advanced filtering and sorting"
             >
@@ -141,9 +147,9 @@ export default function Dashboard() {
               </div>
               <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-blue-700 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                  <span className="font-medium text-blue-700 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                     View purchase history with filters
-                  </a>
+                  </span>
                 </div>
               </div>
             </div>
