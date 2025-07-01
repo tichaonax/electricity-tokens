@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 401 }
@@ -60,12 +60,14 @@ export async function POST(request: NextRequest) {
         
         const tokens = Math.floor(Math.random() * 800) + 200; // 200-1000 tokens
         const totalPayment = tokens * costPerToken;
+        const initialMeterReading = Math.floor(Math.random() * 5000) + 5000; // Random initial meter reading 5000-10000
         
         const purchase = await prisma.tokenPurchase.create({
           data: {
             purchaseDate: actualDate,
             totalTokens: tokens,
             totalPayment: Math.round(totalPayment * 100) / 100, // Round to 2 decimal places
+            meterReading: initialMeterReading, // New field: initial meter reading
             isEmergency,
             createdBy: users[Math.floor(Math.random() * users.length)].id,
           }
@@ -73,33 +75,26 @@ export async function POST(request: NextRequest) {
         
         purchases.push(purchase);
         
-        // Create user contributions for this purchase
-        const numContributors = Math.floor(Math.random() * users.length) + 1;
-        const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
-        let remainingTokens = tokens;
-        
-        for (let j = 0; j < numContributors && remainingTokens > 0; j++) {
-          const isLastContributor = j === numContributors - 1;
-          const maxTokens = isLastContributor ? remainingTokens : Math.floor(remainingTokens * 0.7);
-          const tokensConsumed = Math.min(
-            Math.floor(Math.random() * maxTokens) + 10,
-            remainingTokens
-          );
+        // Create ONE user contribution for this purchase (new business rule)
+        // 80% of purchases get contributions immediately, 20% remain without contributions
+        if (Math.random() < 0.8) {
+          const contributingUser = users[Math.floor(Math.random() * users.length)];
+          
+          // Calculate realistic electricity consumption
+          const tokensConsumed = Math.floor(Math.random() * (tokens * 0.8)) + Math.floor(tokens * 0.1); // 10% to 90% of available tokens
+          const currentMeterReading = initialMeterReading + tokensConsumed + Math.floor(Math.random() * 20); // Slight variance for realism
           
           const contributionAmount = tokensConsumed * costPerToken * (0.9 + Math.random() * 0.2); // ±10% variation in contribution
-          const meterReading = Math.floor(Math.random() * 1000) + 5000; // Random meter reading
           
           await prisma.userContribution.create({
             data: {
-              userId: shuffledUsers[j].id,
+              userId: contributingUser.id,
               purchaseId: purchase.id,
               contributionAmount: Math.round(contributionAmount * 100) / 100,
               tokensConsumed,
-              meterReading,
+              meterReading: currentMeterReading, // Current meter reading
             }
           });
-          
-          remainingTokens -= tokensConsumed;
         }
       }
     }

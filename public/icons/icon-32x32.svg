@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="4" fill="#4f46e5"/>
+  <circle cx="16" cy="16" r="10.666666666666666" fill="white" opacity="0.2"/>
+  <path d="M9.6 12.8h12.8v3.2h-12.8z" fill="white"/>
+  <path d="M9.6 16h6.4v3.2h-6.4z" fill="white"/>
+  <circle cx="19.2" cy="19.2" r="1.6" fill="#fbbf24"/>
+  <text x="16" y="25.6" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="4.8" font-weight="bold">ET</text>
+</svg>

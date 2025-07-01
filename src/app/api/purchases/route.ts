@@ -12,7 +12,9 @@ import {
   createValidationErrorResponse,
   sanitizeInput,
   checkPermissions,
+  validateBusinessRules,
 } from '@/lib/validation-middleware';
+import { validateMeterReadingChronology } from '@/lib/meter-reading-validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,6 +49,7 @@ export async function GET(request: NextRequest) {
         isEmergency?: boolean;
         startDate?: string;
         endDate?: string;
+        before?: string;
         sortBy?: 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'creator';
         sortDirection?: 'asc' | 'desc';
       };
@@ -57,6 +60,7 @@ export async function GET(request: NextRequest) {
       isEmergency,
       startDate,
       endDate,
+      before,
       sortBy = 'purchaseDate',
       sortDirection = 'desc',
     } = query || {};
@@ -74,6 +78,11 @@ export async function GET(request: NextRequest) {
       where.purchaseDate = {
         gte: new Date(startDate),
         lte: new Date(endDate),
+      };
+    } else if (before) {
+      // Find purchases before a specific date (for previous purchase lookup)
+      where.purchaseDate = {
+        lt: new Date(before),
       };
     }
 
@@ -114,7 +123,7 @@ export async function GET(request: NextRequest) {
               email: true,
             },
           },
-          contributions: {
+          contribution: {
             include: {
               user: {
                 select: {
@@ -181,6 +190,7 @@ export async function POST(request: NextRequest) {
       body: {
         totalTokens: number;
         totalPayment: number;
+        meterReading: number;
         purchaseDate: string | Date;
         isEmergency?: boolean;
       };
@@ -189,19 +199,55 @@ export async function POST(request: NextRequest) {
     const {
       totalTokens,
       totalPayment,
+      meterReading,
       purchaseDate,
       isEmergency = false,
     } = sanitizedData as {
       totalTokens: number;
       totalPayment: number;
+      meterReading: number;
       purchaseDate: string | Date;
       isEmergency: boolean;
     };
+
+    // Validate meter reading chronology
+    const purchaseDateObj = new Date(purchaseDate);
+    const meterValidation = await validateMeterReadingChronology(
+      meterReading,
+      purchaseDateObj,
+      'purchase'
+    );
+    
+    if (!meterValidation.valid) {
+      return NextResponse.json(
+        { message: meterValidation.error || 'Invalid meter reading' },
+        { status: 400 }
+      );
+    }
+
+    // Validate sequential purchase-contribution order (constraint 1)
+    const sequentialValidation = await validateBusinessRules(
+      {
+        checkSequentialPurchaseOrder: {
+          purchaseDate: purchaseDateObj,
+          bypassAdmin: permissionCheck.user!.role === 'ADMIN', // Admin can bypass
+        },
+      },
+      prisma
+    );
+
+    if (!sequentialValidation.success) {
+      return NextResponse.json(
+        { message: sequentialValidation.error },
+        { status: 400 }
+      );
+    }
 
     const purchase = await prisma.tokenPurchase.create({
       data: {
         totalTokens: parseFloat(totalTokens.toString()),
         totalPayment: parseFloat(totalPayment.toString()),
+        meterReading: parseFloat(meterReading.toString()),
         purchaseDate: new Date(purchaseDate),
         isEmergency: Boolean(isEmergency),
         createdBy: permissionCheck.user!.id,

@@ -298,7 +298,7 @@ export function MonthlyCostChart({ startDate, endDate }: MonthlyCostChartProps) 
         </div>
         <div className="flex gap-2">
           <Button
-            variant={chartType === 'line' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartType('line')}
           >
@@ -306,7 +306,7 @@ export function MonthlyCostChart({ startDate, endDate }: MonthlyCostChartProps) 
             Line Chart
           </Button>
           <Button
-            variant={chartType === 'bar' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartType('bar')}
           >

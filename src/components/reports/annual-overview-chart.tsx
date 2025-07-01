@@ -129,7 +129,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
     );
   }
 
-  if (!data) {
+  if (!data || !data.summary || !data.emergencyAnalysis || !data.monthlyBreakdown) {
     return (
       <div className="text-center py-8">
         <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
@@ -154,14 +154,14 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
     datasets: [
       {
         label: 'Monthly Spending ($)',
-        data: data.monthlyBreakdown.map(item => item.spent),
+        data: data.monthlyBreakdown.map(item => item.spent || 0),
         borderColor: 'rgb(34, 197, 94)',
         backgroundColor: 'rgba(34, 197, 94, 0.1)',
         tension: 0.1,
       },
       {
         label: 'Monthly Contributions ($)',
-        data: data.monthlyBreakdown.map(item => item.contributions),
+        data: data.monthlyBreakdown.map(item => item.contributions || 0),
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.1,
@@ -174,7 +174,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
     datasets: [
       {
         label: 'Tokens Purchased',
-        data: data.monthlyBreakdown.map(item => item.tokens),
+        data: data.monthlyBreakdown.map(item => item.tokens || 0),
         backgroundColor: 'rgba(168, 85, 247, 0.8)',
       },
     ],
@@ -184,7 +184,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
     labels: ['Regular Spending', 'Emergency Spending'],
     datasets: [
       {
-        data: [data.emergencyAnalysis.regularSpent, data.emergencyAnalysis.emergencySpent],
+        data: [data.emergencyAnalysis.regularSpent || 0, data.emergencyAnalysis.emergencySpent || 0],
         backgroundColor: [
           'rgba(34, 197, 94, 0.8)',
           'rgba(239, 68, 68, 0.8)',
@@ -204,10 +204,10 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
       {
         label: 'Performance Metrics (%)',
         data: [
-          data.summary.utilizationRate,
-          data.emergencyAnalysis.emergencyPercentage,
-          data.summary.overpayment > 0 ? 
-            ((data.summary.totalContributions - data.summary.overpayment) / data.summary.totalContributions * 100) : 
+          data.summary.utilizationRate || 0,
+          data.emergencyAnalysis.emergencyPercentage || 0,
+          (data.summary.overpayment || 0) > 0 ? 
+            (((data.summary.totalContributions || 0) - (data.summary.overpayment || 0)) / (data.summary.totalContributions || 1) * 100) : 
             100
         ],
         backgroundColor: [
@@ -356,7 +356,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
         </div>
         <div className="flex gap-2">
           <Button
-            variant={chartView === 'monthly' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartView('monthly')}
           >
@@ -364,7 +364,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
             Monthly
           </Button>
           <Button
-            variant={chartView === 'emergency' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartView('emergency')}
           >
@@ -372,7 +372,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
             Emergency
           </Button>
           <Button
-            variant={chartView === 'summary' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartView('summary')}
           >
@@ -386,7 +386,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-900 dark:text-green-100">
-            ${data.summary.totalSpent.toFixed(2)}
+            ${(data.summary.totalSpent || 0).toFixed(2)}
           </div>
           <div className="text-sm text-green-700 dark:text-green-300">Total Spent</div>
         </div>
@@ -398,13 +398,13 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
         </div>
         <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
           <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-            {data.summary.utilizationRate.toFixed(1)}%
+            {(data.summary.utilizationRate || 0).toFixed(1)}%
           </div>
           <div className="text-sm text-purple-700 dark:text-purple-300">Utilization Rate</div>
         </div>
         <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg">
           <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-            ${data.summary.averageCostPerToken.toFixed(4)}
+            ${(data.summary.averageCostPerToken || 0).toFixed(4)}
           </div>
           <div className="text-sm text-orange-700 dark:text-orange-300">Avg Cost/Token</div>
         </div>
@@ -425,13 +425,13 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
             <div className="flex justify-between items-center">
               <span className="text-slate-600 dark:text-slate-400">Emergency Spending:</span>
               <span className="font-medium text-red-600">
-                ${data.emergencyAnalysis.emergencySpent.toFixed(2)}
+                ${(data.emergencyAnalysis.emergencySpent || 0).toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-600 dark:text-slate-400">Emergency Rate:</span>
               <span className="font-medium">
-                {data.emergencyAnalysis.emergencyPercentage.toFixed(1)}%
+                {(data.emergencyAnalysis.emergencyPercentage || 0).toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -443,7 +443,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
             <div className="flex justify-between items-center pt-2 border-t">
               <span className="text-slate-600 dark:text-slate-400">Premium Paid:</span>
               <span className="font-medium text-red-600">
-                ${data.emergencyAnalysis.emergencyPremium.toFixed(2)}
+                ${(data.emergencyAnalysis.emergencyPremium || 0).toFixed(2)}
               </span>
             </div>
           </div>
@@ -459,7 +459,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
             <div className="flex justify-between items-center">
               <span className="text-slate-600 dark:text-slate-400">Total Contributions:</span>
               <span className="font-medium text-blue-600">
-                ${data.summary.totalContributions.toFixed(2)}
+                ${(data.summary.totalContributions || 0).toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -470,14 +470,14 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-600 dark:text-slate-400">Token Utilization:</span>
-              <span className={`font-medium ${data.summary.utilizationRate > 85 ? 'text-green-600' : 'text-orange-600'}`}>
-                {data.summary.utilizationRate.toFixed(1)}%
+              <span className={`font-medium ${(data.summary.utilizationRate || 0) > 85 ? 'text-green-600' : 'text-orange-600'}`}>
+                {(data.summary.utilizationRate || 0).toFixed(1)}%
               </span>
             </div>
             <div className="flex justify-between items-center pt-2 border-t">
               <span className="text-slate-600 dark:text-slate-400">Net Overpayment:</span>
-              <span className={`font-medium ${data.summary.overpayment > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {data.summary.overpayment >= 0 ? '+' : ''}${data.summary.overpayment.toFixed(2)}
+              <span className={`font-medium ${(data.summary.overpayment || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {(data.summary.overpayment || 0) >= 0 ? '+' : ''}${(data.summary.overpayment || 0).toFixed(2)}
               </span>
             </div>
           </div>
@@ -517,7 +517,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
             </thead>
             <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
               {data.monthlyBreakdown.map((month, index) => {
-                const balance = month.contributions - month.spent;
+                const balance = (month.contributions || 0) - (month.spent || 0);
                 const monthDate = new Date(month.month + '-01');
                 const monthName = monthDate.toLocaleDateString('en-US', { 
                   year: 'numeric', 
@@ -530,10 +530,10 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
                       {monthName}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                      ${month.spent.toFixed(2)}
+                      ${(month.spent || 0).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                      ${month.contributions.toFixed(2)}
+                      ${(month.contributions || 0).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                       {month.tokens.toLocaleString()}
@@ -543,7 +543,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span className={balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        {balance >= 0 ? '+' : ''}${balance.toFixed(2)}
+                        {balance >= 0 ? '+' : ''}${(balance || 0).toFixed(2)}
                       </span>
                     </td>
                   </tr>

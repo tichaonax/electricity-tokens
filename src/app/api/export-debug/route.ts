@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
-        contributions: {
+        contribution: {
           include: {
             user: {
               select: {
@@ -40,14 +40,12 @@ export async function GET(request: NextRequest) {
     console.log('Found purchases:', purchases.length);
 
     const data = purchases.map((purchase) => {
-      const totalContributions = purchase.contributions.reduce(
-        (sum, c) => sum + c.contributionAmount,
-        0
-      );
-      const totalTokensConsumed = purchase.contributions.reduce(
-        (sum, c) => sum + c.tokensConsumed,
-        0
-      );
+      const totalContributions = purchase.contribution
+        ? purchase.contribution.contributionAmount
+        : 0;
+      const totalTokensConsumed = purchase.contribution
+        ? purchase.contribution.tokensConsumed
+        : 0;
 
       return {
         id: purchase.id,
@@ -58,7 +56,7 @@ export async function GET(request: NextRequest) {
         isEmergency: purchase.isEmergency ? 'Yes' : 'No',
         createdBy: purchase.creator.name,
         createdByEmail: purchase.creator.email,
-        contributionCount: purchase.contributions.length,
+        contributionCount: purchase.contribution.length,
         totalContributions: totalContributions,
         totalTokensConsumed: totalTokensConsumed,
         tokensRemaining: purchase.totalTokens - totalTokensConsumed,

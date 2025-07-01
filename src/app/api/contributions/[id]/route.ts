@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { validateBusinessRules } from '@/lib/validation-middleware';
 import type { UpdateData } from '@/types/api';
 
 export async function GET(
@@ -31,6 +32,7 @@ export async function GET(
             id: true,
             totalTokens: true,
             totalPayment: true,
+            meterReading: true,
             purchaseDate: true,
             isEmergency: true,
           },
@@ -138,21 +140,21 @@ export async function PUT(
         );
       }
 
-      // Validate that updated tokens consumed doesn't exceed available tokens
-      const otherContributions = await prisma.userContribution.aggregate({
-        where: {
-          purchaseId: existingContribution.purchaseId,
-          id: { not: id },
+      // Validate business rules for token consumption
+      const businessRulesValidation = await validateBusinessRules(
+        {
+          checkTokenAvailability: {
+            purchaseId: existingContribution.purchaseId,
+            requestedTokens: tokensConsumed,
+            excludeContributionId: id, // Exclude current contribution from availability check
+          },
         },
-        _sum: { tokensConsumed: true },
-      });
+        prisma
+      );
 
-      const totalConsumed =
-        (otherContributions._sum.tokensConsumed || 0) + tokensConsumed;
-
-      if (totalConsumed > existingContribution.purchase.totalTokens) {
+      if (!businessRulesValidation.success) {
         return NextResponse.json(
-          { message: 'Total tokens consumed cannot exceed available tokens' },
+          { message: businessRulesValidation.error },
           { status: 400 }
         );
       }
@@ -176,6 +178,7 @@ export async function PUT(
             id: true,
             totalTokens: true,
             totalPayment: true,
+            meterReading: true,
             purchaseDate: true,
             isEmergency: true,
           },

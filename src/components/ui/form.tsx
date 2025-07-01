@@ -26,8 +26,8 @@ const FormLabel = React.forwardRef<
     ref={ref}
     className={cn(
       'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-      // Enhanced contrast for better visibility
-      'text-slate-900 dark:text-slate-100',
+      // High contrast dark mode - pure white text with important overrides
+      'text-slate-900 dark:!text-white dark:!opacity-100 high-contrast:!text-white high-contrast:!opacity-100',
       className
     )}
     {...props}
@@ -65,8 +65,8 @@ const FormDescription = React.forwardRef<
   <p
     ref={ref}
     className={cn(
-      'text-sm text-slate-600 dark:text-slate-300',
-      // Better contrast than the default muted colors
+      'text-sm text-slate-600 dark:text-slate-200',
+      // High contrast for better visibility
       className
     )}
     {...props}

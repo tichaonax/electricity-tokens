@@ -236,6 +236,7 @@ export function DataBackup() {
           <Button
             onClick={handleBackup}
             disabled={loading}
+            variant="outline"
             className="flex items-center gap-2"
           >
             {loading ? (
@@ -307,7 +308,7 @@ export function DataBackup() {
                   >
                     Choose Different File
                   </Button>
-                  <Button onClick={handleRestore} disabled={loading}>
+                  <Button onClick={handleRestore} disabled={loading} variant="outline">
                     {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -333,6 +334,7 @@ export function DataBackup() {
                 </p>
                 <Button
                   onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
                   className="mt-4"
                 >
                   <Upload className="h-4 w-4 mr-2" />

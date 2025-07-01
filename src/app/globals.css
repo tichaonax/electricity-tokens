@@ -79,14 +79,16 @@ body {
 
 /* Improved contrast and visibility */
 .dark {
-  /* Enhanced dark mode colors for better contrast */
-  --background: 0 0% 5.9%; /* Slightly lighter background */
-  --foreground: 0 0% 98%; /* Ensure bright white text */
-  --muted-foreground: 0 0% 75%; /* Even lighter muted text */
-  --border: 0 0% 25%; /* Lighter borders */
-  --input: 0 0% 8%; /* Lighter input backgrounds */
-  --popover: 0 0% 8%; /* Lighter popover backgrounds */
-  --card: 0 0% 8%; /* Lighter card backgrounds */
+  /* High contrast dark mode - white on black */
+  --background: 0 0% 0%; /* Pure black background */
+  --foreground: 0 0% 100%; /* Pure white text */
+  --muted-foreground: 0 0% 85%; /* Light gray for muted text */
+  --border: 0 0% 40%; /* Lighter borders for visibility */
+  --input: 0 0% 0%; /* Pure black input backgrounds */
+  --popover: 0 0% 0%; /* Pure black popover backgrounds */
+  --card: 0 0% 3%; /* Very dark card backgrounds */
+  --secondary: 0 0% 10%; /* Dark secondary backgrounds */
+  --accent: 0 0% 15%; /* Dark accent backgrounds */
 }
 
 /* Better icon visibility */
@@ -105,20 +107,96 @@ button .lucide {
   opacity: 1;
 }
 
+/* Ensure dollar sign icon is visible in dark mode */
+.dark .lucide {
+  color: white;
+  opacity: 0.8;
+}
+
 /* Better dropdown contrast */
 [data-radix-select-content] {
   background: hsl(var(--popover)) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  color: hsl(var(--popover-foreground)) !important;
+  border: 2px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 [data-radix-select-item] {
-  color: hsl(var(--popover-foreground)) !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 [data-radix-select-item][data-highlighted] {
   background: hsl(var(--accent)) !important;
-  color: hsl(var(--accent-foreground)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Dark mode dropdown enhancements */
+.dark [data-radix-select-content] {
+  background: hsl(0 0% 5%) !important; /* Very dark background */
+  border: 2px solid hsl(0 0% 30%) !important; /* Visible border */
+  color: hsl(0 0% 100%) !important; /* White text */
+}
+
+.dark [data-radix-select-item] {
+  color: hsl(0 0% 100%) !important; /* White text for options */
+}
+
+.dark [data-radix-select-item][data-highlighted] {
+  background: hsl(0 0% 20%) !important; /* Darker highlight */
+  color: hsl(0 0% 100%) !important; /* White text on highlight */
+}
+
+.dark [data-radix-select-trigger] {
+  background: hsl(0 0% 5%) !important; /* Dark background */
+  color: hsl(0 0% 100%) !important; /* White text */
+  border-color: hsl(0 0% 30%) !important; /* Visible border */
+}
+
+.dark [data-radix-select-value] {
+  color: hsl(0 0% 100%) !important; /* White text for selected value */
+}
+
+/* DatePicker and Calendar dark mode enhancements */
+.dark [data-radix-popover-content] {
+  background: hsl(0 0% 5%) !important; /* Dark background for calendar */
+  border: 2px solid hsl(0 0% 30%) !important; /* Visible border */
+  color: hsl(0 0% 100%) !important; /* White text */
+}
+
+.dark .rdp {
+  color: hsl(0 0% 100%) !important; /* White text for calendar */
+}
+
+.dark .rdp-day {
+  color: hsl(0 0% 100%) !important; /* White text for days */
+}
+
+.dark .rdp-day:hover {
+  background: hsl(0 0% 20%) !important; /* Dark hover background */
+  color: hsl(0 0% 100%) !important; /* White text on hover */
+}
+
+.dark .rdp-day_selected {
+  background: hsl(0 0% 30%) !important; /* Selected day background */
+  color: hsl(0 0% 100%) !important; /* White text for selected day */
+}
+
+.dark .rdp-caption_label {
+  color: hsl(0 0% 100%) !important; /* White month/year text */
+}
+
+.dark .rdp-head_cell {
+  color: hsl(0 0% 85%) !important; /* Light gray for day headers */
+}
+
+/* Button styling in dark mode */
+.dark button {
+  color: hsl(0 0% 100%) !important; /* White text for buttons */
+}
+
+.dark button[data-variant="outline"] {
+  background: hsl(0 0% 5%) !important; /* Dark background for outline buttons */
+  border-color: hsl(0 0% 30%) !important; /* Visible border */
+  color: hsl(0 0% 100%) !important; /* White text */
 }
 
 /* Better input visibility */
@@ -126,22 +204,44 @@ input,
 textarea,
 select {
   color: hsl(var(--foreground)) !important;
-  background-color: hsl(var(--background)) !important;
+  background-color: hsl(var(--input)) !important;
+  border-color: hsl(var(--border)) !important;
 }
 
 input::placeholder,
 textarea::placeholder {
   color: hsl(var(--muted-foreground)) !important;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
-/* Dark mode specific improvements */
+/* Dark mode specific improvements - White text on black backgrounds */
 .dark input,
 .dark textarea,
-.dark select {
-  background-color: hsl(var(--background)) !important;
-  color: hsl(var(--foreground)) !important;
-  border-color: hsl(var(--border)) !important;
+.dark select,
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  background-color: hsl(0 0% 0%) !important; /* Pure black background */
+  color: hsl(0 0% 100%) !important; /* Pure white text */
+  border-color: hsl(0 0% 40%) !important; /* Visible borders */
+}
+
+/* Specific styling for purchase form inputs */
+.dark #totalTokens,
+.dark #totalPayment,
+.dark input[type="number"],
+.high-contrast #totalTokens,
+.high-contrast #totalPayment,
+.high-contrast input[type="number"] {
+  background-color: black !important;
+  color: white !important;
+  border-color: rgb(100, 116, 139) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: hsl(0 0% 85%) !important; /* Light gray placeholders */
+  opacity: 0.8;
 }
 
 /* Select trigger and value visibility */
@@ -186,12 +286,40 @@ label {
   color: hsl(var(--foreground));
 }
 
-/* Form label specific improvements */
-[data-radix-label],
-.form-label,
-label[for] {
-  color: hsl(var(--foreground)) !important;
-  opacity: 1;
+/* Form label specific improvements - SIMPLIFIED */
+.dark label,
+.dark [data-radix-label],
+.high-contrast label,
+.high-contrast [data-radix-label] {
+  color: white !important;
+  opacity: 1 !important;
+}
+
+/* Extra specificity for stubborn labels */
+.dark label[for="totalTokens"],
+.dark label[for="totalPayment"],
+.high-contrast label[for="totalTokens"],
+.high-contrast label[for="totalPayment"] {
+  color: white !important;
+  font-weight: 500 !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Universal dark mode label fix */
+html.dark label,
+html.dark [data-radix-label],
+body.dark label,
+body.dark [data-radix-label],
+.dark label,
+.dark [data-radix-label],
+html.high-contrast label,
+html.high-contrast [data-radix-label],
+body.high-contrast label,
+body.high-contrast [data-radix-label],
+.high-contrast label,
+.high-contrast [data-radix-label] {
+  color: rgb(255, 255, 255) !important;
 }
 
 /* Better text contrast for form elements */

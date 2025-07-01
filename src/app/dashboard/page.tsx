@@ -61,19 +61,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <ResponsiveNav title="Electricity Tokens Tracker" />
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Welcome Section */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Welcome back, {session?.user?.name}!
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Track your electricity usage and manage your token contributions
                 </p>
               </div>
@@ -103,7 +103,7 @@ export default function Dashboard() {
             {checkPermission('canAddPurchases') && (
               <Tooltip content="View and manage all electricity token purchases with advanced filtering and sorting">
                 <div
-                  className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                  className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => router.push('/dashboard/purchases/history')}
                 >
               <div className="p-5">
@@ -127,19 +127,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         Purchase History
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         View & Manage
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-blue-700 hover:text-blue-900">
+                  <a className="font-medium text-blue-700 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                     View purchase history with filters
                   </a>
                 </div>
@@ -151,7 +151,7 @@ export default function Dashboard() {
             {/* New Purchase Card - Only show if user can add purchases */}
             {checkPermission('canAddPurchases') && (
             <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/purchases/new')}
             >
               <div className="p-5">
@@ -175,19 +175,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         New Purchase
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Add Tokens
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-green-700 hover:text-green-900">
+                  <a className="font-medium text-green-700 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
                     Create new purchase
                   </a>
                 </div>
@@ -198,7 +198,7 @@ export default function Dashboard() {
             {/* User Contributions Card - Only show if user can add contributions */}
             {checkPermission('canAddContributions') && (
               <div
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => router.push('/dashboard/contributions')}
               >
               <div className="p-5">
@@ -222,19 +222,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         User Contributions
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Track Usage
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-purple-700 hover:text-purple-900">
+                  <a className="font-medium text-purple-700 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300">
                     View contributions
                   </a>
                 </div>
@@ -245,7 +245,7 @@ export default function Dashboard() {
             {/* Cost Analysis Card */}
             {checkPermission('canViewCostAnalysis') && (
             <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/cost-analysis')}
             >
               <div className="p-5">
@@ -269,19 +269,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         Cost Analysis
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         View Insights
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-orange-700 hover:text-orange-900">
+                  <a className="font-medium text-orange-700 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300">
                     Analyze costs & get recommendations
                   </a>
                 </div>
@@ -292,7 +292,7 @@ export default function Dashboard() {
             {/* Personal Dashboard Card */}
             {checkPermission('canViewPersonalDashboard') && (
             <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/personal')}
             >
               <div className="p-5">
@@ -316,19 +316,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         Personal Dashboard
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Your Overview
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-teal-700 hover:text-teal-900">
+                  <a className="font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-300">
                     View personal usage & trends
                   </a>
                 </div>
@@ -339,7 +339,7 @@ export default function Dashboard() {
             {/* Data Management Card */}
             {checkPermission('canExportData') && (
             <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/data-management')}
             >
               <div className="p-5">
@@ -363,19 +363,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         Data Management
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Export & Import
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-indigo-700 hover:text-indigo-900">
+                  <a className="font-medium text-indigo-700 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
                     Export data & bulk import
                   </a>
                 </div>
@@ -386,7 +386,7 @@ export default function Dashboard() {
             {/* Usage Reports Card */}
             {checkPermission('canViewUsageReports') && (
             <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/reports/usage')}
             >
               <div className="p-5">
@@ -410,19 +410,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         Usage Reports
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Analytics & Charts
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-red-700 hover:text-red-900">
+                  <a className="font-medium text-red-700 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
                     View usage trends & cost analysis
                   </a>
                 </div>
@@ -433,7 +433,7 @@ export default function Dashboard() {
             {/* Financial Reports Card */}
             {checkPermission('canViewFinancialReports') && (
             <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/reports/financial')}
             >
               <div className="p-5">
@@ -457,19 +457,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         Financial Reports
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Cost & Balance Analysis
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-green-700 hover:text-green-900">
+                  <a className="font-medium text-green-700 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
                     View financial summaries & balances
                   </a>
                 </div>
@@ -480,7 +480,7 @@ export default function Dashboard() {
             {/* Efficiency Metrics Card */}
             {checkPermission('canViewEfficiencyReports') && (
             <div
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/reports/efficiency')}
             >
               <div className="p-5">
@@ -504,19 +504,19 @@ export default function Dashboard() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                         Efficiency Metrics
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">
+                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Optimization & Predictions
                       </dd>
                     </dl>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-5 py-3">
+              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
                 <div className="text-sm">
-                  <a className="font-medium text-purple-700 hover:text-purple-900">
+                  <a className="font-medium text-purple-700 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300">
                     Analyze efficiency & get predictions
                   </a>
                 </div>
@@ -527,12 +527,12 @@ export default function Dashboard() {
 
           {/* Main Features Section */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Features & Tools</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Features & Tools</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {/* Admin Panel Card - Only visible to admins */}
             {isAdmin && (
               <div
-                className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200"
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200 dark:border-red-800"
                 onClick={() => router.push('/dashboard/admin')}
               >
                 <div className="p-5">
@@ -556,19 +556,19 @@ export default function Dashboard() {
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
+                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                           Admin Panel
                         </dt>
-                        <dd className="text-lg font-medium text-gray-900">
+                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                           System Management
                         </dd>
                       </dl>
                     </div>
                   </div>
                 </div>
-                <div className="bg-red-50 px-5 py-3">
+                <div className="bg-red-50 dark:bg-red-900/20 px-5 py-3">
                   <div className="text-sm">
-                    <a className="font-medium text-red-700 hover:text-red-900">
+                    <a className="font-medium text-red-700 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
                       Manage users, settings & security
                     </a>
                   </div>
@@ -579,11 +579,11 @@ export default function Dashboard() {
 
           {/* Quick Stats */}
           <div className="mt-8">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
               Quick Stats
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -605,10 +605,10 @@ export default function Dashboard() {
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
+                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                           Total Tokens
                         </dt>
-                        <dd className="text-lg font-medium text-gray-900">
+                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                           {loadingStats
                             ? '...'
                             : quickStats?.totalTokensUsed.toLocaleString() ||
@@ -620,7 +620,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -642,10 +642,10 @@ export default function Dashboard() {
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
+                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                           Total Spent
                         </dt>
-                        <dd className="text-lg font-medium text-gray-900">
+                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                           {loadingStats
                             ? '...'
                             : quickStats
@@ -658,7 +658,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -680,10 +680,10 @@ export default function Dashboard() {
                     </div>
                     <div className="ml-5 w-0 flex-1">
                       <dl>
-                        <dt className="text-sm font-medium text-gray-500 truncate">
+                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                           Average Cost/Token
                         </dt>
-                        <dd className="text-lg font-medium text-gray-900">
+                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                           {loadingStats
                             ? '...'
                             : quickStats

@@ -107,7 +107,7 @@ async function getMonthlyUsageTrends(startDate?: string, endDate?: string) {
   const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
-      contributions: {
+      contribution: {
         include: {
           user: {
             select: { name: true, email: true }
@@ -136,10 +136,8 @@ async function getMonthlyUsageTrends(startDate?: string, endDate?: string) {
 
     acc[monthKey].totalTokensPurchased += purchase.totalTokens;
     acc[monthKey].totalPayment += purchase.totalPayment;
-    acc[monthKey].totalTokensConsumed += purchase.contributions.reduce(
-      (sum, c) => sum + c.tokensConsumed, 0
-    );
-    acc[monthKey].contributionCount += purchase.contributions.length;
+    acc[monthKey].totalTokensConsumed += purchase.contribution ? purchase.contribution.tokensConsumed : 0;
+    acc[monthKey].contributionCount += purchase.contribution ? 1 : 0;
     
     if (purchase.isEmergency) {
       acc[monthKey].emergencyPurchases += 1;
@@ -320,7 +318,7 @@ async function getEmergencyPurchaseImpact(startDate?: string, endDate?: string) 
   const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
-      contributions: true
+      contribution: true
     },
     orderBy: { purchaseDate: 'asc' }
   });
@@ -349,8 +347,8 @@ async function getEmergencyPurchaseImpact(startDate?: string, endDate?: string) 
       premium,
       premiumCost,
       premiumPercentage,
-      utilizationRate: purchase.contributions.length > 0 
-        ? (purchase.contributions.reduce((sum, c) => sum + c.tokensConsumed, 0) / purchase.totalTokens * 100)
+      utilizationRate: purchase.contribution 
+        ? (purchase.contribution.tokensConsumed / purchase.totalTokens * 100)
         : 0,
     };
   });

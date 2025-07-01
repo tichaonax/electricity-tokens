@@ -248,7 +248,7 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
         </div>
         <div className="flex gap-2">
           <Button
-            variant={chartType === 'line' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartType('line')}
           >
@@ -256,7 +256,7 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
             Line Chart
           </Button>
           <Button
-            variant={chartType === 'bar' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartType('bar')}
           >

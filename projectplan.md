@@ -277,6 +277,166 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - [ ] Bug reporting system
 - [ ] Long-term maintenance strategy
 
+## 🔒 Business Rules and Constraints
+
+### Critical Business Rules Implemented ✅
+
+#### 1. Token Purchase Constraints ✅
+- **Mandatory Meter Reading**: Every Token Purchase MUST have a meter reading > 0
+- **Positive Values Only**: Total tokens and total payment must be positive numbers  
+- **Maximum Limits**: 
+  - Total tokens cannot exceed 100,000 kWh
+  - Total payment cannot exceed $1,000,000
+  - Meter reading cannot exceed 1,000,000 kWh
+- **Emergency Purchase Flagging**: Clear identification of higher-rate emergency purchases
+
+#### 2. Meter Reading Chronological Constraints ✅
+- **Chronological Order**: Meter readings must follow chronological order based on purchase dates
+- **No Backwards Movement**: Later purchases cannot have meter readings lower than earlier ones
+- **Real-time Validation**: API validation with suggestions for minimum required readings
+- **Chronology Enforcement**: Server-side validation prevents out-of-order meter readings
+
+#### 3. User Contribution Constraints ✅
+- **One Contribution Per Purchase**: Only ONE contribution allowed per token purchase (major business rule)
+- **Auto-Select Current User**: Removed admin ability to select different users for contributions
+- **Meter Reading Baseline**: Contributions use the purchase meter reading as the baseline
+- **Positive Contribution Amount**: Must be greater than $0
+- **Logical Token Consumption**: Tokens consumed should not significantly exceed meter reading difference
+- **Smart Suggestions**: Historical consumption analysis for contribution recommendations
+
+#### 4. User and Authentication Constraints ✅
+- **Role-Based Access**: ADMIN vs USER roles with different permissions
+- **Account Locking**: Locked accounts cannot perform any actions
+- **Session Validation**: All API endpoints require valid authentication
+- **User ID Validation**: User IDs must be valid CUIDs and exist in database
+- **Fine-grained Permissions**: 12 individual permissions across 5 categories
+
+#### 5. Data Integrity Constraints ✅
+- **Referential Integrity**: All foreign keys must reference valid records
+- **Audit Trail**: All CRUD operations must be logged with SHA-256 integrity verification
+- **Input Sanitization**: All inputs validated and sanitized against XSS/SQL injection
+- **CSRF Protection**: All forms protected against CSRF attacks
+- **Duplicate Prevention**: Comprehensive checks for duplicate contributions and records
+
+#### 6. Security Constraints ✅
+- **Rate Limiting**: Multi-tier API rate limits to prevent abuse
+- **SQL Injection Prevention**: All database queries use parameterized statements
+- **XSS Protection**: All user inputs sanitized against cross-site scripting
+- **Permission Checks**: Fine-grained permissions for all operations
+- **Encryption**: Sensitive data encrypted at rest and in transit
+
+#### 7. API Validation Constraints ✅
+- **Zod Schema Validation**: All API inputs validated with comprehensive schemas
+- **Error Handling**: Consistent error responses with proper HTTP status codes
+- **Business Rule Validation**: Server-side validation of all business constraints
+- **Input Length Limits**: Maximum character limits on all text inputs
+- **Numeric Range Validation**: Min/max constraints on all numeric fields
+
+#### 8. UI/UX Constraints ✅
+- **Form Validation**: Real-time form validation with user feedback
+- **Required Field Enforcement**: Visual indicators for required fields
+- **Confirmation Dialogs**: Destructive actions require confirmation
+- **Loading States**: Prevent multiple submissions during processing
+- **Accessibility**: WCAG 2.1 compliance with keyboard navigation support
+- **Dark Mode Compatibility**: All components must support both light and dark themes
+- **Mobile Responsiveness**: Touch-friendly interface with minimum 44px touch targets
+- **Progressive Enhancement**: Core functionality works without JavaScript
+- **Offline Support**: Basic functionality available when offline
+
+### Constraint Enforcement Layers
+
+1. **Database Level**: Prisma schema constraints and PostgreSQL constraints
+2. **API Level**: Zod validation schemas and business rule middleware
+3. **UI Level**: React Hook Form validation and real-time feedback
+4. **Security Level**: Rate limiting, CSRF protection, and input sanitization
+
+### Recently Implemented New Constraints ✅
+
+#### 9. **Sequential Purchase-Contribution Workflow Constraints** ✅
+- **Sequential Order Enforcement**: No new token purchase can be created before the previous purchase has a matching contribution
+- **Global Application**: Constraint applies to all users (not per-user basis)
+- **Admin Override**: Administrators can bypass sequential validation for data corrections
+- **No Emergency Exemptions**: Emergency purchases must also follow sequential order
+- **Workflow**: Everyone contributes first → Then tokens are purchased → Repeat cycle
+
+#### 10. **Meter Reading Synchronization Constraints** ✅
+- **Matching Meter Readings**: Contribution meter reading must exactly match the corresponding purchase meter reading
+- **Automatic Calculation**: Tokens consumed = current purchase meter reading - previous purchase meter reading
+- **Read-only UI**: Contribution meter reading is auto-set and read-only (constraint enforcement)
+- **Previous Purchase Baseline**: Consumption calculated from chronologically previous purchase, not current
+
+#### 11. **Token Purchase Edit Constraints** ✅
+- **Permission-Based Editing**: Only the purchase creator or admin can edit token purchases
+- **Contribution Lock Constraint**: Token purchases WITH matching contributions CANNOT be edited (business rule)
+- **Editable Purchase Identification**: UI visually indicates which purchases can be edited with tooltips
+- **API-Level Validation**: Server-side enforcement prevents editing purchases with contributions
+- **User Feedback**: Clear error messages when attempting to edit locked purchases
+
+#### 12. **Token Purchase Deletion Constraints** ✅
+- **Permission-Based Deletion**: Only the purchase creator or admin can delete token purchases
+- **Contribution Lock Constraint**: Token purchases WITH matching contributions CANNOT be deleted (business rule)
+- **API-Level Validation**: Server-side enforcement prevents deleting purchases with contributions
+- **Consistent Logic**: Same constraint validation as edit operations for data integrity
+- **User Feedback**: Clear error messages when attempting to delete locked purchases
+- **UI Indicators**: Delete buttons disabled/grayed for purchases with contributions
+
+#### 13. **User Contribution Edit Constraints** ✅
+- **Permission-Based Editing**: Only the contribution creator or admin can edit contributions
+- **Click-to-Edit**: Users can click on contribution rows to access edit interface
+- **Live Calculations**: Real-time cost calculations and efficiency metrics during editing
+- **Business Rule Validation**: Server-side validation ensures editing doesn't violate constraints
+- **Token Availability**: Edit validation excludes current contribution from availability calculations
+- **Meter Reading Lock**: Contribution meter readings cannot be changed (derived from purchase)
+- **Form Pre-population**: Edit forms pre-populate with existing values for seamless updates
+
+#### 14. **Responsive Design and Mobile Navigation Constraints** ✅
+- **Mobile-First Design**: All interfaces must work on mobile devices first
+- **Touch Target Size**: Minimum 44px touch targets for all interactive elements
+- **Responsive Tables**: Table data adapts to mobile card layouts automatically
+- **Mobile Navigation**: Slide-out navigation menu with proper scroll behavior
+- **Theme Selection**: Mobile-accessible theme toggle (Light/Dark/System) with persistence
+- **Scrollable Content**: Mobile menus have internal scrolling, not background page scrolling
+- **Fixed Elements**: Headers and footers remain accessible during mobile navigation
+- **Proper Overflow**: Content containers handle overflow correctly on all screen sizes
+
+### Implementation Architecture ✅
+
+- **Multi-layer Validation**: Database schema → API validation → UI enforcement → Security middleware
+- **Real-time Feedback**: Form validation with immediate constraint checking
+- **Historical Analysis**: Smart contribution suggestions based on consumption patterns
+- **Audit Compliance**: All constraint violations logged with detailed error messages
+
+### Recently Resolved Constraint Issues ✅
+
+#### Initial Implementation Issues:
+- **"Initial Meter Reading always zero"**: Fixed API response parsing in contribution form
+- **"User not found" error**: Fixed PostgreSQL setup and proper user seeding  
+- **Meter reading constraint restoration**: Re-implemented positive number requirement after database migration
+- **Sequential workflow implementation**: Complete redesign of purchase-contribution relationship with proper validation
+- **Meter reading synchronization**: Auto-setting contribution readings to match purchase readings
+
+#### API and Database Relationship Issues:
+- **Multiple API 500 errors**: Fixed database relationship mismatches (contributions vs contribution)
+- **Usage trends API failures**: Corrected one-to-one relationship queries
+- **Financial reports API failures**: Updated relationship includes and calculations
+- **Efficiency reports API failures**: Fixed token consumption calculations
+- **Cost analysis API errors**: Restructured queries for proper one-to-one relationships
+
+#### UI/UX and Dark Mode Issues:
+- **AnnualOverviewChart null errors**: Added null checks to prevent .toFixed() errors on null values
+- **Button styling issues**: Fixed white-on-white buttons in dark mode with explicit color classes
+- **Dashboard dark mode**: Added comprehensive dark mode styling to all dashboard components
+- **Purchase history table dark mode**: Fixed text visibility and button styling for mobile and desktop
+- **Mobile navigation dark mode**: Comprehensive dark mode styling for slide-out navigation
+- **Responsive table dark mode**: Fixed TouchButton and mobile card styling
+- **Confirmation dialog dark mode**: Enhanced button visibility with explicit dark mode colors
+
+#### Navigation and Accessibility Issues:
+- **404 errors on purchase row clicks**: Removed invalid row click navigation to non-existent routes
+- **Edit button visibility**: Made Actions column visible on all screen sizes for purchase management
+- **Mobile navigation scrolling**: Fixed scroll behavior so menu content scrolls instead of background
+- **Theme selector accessibility**: Added mobile-accessible theme toggle with proper positioning
+
 ## Key Technical Considerations
 
 ### Data Integrity

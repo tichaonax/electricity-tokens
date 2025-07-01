@@ -96,6 +96,10 @@ export const createTokenPurchaseSchema = z.object({
     1000000,
     'Total payment cannot exceed 1,000,000'
   ),
+  meterReading: positiveNumberSchema.max(
+    1000000,
+    'Initial meter reading cannot exceed 1,000,000'
+  ),
   purchaseDate: dateSchema,
   isEmergency: z.boolean().default(false),
 });
@@ -107,6 +111,9 @@ export const updateTokenPurchaseSchema = z
       .optional(),
     totalPayment: positiveNumberSchema
       .max(1000000, 'Total payment cannot exceed 1,000,000')
+      .optional(),
+    meterReading: positiveNumberSchema
+      .max(1000000, 'Initial meter reading cannot exceed 1,000,000')
       .optional(),
     purchaseDate: dateSchema.optional(),
     isEmergency: z.boolean().optional(),
@@ -135,6 +142,7 @@ export const purchaseQuerySchema = z
       .optional(),
     startDate: z.string().datetime('Invalid start date format').optional(),
     endDate: z.string().datetime('Invalid end date format').optional(),
+    before: z.string().datetime('Invalid before date format').optional(),
     sortBy: z
       .enum(['purchaseDate', 'totalTokens', 'totalPayment', 'creator'])
       .optional(),
@@ -156,22 +164,22 @@ export const purchaseQuerySchema = z
 export const createUserContributionSchema = z
   .object({
     purchaseId: cuidSchema,
-    userId: cuidSchema.optional(), // Optional for regular users, required for admin
+    userId: cuidSchema, // Always required - will be auto-set to current user
     contributionAmount: positiveNumberSchema.max(
       1000000,
       'Contribution amount cannot exceed 1,000,000'
     ),
     meterReading: nonNegativeNumberSchema.max(
       1000000,
-      'Meter reading cannot exceed 1,000,000'
+      'Current meter reading cannot exceed 1,000,000'
     ),
     tokensConsumed: nonNegativeNumberSchema.max(
       100000,
-      'Tokens consumed cannot exceed 100,000'
+      'Electricity consumed cannot exceed 100,000'
     ),
   })
   .refine((data) => data.tokensConsumed <= data.meterReading * 1.1, {
-    message: 'Tokens consumed should not significantly exceed meter reading',
+    message: 'Electricity consumed should not significantly exceed meter reading difference',
     path: ['tokensConsumed'],
   });
 
@@ -181,10 +189,10 @@ export const updateUserContributionSchema = z
       .max(1000000, 'Contribution amount cannot exceed 1,000,000')
       .optional(),
     meterReading: nonNegativeNumberSchema
-      .max(1000000, 'Meter reading cannot exceed 1,000,000')
+      .max(1000000, 'Current meter reading cannot exceed 1,000,000')
       .optional(),
     tokensConsumed: nonNegativeNumberSchema
-      .max(100000, 'Tokens consumed cannot exceed 100,000')
+      .max(100000, 'Electricity consumed cannot exceed 100,000')
       .optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
@@ -201,7 +209,7 @@ export const updateUserContributionSchema = z
       return true;
     },
     {
-      message: 'Tokens consumed should not significantly exceed meter reading',
+      message: 'Electricity consumed should not significantly exceed meter reading difference',
       path: ['tokensConsumed'],
     }
   );

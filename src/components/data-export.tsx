@@ -341,6 +341,7 @@ export function DataExport({ userRole }: DataExportProps) {
         <Button
           onClick={handleExport}
           disabled={loading}
+          variant="outline"
           className="flex items-center gap-2"
         >
           {loading ? (

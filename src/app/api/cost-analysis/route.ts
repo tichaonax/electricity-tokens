@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
     // Fetch data based on analysis type
     switch (analysisType) {
       case 'user': {
-        // Get user's contributions with purchase data
-        const contributions = await prisma.userContribution.findMany({
+        // Get user's contribution with purchase data
+        const contribution = await prisma.userContribution.findMany({
           where: {
             userId: targetUserId,
             ...(start && { createdAt: { gte: start } }),
@@ -104,26 +104,26 @@ export async function GET(request: NextRequest) {
         });
 
         const costBreakdown = calculateUserTrueCost(
-          contributions as Contribution[]
+          contribution as Contribution[]
         );
 
         return NextResponse.json({
           userId: targetUserId,
           costBreakdown,
-          contributions: contributions.length,
+          contribution: contribution.length,
           period: { start, end },
         });
       }
 
       case 'period': {
-        // Get all purchases and contributions for the period
+        // Get all purchases and contribution for the period
         const purchases = await prisma.tokenPurchase.findMany({
           where: {
             ...(start && { purchaseDate: { gte: start } }),
             ...(end && { purchaseDate: { lte: end } }),
           },
           include: {
-            contributions: {
+            contribution: {
               include: {
                 user: {
                   select: {
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
           },
         });
 
-        const contributions = await prisma.userContribution.findMany({
+        const contribution = await prisma.userContribution.findMany({
           where: {
             ...(start && { createdAt: { gte: start } }),
             ...(end && { createdAt: { lte: end } }),
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
 
         const periodAnalysis = calculatePeriodCostAnalysis(
           purchases as Purchase[],
-          contributions as Contribution[],
+          contribution as Contribution[],
           start,
           end
         );
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
 
       case 'recommendations': {
         // Get user's data and generate recommendations
-        const contributions = await prisma.userContribution.findMany({
+        const contribution = await prisma.userContribution.findMany({
           where: {
             userId: targetUserId,
             ...(start && { createdAt: { gte: start } }),
@@ -189,14 +189,12 @@ export async function GET(request: NextRequest) {
 
         const purchases = await prisma.tokenPurchase.findMany({
           where: {
-            contributions: {
-              some: {
-                userId: targetUserId,
-              },
+            contribution: {
+              userId: targetUserId,
             },
           },
           include: {
-            contributions: {
+            contribution: {
               include: {
                 user: {
                   select: {
@@ -211,13 +209,13 @@ export async function GET(request: NextRequest) {
 
         // Calculate user summary
         const costBreakdown = calculateUserTrueCost(
-          contributions as Contribution[]
+          contribution as Contribution[]
         );
 
         const userSummary = {
           userId: targetUserId,
-          userName: contributions[0]?.user?.name,
-          contributions: contributions as Contribution[],
+          userName: contribution[0]?.user?.name,
+          contribution: contribution as Contribution[],
           purchases: purchases as Purchase[],
           ...costBreakdown,
         };
@@ -232,19 +230,18 @@ export async function GET(request: NextRequest) {
       }
 
       case 'optimal': {
-        // Calculate optimal contributions for recent purchases
+        // Calculate optimal contribution for recent purchases
         const recentPurchases = await prisma.tokenPurchase.findMany({
           where: {
             createdAt: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
             },
+            contribution: {
+              userId: targetUserId,
+            },
           },
           include: {
-            contributions: {
-              where: {
-                userId: targetUserId,
-              },
-            },
+            contribution: true,
           },
           orderBy: { createdAt: 'desc' },
           take: 10,
@@ -252,7 +249,7 @@ export async function GET(request: NextRequest) {
 
         const optimalContributions = recentPurchases
           .map((purchase) => {
-            const userContribution = purchase.contributions[0];
+            const userContribution = purchase.contribution;
             if (!userContribution) return null;
 
             const optimal = calculateOptimalContribution(

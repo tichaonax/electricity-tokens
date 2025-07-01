@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -77,6 +77,7 @@ model TokenPurchase {
   id           String   @id @default(cuid())
   totalTokens  Float
   totalPayment Float
+  meterReading Float    // Initial meter reading when purchase was made
   purchaseDate DateTime
   isEmergency  Boolean  @default(false)
   createdBy    String
@@ -84,19 +85,19 @@ model TokenPurchase {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  creator       User               @relation(fields: [createdBy], references: [id])
-  contributions UserContribution[]
+  creator      User              @relation(fields: [createdBy], references: [id])
+  contribution UserContribution? // Changed to optional one-to-one relationship
 
   @@map("token_purchases")
 }
 
 model UserContribution {
   id                String   @id @default(cuid())
-  purchaseId        String
+  purchaseId        String   @unique // Changed to unique to enforce one contribution per purchase
   userId            String
   contributionAmount Float
-  meterReading      Float
-  tokensConsumed    Float
+  meterReading      Float    // Current meter reading at time of contribution
+  tokensConsumed    Float    // Calculated: current - initial meter reading
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -104,7 +105,7 @@ model UserContribution {
   purchase TokenPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([purchaseId, userId])
+  // Removed compound unique constraint - now using @unique on purchaseId only
   @@map("user_contributions")
 }
 

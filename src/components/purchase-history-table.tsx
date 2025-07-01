@@ -23,6 +23,11 @@ import {
   ArrowUp,
   ArrowDown,
   RefreshCw,
+  Users,
+  Plus,
+  ExternalLink,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -30,6 +35,7 @@ interface Purchase {
   id: string;
   totalTokens: number;
   totalPayment: number;
+  meterReading: number;
   purchaseDate: string;
   isEmergency: boolean;
   createdAt: string;
@@ -37,14 +43,16 @@ interface Purchase {
     id: string;
     name: string;
   };
-  contributions: {
+  contribution: {
     id: string;
     user: {
+      id: string;
       name: string;
     };
     tokensConsumed: number;
     contributionAmount: number;
-  }[];
+    meterReading: number;
+  } | null;
 }
 
 interface PaginationInfo {
@@ -59,7 +67,7 @@ interface PurchaseHistoryTableProps {
   isAdmin?: boolean;
 }
 
-type SortField = 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'creator';
+type SortField = 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'meterReading' | 'creator';
 type SortDirection = 'asc' | 'desc';
 
 export function PurchaseHistoryTable({
@@ -93,6 +101,7 @@ export function PurchaseHistoryTable({
 
   // UI state
   const [showFilters, setShowFilters] = useState(false);
+  const [hasUncontributedPurchases, setHasUncontributedPurchases] = useState(false);
 
   useEffect(() => {
     fetchPurchases();
@@ -138,6 +147,10 @@ export function PurchaseHistoryTable({
 
       setPurchases(filteredPurchases);
       setPagination(data.pagination);
+      
+      // Check if there are any purchases without contributions
+      const hasUncontributed = filteredPurchases.some((purchase: Purchase) => !purchase.contribution);
+      setHasUncontributedPurchases(hasUncontributed);
     } catch (error) {
       console.error('Error fetching purchases:', error);
       setError(
@@ -186,14 +199,26 @@ export function PurchaseHistoryTable({
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  const handleEdit = (purchaseId: string) => {
-    router.push(`/dashboard/purchases/${purchaseId}/edit`);
+  const handleEdit = (purchase: Purchase) => {
+    // Check if purchase has a contribution - if so, it cannot be edited
+    if (purchase.contribution) {
+      showError('Cannot edit purchase: This purchase already has a matching contribution.');
+      return;
+    }
+    
+    router.push(`/dashboard/purchases/edit/${purchase.id}`);
   };
 
-  const handleDelete = (purchaseId: string) => {
+  const handleDelete = (purchase: Purchase) => {
+    // Check if purchase has a contribution - if so, it cannot be deleted
+    if (purchase.contribution) {
+      showError('Cannot delete purchase: This purchase already has a matching contribution.');
+      return;
+    }
+    
     confirmDelete('purchase', async () => {
       try {
-        const response = await fetch(`/api/purchases/${purchaseId}`, {
+        const response = await fetch(`/api/purchases/${purchase.id}`, {
           method: 'DELETE',
         });
 
@@ -210,6 +235,22 @@ export function PurchaseHistoryTable({
     });
   };
 
+  const handleViewContribution = (contributionId: string) => {
+    // Navigate to contributions page and potentially highlight the specific contribution
+    router.push(`/dashboard/contributions#contribution-${contributionId}`);
+  };
+
+  const handleAddContribution = (purchaseId?: string) => {
+    if (purchaseId) {
+      // Navigate to specific purchase contribution
+      const url = `/dashboard/contributions/new?purchaseId=${purchaseId}`;
+      window.location.href = url;
+    } else {
+      // Navigate to general contribution page to select purchase
+      window.location.href = '/dashboard/contributions/new';
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full bg-white rounded-lg shadow-lg dark:bg-slate-900 p-6">
@@ -218,7 +259,7 @@ export function PurchaseHistoryTable({
             Purchase History
           </h2>
         </div>
-        <SkeletonTable rows={5} columns={6} />
+        <SkeletonTable rows={5} columns={7} />
       </div>
     );
   }
@@ -252,9 +293,26 @@ export function PurchaseHistoryTable({
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               {pagination.total} total purchases
+              {hasUncontributedPurchases && (
+                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                  {purchases.filter(p => !p.contribution).length} need contribution{purchases.filter(p => !p.contribution).length !== 1 ? 's' : ''}
+                </span>
+              )}
             </p>
           </div>
           <div className="flex gap-2">
+            {/* Add Contribution button - only show if there are purchases without contributions */}
+            {hasUncontributedPurchases && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleAddContribution()}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Contribution
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -358,6 +416,18 @@ export function PurchaseHistoryTable({
             </div>
           </div>
         )}
+
+        {/* Info message when all purchases have contributions */}
+        {!hasUncontributedPurchases && pagination.total > 0 && (
+          <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
+              <p className="text-sm text-green-700 dark:text-green-300">
+                All purchases have matching contributions. No new contributions can be added at this time.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Responsive Table */}
@@ -368,10 +438,10 @@ export function PurchaseHistoryTable({
             label: 'Date',
             render: (value, row) => (
               <div>
-                <div className="text-sm font-medium text-slate-900">
+                <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                   {new Date(value).toLocaleDateString()}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-slate-500 dark:text-slate-400">
                   {new Date(row.createdAt).toLocaleTimeString()}
                 </div>
               </div>
@@ -381,7 +451,7 @@ export function PurchaseHistoryTable({
             key: 'totalTokens',
             label: 'Tokens',
             render: (value) => (
-              <span className="text-sm font-medium text-slate-900">
+              <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                 {value.toLocaleString()} kWh
               </span>
             ),
@@ -390,9 +460,24 @@ export function PurchaseHistoryTable({
             key: 'totalPayment',
             label: 'Amount',
             render: (value) => (
-              <span className="text-sm font-medium text-slate-900">
+              <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                 ${value.toFixed(2)}
               </span>
+            ),
+          },
+          {
+            key: 'meterReading',
+            label: 'Meter Reading',
+            mobileHide: true,
+            render: (value) => (
+              <div>
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  {value.toLocaleString()} kWh
+                </span>
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  at purchase
+                </div>
+              </div>
             ),
           },
           {
@@ -413,32 +498,90 @@ export function PurchaseHistoryTable({
             label: 'Creator',
             mobileHide: true,
             render: (value) => (
-              <span className="text-sm text-slate-900">{value?.name || 'Unknown'}</span>
+              <span className="text-sm text-slate-900 dark:text-slate-100">{value?.name || 'Unknown'}</span>
             ),
           },
           {
-            key: '_count',
-            label: 'Contributors',
-            mobileLabel: 'Contributors',
-            render: (value) => (
-              <span className="text-sm text-slate-600">
-                {value?.contributions || 0} users
-              </span>
-            ),
+            key: 'contribution',
+            label: 'Contribution Status',
+            mobileLabel: 'Status',
+            render: (value, row) => {
+              const contribution = row.contribution;
+              
+              if (contribution) {
+                // Has contribution - show status and link to view
+                return (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                          Has Contribution
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {contribution.tokensConsumed.toLocaleString()} kWh by {contribution.user.name} • Meter: {row.meterReading.toLocaleString()} kWh
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewContribution(contribution.id);
+                      }}
+                      className="w-fit text-xs h-7 mt-1"
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View Contribution
+                    </Button>
+                  </div>
+                );
+              } else {
+                // No contribution - show "add contribution" button
+                return (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1">
+                      <XCircle className="h-4 w-4 text-slate-400" />
+                      <span className="text-sm text-slate-500 dark:text-slate-400">
+                        No Contribution
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-400 dark:text-slate-500">
+                      {row.totalTokens.toLocaleString()} kWh available • Meter: {row.meterReading.toLocaleString()} kWh
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddContribution(row.id);
+                      }}
+                      className="w-fit text-xs h-7 mt-1 text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-950"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Contribution
+                    </Button>
+                  </div>
+                );
+              }
+            },
           },
           {
             key: 'actions',
             label: 'Actions',
             mobileHide: true,
             render: (value, row) => (
-              <div className="hidden md:flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(`/dashboard/purchases/edit/${row.id}`);
+                    handleEdit(row);
                   }}
+                  disabled={!!row.contribution}
+                  title={row.contribution ? 'Cannot edit: Purchase has a contribution' : 'Edit purchase'}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -447,8 +590,10 @@ export function PurchaseHistoryTable({
                   variant="outline"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(row.id);
+                    handleDelete(row);
                   }}
+                  disabled={!!row.contribution}
+                  title={row.contribution ? 'Cannot delete: Purchase has a contribution' : 'Delete purchase'}
                   className="text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -463,21 +608,42 @@ export function PurchaseHistoryTable({
           // Add mobile actions
           mobileActions: (
             <MobileActions>
+              {purchase.contribution ? (
+                <TouchButton
+                  onClick={() => handleViewContribution(purchase.contribution!.id)}
+                  variant="secondary"
+                  size="sm"
+                >
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  View Contribution
+                </TouchButton>
+              ) : (
+                <TouchButton
+                  onClick={() => handleAddContribution(purchase.id)}
+                  variant="primary"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Contribution
+                </TouchButton>
+              )}
               <TouchButton
-                onClick={() => router.push(`/dashboard/purchases/edit/${purchase.id}`)}
+                onClick={() => handleEdit(purchase)}
                 variant="secondary"
                 size="sm"
+                disabled={!!purchase.contribution}
               >
                 <Edit className="h-4 w-4 mr-1" />
-                Edit
+                Edit {purchase.contribution ? '(Locked)' : ''}
               </TouchButton>
               <TouchButton
-                onClick={() => handleDelete(purchase.id)}
+                onClick={() => handleDelete(purchase)}
                 variant="danger"
                 size="sm"
+                disabled={!!purchase.contribution}
               >
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete
+                Delete {purchase.contribution ? '(Locked)' : ''}
               </TouchButton>
             </MobileActions>
           ),
@@ -488,7 +654,7 @@ export function PurchaseHistoryTable({
             ? 'No purchases found. Try adjusting your filters.'
             : 'No purchases found. Get started by creating your first purchase.'
         }
-        onRowClick={(row) => router.push(`/dashboard/purchases/${row.id}`)}
+        onRowClick={undefined}
         className="mt-4"
       />
 
@@ -525,6 +691,15 @@ export function PurchaseHistoryTable({
                 </button>
               </th>
               <th className="px-6 py-3 text-left">
+                <button
+                  onClick={() => handleSort('meterReading')}
+                  className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200"
+                >
+                  Meter Reading
+                  {getSortIcon('meterReading')}
+                </button>
+              </th>
+              <th className="px-6 py-3 text-left">
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Type
                 </span>
@@ -540,7 +715,7 @@ export function PurchaseHistoryTable({
               </th>
               <th className="px-6 py-3 text-left">
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Contributors
+                  Contribution Status
                 </span>
               </th>
               <th className="px-6 py-3 text-right">
@@ -553,7 +728,7 @@ export function PurchaseHistoryTable({
           <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
             {purchases.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
+                <td colSpan={8} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center gap-2">
                     <Zap className="h-12 w-12 text-slate-400" />
                     <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
@@ -601,6 +776,14 @@ export function PurchaseHistoryTable({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {purchase.meterReading.toLocaleString()} kWh
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      at purchase
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         purchase.isEmergency
@@ -626,18 +809,56 @@ export function PurchaseHistoryTable({
                       {purchase.creator.name}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                      {purchase.contributions.length} contributor
-                      {purchase.contributions.length !== 1 ? 's' : ''}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {purchase.contributions.reduce(
-                        (sum, c) => sum + c.tokensConsumed,
-                        0
-                      )}{' '}
-                      kWh used
-                    </div>
+                  <td className="px-6 py-4">
+                    {purchase.contribution ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                            Has Contribution
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          {purchase.contribution.tokensConsumed.toLocaleString()} kWh by {purchase.contribution.user.name} • Meter: {purchase.meterReading.toLocaleString()} kWh
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewContribution(purchase.contribution!.id);
+                          }}
+                          className="w-fit text-xs h-7"
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          View Contribution
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-1">
+                          <XCircle className="h-4 w-4 text-slate-400" />
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            No Contribution
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 dark:text-slate-500">
+                          {purchase.totalTokens.toLocaleString()} kWh available • Meter: {purchase.meterReading.toLocaleString()} kWh
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddContribution(purchase.id);
+                          }}
+                          className="w-fit text-xs h-7 text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-950"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add Contribution
+                        </Button>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
@@ -646,7 +867,9 @@ export function PurchaseHistoryTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEdit(purchase.id)}
+                            onClick={() => handleEdit(purchase)}
+                            disabled={!!purchase.contribution}
+                            title={purchase.contribution ? 'Cannot edit: Purchase has a contribution' : 'Edit purchase'}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>

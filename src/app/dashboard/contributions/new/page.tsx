@@ -1,12 +1,13 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { ContributionForm } from '@/components/contribution-form';
 import { type CreateUserContributionInput } from '@/lib/validations';
+import { LogOut } from 'lucide-react';
 
-export default function NewContributionPage() {
+function NewContributionContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,6 +33,10 @@ export default function NewContributionPage() {
   if (!session) {
     return null;
   }
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
 
   const handleSubmit = async (data: CreateUserContributionInput) => {
     setIsSubmitting(true);
@@ -81,12 +86,22 @@ export default function NewContributionPage() {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-slate-700 dark:text-slate-300">
-                {session.user?.name}
-              </span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                ({session.user?.role})
-              </span>
+              <div className="flex flex-col items-end">
+                <span className="text-slate-700 dark:text-slate-300">
+                  {session.user?.name}
+                </span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                  ({session.user?.role})
+                </span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
             </div>
           </div>
         </div>
@@ -100,9 +115,22 @@ export default function NewContributionPage() {
             selectedPurchaseId={purchaseId || undefined}
             currentUserId={session.user?.id}
             isAdmin={session.user?.role === 'ADMIN'}
+            session={session}
           />
         </div>
       </main>
     </div>
+  );
+}
+
+export default function NewContributionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      </div>
+    }>
+      <NewContributionContent />
+    </Suspense>
   );
 }

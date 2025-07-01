@@ -234,21 +234,21 @@ export function UserComparisonChart({ startDate, endDate }: UserComparisonChartP
         </div>
         <div className="flex gap-2">
           <Button
-            variant={metric === 'contributions' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setMetric('contributions')}
           >
             Contributions
           </Button>
           <Button
-            variant={metric === 'tokens' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setMetric('tokens')}
           >
             Tokens
           </Button>
           <Button
-            variant={metric === 'efficiency' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setMetric('efficiency')}
           >

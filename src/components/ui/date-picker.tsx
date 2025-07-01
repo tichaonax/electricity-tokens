@@ -32,9 +32,9 @@ export function DatePicker({
           variant={'outline'}
           className={cn(
             'w-full justify-start text-left font-normal',
+            // High contrast dark mode styling
             !date && 'text-slate-600 dark:text-slate-300',
-            // Enhanced text visibility
-            'text-slate-900 dark:text-slate-100',
+            'text-slate-900 dark:text-white dark:bg-black dark:border-slate-600 dark:hover:bg-slate-900',
             className
           )}
           disabled={disabled}
@@ -43,7 +43,7 @@ export function DatePicker({
           {date ? format(date, 'PPP') : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="w-auto p-0 dark:bg-black dark:border-slate-600">
         <Calendar
           mode="single"
           selected={date}

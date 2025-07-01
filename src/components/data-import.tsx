@@ -281,7 +281,7 @@ export function DataImport() {
                   <Button variant="outline" onClick={handleUploadClick}>
                     Choose Different File
                   </Button>
-                  <Button onClick={parseFile} disabled={loading}>
+                  <Button onClick={parseFile} disabled={loading} variant="outline">
                     {loading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -305,7 +305,7 @@ export function DataImport() {
                 <p className="text-sm text-slate-600 dark:text-slate-400">
                   Click to browse or drag and drop your CSV file here
                 </p>
-                <Button onClick={handleUploadClick} className="mt-4">
+                <Button onClick={handleUploadClick} variant="outline" className="mt-4">
                   <FileText className="h-4 w-4 mr-2" />
                   Choose File
                 </Button>
@@ -386,7 +386,7 @@ export function DataImport() {
                 </>
               )}
             </Button>
-            <Button onClick={importData} disabled={loading}>
+            <Button onClick={importData} disabled={loading} variant="outline">
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -409,7 +409,7 @@ export function DataImport() {
             <h4 className="text-lg font-medium text-slate-900 dark:text-slate-100">
               Import Results
             </h4>
-            <Button onClick={reset}>Import Another File</Button>
+            <Button onClick={reset} variant="outline">Import Another File</Button>
           </div>
 
           <div

@@ -256,7 +256,7 @@ export function EmergencyImpactChart({ startDate, endDate }: EmergencyImpactChar
         </div>
         <div className="flex gap-2">
           <Button
-            variant={chartView === 'premium' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartView('premium')}
           >
@@ -264,7 +264,7 @@ export function EmergencyImpactChart({ startDate, endDate }: EmergencyImpactChar
             Premium Analysis
           </Button>
           <Button
-            variant={chartView === 'comparison' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setChartView('comparison')}
           >

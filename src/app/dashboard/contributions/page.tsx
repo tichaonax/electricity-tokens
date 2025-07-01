@@ -32,6 +32,7 @@ export default function ContributionsPage() {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasAvailablePurchases, setHasAvailablePurchases] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -45,6 +46,27 @@ export default function ContributionsPage() {
     }
   }, [session]);
 
+  // Handle highlighting specific contribution from URL fragment
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const contributionId = window.location.hash.replace('#contribution-', '');
+      if (contributionId) {
+        // Wait for contributions to load, then scroll to the contribution
+        setTimeout(() => {
+          const element = document.getElementById(`contribution-${contributionId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+            // Remove highlight after a few seconds
+            setTimeout(() => {
+              element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+            }, 3000);
+          }
+        }, 500);
+      }
+    }
+  }, [contributions]);
+
   const fetchContributions = async () => {
     try {
       setIsLoading(true);
@@ -56,6 +78,9 @@ export default function ContributionsPage() {
 
       const data = await response.json();
       setContributions(data.contributions || []);
+      
+      // Check if there are available purchases (purchases without contributions)
+      await checkAvailablePurchases();
     } catch (error) {
       console.error('Error fetching contributions:', error);
       setError(
@@ -63,6 +88,21 @@ export default function ContributionsPage() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkAvailablePurchases = async () => {
+    try {
+      const response = await fetch('/api/purchases');
+      if (response.ok) {
+        const data = await response.json();
+        // Check if there are any purchases without contributions
+        const hasAvailable = data.purchases?.some((purchase: any) => !purchase.contribution) || false;
+        setHasAvailablePurchases(hasAvailable);
+      }
+    } catch (error) {
+      console.error('Error checking available purchases:', error);
+      setHasAvailablePurchases(false);
     }
   };
 
@@ -80,6 +120,15 @@ export default function ContributionsPage() {
       (contribution.tokensConsumed / contribution.purchase.totalTokens) *
       contribution.purchase.totalPayment
     );
+  };
+
+  const handleContributionClick = (contribution: Contribution) => {
+    // Check if user can edit this contribution
+    const canEdit = session?.user?.role === 'ADMIN' || contribution.user.id === session?.user?.id;
+    
+    if (canEdit) {
+      router.push(`/dashboard/contributions/edit/${contribution.id}`);
+    }
   };
 
   if (status === 'loading') {
@@ -114,7 +163,9 @@ export default function ContributionsPage() {
             <div className="flex items-center space-x-4">
               <Button
                 onClick={() => router.push('/dashboard/contributions/new')}
+                variant="outline"
                 className="flex items-center gap-2"
+                disabled={!hasAvailablePurchases}
               >
                 <Plus className="h-4 w-4" />
                 New Contribution
@@ -129,6 +180,18 @@ export default function ContributionsPage() {
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-400">
               {error}
+            </div>
+          )}
+
+          {/* Info message when no purchases are available for contribution */}
+          {!hasAvailablePurchases && !isLoading && (
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+              <div className="flex items-center">
+                <User className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  All token purchases have matching contributions. New contributions can only be added when there are purchases without contributions.
+                </p>
+              </div>
             </div>
           )}
 
@@ -152,31 +215,40 @@ export default function ContributionsPage() {
               <div className="mt-6">
                 <Button
                   onClick={() => router.push('/dashboard/contributions/new')}
+                  variant="outline"
                   className="flex items-center gap-2"
+                  disabled={!hasAvailablePurchases}
                 >
                   <Plus className="h-4 w-4" />
                   New Contribution
                 </Button>
+                {!hasAvailablePurchases && (
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    All purchases already have contributions. No new contributions can be added at this time.
+                  </p>
+                )}
               </div>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow dark:bg-slate-800">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <DollarSign className="h-8 w-8 text-green-600" />
+                      <Zap className="h-8 w-8 text-blue-600" />
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                        Total Contributed
+                        Tokens Consumed
                       </p>
                       <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                        $
                         {contributions
-                          .reduce((sum, c) => sum + c.contributionAmount, 0)
-                          .toFixed(2)}
+                          .reduce((sum, c) => sum + c.tokensConsumed, 0)
+                          .toLocaleString()}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        kWh
                       </p>
                     </div>
                   </div>
@@ -185,16 +257,42 @@ export default function ContributionsPage() {
                 <div className="bg-white p-6 rounded-lg shadow dark:bg-slate-800">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <Zap className="h-8 w-8 text-blue-600" />
+                      <DollarSign className="h-8 w-8 text-blue-600" />
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                        Tokens Used
+                        Actual Cost
                       </p>
                       <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                        $
                         {contributions
-                          .reduce((sum, c) => sum + c.tokensConsumed, 0)
-                          .toLocaleString()}
+                          .reduce((sum, c) => sum + calculateTrueCost(c), 0)
+                          .toFixed(2)}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        (your share)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow dark:bg-slate-800">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <DollarSign className="h-8 w-8 text-green-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        Amount Paid
+                      </p>
+                      <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                        $
+                        {contributions
+                          .reduce((sum, c) => sum + c.contributionAmount, 0)
+                          .toFixed(2)}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        total contributed
                       </p>
                     </div>
                   </div>
@@ -220,6 +318,9 @@ export default function ContributionsPage() {
                           : '0'}
                         %
                       </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        payment accuracy
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -242,7 +343,18 @@ export default function ContributionsPage() {
                     return (
                       <div
                         key={contribution.id}
-                        className="px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700"
+                        id={`contribution-${contribution.id}`}
+                        className={`px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 ${
+                          (session?.user?.role === 'ADMIN' || contribution.user.id === session?.user?.id) 
+                            ? 'cursor-pointer border-l-4 border-l-transparent hover:border-l-blue-500' 
+                            : ''
+                        }`}
+                        onClick={() => handleContributionClick(contribution)}
+                        title={
+                          (session?.user?.role === 'ADMIN' || contribution.user.id === session?.user?.id) 
+                            ? 'Click to edit this contribution' 
+                            : ''
+                        }
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
@@ -267,53 +379,69 @@ export default function ContributionsPage() {
                                     contribution.purchase.purchaseDate
                                   ).toLocaleDateString()}
                                 </span>
-                                <span>
+                                <span className="font-medium text-blue-600 dark:text-blue-400">
                                   {contribution.tokensConsumed.toLocaleString()}{' '}
-                                  tokens
+                                  kWh consumed
                                 </span>
                                 <span>
                                   Reading:{' '}
                                   {contribution.meterReading.toLocaleString()}{' '}
                                   kWh
                                 </span>
+                                {contribution.purchase.isEmergency && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                    Emergency
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="flex items-center space-x-6">
-                              <div>
+                              <div className="text-center">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                  Purchase Cost
+                                </p>
                                 <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  ${contribution.contributionAmount.toFixed(2)}
+                                  ${contribution.purchase.totalPayment.toFixed(2)}
                                 </p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  Contributed
+                                  ({contribution.purchase.totalTokens.toLocaleString()} kWh)
                                 </p>
                               </div>
-                              <div>
-                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                              <div className="text-center">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                  Your Share
+                                </p>
+                                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                                   ${trueCost.toFixed(2)}
                                 </p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  True Cost
+                                  ({contribution.tokensConsumed.toLocaleString()} kWh)
                                 </p>
                               </div>
-                              <div>
-                                <p
-                                  className={`text-sm font-medium ${overpayment >= 0 ? 'text-green-600' : 'text-red-600'}`}
-                                >
-                                  {overpayment >= 0 ? '+' : ''}$
-                                  {overpayment.toFixed(2)}
+                              <div className="text-center">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                  You Paid
                                 </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  {overpayment >= 0 ? 'Overpaid' : 'Underpaid'}
-                                </p>
-                              </div>
-                              <div>
                                 <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  {efficiency.toFixed(1)}%
+                                  ${contribution.contributionAmount.toFixed(2)}
+                                </p>
+                                <p
+                                  className={`text-xs ${overpayment >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                                >
+                                  {overpayment >= 0 ? '+' : ''}${overpayment.toFixed(2)}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                  Rate/kWh
+                                </p>
+                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                  ${(contribution.purchase.totalPayment / contribution.purchase.totalTokens).toFixed(4)}
                                 </p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  Efficiency
+                                  {efficiency.toFixed(1)}% eff.
                                 </p>
                               </div>
                             </div>

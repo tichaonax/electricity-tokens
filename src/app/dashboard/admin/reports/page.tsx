@@ -40,13 +40,13 @@ export default function SystemReports() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
       router.push('/dashboard');
     }
   }, [status, session, router]);
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
       fetchSystemStats();
     }
   }, [status, session, reportPeriod]);
@@ -114,7 +114,7 @@ export default function SystemReports() {
     );
   }
 
-  if (!session || session.user?.role !== 'admin') {
+  if (!session || session.user?.role !== 'ADMIN') {
     return null;
   }
 

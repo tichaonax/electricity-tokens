@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#4f46e5" rx="102.4"/>
-  <circle cx="256" cy="153.6" r="76.8" fill="white"/>
-  <path d="M128 281.6 L384 281.6 L256 409.6 Z" fill="white"/>
-  <text x="256" y="460.8" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="40.96" font-weight="bold">ET</text>
+  <rect width="512" height="512" rx="64" fill="#4f46e5"/>
+  <circle cx="256" cy="256" r="170.66666666666666" fill="white" opacity="0.2"/>
+  <path d="M153.6 204.8h204.8v51.2h-204.8z" fill="white"/>
+  <path d="M153.6 256h102.4v51.2h-102.4z" fill="white"/>
+  <circle cx="307.2" cy="307.2" r="25.6" fill="#fbbf24"/>
+  <text x="256" y="409.6" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="76.8" font-weight="bold">ET</text>
 </svg>

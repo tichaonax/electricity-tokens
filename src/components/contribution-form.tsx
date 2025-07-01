@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Session } from 'next-auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type CreateUserContributionInput } from '@/lib/validations';
@@ -83,6 +84,7 @@ interface ContributionFormProps {
   selectedPurchaseId?: string;
   currentUserId?: string;
   isAdmin?: boolean;
+  session?: Session | null;
 }
 
 export function ContributionForm({
@@ -91,6 +93,7 @@ export function ContributionForm({
   selectedPurchaseId,
   currentUserId,
   isAdmin = false,
+  session,
 }: ContributionFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -108,6 +111,25 @@ export function ContributionForm({
     Set<string>
   >(new Set());
   const [showContributionWarning, setShowContributionWarning] = useState(true);
+  const [meterReadingValidation, setMeterReadingValidation] = useState<{
+    isValidating: boolean;
+    isValid: boolean;
+    error?: string;
+    suggestedMinimum?: number;
+  }>({
+    isValidating: false,
+    isValid: true,
+  });
+  const [historicalSuggestion, setHistoricalSuggestion] = useState<{
+    loading: boolean;
+    suggestedAmount: number;
+    averageUsage: number;
+    averageContribution: number;
+    totalContributions: number;
+    efficiencyScore: number;
+    confidence: 'high' | 'medium' | 'low';
+    reasoning: string;
+  } | null>(null);
 
   const {
     register,
@@ -123,7 +145,7 @@ export function ContributionForm({
       contributionAmount: 0,
       meterReading: 0,
       tokensConsumed: 0,
-      userId: isAdmin ? '' : currentUserId,
+      userId: currentUserId, // Always set to current user (no longer admin selectable)
     },
   });
 
@@ -152,18 +174,12 @@ export function ContributionForm({
     }
   }, []);
 
-  // Define checkUserContribution before useEffect hooks
-  const checkUserContribution = useCallback(
+  // Check if purchase already has a contribution (new business rule: one contribution per purchase)
+  const checkPurchaseContribution = useCallback(
     async (purchaseId: string) => {
       try {
-        const targetUserId =
-          isAdmin && watchedValues.userId
-            ? watchedValues.userId
-            : currentUserId;
-        if (!targetUserId) return;
-
         const response = await fetch(
-          `/api/contributions?purchaseId=${purchaseId}&userId=${targetUserId}`
+          `/api/contributions?purchaseId=${purchaseId}`
         );
         if (!response.ok) {
           setUserHasContributed(false);
@@ -173,17 +189,17 @@ export function ContributionForm({
         const data = await response.json();
         const contributions = data.contributions || [];
 
-        // Check if user has already contributed to this purchase
+        // Check if ANY contribution exists for this purchase
         const hasContributed = contributions.length > 0;
         setUserHasContributed(hasContributed);
         setShowContributionWarning(hasContributed); // Show warning when contribution exists
       } catch (error) {
-        console.error('Error checking user contribution:', error);
+        console.error('Error checking purchase contribution:', error);
         setUserHasContributed(false);
         setShowContributionWarning(false);
       }
     },
-    [isAdmin, watchedValues.userId, currentUserId]
+    []
   );
 
   // Fetch purchases on component mount
@@ -200,24 +216,24 @@ export function ContributionForm({
       const purchase = purchases.find((p) => p.id === watchedValues.purchaseId);
       setSelectedPurchase(purchase || null);
 
-      // Check if current user has already contributed to this purchase
+      // Fetch the purchase and previous purchase info
       if (purchase) {
-        checkUserContribution(purchase.id);
+        fetchPurchaseAndPreviousReading(purchase.id);
+        checkPurchaseContribution(purchase.id);
       }
     }
-  }, [watchedValues.purchaseId, purchases, checkUserContribution]);
+  }, [watchedValues.purchaseId, purchases, checkPurchaseContribution]);
 
-  // Fetch previous meter reading when user changes
+  // Fetch user contributions when user changes
   useEffect(() => {
     const targetUserId =
       isAdmin && watchedValues.userId ? watchedValues.userId : currentUserId;
     if (targetUserId) {
-      fetchPreviousMeterReading(targetUserId);
       fetchUserContributions(targetUserId);
 
-      // Also check if this user has already contributed to the selected purchase
+      // Also check if this purchase already has a contribution
       if (watchedValues.purchaseId) {
-        checkUserContribution(watchedValues.purchaseId);
+        checkPurchaseContribution(watchedValues.purchaseId);
       }
     }
   }, [
@@ -225,20 +241,30 @@ export function ContributionForm({
     currentUserId,
     isAdmin,
     watchedValues.purchaseId,
-    checkUserContribution,
+    checkPurchaseContribution,
     fetchUserContributions,
   ]);
 
-  // Auto-calculate tokens consumed when meter reading changes
+  // Auto-calculate tokens consumed from previous purchase meter reading
   useEffect(() => {
-    if (
-      watchedValues.meterReading &&
-      watchedValues.meterReading > previousMeterReading
-    ) {
-      const tokensConsumed = watchedValues.meterReading - previousMeterReading;
+    if (watchedValues.meterReading && previousMeterReading >= 0) {
+      // Tokens consumed = current purchase meter reading - previous purchase meter reading
+      const tokensConsumed = Math.max(0, watchedValues.meterReading - previousMeterReading);
       setValue('tokensConsumed', tokensConsumed);
     }
   }, [watchedValues.meterReading, previousMeterReading, setValue]);
+
+  // Validate meter reading when it changes
+  useEffect(() => {
+    if (watchedValues.meterReading && watchedValues.purchaseId) {
+      const debounceTimer = setTimeout(() => {
+        validateContributionMeterReading(watchedValues.meterReading, watchedValues.purchaseId);
+      }, 500); // Debounce for 500ms
+
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [watchedValues.meterReading, watchedValues.purchaseId]);
+
 
   const fetchPurchases = async () => {
     try {
@@ -276,32 +302,56 @@ export function ContributionForm({
     }
   };
 
-  const fetchPreviousMeterReading = async (userId: string) => {
+  const fetchPurchaseAndPreviousReading = async (purchaseId: string) => {
     try {
       setLoadingPreviousReading(true);
-      const response = await fetch(
-        `/api/contributions?userId=${userId}&limit=1`
-      );
+      const response = await fetch(`/api/purchases/${purchaseId}`);
       if (!response.ok) {
-        // If no previous contributions found, start from 0
+        setPreviousMeterReading(0);
+        return;
+      }
+
+      const purchase = await response.json();
+
+      if (purchase && purchase.meterReading !== undefined) {
+        // Set contribution meter reading to match purchase meter reading (constraint 2)
+        setValue('meterReading', purchase.meterReading);
+
+        // Fetch previous purchase to calculate tokens consumed
+        await fetchPreviousPurchaseForTokens(purchase.purchaseDate);
+      } else {
+        setPreviousMeterReading(0);
+      }
+    } catch (error) {
+      console.error('Error fetching purchase meter reading:', error);
+      setPreviousMeterReading(0);
+    } finally {
+      setLoadingPreviousReading(false);
+    }
+  };
+
+  const fetchPreviousPurchaseForTokens = async (currentPurchaseDate: string) => {
+    try {
+      // Find the previous purchase before the current purchase date
+      const response = await fetch(`/api/purchases?before=${currentPurchaseDate}&limit=1`);
+      if (!response.ok) {
         setPreviousMeterReading(0);
         return;
       }
 
       const data = await response.json();
-      const contributions = data.contributions || [];
+      const previousPurchase = data.purchases?.[0];
 
-      if (contributions.length > 0) {
-        // Get the most recent meter reading
-        setPreviousMeterReading(contributions[0].meterReading);
+      if (previousPurchase) {
+        // Set previous meter reading for tokens consumed calculation
+        setPreviousMeterReading(previousPurchase.meterReading);
       } else {
+        // No previous purchase - first purchase, so no previous consumption
         setPreviousMeterReading(0);
       }
     } catch (error) {
-      console.error('Error fetching previous meter reading:', error);
+      console.error('Error fetching previous purchase:', error);
       setPreviousMeterReading(0);
-    } finally {
-      setLoadingPreviousReading(false);
     }
   };
 
@@ -353,18 +403,174 @@ export function ContributionForm({
     setShowContributionWarning(false);
   };
 
+  // Validate contribution meter reading
+  const validateContributionMeterReading = async (reading: number, purchaseId: string) => {
+    if (!reading || !purchaseId) return;
+
+    setMeterReadingValidation({ isValidating: true, isValid: true });
+
+    try {
+      const response = await fetch('/api/validate-contribution-meter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          meterReading: reading,
+          purchaseId: purchaseId,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setMeterReadingValidation({
+          isValidating: false,
+          isValid: result.valid,
+          error: result.error,
+          suggestedMinimum: result.suggestedMinimum,
+        });
+      } else {
+        setMeterReadingValidation({
+          isValidating: false,
+          isValid: false,
+          error: 'Unable to validate meter reading',
+        });
+      }
+    } catch (error) {
+      setMeterReadingValidation({
+        isValidating: false,
+        isValid: false,
+        error: 'Validation error occurred',
+      });
+    }
+  };
+
+  // Analyze historical consumption patterns for contribution suggestion
+  const analyzeHistoricalConsumption = useCallback(async (userId: string, currentTokensConsumed: number, currentPurchase: Purchase) => {
+    if (!userId || !currentTokensConsumed || !currentPurchase) {
+      setHistoricalSuggestion(null);
+      return;
+    }
+
+    setHistoricalSuggestion(prev => ({ 
+      ...prev, 
+      loading: true,
+      suggestedAmount: 0,
+      averageUsage: 0,
+      averageContribution: 0,
+      totalContributions: 0,
+      efficiencyScore: 0,
+      confidence: 'low' as const,
+      reasoning: 'Analyzing...'
+    }));
+
+    try {
+      const response = await fetch(`/api/contributions?userId=${userId}&limit=10`);
+      if (!response.ok) {
+        setHistoricalSuggestion(null);
+        return;
+      }
+
+      const data = await response.json();
+      const userContributions = data.contributions || [];
+
+      if (userContributions.length === 0) {
+        // No historical data - use current purchase fair share
+        const fairShare = (currentTokensConsumed / currentPurchase.totalTokens) * currentPurchase.totalPayment;
+        setHistoricalSuggestion({
+          loading: false,
+          suggestedAmount: fairShare,
+          averageUsage: currentTokensConsumed,
+          averageContribution: fairShare,
+          totalContributions: 0,
+          efficiencyScore: 100,
+          confidence: 'medium',
+          reasoning: 'Based on fair share (no historical data available)'
+        });
+        return;
+      }
+
+      // Calculate historical patterns
+      const totalUsage = userContributions.reduce((sum: number, c: any) => sum + c.tokensConsumed, 0);
+      const totalPaid = userContributions.reduce((sum: number, c: any) => sum + c.contributionAmount, 0);
+      const avgUsage = totalUsage / userContributions.length;
+      const avgContribution = totalPaid / userContributions.length;
+
+      // Calculate efficiency scores (how close to fair share)
+      const efficiencies = userContributions.map((c: any) => {
+        const fairShare = (c.tokensConsumed / c.purchase.totalTokens) * c.purchase.totalPayment;
+        return fairShare > 0 ? (c.contributionAmount / fairShare) * 100 : 100;
+      });
+      const avgEfficiency = efficiencies.reduce((sum: number, eff: number) => sum + eff, 0) / efficiencies.length;
+
+      // Calculate average cost per kWh from historical data
+      const avgCostPerKwh = totalUsage > 0 ? totalPaid / totalUsage : currentPurchase.totalPayment / currentPurchase.totalTokens;
+
+      // Generate suggestion based on patterns
+      let suggestedAmount: number;
+      let confidence: 'high' | 'medium' | 'low';
+      let reasoning: string;
+
+      if (userContributions.length >= 5) {
+        // High confidence: Use historical average cost per kWh
+        suggestedAmount = currentTokensConsumed * avgCostPerKwh;
+        confidence = 'high';
+        reasoning = `Based on your average of $${avgCostPerKwh.toFixed(4)}/kWh from ${userContributions.length} contributions`;
+      } else if (userContributions.length >= 2) {
+        // Medium confidence: Blend historical and current fair share
+        const fairShare = (currentTokensConsumed / currentPurchase.totalTokens) * currentPurchase.totalPayment;
+        const historicalEstimate = currentTokensConsumed * avgCostPerKwh;
+        suggestedAmount = (fairShare + historicalEstimate) / 2;
+        confidence = 'medium';
+        reasoning = `Blended estimate from ${userContributions.length} contributions and current purchase rate`;
+      } else {
+        // Low confidence: Use current fair share adjusted by historical efficiency
+        const fairShare = (currentTokensConsumed / currentPurchase.totalTokens) * currentPurchase.totalPayment;
+        suggestedAmount = fairShare * (avgEfficiency / 100);
+        confidence = 'low';
+        reasoning = `Limited data (${userContributions.length} contributions) - adjusted fair share`;
+      }
+
+      setHistoricalSuggestion({
+        loading: false,
+        suggestedAmount: Math.max(0, suggestedAmount),
+        averageUsage: avgUsage,
+        averageContribution: avgContribution,
+        totalContributions: userContributions.length,
+        efficiencyScore: avgEfficiency,
+        confidence,
+        reasoning
+      });
+
+    } catch (error) {
+      console.error('Error analyzing historical consumption:', error);
+      setHistoricalSuggestion(null);
+    }
+  }, []);
+
+  // Analyze historical consumption when tokens consumed changes
+  useEffect(() => {
+    if (watchedValues.tokensConsumed > 0 && selectedPurchase && currentUserId) {
+      const debounceTimer = setTimeout(() => {
+        analyzeHistoricalConsumption(currentUserId, watchedValues.tokensConsumed, selectedPurchase);
+      }, 800); // Slight delay to avoid too many API calls
+
+      return () => clearTimeout(debounceTimer);
+    } else {
+      setHistoricalSuggestion(null);
+    }
+  }, [watchedValues.tokensConsumed, selectedPurchase, currentUserId, analyzeHistoricalConsumption]);
+
   const handleFormSubmit = async (data: ContributionFormData) => {
     try {
       setSubmitError(null);
       setSubmitSuccess(false);
 
-      // Prepare submission data
+      // Prepare submission data - always use current user
       const submitData: CreateUserContributionInput = {
         purchaseId: data.purchaseId,
         contributionAmount: data.contributionAmount,
         meterReading: data.meterReading,
         tokensConsumed: data.tokensConsumed,
-        ...(isAdmin && data.userId && { userId: data.userId }),
+        userId: currentUserId!, // Always current user - enforced by new business rules
       };
 
       await onSubmit(submitData);
@@ -431,12 +637,10 @@ export function ContributionForm({
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 mt-0.5" />
               <div>
-                <p className="font-medium">Contribution Already Exists</p>
+                <p className="font-medium">Purchase Already Has Contribution</p>
                 <p className="text-sm mt-1">
-                  {isAdmin && watchedValues.userId
-                    ? `This user has already contributed to the selected purchase (${new Date(selectedPurchase.purchaseDate).toLocaleDateString()})`
-                    : `You have already contributed to this purchase (${new Date(selectedPurchase.purchaseDate).toLocaleDateString()})`}
-                  . The form is read-only to prevent duplicate entries.
+                  This token purchase from {new Date(selectedPurchase.purchaseDate).toLocaleDateString()} already has a contribution recorded.
+                  Only one contribution is allowed per purchase. Please select a different purchase.
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button
@@ -483,7 +687,7 @@ export function ContributionForm({
               <select
                 id="purchaseId"
                 {...register('purchaseId')}
-                disabled={userHasContributed}
+                disabled={userHasContributed || !!selectedPurchaseId}
                 className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
                 style={{
                   background: 'white',
@@ -516,8 +720,14 @@ export function ContributionForm({
                 })}
               </select>
               <FormDescription>
-                Select the token purchase you want to contribute to.
-                {contributedPurchaseIds.size > 0 && (
+                {selectedPurchaseId ? (
+                  <span className="text-blue-600 dark:text-blue-400">
+                    Pre-selected token purchase (read-only)
+                  </span>
+                ) : (
+                  'Select the token purchase you want to contribute to.'
+                )}
+                {contributedPurchaseIds.size > 0 && !selectedPurchaseId && (
                   <span className="block text-amber-600 dark:text-amber-400 mt-1">
                     ✓ Highlighted purchases show where you&apos;ve already
                     contributed
@@ -529,38 +739,26 @@ export function ContributionForm({
               )}
             </FormField>
 
-            {/* User Selection (Admin only) */}
-            {isAdmin && (
-              <FormField>
-                <FormLabel htmlFor="userId">Select User</FormLabel>
-                <select
-                  id="userId"
-                  {...register('userId')}
-                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300"
-                  disabled={loadingUsers || userHasContributed}
-                >
-                  <option value="">Select user...</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name} ({user.email})
-                    </option>
-                  ))}
-                </select>
-                <FormDescription>
-                  Select the user this contribution is for (leave empty for
-                  yourself)
-                </FormDescription>
-                {errors.userId && (
-                  <FormMessage>{errors.userId.message}</FormMessage>
-                )}
-              </FormField>
-            )}
+            {/* Current User Display */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-950 dark:border-blue-800">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Contributing User:
+                </span>
+                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  {session?.user?.name || 'Current User'}
+                </span>
+              </div>
+              <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Contributions are now limited to one per purchase per user
+              </div>
+            </div>
 
-            {/* Previous Meter Reading Display */}
+            {/* Previous Purchase Meter Reading (for calculation) */}
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-md dark:bg-slate-800 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Previous Meter Reading:
+                  Previous Purchase Meter Reading:
                 </span>
                 <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                   {loadingPreviousReading ? (
@@ -573,37 +771,39 @@ export function ContributionForm({
                   )}
                 </span>
               </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                Used as baseline for calculating tokens consumed since last purchase
+              </div>
             </div>
 
-            {/* Current Meter Reading */}
+            {/* Contribution Meter Reading (matches purchase) */}
             <FormField>
               <FormLabel htmlFor="meterReading">
-                Current Meter Reading (kWh) *
+                Contribution Meter Reading (kWh) *
               </FormLabel>
-              <Input
-                id="meterReading"
-                type="number"
-                step="0.01"
-                min={previousMeterReading}
-                max="1000000"
-                placeholder={`Enter reading (min: ${previousMeterReading})`}
-                disabled={userHasContributed}
-                {...register('meterReading', { valueAsNumber: true })}
-                className={errors.meterReading ? 'border-red-500' : ''}
-              />
+              <div className="relative">
+                <Input
+                  id="meterReading"
+                  type="number"
+                  step="0.01"
+                  value={watchedValues.meterReading || ''}
+                  readOnly
+                  disabled
+                  className="bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-not-allowed"
+                  {...register('meterReading', { valueAsNumber: true })}
+                />
+              </div>
+
               <FormDescription>
-                Enter your current meter reading. Must be greater than or equal
-                to previous reading ({previousMeterReading} kWh)
+                This meter reading matches the purchase meter reading and is automatically set. 
+                Tokens consumed are calculated from the previous purchase meter reading.
               </FormDescription>
-              {errors.meterReading && (
-                <FormMessage>{errors.meterReading.message}</FormMessage>
-              )}
             </FormField>
 
-            {/* Tokens Consumed (Auto-calculated) */}
+            {/* Electricity Consumed (Auto-calculated) */}
             <FormField>
               <FormLabel htmlFor="tokensConsumed">
-                Tokens Consumed (kWh) *
+                Electricity Consumed (kWh) *
               </FormLabel>
               <div className="relative">
                 <Input
@@ -623,10 +823,10 @@ export function ContributionForm({
                 </div>
               </div>
               <FormDescription>
-                Automatically calculated: Current reading (
-                {watchedValues.meterReading || 0}) - Previous reading (
+                Automatically calculated: Current meter reading (
+                {watchedValues.meterReading || 0}) - Previous purchase reading (
                 {previousMeterReading}) ={' '}
-                {(watchedValues.meterReading || 0) - previousMeterReading} kWh
+                {Math.max(0, (watchedValues.meterReading || 0) - previousMeterReading)} kWh
               </FormDescription>
               {errors.tokensConsumed && (
                 <FormMessage>{errors.tokensConsumed.message}</FormMessage>
@@ -656,6 +856,83 @@ export function ContributionForm({
                   ).toFixed(4)}
                   /token
                 </div>
+              </div>
+            )}
+
+            {/* Historical Consumption Analysis */}
+            {historicalSuggestion && watchedValues.tokensConsumed > 0 && (
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-md dark:from-purple-950 dark:to-blue-950 dark:border-purple-800">
+                <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-3 flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Smart Contribution Suggestion
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    historicalSuggestion.confidence === 'high' 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      : historicalSuggestion.confidence === 'medium'
+                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                  }`}>
+                    {historicalSuggestion.confidence} confidence
+                  </span>
+                </h4>
+                
+                {historicalSuggestion.loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                    <span className="text-sm text-purple-700 dark:text-purple-300">
+                      Analyzing your consumption patterns...
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                        Suggested Amount: ${historicalSuggestion.suggestedAmount.toFixed(2)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setValue('contributionAmount', historicalSuggestion.suggestedAmount)}
+                        className="px-3 py-1 bg-purple-600 text-white text-xs rounded-md hover:bg-purple-700 transition-colors"
+                      >
+                        Use This Amount
+                      </button>
+                    </div>
+                    
+                    <div className="text-xs text-purple-700 dark:text-purple-300">
+                      {historicalSuggestion.reasoning}
+                    </div>
+                    
+                    {historicalSuggestion.totalContributions > 0 && (
+                      <div className="grid grid-cols-2 gap-4 text-xs text-purple-600 dark:text-purple-400">
+                        <div>
+                          <div className="font-medium">Your History:</div>
+                          <div>• {historicalSuggestion.totalContributions} contributions</div>
+                          <div>• Avg usage: {historicalSuggestion.averageUsage.toFixed(0)} kWh</div>
+                          <div>• Avg payment: ${historicalSuggestion.averageContribution.toFixed(2)}</div>
+                        </div>
+                        <div>
+                          <div className="font-medium">Payment Accuracy:</div>
+                          <div className={`font-semibold ${
+                            historicalSuggestion.efficiencyScore >= 95 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : historicalSuggestion.efficiencyScore >= 85
+                              ? 'text-yellow-600 dark:text-yellow-400'
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {historicalSuggestion.efficiencyScore.toFixed(1)}% efficiency
+                          </div>
+                          <div className="text-xs">
+                            {historicalSuggestion.efficiencyScore >= 95 
+                              ? 'Excellent payment accuracy!' 
+                              : historicalSuggestion.efficiencyScore >= 85
+                              ? 'Good payment accuracy'
+                              : 'Consider adjusting payments'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -850,8 +1127,11 @@ export function ContributionForm({
             disabled={
               isLoading ||
               userHasContributed ||
-              watchedValues.tokensConsumed > getRemainingTokens()
+              watchedValues.tokensConsumed > getRemainingTokens() ||
+              !meterReadingValidation.isValid ||
+              meterReadingValidation.isValidating
             }
+            variant="outline"
             className="min-w-[120px]"
           >
             {isLoading ? (

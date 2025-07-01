@@ -14,6 +14,7 @@ import {
   checkPermissions,
   validateBusinessRules,
 } from '@/lib/validation-middleware';
+import { validateContributionMeterReading } from '@/lib/meter-reading-validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -192,19 +193,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
-    // Check if contribution already exists for this user and purchase
+    // Check if contribution already exists for this purchase (new business rule: one per purchase)
     const existingContribution = await prisma.userContribution.findUnique({
       where: {
-        purchaseId_userId: {
-          purchaseId,
-          userId: targetUserId,
-        },
+        purchaseId: purchaseId,
       },
     });
 
     if (existingContribution) {
       return NextResponse.json(
-        { message: 'Contribution already exists for this user and purchase' },
+        { message: 'Contribution already exists for this purchase' },
+        { status: 400 }
+      );
+    }
+
+    // Validate meter reading chronology and constraints
+    const meterValidation = await validateContributionMeterReading(meterReading, purchaseId);
+    
+    if (!meterValidation.valid) {
+      return NextResponse.json(
+        { message: meterValidation.error || 'Invalid meter reading' },
         { status: 400 }
       );
     }
@@ -219,6 +227,10 @@ export async function POST(request: NextRequest) {
         checkDuplicateContribution: {
           purchaseId,
           userId: targetUserId,
+        },
+        checkMeterReadingMatch: {
+          purchaseId,
+          contributionMeterReading: meterReading,
         },
       },
       prisma

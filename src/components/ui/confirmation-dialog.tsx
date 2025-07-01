@@ -149,7 +149,7 @@ function ConfirmationDialog({
                 variant="outline"
                 onClick={onCancel}
                 disabled={isLoading}
-                className="flex-1"
+                className="flex-1 bg-white text-slate-900 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 dark:border-slate-600"
               >
                 {cancelLabel}
               </Button>

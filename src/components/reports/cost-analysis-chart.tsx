@@ -221,14 +221,14 @@ export function CostAnalysisChart({ startDate, endDate }: CostAnalysisChartProps
         </div>
         <div className="flex gap-2">
           <Button
-            variant={!showEmergencyOnly ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setShowEmergencyOnly(false)}
           >
             All Purchases
           </Button>
           <Button
-            variant={showEmergencyOnly ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setShowEmergencyOnly(true)}
           >

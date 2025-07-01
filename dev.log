@@ -1,0 +1,575 @@
+
+> electricity-tokens@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.4 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.111:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ○ Compiling middleware ...
+ ✓ Compiled middleware in 639ms
+ ✓ Ready in 3.1s
+ ○ Compiling /dashboard/contributions/new ...
+ ✓ Compiled /dashboard/contributions/new in 4s
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions/new?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 4782ms
+ ○ Compiling /_not-found/page ...
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 3104ms
+ ✓ Compiled /_not-found/page in 3.7s
+ GET /api/auth/session 200 in 2412ms
+ ○ Compiling /api/purchases ...
+ ✓ Compiled /api/purchases in 2.2s
+ GET /api/users 200 in 2252ms
+ GET /api/purchases 200 in 2266ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 2321ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 2329ms
+ GET /api/users 200 in 185ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 118ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 124ms
+ GET /api/purchases 200 in 214ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 84ms
+ ○ Compiling /api/purchases/[id] ...
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 81ms
+ ✓ Compiled /api/purchases/[id] in 1329ms
+ GET /api/purchases/cmcjyh2z1000gtm4csg7xb4a0 200 in 2089ms
+ GET /api/purchases/cmcjyh2z1000gtm4csg7xb4a0 200 in 86ms
+ GET /api/purchases?before=2024-04-01T00:00:00.000Z&limit=1 200 in 115ms
+ GET /api/purchases?before=2024-04-01T00:00:00.000Z&limit=1 200 in 78ms
+ ○ Compiling /api/validate-contribution-meter ...
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq&limit=10 200 in 72ms
+ ✓ Compiled /api/validate-contribution-meter in 1101ms
+ POST /api/validate-contribution-meter 200 in 1206ms
+ ○ Compiling /dashboard/contributions ...
+ ✓ Compiled /dashboard/contributions in 1124ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions 200 in 1250ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 177ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1162ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 1229ms
+ ○ Compiling /api/dashboard ...
+ ✓ Compiled /api/dashboard in 796ms
+ GET /api/dashboard 200 in 905ms
+ GET /api/dashboard 200 in 111ms
+ ○ Compiling /dashboard/purchases/history ...
+ ✓ Compiled /dashboard/purchases/history in 1124ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/purchases/history. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/purchases/history. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/purchases/history 200 in 1280ms
+ GET /api/purchases?page=1&limit=10&sortBy=purchaseDate&sortDirection=desc 200 in 81ms
+ GET /api/purchases?page=1&limit=10&sortBy=purchaseDate&sortDirection=desc 200 in 50ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions/new?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 176ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 89ms
+ GET /api/auth/session 200 in 72ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 165ms
+ GET /api/purchases 200 in 167ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 93ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 315ms
+ GET /api/users 200 in 329ms
+ GET /api/purchases 200 in 169ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 141ms
+ GET /api/users 200 in 140ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 78ms
+ GET /api/purchases/cmcjyh2z1000gtm4csg7xb4a0 200 in 86ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 143ms
+ GET /api/purchases/cmcjyh2z1000gtm4csg7xb4a0 200 in 134ms
+ GET /api/purchases?before=2024-04-01T00:00:00.000Z&limit=1 200 in 158ms
+ GET /api/purchases?before=2024-04-01T00:00:00.000Z&limit=1 200 in 87ms
+ POST /api/validate-contribution-meter 200 in 53ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq&limit=10 200 in 63ms
+Error creating contribution: Error [PrismaClientValidationError]: 
+Invalid `prisma.tokenPurchase.findUnique()` invocation in
+/Users/owner/ai/electricity-tokens/.next/server/chunks/[root-of-the-server]__e696bbf0._.js:971:53
+
+  968 if (rules.checkTokenAvailability) {
+  969     const { purchaseId, requestedTokens, excludeContributionId } = rules.checkTokenAvailability;
+  970     // Get the purchase
+→ 971     const purchase = await prisma.tokenPurchase.findUnique({
+            where: {
+              id: "cmcjyh2z1000gtm4csg7xb4a0"
+            },
+            include: {
+              contributions: true,
+              ~~~~~~~~~~~~~
+          ?   creator?: true,
+          ?   contribution?: true
+            }
+          })
+
+Unknown field `contributions` for include statement on model `TokenPurchase`. Available options are marked with ?.
+    at <unknown> (src/lib/validation-middleware.ts:264:48)
+    at async validateBusinessRules (src/lib/validation-middleware.ts:264:21)
+    at async POST (src/app/api/contributions/route.ts:221:30)
+  262 |
+  263 |     // Get the purchase
+> 264 |     const purchase = await prisma.tokenPurchase.findUnique({
+      |                                                ^
+  265 |       where: { id: purchaseId },
+  266 |       include: {
+  267 |         contributions: excludeContributionId {
+  clientVersion: '6.10.1'
+}
+ POST /api/contributions 500 in 224ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/purchases/history. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/purchases/history. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/purchases/history 200 in 180ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 180ms
+ GET /api/auth/session 200 in 87ms
+ GET /api/purchases?page=1&limit=10&sortBy=purchaseDate&sortDirection=desc 200 in 378ms
+ GET /api/purchases?page=1&limit=10&sortBy=purchaseDate&sortDirection=desc 200 in 58ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions/new?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 146ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 105ms
+ GET /api/auth/session 200 in 152ms
+ GET /api/purchases 200 in 351ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 413ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 480ms
+ GET /api/users 200 in 491ms
+ GET /api/purchases 200 in 146ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 135ms
+ GET /api/users 200 in 138ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 163ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 90ms
+ GET /api/purchases/cmcjyh2z1000gtm4csg7xb4a0 200 in 232ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 122ms
+ GET /api/purchases/cmcjyh2z1000gtm4csg7xb4a0 200 in 128ms
+ GET /api/purchases?before=2024-04-01T00:00:00.000Z&limit=1 200 in 102ms
+ GET /api/purchases?before=2024-04-01T00:00:00.000Z&limit=1 200 in 91ms
+ POST /api/validate-contribution-meter 200 in 89ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq&limit=10 200 in 73ms
+ POST /api/contributions 201 in 94ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions 200 in 121ms
+ GET /api/purchases 200 in 191ms
+ GET /api/purchases/cmcjyh2z1000gtm4csg7xb4a0 200 in 117ms
+ GET /api/contributions?purchaseId=cmcjyh2z1000gtm4csg7xb4a0 200 in 125ms
+ GET /api/purchases?before=2024-04-01T00:00:00.000Z&limit=1 200 in 60ms
+ GET /api/contributions 200 in 53ms
+ GET /api/contributions 200 in 114ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions/new 200 in 65ms
+ GET /api/users 200 in 112ms
+ GET /api/purchases 200 in 119ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 132ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 89ms
+ GET /api/purchases 200 in 98ms
+ GET /api/users 200 in 105ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 70ms
+ GET /api/dashboard 200 in 373ms
+ GET /api/dashboard 200 in 58ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/purchases/history. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/purchases/history. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/purchases/history 200 in 86ms
+ GET /api/purchases?page=1&limit=10&sortBy=purchaseDate&sortDirection=desc 200 in 127ms
+ GET /api/purchases?page=1&limit=10&sortBy=purchaseDate&sortDirection=desc 200 in 52ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions 200 in 146ms
+ GET /api/contributions 200 in 101ms
+ GET /api/contributions 200 in 63ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions/new 200 in 78ms
+ GET /api/purchases 200 in 74ms
+ GET /api/users 200 in 74ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 86ms
+ GET /api/purchases 200 in 120ms
+ GET /api/users 200 in 124ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 114ms
+ GET /api/contributions?purchaseId=cmcjyh2yy000ctm4c4o9yh4mz 200 in 208ms
+ GET /api/purchases/cmcjyh2yy000ctm4c4o9yh4mz 200 in 205ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 214ms
+ GET /api/contributions?purchaseId=cmcjyh2yy000ctm4c4o9yh4mz 200 in 105ms
+ GET /api/purchases?before=2024-03-01T00:00:00.000Z&limit=1 200 in 62ms
+ POST /api/validate-contribution-meter 200 in 89ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq&limit=10 200 in 58ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 137ms
+ GET /api/contributions 200 in 242ms
+ GET /api/contributions 200 in 86ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions/new 200 in 71ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 99ms
+ GET /api/purchases 200 in 100ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 61ms
+ GET /api/users 200 in 177ms
+ GET /api/purchases 200 in 91ms
+ GET /api/users 200 in 54ms
+ GET /api/contributions 200 in 318ms
+ GET /api/contributions 200 in 77ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 1342ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 1731ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions 200 in 261ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 103ms
+ GET /api/auth/session 200 in 60ms
+ GET /api/contributions 200 in 116ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/contributions/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/contributions/new 200 in 65ms
+ GET /api/purchases 200 in 176ms
+ GET /api/users 200 in 249ms
+ GET /api/purchases 200 in 170ms
+ GET /api/users 200 in 79ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 343ms
+ GET /api/contributions?userId=cmcjyh2bc0000tm4c3r0g6aqq 200 in 137ms
+ GET /api/contributions 200 in 78ms
+ GET /api/contributions 200 in 71ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 64ms
+ GET /api/dashboard 200 in 112ms
+ GET /api/dashboard 200 in 83ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 112ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 82ms
+ GET /api/auth/session 200 in 68ms
+ GET /api/dashboard 200 in 110ms
+ GET /api/auth/session 200 in 51ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1243ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 1404ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 137ms
+ GET /api/auth/session 200 in 116ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 157ms
+ GET /api/dashboard 200 in 132ms
+ GET /api/dashboard 200 in 64ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 122ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 104ms
+ GET /api/auth/session 200 in 78ms
+ GET /api/dashboard 200 in 70ms
+ GET /api/auth/csrf 200 in 41ms
+ POST /api/auth/signout 200 in 37ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 184ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 116ms
+ GET /api/auth/session 200 in 57ms
+ ○ Compiling /auth/signin ...
+ ✓ Compiled /auth/signin in 1335ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /auth/signin 200 in 1385ms
+ GET /api/auth/providers 200 in 49ms
+ GET /api/auth/csrf 200 in 43ms
+Failed to create audit log: Error [PrismaClientValidationError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].auditLog.create()` invocation in
+/Users/owner/ai/electricity-tokens/.next/server/chunks/[root-of-the-server]__1cae7952._.js:194:153
+
+  191 try {
+  192     const timestamp = new Date();
+  193     const hash = generateAuditHash(entry, timestamp);
+→ 194     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].auditLog.create({
+            data: {
+              userId: "cmcjyh2bc0000tm4c3r0g6aqq",
+              action: "LOGIN",
+              entityType: "Authentication",
+              entityId: "cmcjyh2bc0000tm4c3r0g6aqq",
+              oldValues: null,
+              newValues: null,
+              timestamp: new Date("2025-07-01T04:03:47.658Z"),
+              metadata: {
+              ~~~~~~~~
+                email: "admin@test.com",
+                loginMethod: "credentials",
+                ipAddress: "::1",
+                userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+                hash: "8304fe3f174edb65fc722a175d9726ddeadc9fe2c7c0fec43bef2d067c81e255"
+              },
+          ?   id?: String
+            }
+          })
+
+Unknown argument `metadata`. Available options are marked with ?.
+    at <unknown> (src/lib/audit.ts:46:26)
+    at async createAuditLog (src/lib/audit.ts:46:4)
+    at async auditAuthentication (src/lib/audit.ts:147:2)
+    at async Object.authorize (src/lib/auth.ts:77:8)
+  44 |     const hash = generateAuditHash(entry, timestamp);
+  45 |     
+> 46 |     await prisma.auditLog.create({
+     |                          ^
+  47 |       data: {
+  48 |         userId: entry.userId,
+  49 |         action: entry.action, {
+  clientVersion: '6.10.1'
+}
+ POST /api/auth/callback/credentials 200 in 547ms
+ GET /api/auth/session 200 in 48ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 86ms
+ GET /api/dashboard 200 in 88ms
+ GET /api/dashboard 200 in 188ms
+ ○ Compiling /dashboard/purchases/new ...
+ ✓ Compiled /dashboard/purchases/new in 2.4s
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard/purchases/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard/purchases/new. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard/purchases/new 200 in 2433ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 145ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 107ms
+ GET /api/auth/session 200 in 105ms
+ GET /api/dashboard 200 in 92ms
+ GET /api/auth/csrf 200 in 46ms
+ POST /api/auth/signout 200 in 45ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 188ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 129ms
+ GET /api/auth/session 200 in 56ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 430ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 143ms
+ GET /api/auth/session 200 in 55ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /auth/signin 200 in 98ms
+ GET /api/auth/providers 200 in 44ms
+ GET /api/auth/csrf 200 in 36ms
+Failed to create audit log: Error [PrismaClientValidationError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].auditLog.create()` invocation in
+/Users/owner/ai/electricity-tokens/.next/server/chunks/[root-of-the-server]__1cae7952._.js:194:153
+
+  191 try {
+  192     const timestamp = new Date();
+  193     const hash = generateAuditHash(entry, timestamp);
+→ 194     await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].auditLog.create({
+            data: {
+              userId: "cmcjyh2bc0000tm4c3r0g6aqq",
+              action: "LOGIN",
+              entityType: "Authentication",
+              entityId: "cmcjyh2bc0000tm4c3r0g6aqq",
+              oldValues: null,
+              newValues: null,
+              timestamp: new Date("2025-07-01T04:10:07.404Z"),
+              metadata: {
+              ~~~~~~~~
+                email: "admin@test.com",
+                loginMethod: "credentials",
+                ipAddress: "::1",
+                userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+                hash: "c5074b3f6dca10dd34921f8870aeb0a47064d4e83321519f1bcc3c19a1ff2133"
+              },
+          ?   id?: String
+            }
+          })
+
+Unknown argument `metadata`. Available options are marked with ?.
+    at <unknown> (src/lib/audit.ts:46:26)
+    at async createAuditLog (src/lib/audit.ts:46:4)
+    at async auditAuthentication (src/lib/audit.ts:147:2)
+    at async Object.authorize (src/lib/auth.ts:77:8)
+  44 |     const hash = generateAuditHash(entry, timestamp);
+  45 |     
+> 46 |     await prisma.auditLog.create({
+     |                          ^
+  47 |       data: {
+  48 |         userId: entry.userId,
+  49 |         action: entry.action, {
+  clientVersion: '6.10.1'
+}
+ POST /api/auth/callback/credentials 200 in 598ms
+ GET /api/auth/session 200 in 147ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 81ms
+ GET /api/dashboard 200 in 148ms
+ GET /api/dashboard 200 in 99ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /dashboard 200 in 305ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 169ms
+ GET /api/auth/session 200 in 76ms
+ GET /api/dashboard 200 in 120ms
+ GET /api/auth/csrf 200 in 48ms
+ POST /api/auth/signout 200 in 52ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 274ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 100ms
+ GET /api/auth/session 200 in 71ms
+ ✓ Compiled middleware in 13ms
+ ✓ Compiled / in 161ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 1194ms
+ ✓ Compiled /_not-found/page in 137ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 218ms
+ GET /api/auth/session 200 in 160ms
+ ✓ Compiled /auth/signin in 49ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /auth/signin 200 in 133ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /auth/signin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /auth/signin 200 in 255ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 224ms
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /.well-known/appspecific/com.chrome.devtools.json. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 103ms
+ GET /api/auth/session 200 in 56ms

@@ -104,7 +104,7 @@ async function getTokenLossAnalysis(startDate?: string, endDate?: string) {
   const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
-      contributions: true
+      contribution: true
     },
     orderBy: { purchaseDate: 'asc' }
   });
@@ -217,7 +217,7 @@ async function getPurchaseTimingRecommendations(startDate?: string, endDate?: st
   const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
-      contributions: true
+      contribution: true
     },
     orderBy: { purchaseDate: 'asc' }
   });
@@ -229,7 +229,7 @@ async function getPurchaseTimingRecommendations(startDate?: string, endDate?: st
     const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
     const dayOfMonth = date.getDate();
     
-    const tokensConsumed = purchase.contributions.reduce((sum, c) => sum + c.tokensConsumed, 0);
+    const tokensConsumed = purchase.contribution ? purchase.contribution.tokensConsumed : 0;
     const utilizationRate = purchase.totalTokens > 0 ? tokensConsumed / purchase.totalTokens : 0;
 
     if (!acc.monthly[monthKey]) {

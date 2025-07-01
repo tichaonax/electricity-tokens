@@ -107,7 +107,7 @@ async function getMonthlyCostSummaries(startDate?: string, endDate?: string) {
   const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
-      contributions: {
+      contribution: {
         include: {
           user: {
             select: { id: true, name: true, email: true }
@@ -141,8 +141,8 @@ async function getMonthlyCostSummaries(startDate?: string, endDate?: string) {
 
     const monthData = acc[monthKey];
     const costPerToken = purchase.totalPayment / purchase.totalTokens;
-    const tokensConsumed = purchase.contributions.reduce((sum, c) => sum + c.tokensConsumed, 0);
-    const totalContributions = purchase.contributions.reduce((sum, c) => sum + c.contributionAmount, 0);
+    const tokensConsumed = purchase.contribution ? purchase.contribution.tokensConsumed : 0;
+    const totalContributions = purchase.contribution ? purchase.contribution.contributionAmount : 0;
     const trueCost = tokensConsumed * costPerToken;
 
     monthData.totalSpent += purchase.totalPayment;
@@ -159,7 +159,9 @@ async function getMonthlyCostSummaries(startDate?: string, endDate?: string) {
     }
 
     // Track unique contributors
-    purchase.contributions.forEach(c => monthData.contributorCount.add(c.userId));
+    if (purchase.contribution) {
+      monthData.contributorCount.add(purchase.contribution.userId);
+    }
 
     return acc;
   }, {} as Record<string, any>);
@@ -435,7 +437,7 @@ async function getAnnualFinancialOverview(startDate?: string, endDate?: string) 
       }
     },
     include: {
-      contributions: {
+      contribution: {
         include: {
           user: {
             select: { id: true, name: true }
@@ -463,8 +465,8 @@ async function getAnnualFinancialOverview(startDate?: string, endDate?: string) 
 
   purchases.forEach(purchase => {
     const month = purchase.purchaseDate.toISOString().substring(0, 7);
-    const tokensConsumed = purchase.contributions.reduce((sum, c) => sum + c.tokensConsumed, 0);
-    const totalContributions = purchase.contributions.reduce((sum, c) => sum + c.contributionAmount, 0);
+    const tokensConsumed = purchase.contribution ? purchase.contribution.tokensConsumed : 0;
+    const totalContributions = purchase.contribution ? purchase.contribution.contributionAmount : 0;
 
     // Annual totals
     yearlyTotals.totalSpent += purchase.totalPayment;
@@ -482,7 +484,9 @@ async function getAnnualFinancialOverview(startDate?: string, endDate?: string) 
     }
 
     // Track contributors
-    purchase.contributions.forEach(c => yearlyTotals.uniqueContributors.add(c.userId));
+    if (purchase.contribution) {
+      yearlyTotals.uniqueContributors.add(purchase.contribution.userId);
+    }
 
     // Monthly breakdown
     if (!yearlyTotals.monthlyData[month]) {

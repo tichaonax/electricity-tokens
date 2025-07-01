@@ -313,6 +313,7 @@ export async function POST(request: NextRequest) {
                   id: purchase.id,
                   totalTokens: purchase.totalTokens,
                   totalPayment: purchase.totalPayment,
+                  meterReading: purchase.meterReading || 0, // Add meterReading field
                   purchaseDate: new Date(purchase.purchaseDate),
                   isEmergency: purchase.isEmergency,
                   createdBy: creator.id,

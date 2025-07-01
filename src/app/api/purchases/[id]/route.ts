@@ -10,6 +10,7 @@ import {
   sanitizeInput,
   checkPermissions,
 } from '@/lib/validation-middleware';
+import { validateMeterReadingChronology } from '@/lib/meter-reading-validation';
 
 export async function GET(
   request: NextRequest,
@@ -55,7 +56,7 @@ export async function GET(
             email: true,
           },
         },
-        contributions: {
+        contribution: {
           include: {
             user: {
               select: {
@@ -125,28 +126,41 @@ export async function PUT(
       body: {
         totalTokens?: number;
         totalPayment?: number;
+        meterReading?: number;
         purchaseDate?: string | Date;
         isEmergency?: boolean;
       };
     };
     const sanitizedData = sanitizeInput(body);
-    const { totalTokens, totalPayment, purchaseDate, isEmergency } =
+    const { totalTokens, totalPayment, meterReading, purchaseDate, isEmergency } =
       sanitizedData as {
         totalTokens?: number;
         totalPayment?: number;
+        meterReading?: number;
         purchaseDate?: string | Date;
         isEmergency?: boolean;
       };
 
-    // Check if purchase exists
+    // Check if purchase exists and include contribution relationship
     const existingPurchase = await prisma.tokenPurchase.findUnique({
       where: { id: id },
+      include: {
+        contribution: true,
+      },
     });
 
     if (!existingPurchase) {
       return NextResponse.json(
         { message: 'Purchase not found' },
         { status: 404 }
+      );
+    }
+
+    // Check if purchase has contribution - prevent editing if it does
+    if (existingPurchase.contribution) {
+      return NextResponse.json(
+        { message: 'Cannot edit purchase: This purchase already has a matching contribution.' },
+        { status: 400 }
       );
     }
 
@@ -172,12 +186,36 @@ export async function PUT(
       updateData.totalPayment = parseFloat(totalPayment.toString());
     }
 
+    if (meterReading !== undefined) {
+      updateData.meterReading = parseFloat(meterReading.toString());
+    }
+
     if (purchaseDate !== undefined) {
       updateData.purchaseDate = new Date(purchaseDate);
     }
 
     if (isEmergency !== undefined) {
       updateData.isEmergency = Boolean(isEmergency);
+    }
+
+    // If meter reading or purchase date is being updated, validate chronology
+    if (meterReading !== undefined || purchaseDate !== undefined) {
+      const finalMeterReading = meterReading !== undefined ? meterReading : existingPurchase.meterReading;
+      const finalPurchaseDate = purchaseDate !== undefined ? new Date(purchaseDate) : existingPurchase.purchaseDate;
+      
+      const meterValidation = await validateMeterReadingChronology(
+        finalMeterReading,
+        finalPurchaseDate,
+        'purchase',
+        id // Exclude current purchase from validation
+      );
+      
+      if (!meterValidation.valid) {
+        return NextResponse.json(
+          { message: meterValidation.error || 'Invalid meter reading' },
+          { status: 400 }
+        );
+      }
     }
 
     const updatedPurchase = await prisma.tokenPurchase.update({
@@ -191,7 +229,7 @@ export async function PUT(
             email: true,
           },
         },
-        contributions: {
+        contribution: {
           include: {
             user: {
               select: {
@@ -265,7 +303,7 @@ export async function DELETE(
     const existingPurchase = await prisma.tokenPurchase.findUnique({
       where: { id: id },
       include: {
-        contributions: true,
+        contribution: true,
       },
     });
 
@@ -287,10 +325,10 @@ export async function DELETE(
       );
     }
 
-    // Check if purchase has contributions - prevent deletion if it does
-    if (existingPurchase.contributions.length > 0) {
+    // Check if purchase has contribution - prevent deletion if it does
+    if (existingPurchase.contribution) {
       return NextResponse.json(
-        { message: 'Cannot delete purchase with existing contributions' },
+        { message: 'Cannot delete purchase with existing contribution' },
         { status: 400 }
       );
     }

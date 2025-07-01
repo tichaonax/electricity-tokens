@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type CreateTokenPurchaseInput } from '@/lib/validations';
@@ -16,7 +16,7 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { AlertCircle, CheckCircle2, DollarSign, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle2, DollarSign, Zap, Info } from 'lucide-react';
 
 // Form-specific schema for react-hook-form
 const purchaseFormSchema = z.object({
@@ -28,6 +28,10 @@ const purchaseFormSchema = z.object({
     .number()
     .positive('Must be a positive number')
     .max(1000000, 'Total payment cannot exceed 1,000,000'),
+  meterReading: z
+    .number()
+    .positive('Meter reading is required and must be greater than 0')
+    .max(1000000, 'Initial meter reading cannot exceed 1,000,000'),
   purchaseDate: z.date(),
   isEmergency: z.boolean(),
 });
@@ -44,6 +48,7 @@ interface PurchaseFormProps {
   initialData?: {
     totalTokens: number;
     totalPayment: number;
+    meterReading: number;
     purchaseDate: string;
     isEmergency: boolean;
   };
@@ -60,6 +65,17 @@ export function PurchaseForm({
 }: PurchaseFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [meterReadingValidation, setMeterReadingValidation] = useState<{
+    isValidating: boolean;
+    isValid: boolean;
+    error?: string;
+    suggestion?: number;
+    minimum?: number;
+    context?: string;
+  }>({
+    isValidating: false,
+    isValid: true,
+  });
 
   const {
     register,
@@ -71,8 +87,9 @@ export function PurchaseForm({
   } = useForm<PurchaseFormData>({
     resolver: zodResolver(purchaseFormSchema),
     defaultValues: {
-      totalTokens: initialData?.totalTokens || 0,
-      totalPayment: initialData?.totalPayment || 0,
+      totalTokens: initialData?.totalTokens || undefined,
+      totalPayment: initialData?.totalPayment || undefined,
+      meterReading: initialData?.meterReading || undefined,
       purchaseDate: initialData?.purchaseDate
         ? new Date(initialData.purchaseDate)
         : new Date(),
@@ -85,6 +102,61 @@ export function PurchaseForm({
     watchedValues.totalTokens > 0
       ? watchedValues.totalPayment / watchedValues.totalTokens
       : 0;
+
+  // Validate meter reading when date or meter reading changes
+  const validateMeterReading = async (reading: number, date: Date) => {
+    if (!reading || !date) return;
+
+    setMeterReadingValidation({ isValidating: true, isValid: true });
+
+    try {
+      const response = await fetch('/api/validate-meter-reading', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          meterReading: reading,
+          purchaseDate: date.toISOString(),
+          type: 'purchase',
+          excludePurchaseId: purchaseId, // For edit mode
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setMeterReadingValidation({
+          isValidating: false,
+          isValid: result.valid,
+          error: result.error,
+          suggestion: result.suggestion,
+          minimum: result.minimum,
+          context: result.context,
+        });
+      } else {
+        setMeterReadingValidation({
+          isValidating: false,
+          isValid: false,
+          error: 'Unable to validate meter reading',
+        });
+      }
+    } catch (error) {
+      setMeterReadingValidation({
+        isValidating: false,
+        isValid: false,
+        error: 'Validation error occurred',
+      });
+    }
+  };
+
+  // Watch for changes in meter reading and purchase date
+  useEffect(() => {
+    if (watchedValues.meterReading && watchedValues.purchaseDate) {
+      const debounceTimer = setTimeout(() => {
+        validateMeterReading(watchedValues.meterReading, watchedValues.purchaseDate);
+      }, 500); // Debounce for 500ms
+
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [watchedValues.meterReading, watchedValues.purchaseDate]);
 
   const handleFormSubmit = async (data: PurchaseFormData) => {
     try {
@@ -211,6 +283,76 @@ export function PurchaseForm({
             )}
           </FormField>
 
+          {/* Initial Meter Reading */}
+          <FormField>
+            <FormLabel htmlFor="meterReading">Initial Meter Reading (kWh) *</FormLabel>
+            <div className="relative">
+              <Input
+                id="meterReading"
+                type="number"
+                step="0.01"
+                min={meterReadingValidation.minimum || 0}
+                max="1000000"
+                placeholder={
+                  meterReadingValidation.suggestion 
+                    ? `Enter reading (suggested: ${meterReadingValidation.suggestion.toLocaleString()})` 
+                    : "Enter initial meter reading"
+                }
+                {...register('meterReading', { valueAsNumber: true })}
+                className={`${
+                  errors.meterReading 
+                    ? 'border-red-500' 
+                    : !meterReadingValidation.isValid && watchedValues.meterReading
+                    ? 'border-red-500'
+                    : meterReadingValidation.isValid && watchedValues.meterReading
+                    ? 'border-green-500'
+                    : ''
+                }`}
+              />
+              {meterReadingValidation.isValidating && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                </div>
+              )}
+            </div>
+            
+            {/* Validation Context */}
+            {meterReadingValidation.context && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-950 dark:border-blue-800">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                  <div className="text-sm text-blue-700 dark:text-blue-300">
+                    {meterReadingValidation.context}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Validation Error */}
+            {!meterReadingValidation.isValid && meterReadingValidation.error && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-950 dark:border-red-800">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
+                  <div className="text-sm text-red-700 dark:text-red-300">
+                    {meterReadingValidation.error}
+                    {meterReadingValidation.suggestedMinimum && (
+                      <div className="mt-1 font-medium">
+                        Minimum required: {meterReadingValidation.suggestedMinimum.toLocaleString()} kWh
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <FormDescription>
+              Enter the meter reading at the time of purchase (baseline for consumption calculations)
+            </FormDescription>
+            {errors.meterReading && (
+              <FormMessage>{errors.meterReading.message}</FormMessage>
+            )}
+          </FormField>
+
           {/* Purchase Date */}
           <FormField>
             <FormLabel>Purchase Date *</FormLabel>
@@ -319,7 +461,12 @@ export function PurchaseForm({
               Clear Form
             </Button>
           )}
-          <Button type="submit" disabled={isLoading} className="min-w-[120px]">
+          <Button 
+            type="submit" 
+            variant="outline" 
+            disabled={isLoading || !meterReadingValidation.isValid || meterReadingValidation.isValidating} 
+            className="min-w-[120px]"
+          >
             {isLoading ? (
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

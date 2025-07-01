@@ -237,6 +237,14 @@ export interface BusinessRuleCheck {
     userId: string;
     excludeContributionId?: string;
   };
+  checkSequentialPurchaseOrder?: {
+    purchaseDate: Date;
+    bypassAdmin?: boolean;
+  };
+  checkMeterReadingMatch?: {
+    purchaseId: string;
+    contributionMeterReading: number;
+  };
 }
 
 /**
@@ -256,9 +264,7 @@ export async function validateBusinessRules(
     const purchase = await prisma.tokenPurchase.findUnique({
       where: { id: purchaseId },
       include: {
-        contributions: excludeContributionId
-          ? { where: { id: { not: excludeContributionId } } }
-          : true,
+        contribution: true,
       },
     });
 
@@ -266,12 +272,14 @@ export async function validateBusinessRules(
       return { success: false, error: 'Purchase not found' };
     }
 
-    // Calculate consumed tokens
-    const consumedTokens = purchase.contributions.reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (sum: number, contribution: any) => sum + contribution.tokensConsumed,
-      0
-    );
+    // Calculate consumed tokens (handle edit case)
+    let consumedTokens = 0;
+    if (purchase.contribution) {
+      // If we're editing a contribution, exclude it from the calculation
+      if (!excludeContributionId || purchase.contribution.id !== excludeContributionId) {
+        consumedTokens = purchase.contribution.tokensConsumed;
+      }
+    }
 
     // Check if requested tokens would exceed available tokens
     if (consumedTokens + requestedTokens > purchase.totalTokens) {
@@ -299,6 +307,57 @@ export async function validateBusinessRules(
       return {
         success: false,
         error: 'User already has a contribution for this purchase',
+      };
+    }
+  }
+
+  // Check sequential purchase order (no new purchase without previous contribution)
+  if (rules.checkSequentialPurchaseOrder) {
+    const { purchaseDate, bypassAdmin } = rules.checkSequentialPurchaseOrder;
+
+    // Skip validation if admin bypass is enabled
+    if (bypassAdmin) {
+      return { success: true };
+    }
+
+    // Find the most recent purchase before the new purchase date
+    const previousPurchase = await prisma.tokenPurchase.findFirst({
+      where: {
+        purchaseDate: { lt: purchaseDate },
+      },
+      include: {
+        contribution: true,
+      },
+      orderBy: {
+        purchaseDate: 'desc',
+      },
+    });
+
+    // If there's a previous purchase without contribution, block the new purchase
+    if (previousPurchase && !previousPurchase.contribution) {
+      return {
+        success: false,
+        error: `Cannot create new purchase. Previous purchase from ${previousPurchase.purchaseDate.toLocaleDateString()} requires a contribution first.`,
+      };
+    }
+  }
+
+  // Check meter reading match between contribution and purchase
+  if (rules.checkMeterReadingMatch) {
+    const { purchaseId, contributionMeterReading } = rules.checkMeterReadingMatch;
+
+    const purchase = await prisma.tokenPurchase.findUnique({
+      where: { id: purchaseId },
+    });
+
+    if (!purchase) {
+      return { success: false, error: 'Purchase not found' };
+    }
+
+    if (purchase.meterReading !== contributionMeterReading) {
+      return {
+        success: false,
+        error: `Contribution meter reading (${contributionMeterReading}) must match purchase meter reading (${purchase.meterReading})`,
       };
     }
   }

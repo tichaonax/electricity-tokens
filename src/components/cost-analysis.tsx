@@ -176,7 +176,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
       <div className="mb-6 flex flex-wrap gap-4">
         <div className="flex gap-2">
           <Button
-            variant={analysisType === 'user' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setAnalysisType('user')}
           >
@@ -184,7 +184,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             Cost Breakdown
           </Button>
           <Button
-            variant={analysisType === 'recommendations' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setAnalysisType('recommendations')}
           >
@@ -192,7 +192,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             Recommendations
           </Button>
           <Button
-            variant={analysisType === 'optimal' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
             onClick={() => setAnalysisType('optimal')}
           >
@@ -220,7 +220,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             }
             className="w-40"
           />
-          <Button onClick={fetchCostAnalysis} size="sm">
+          <Button onClick={fetchCostAnalysis} variant="outline" size="sm">
             Refresh
           </Button>
         </div>
