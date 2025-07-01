@@ -49,7 +49,7 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
     {
       icon: FileText,
       label: 'Purchase History',
-      path: '/dashboard/purchases',
+      path: '/dashboard/purchases/history',
     },
     {
       icon: BarChart3,
