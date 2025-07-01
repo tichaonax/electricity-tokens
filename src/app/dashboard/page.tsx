@@ -100,11 +100,14 @@ export default function Dashboard() {
           {/* Quick Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Token Purchases Card - Show to all users */}
-            <Tooltip content="View and manage all electricity token purchases with advanced filtering and sorting">
-              <div
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => router.push('/dashboard/purchases/history')}
-              >
+            <div
+              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => {
+                console.log('Purchase History clicked!');
+                window.location.href = '/dashboard/purchases/history';
+              }}
+              title="View and manage all electricity token purchases with advanced filtering and sorting"
+            >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -143,8 +146,7 @@ export default function Dashboard() {
                   </a>
                 </div>
               </div>
-                </div>
-            </Tooltip>
+            </div>
 
             {/* New Purchase Card - Only show if user can add purchases */}
             {checkPermission('canAddPurchases') && (
