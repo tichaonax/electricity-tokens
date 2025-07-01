@@ -15,6 +15,7 @@ import {
   validateBusinessRules,
 } from '@/lib/validation-middleware';
 import { validateContributionMeterReading } from '@/lib/meter-reading-validation';
+import { canPurchaseAcceptContribution } from '@/lib/sequential-contributions';
 
 export async function GET(request: NextRequest) {
   try {
@@ -207,9 +208,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate sequential contribution constraint (unless admin)
+    const isAdmin = permissionCheck.user!.role === 'ADMIN';
+    const sequentialValidation = await canPurchaseAcceptContribution(
+      purchaseId,
+      isAdmin
+    );
+
+    if (!sequentialValidation.canContribute) {
+      return NextResponse.json(
+        {
+          message:
+            sequentialValidation.reason || 'Cannot contribute to this purchase',
+          nextAvailablePurchaseId: sequentialValidation.nextAvailablePurchaseId,
+        },
+        { status: 400 }
+      );
+    }
+
     // Validate meter reading chronology and constraints
-    const meterValidation = await validateContributionMeterReading(meterReading, purchaseId);
-    
+    const meterValidation = await validateContributionMeterReading(
+      meterReading,
+      purchaseId
+    );
+
     if (!meterValidation.valid) {
       return NextResponse.json(
         { message: meterValidation.error || 'Invalid meter reading' },

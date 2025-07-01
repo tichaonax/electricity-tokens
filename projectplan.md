@@ -282,21 +282,24 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 ### Critical Business Rules Implemented ✅
 
 #### 1. Token Purchase Constraints ✅
+
 - **Mandatory Meter Reading**: Every Token Purchase MUST have a meter reading > 0
-- **Positive Values Only**: Total tokens and total payment must be positive numbers  
-- **Maximum Limits**: 
+- **Positive Values Only**: Total tokens and total payment must be positive numbers
+- **Maximum Limits**:
   - Total tokens cannot exceed 100,000 kWh
   - Total payment cannot exceed $1,000,000
   - Meter reading cannot exceed 1,000,000 kWh
 - **Emergency Purchase Flagging**: Clear identification of higher-rate emergency purchases
 
 #### 2. Meter Reading Chronological Constraints ✅
+
 - **Chronological Order**: Meter readings must follow chronological order based on purchase dates
 - **No Backwards Movement**: Later purchases cannot have meter readings lower than earlier ones
 - **Real-time Validation**: API validation with suggestions for minimum required readings
 - **Chronology Enforcement**: Server-side validation prevents out-of-order meter readings
 
 #### 3. User Contribution Constraints ✅
+
 - **One Contribution Per Purchase**: Only ONE contribution allowed per token purchase (major business rule)
 - **Auto-Select Current User**: Removed admin ability to select different users for contributions
 - **Meter Reading Baseline**: Contributions use the purchase meter reading as the baseline
@@ -305,6 +308,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Smart Suggestions**: Historical consumption analysis for contribution recommendations
 
 #### 4. User and Authentication Constraints ✅
+
 - **Role-Based Access**: ADMIN vs USER roles with different permissions
 - **Account Locking**: Locked accounts cannot perform any actions
 - **Session Validation**: All API endpoints require valid authentication
@@ -312,6 +316,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Fine-grained Permissions**: 12 individual permissions across 5 categories
 
 #### 5. Data Integrity Constraints ✅
+
 - **Referential Integrity**: All foreign keys must reference valid records
 - **Audit Trail**: All CRUD operations must be logged with SHA-256 integrity verification
 - **Input Sanitization**: All inputs validated and sanitized against XSS/SQL injection
@@ -319,6 +324,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Duplicate Prevention**: Comprehensive checks for duplicate contributions and records
 
 #### 6. Security Constraints ✅
+
 - **Rate Limiting**: Multi-tier API rate limits to prevent abuse
 - **SQL Injection Prevention**: All database queries use parameterized statements
 - **XSS Protection**: All user inputs sanitized against cross-site scripting
@@ -326,6 +332,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Encryption**: Sensitive data encrypted at rest and in transit
 
 #### 7. API Validation Constraints ✅
+
 - **Zod Schema Validation**: All API inputs validated with comprehensive schemas
 - **Error Handling**: Consistent error responses with proper HTTP status codes
 - **Business Rule Validation**: Server-side validation of all business constraints
@@ -333,6 +340,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Numeric Range Validation**: Min/max constraints on all numeric fields
 
 #### 8. UI/UX Constraints ✅
+
 - **Form Validation**: Real-time form validation with user feedback
 - **Required Field Enforcement**: Visual indicators for required fields
 - **Confirmation Dialogs**: Destructive actions require confirmation
@@ -353,6 +361,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 ### Recently Implemented New Constraints ✅
 
 #### 9. **Sequential Purchase-Contribution Workflow Constraints** ✅
+
 - **Sequential Order Enforcement**: No new token purchase can be created before the previous purchase has a matching contribution
 - **Global Application**: Constraint applies to all users (not per-user basis)
 - **Admin Override**: Administrators can bypass sequential validation for data corrections
@@ -360,12 +369,14 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Workflow**: Everyone contributes first → Then tokens are purchased → Repeat cycle
 
 #### 10. **Meter Reading Synchronization Constraints** ✅
+
 - **Matching Meter Readings**: Contribution meter reading must exactly match the corresponding purchase meter reading
 - **Automatic Calculation**: Tokens consumed = current purchase meter reading - previous purchase meter reading
 - **Read-only UI**: Contribution meter reading is auto-set and read-only (constraint enforcement)
 - **Previous Purchase Baseline**: Consumption calculated from chronologically previous purchase, not current
 
 #### 11. **Token Purchase Edit Constraints** ✅
+
 - **Permission-Based Editing**: Only the purchase creator or admin can edit token purchases
 - **Contribution Lock Constraint**: Token purchases WITH matching contributions CANNOT be edited (business rule)
 - **Editable Purchase Identification**: UI visually indicates which purchases can be edited with tooltips
@@ -373,6 +384,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **User Feedback**: Clear error messages when attempting to edit locked purchases
 
 #### 12. **Token Purchase Deletion Constraints** ✅
+
 - **Permission-Based Deletion**: Only the purchase creator or admin can delete token purchases
 - **Contribution Lock Constraint**: Token purchases WITH matching contributions CANNOT be deleted (business rule)
 - **API-Level Validation**: Server-side enforcement prevents deleting purchases with contributions
@@ -381,6 +393,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **UI Indicators**: Delete buttons disabled/grayed for purchases with contributions
 
 #### 13. **User Contribution Edit Constraints** ✅
+
 - **Permission-Based Editing**: Only the contribution creator or admin can edit contributions
 - **Click-to-Edit**: Users can click on contribution rows to access edit interface
 - **Live Calculations**: Real-time cost calculations and efficiency metrics during editing
@@ -390,6 +403,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Form Pre-population**: Edit forms pre-populate with existing values for seamless updates
 
 #### 14. **Responsive Design and Mobile Navigation Constraints** ✅
+
 - **Mobile-First Design**: All interfaces must work on mobile devices first
 - **Touch Target Size**: Minimum 44px touch targets for all interactive elements
 - **Responsive Tables**: Table data adapts to mobile card layouts automatically
@@ -398,6 +412,19 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Scrollable Content**: Mobile menus have internal scrolling, not background page scrolling
 - **Fixed Elements**: Headers and footers remain accessible during mobile navigation
 - **Proper Overflow**: Content containers handle overflow correctly on all screen sizes
+
+#### 15. **Sequential Contribution Constraint** ✅
+
+- **Chronological Order Enforcement**: Users must contribute to token purchases in chronological order (oldest first)
+- **Only Oldest Purchase Available**: Only the oldest purchase without a contribution has its "Add Contribution" button enabled
+- **Dropdown Constraint**: Purchase dropdown shows all purchases but disables non-sequential selections
+- **Admin Override Capability**: Administrators can bypass sequential validation for data corrections
+- **Server-side Validation**: API endpoint validates sequential constraint with admin override logic
+- **Progress Indicator**: Progress tracking component shows contribution completion status
+- **User Guidance**: Clear visual indicators guide users to the next purchase they should contribute to
+- **Global Application**: Constraint applies to all users across the system, not per-user basis
+- **Business Rule Priority**: Sequential constraint takes precedence over other contribution rules
+- **UI State Management**: Form buttons and dropdowns dynamically update based on sequential availability
 
 ### Implementation Architecture ✅
 
@@ -409,13 +436,15 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 ### Recently Resolved Constraint Issues ✅
 
 #### Initial Implementation Issues:
+
 - **"Initial Meter Reading always zero"**: Fixed API response parsing in contribution form
-- **"User not found" error**: Fixed PostgreSQL setup and proper user seeding  
+- **"User not found" error**: Fixed PostgreSQL setup and proper user seeding
 - **Meter reading constraint restoration**: Re-implemented positive number requirement after database migration
 - **Sequential workflow implementation**: Complete redesign of purchase-contribution relationship with proper validation
 - **Meter reading synchronization**: Auto-setting contribution readings to match purchase readings
 
 #### API and Database Relationship Issues:
+
 - **Multiple API 500 errors**: Fixed database relationship mismatches (contributions vs contribution)
 - **Usage trends API failures**: Corrected one-to-one relationship queries
 - **Financial reports API failures**: Updated relationship includes and calculations
@@ -423,6 +452,7 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Cost analysis API errors**: Restructured queries for proper one-to-one relationships
 
 #### UI/UX and Dark Mode Issues:
+
 - **AnnualOverviewChart null errors**: Added null checks to prevent .toFixed() errors on null values
 - **Button styling issues**: Fixed white-on-white buttons in dark mode with explicit color classes
 - **Dashboard dark mode**: Added comprehensive dark mode styling to all dashboard components
@@ -430,12 +460,25 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Mobile navigation dark mode**: Comprehensive dark mode styling for slide-out navigation
 - **Responsive table dark mode**: Fixed TouchButton and mobile card styling
 - **Confirmation dialog dark mode**: Enhanced button visibility with explicit dark mode colors
+- **Contribution form dark mode**: Fixed button visibility and form styling for dark theme
+- **Contribute Next button styling**: Added explicit dark mode classes for proper visibility
+- **Progress component implementation**: Created custom Progress component without Radix dependency
 
 #### Navigation and Accessibility Issues:
+
 - **404 errors on purchase row clicks**: Removed invalid row click navigation to non-existent routes
 - **Edit button visibility**: Made Actions column visible on all screen sizes for purchase management
 - **Mobile navigation scrolling**: Fixed scroll behavior so menu content scrolls instead of background
 - **Theme selector accessibility**: Added mobile-accessible theme toggle with proper positioning
+
+#### Form Validation and Business Logic Issues:
+
+- **Nested form structure error**: Fixed invalid HTML with nested `<form>` tags causing React hydration errors
+- **Meter reading validation failure**: Fixed contribution validation to require exact match with purchase meter reading
+- **Button state management**: Fixed grayed out "Record Contribution" buttons by correcting validation logic
+- **Sequential constraint implementation**: Complete implementation of chronological contribution ordering with admin override
+- **Contribution dropdown marking**: Fixed purchases with existing contributions not being properly marked in dropdown
+- **Debug information cleanup**: Removed development debug information from New Contribution form for production use
 
 ## Key Technical Considerations
 

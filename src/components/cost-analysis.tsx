@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // Form components removed as they're not used in this component
@@ -75,9 +75,9 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
 
   useEffect(() => {
     fetchCostAnalysis();
-  }, [userId, analysisType, dateRange]); // fetchCostAnalysis is recreated each render, which is intentional
+  }, [userId, analysisType, dateRange, fetchCostAnalysis]);
 
-  const fetchCostAnalysis = async () => {
+  const fetchCostAnalysis = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -116,7 +116,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, analysisType, dateRange]);
 
   const getEfficiencyColor = (efficiency: number) => {
     if (efficiency >= 95) return 'text-green-600';
@@ -320,7 +320,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                   <span className="text-slate-600 dark:text-slate-400">
                     Average Cost/kWh:
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
                     ${costData.averageCostPerKwh.toFixed(4)}
                   </span>
                 </div>
@@ -328,7 +328,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                   <span className="text-slate-600 dark:text-slate-400">
                     Regular Rate:
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
                     ${costData.regularCostPerKwh.toFixed(4)}
                   </span>
                 </div>
@@ -412,14 +412,14 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             >
               <div className="flex items-center gap-2 mb-2">
                 {getEfficiencyIcon(costData?.efficiency || 0)}
-                <span className="font-medium capitalize">
+                <span className="font-medium capitalize text-slate-900 dark:text-slate-100">
                   {recommendations.efficiency} Efficiency
                 </span>
               </div>
               {recommendations.potentialSavings > 0 && (
-                <p className="text-sm">
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   Potential savings:{' '}
-                  <span className="font-medium">
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
                     ${recommendations.potentialSavings.toFixed(2)}
                   </span>
                 </p>
@@ -454,12 +454,24 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-700">
-                  <th className="text-left p-2">Purchase Date</th>
-                  <th className="text-left p-2">Type</th>
-                  <th className="text-right p-2">Tokens</th>
-                  <th className="text-right p-2">Actual</th>
-                  <th className="text-right p-2">Optimal</th>
-                  <th className="text-right p-2">Difference</th>
+                  <th className="text-left p-2 text-slate-900 dark:text-slate-100">
+                    Purchase Date
+                  </th>
+                  <th className="text-left p-2 text-slate-900 dark:text-slate-100">
+                    Type
+                  </th>
+                  <th className="text-right p-2 text-slate-900 dark:text-slate-100">
+                    Tokens
+                  </th>
+                  <th className="text-right p-2 text-slate-900 dark:text-slate-100">
+                    Actual
+                  </th>
+                  <th className="text-right p-2 text-slate-900 dark:text-slate-100">
+                    Optimal
+                  </th>
+                  <th className="text-right p-2 text-slate-900 dark:text-slate-100">
+                    Difference
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -468,7 +480,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                     key={index}
                     className="border-b border-slate-100 dark:border-slate-800"
                   >
-                    <td className="p-2">
+                    <td className="p-2 text-slate-900 dark:text-slate-100">
                       {new Date(contrib.purchaseDate).toLocaleDateString()}
                     </td>
                     <td className="p-2">
@@ -482,11 +494,13 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                         {contrib.isEmergency ? 'Emergency' : 'Regular'}
                       </span>
                     </td>
-                    <td className="text-right p-2">{contrib.tokensConsumed}</td>
-                    <td className="text-right p-2">
+                    <td className="text-right p-2 text-slate-900 dark:text-slate-100">
+                      {contrib.tokensConsumed}
+                    </td>
+                    <td className="text-right p-2 text-slate-900 dark:text-slate-100">
                       ${contrib.actualContribution.toFixed(2)}
                     </td>
-                    <td className="text-right p-2">
+                    <td className="text-right p-2 text-slate-900 dark:text-slate-100">
                       ${contrib.totalOptimalContribution.toFixed(2)}
                     </td>
                     <td

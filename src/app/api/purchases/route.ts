@@ -15,6 +15,7 @@ import {
   validateBusinessRules,
 } from '@/lib/validation-middleware';
 import { validateMeterReadingChronology } from '@/lib/meter-reading-validation';
+import { findOldestPurchaseWithoutContribution } from '@/lib/sequential-contributions';
 
 export async function GET(request: NextRequest) {
   try {
@@ -112,7 +113,7 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    const [purchases, total] = await Promise.all([
+    const [purchases, total, sequentialResult] = await Promise.all([
       prisma.tokenPurchase.findMany({
         where,
         include: {
@@ -140,15 +141,35 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.tokenPurchase.count({ where }),
+      findOldestPurchaseWithoutContribution(),
     ]);
 
+    // Add canContribute field to each purchase based on sequential constraint
+    const isAdmin = permissionCheck.user?.role === 'ADMIN';
+    const nextAvailablePurchaseId = sequentialResult.nextAvailablePurchase?.id;
+
+    const purchasesWithContributeFlag = purchases.map((purchase) => ({
+      ...purchase,
+      canContribute:
+        !purchase.contribution &&
+        (isAdmin || // Admin can bypass constraint
+          purchase.id === nextAvailablePurchaseId), // Or it's the next available purchase
+    }));
+
     return NextResponse.json({
-      purchases,
+      purchases: purchasesWithContributeFlag,
       pagination: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      sequentialInfo: {
+        nextAvailablePurchaseId,
+        totalPurchasesWithoutContributions:
+          sequentialResult.totalPurchasesWithoutContributions,
+        allPurchasesHaveContributions:
+          sequentialResult.allPurchasesHaveContributions,
       },
     });
   } catch (error) {
@@ -217,7 +238,7 @@ export async function POST(request: NextRequest) {
       purchaseDateObj,
       'purchase'
     );
-    
+
     if (!meterValidation.valid) {
       return NextResponse.json(
         { message: meterValidation.error || 'Invalid meter reading' },

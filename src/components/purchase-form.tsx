@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type CreateTokenPurchaseInput } from '@/lib/validations';
@@ -77,6 +77,20 @@ export function PurchaseForm({
     isValid: true,
   });
 
+  const [sequentialValidation, setSequentialValidation] = useState<{
+    isValidating: boolean;
+    isValid: boolean;
+    error?: string;
+    blockingPurchase?: {
+      id: string;
+      date: string;
+      totalTokens: number;
+    };
+  }>({
+    isValidating: false,
+    isValid: true,
+  });
+
   const {
     register,
     handleSubmit,
@@ -104,59 +118,122 @@ export function PurchaseForm({
       : 0;
 
   // Validate meter reading when date or meter reading changes
-  const validateMeterReading = async (reading: number, date: Date) => {
-    if (!reading || !date) return;
+  const validateMeterReading = useCallback(
+    async (reading: number, date: Date) => {
+      if (!reading || !date) return;
 
-    setMeterReadingValidation({ isValidating: true, isValid: true });
+      setMeterReadingValidation({ isValidating: true, isValid: true });
 
-    try {
-      const response = await fetch('/api/validate-meter-reading', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          meterReading: reading,
-          purchaseDate: date.toISOString(),
-          type: 'purchase',
-          excludePurchaseId: purchaseId, // For edit mode
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setMeterReadingValidation({
-          isValidating: false,
-          isValid: result.valid,
-          error: result.error,
-          suggestion: result.suggestion,
-          minimum: result.minimum,
-          context: result.context,
+      try {
+        const response = await fetch('/api/validate-meter-reading', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            meterReading: reading,
+            purchaseDate: date.toISOString(),
+            type: 'purchase',
+            excludePurchaseId: purchaseId, // For edit mode
+          }),
         });
-      } else {
+
+        if (response.ok) {
+          const result = await response.json();
+          setMeterReadingValidation({
+            isValidating: false,
+            isValid: result.valid,
+            error: result.error,
+            suggestion: result.suggestion,
+            minimum: result.minimum,
+            context: result.context,
+          });
+        } else {
+          setMeterReadingValidation({
+            isValidating: false,
+            isValid: false,
+            error: 'Unable to validate meter reading',
+          });
+        }
+      } catch {
         setMeterReadingValidation({
           isValidating: false,
           isValid: false,
-          error: 'Unable to validate meter reading',
+          error: 'Validation error occurred',
         });
       }
-    } catch (error) {
-      setMeterReadingValidation({
-        isValidating: false,
-        isValid: false,
-        error: 'Validation error occurred',
-      });
-    }
-  };
+    },
+    [purchaseId]
+  );
+
+  // Validate sequential purchase order constraint
+  const validateSequentialOrder = useCallback(
+    async (date: Date) => {
+      if (!date || mode === 'edit') return; // Skip validation for edits
+
+      setSequentialValidation({ isValidating: true, isValid: true });
+
+      try {
+        const response = await fetch('/api/validate-sequential-purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            purchaseDate: date.toISOString(),
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setSequentialValidation({
+            isValidating: false,
+            isValid: result.valid,
+            error: result.error,
+            blockingPurchase: result.blockingPurchase,
+          });
+        } else {
+          setSequentialValidation({
+            isValidating: false,
+            isValid: false,
+            error: 'Unable to validate purchase order',
+          });
+        }
+      } catch {
+        setSequentialValidation({
+          isValidating: false,
+          isValid: false,
+          error: 'Validation error occurred',
+        });
+      }
+    },
+    [mode]
+  );
 
   // Watch for changes in meter reading and purchase date
   useEffect(() => {
     if (watchedValues.meterReading && watchedValues.purchaseDate) {
       const debounceTimer = setTimeout(() => {
-        validateMeterReading(watchedValues.meterReading, watchedValues.purchaseDate);
+        validateMeterReading(
+          watchedValues.meterReading,
+          watchedValues.purchaseDate
+        );
       }, 500); // Debounce for 500ms
 
       return () => clearTimeout(debounceTimer);
     }
-  }, [watchedValues.meterReading, watchedValues.purchaseDate]);
+  }, [
+    watchedValues.meterReading,
+    watchedValues.purchaseDate,
+    validateMeterReading,
+  ]);
+
+  // Watch for changes in purchase date for sequential validation
+  useEffect(() => {
+    if (watchedValues.purchaseDate && mode === 'create') {
+      const debounceTimer = setTimeout(() => {
+        validateSequentialOrder(watchedValues.purchaseDate);
+      }, 500); // Debounce for 500ms
+
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [watchedValues.purchaseDate, mode, validateSequentialOrder]);
 
   const handleFormSubmit = async (data: PurchaseFormData) => {
     try {
@@ -285,7 +362,9 @@ export function PurchaseForm({
 
           {/* Initial Meter Reading */}
           <FormField>
-            <FormLabel htmlFor="meterReading">Initial Meter Reading (kWh) *</FormLabel>
+            <FormLabel htmlFor="meterReading">
+              Initial Meter Reading (kWh) *
+            </FormLabel>
             <div className="relative">
               <Input
                 id="meterReading"
@@ -294,19 +373,21 @@ export function PurchaseForm({
                 min={meterReadingValidation.minimum || 0}
                 max="1000000"
                 placeholder={
-                  meterReadingValidation.suggestion 
-                    ? `Enter reading (suggested: ${meterReadingValidation.suggestion.toLocaleString()})` 
-                    : "Enter initial meter reading"
+                  meterReadingValidation.suggestion
+                    ? `Enter reading (suggested: ${meterReadingValidation.suggestion.toLocaleString()})`
+                    : 'Enter initial meter reading'
                 }
                 {...register('meterReading', { valueAsNumber: true })}
                 className={`${
-                  errors.meterReading 
-                    ? 'border-red-500' 
-                    : !meterReadingValidation.isValid && watchedValues.meterReading
+                  errors.meterReading
                     ? 'border-red-500'
-                    : meterReadingValidation.isValid && watchedValues.meterReading
-                    ? 'border-green-500'
-                    : ''
+                    : !meterReadingValidation.isValid &&
+                        watchedValues.meterReading
+                      ? 'border-red-500'
+                      : meterReadingValidation.isValid &&
+                          watchedValues.meterReading
+                        ? 'border-green-500'
+                        : ''
                 }`}
               />
               {meterReadingValidation.isValidating && (
@@ -315,7 +396,7 @@ export function PurchaseForm({
                 </div>
               )}
             </div>
-            
+
             {/* Validation Context */}
             {meterReadingValidation.context && (
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-950 dark:border-blue-800">
@@ -329,24 +410,29 @@ export function PurchaseForm({
             )}
 
             {/* Validation Error */}
-            {!meterReadingValidation.isValid && meterReadingValidation.error && (
-              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-950 dark:border-red-800">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
-                  <div className="text-sm text-red-700 dark:text-red-300">
-                    {meterReadingValidation.error}
-                    {meterReadingValidation.suggestedMinimum && (
-                      <div className="mt-1 font-medium">
-                        Minimum required: {meterReadingValidation.suggestedMinimum.toLocaleString()} kWh
-                      </div>
-                    )}
+            {!meterReadingValidation.isValid &&
+              meterReadingValidation.error && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-950 dark:border-red-800">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
+                    <div className="text-sm text-red-700 dark:text-red-300">
+                      {meterReadingValidation.error}
+                      {meterReadingValidation.suggestedMinimum && (
+                        <div className="mt-1 font-medium">
+                          Minimum required:{' '}
+                          {meterReadingValidation.suggestedMinimum.toLocaleString()}{' '}
+                          kWh
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <FormDescription>
-              Enter the meter reading at the time of purchase (baseline for consumption calculations)
+              Enter the meter reading at the time of purchase. This value must
+              be greater than or equal to the highest previous meter reading to
+              maintain chronological order.
             </FormDescription>
             {errors.meterReading && (
               <FormMessage>{errors.meterReading.message}</FormMessage>
@@ -374,6 +460,43 @@ export function PurchaseForm({
             {errors.purchaseDate && (
               <FormMessage>{errors.purchaseDate.message}</FormMessage>
             )}
+
+            {/* Sequential Purchase Validation Error */}
+            {!sequentialValidation.isValid &&
+              sequentialValidation.error &&
+              mode === 'create' && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-950 dark:border-red-800">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
+                    <div className="text-sm text-red-700 dark:text-red-300">
+                      <div className="font-medium">
+                        Purchase Order Constraint Violation
+                      </div>
+                      <div className="mt-1">{sequentialValidation.error}</div>
+                      {sequentialValidation.blockingPurchase && (
+                        <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/50 rounded border">
+                          <div className="font-medium text-xs text-red-800 dark:text-red-200">
+                            Blocking Purchase Details:
+                          </div>
+                          <div className="text-xs text-red-700 dark:text-red-300">
+                            Date:{' '}
+                            {new Date(
+                              sequentialValidation.blockingPurchase.date
+                            ).toLocaleDateString()}
+                            <br />
+                            Tokens:{' '}
+                            {sequentialValidation.blockingPurchase.totalTokens.toLocaleString()}{' '}
+                            kWh
+                          </div>
+                          <div className="mt-1 text-xs text-red-600 dark:text-red-400">
+                            → Please add a contribution for this purchase first
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
           </FormField>
 
           {/* Emergency Purchase */}
@@ -448,6 +571,7 @@ export function PurchaseForm({
               variant="outline"
               onClick={onCancel}
               disabled={isLoading}
+              className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               Cancel
             </Button>
@@ -457,15 +581,23 @@ export function PurchaseForm({
               variant="outline"
               onClick={() => reset()}
               disabled={isLoading}
+              className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               Clear Form
             </Button>
           )}
-          <Button 
-            type="submit" 
-            variant="outline" 
-            disabled={isLoading || !meterReadingValidation.isValid || meterReadingValidation.isValidating} 
-            className="min-w-[120px]"
+          <Button
+            type="submit"
+            variant="default"
+            disabled={
+              isLoading ||
+              !meterReadingValidation.isValid ||
+              meterReadingValidation.isValidating ||
+              (mode === 'create' &&
+                (!sequentialValidation.isValid ||
+                  sequentialValidation.isValidating))
+            }
+            className="min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <div className="flex items-center gap-2">

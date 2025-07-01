@@ -27,7 +27,10 @@ export async function validateMeterReadingChronology(
 ): Promise<MeterReadingValidationResult> {
   try {
     // Find the latest meter reading that occurred on or before the given purchase date
-    const lastValidReading = await findLastMeterReading(purchaseDate, excludePurchaseId);
+    const lastValidReading = await findLastMeterReading(
+      purchaseDate,
+      excludePurchaseId
+    );
 
     // If no previous readings exist, any reading is valid
     if (!lastValidReading) {
@@ -82,35 +85,16 @@ export async function validateContributionMeterReading(
       };
     }
 
-    // Contribution reading must be >= purchase reading
-    if (contributionReading < purchase.meterReading) {
-      return {
-        valid: false,
-        error: `Current meter reading must be at least ${purchase.meterReading.toLocaleString()} kWh (initial reading for this purchase).`,
-        suggestedMinimum: purchase.meterReading,
-      };
-    }
-
-    // Also validate chronological order (contribution happens after purchase)
-    const chronologyResult = await validateMeterReadingChronology(
-      contributionReading,
-      new Date(), // Use current date for contribution
-      'contribution'
-    );
-
-    if (!chronologyResult.valid) {
-      // If chronology fails, but it's higher than purchase reading,
-      // use the higher of the two minimums
-      const minimumRequired = Math.max(
-        purchase.meterReading,
-        chronologyResult.suggestedMinimum || 0
+    // For contributions, the meter reading should exactly match the purchase meter reading
+    // This is the business rule: contribution meter reading = purchase meter reading
+    if (contributionReading !== purchase.meterReading) {
+      console.log(
+        `Validation failed: contribution ${contributionReading} !== purchase ${purchase.meterReading}`
       );
-
       return {
         valid: false,
-        error: `Meter reading must be at least ${minimumRequired.toLocaleString()} kWh to maintain chronological order.`,
-        suggestedMinimum: minimumRequired,
-        lastReading: chronologyResult.lastReading,
+        error: `Contribution meter reading must match the purchase meter reading exactly: ${purchase.meterReading.toLocaleString()} kWh. Current: ${contributionReading.toLocaleString()} kWh.`,
+        suggestedMinimum: purchase.meterReading,
       };
     }
 
@@ -161,7 +145,7 @@ async function findLastMeterReading(
     type: 'purchase' | 'contribution';
   } | null = null;
 
-  // Collect all readings from all purchases and contributions  
+  // Collect all readings from all purchases and contributions
   const allReadings: Array<{
     value: number;
     date: Date;
@@ -204,7 +188,10 @@ export async function getMinimumMeterReading(
   purchaseDate: Date,
   excludePurchaseId?: string
 ): Promise<number> {
-  const lastReading = await findLastMeterReading(purchaseDate, excludePurchaseId);
+  const lastReading = await findLastMeterReading(
+    purchaseDate,
+    excludePurchaseId
+  );
   return lastReading ? lastReading.value : 0;
 }
 
@@ -221,21 +208,26 @@ export async function getMeterReadingSuggestion(
   suggestion?: number;
   context?: string;
 }> {
-  const lastReading = await findLastMeterReading(purchaseDate, excludePurchaseId);
+  const lastReading = await findLastMeterReading(
+    purchaseDate,
+    excludePurchaseId
+  );
 
   if (!lastReading) {
     return {
       minimum: 0,
       suggestion: 5000, // Reasonable starting point
-      context: 'No previous meter readings found. Enter your current meter reading.',
+      context:
+        'No previous meter readings found. Enter your current meter reading.',
     };
   }
 
   // Suggest a reasonable increment based on time difference
   const daysDiff = Math.ceil(
-    (purchaseDate.getTime() - lastReading.date.getTime()) / (1000 * 60 * 60 * 24)
+    (purchaseDate.getTime() - lastReading.date.getTime()) /
+      (1000 * 60 * 60 * 24)
   );
-  
+
   // Assume average daily usage of 10-15 kWh
   const avgDailyUsage = 12;
   const suggestedIncrement = Math.max(daysDiff * avgDailyUsage, 10);
