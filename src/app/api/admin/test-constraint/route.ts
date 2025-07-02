@@ -51,13 +51,13 @@ export async function POST(request: NextRequest) {
           constraintWorking: false
         });
 
-      } catch (error: any) {
-        if (error.code === 'P2003') {
+      } catch (error: unknown) {
+        if ((error as { code?: string }).code === 'P2003') {
           return NextResponse.json({
             success: true,
             message: 'Constraint is working: Cannot delete purchase with contribution',
             constraintWorking: true,
-            error: error.message
+            error: (error as Error).message
           });
         } else {
           throw error;

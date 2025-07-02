@@ -7,7 +7,7 @@ import { UserPermissions, hasPermission, mergeWithDefaultPermissions, ADMIN_PERM
 import type { UpdateData } from '@/types/api';
 
 // Helper function to get user permissions
-function getUserPermissions(user: { role?: string; permissions?: any }): UserPermissions {
+function getUserPermissions(user: { role?: string; permissions?: unknown }): UserPermissions {
   if (user.role === 'ADMIN') {
     return ADMIN_PERMISSIONS;
   }
