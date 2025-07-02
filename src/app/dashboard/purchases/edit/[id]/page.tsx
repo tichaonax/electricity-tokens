@@ -11,6 +11,7 @@ interface Purchase {
   id: string;
   totalTokens: number;
   totalPayment: number;
+  meterReading: number;
   purchaseDate: string;
   isEmergency: boolean;
   creator: {
@@ -184,6 +185,7 @@ export default function EditPurchasePage() {
               initialData={{
                 totalTokens: purchase?.totalTokens || 0,
                 totalPayment: purchase?.totalPayment || 0,
+                meterReading: purchase?.meterReading || 0,
                 purchaseDate: purchase?.purchaseDate
                   ? new Date(purchase.purchaseDate).toISOString().split('T')[0]
                   : '',

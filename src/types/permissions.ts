@@ -8,6 +8,7 @@ export interface UserPermissions {
   // Contribution Management
   canAddContributions: boolean;
   canEditContributions: boolean;
+  canDeleteContributions: boolean;
   
   // Reports Access
   canViewUsageReports: boolean;
@@ -33,6 +34,7 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   // Contribution Management - Full access
   canAddContributions: true,
   canEditContributions: true,
+  canDeleteContributions: false,
   
   // Reports Access - Basic access
   canViewUsageReports: true,
@@ -55,6 +57,7 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canDeletePurchases: true,
   canAddContributions: true,
   canEditContributions: true,
+  canDeleteContributions: true,
   canViewUsageReports: true,
   canViewFinancialReports: true,
   canViewEfficiencyReports: true,
@@ -71,6 +74,7 @@ export const READ_ONLY_PERMISSIONS: UserPermissions = {
   canDeletePurchases: false,
   canAddContributions: false,
   canEditContributions: false,
+  canDeleteContributions: false,
   canViewUsageReports: true,
   canViewFinancialReports: true,
   canViewEfficiencyReports: false,
@@ -87,6 +91,7 @@ export const CONTRIBUTOR_ONLY_PERMISSIONS: UserPermissions = {
   canDeletePurchases: false,
   canAddContributions: true,
   canEditContributions: true,
+  canDeleteContributions: false,
   canViewUsageReports: false,
   canViewFinancialReports: false,
   canViewEfficiencyReports: false,

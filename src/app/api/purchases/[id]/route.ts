@@ -12,6 +12,214 @@ import {
 } from '@/lib/validation-middleware';
 import { validateMeterReadingChronology } from '@/lib/meter-reading-validation';
 
+// Helper function to analyze impact of purchase changes
+async function analyzePurchaseChangeImpact(
+  purchaseId: string,
+  changes: { meterReading?: number; totalTokens?: number; totalPayment?: number }
+) {
+  const impact = {
+    affectedContribution: null as any,
+    requiresRecalculation: false,
+    tokenConstraintViolations: [] as string[],
+    oldValues: {} as any,
+    newValues: {} as any,
+  };
+
+  // Get the purchase with its contribution
+  const purchase = await prisma.tokenPurchase.findUnique({
+    where: { id: purchaseId },
+    include: { contribution: true },
+  });
+
+  if (!purchase) return impact;
+
+  // Check chronological constraints for meter reading changes
+  if (changes.meterReading !== undefined) {
+    const newMeterReading = changes.meterReading;
+    
+    // Check against previous purchase
+    const previousPurchase = await prisma.tokenPurchase.findFirst({
+      where: {
+        createdAt: { lt: purchase.createdAt },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    if (previousPurchase && newMeterReading < previousPurchase.meterReading) {
+      impact.tokenConstraintViolations.push(
+        `New meter reading (${newMeterReading}) cannot be less than previous purchase meter reading (${previousPurchase.meterReading})`
+      );
+    }
+    
+    // Check against next purchase
+    const nextPurchase = await prisma.tokenPurchase.findFirst({
+      where: {
+        createdAt: { gt: purchase.createdAt },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    
+    if (nextPurchase && newMeterReading > nextPurchase.meterReading) {
+      impact.tokenConstraintViolations.push(
+        `New meter reading (${newMeterReading}) cannot be greater than next purchase meter reading (${nextPurchase.meterReading})`
+      );
+    }
+  }
+
+  // Check if there's an associated contribution that will be affected
+  if (purchase.contribution && (changes.meterReading !== undefined || changes.totalTokens !== undefined)) {
+    impact.affectedContribution = purchase.contribution;
+    impact.requiresRecalculation = changes.meterReading !== undefined; // Recalculate if meter reading changes
+    
+    if (changes.meterReading !== undefined) {
+      // Calculate new tokensConsumed for the matching contribution
+      const previousPurchase = await prisma.tokenPurchase.findFirst({
+        where: {
+          createdAt: { lt: purchase.createdAt },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      
+      const previousMeterReading = previousPurchase?.meterReading || 0;
+      const newMeterReading = changes.meterReading;
+      const newTokensConsumed = newMeterReading - previousMeterReading;
+      
+      // Also check impact on next contribution
+      const nextPurchase = await prisma.tokenPurchase.findFirst({
+        where: {
+          createdAt: { gt: purchase.createdAt },
+        },
+        orderBy: { createdAt: 'asc' },
+        include: { contribution: true },
+      });
+      
+      impact.oldValues = {
+        purchaseMeterReading: purchase.meterReading,
+        contributionMeterReading: purchase.contribution.meterReading,
+        contributionTokensConsumed: purchase.contribution.tokensConsumed,
+        nextContributionTokensConsumed: nextPurchase?.contribution?.tokensConsumed,
+      };
+      
+      impact.newValues = {
+        purchaseMeterReading: newMeterReading,
+        contributionMeterReading: newMeterReading, // Synced to purchase
+        contributionTokensConsumed: newTokensConsumed,
+        nextContributionTokensConsumed: nextPurchase?.contribution ? 
+          nextPurchase.contribution.meterReading - newMeterReading : undefined,
+      };
+
+      // Validate token constraints
+      const newTotalTokens = changes.totalTokens ?? purchase.totalTokens;
+      if (newTokensConsumed > newTotalTokens) {
+        impact.tokenConstraintViolations.push(
+          `Recalculated consumption (${newTokensConsumed} kWh) exceeds available tokens (${newTotalTokens} kWh)`
+        );
+      }
+      
+      if (newTokensConsumed < 0) {
+        impact.tokenConstraintViolations.push(
+          `Invalid calculation: New meter reading (${newMeterReading}) is less than previous purchase meter reading (${previousMeterReading})`
+        );
+      }
+    } else if (changes.totalTokens !== undefined) {
+      // Only totalTokens changed
+      const currentTokensConsumed = purchase.contribution.tokensConsumed;
+      const newTotalTokens = changes.totalTokens;
+      
+      if (currentTokensConsumed > newTotalTokens) {
+        impact.tokenConstraintViolations.push(
+          `Current consumption (${currentTokensConsumed} kWh) exceeds new available tokens (${newTotalTokens} kWh)`
+        );
+      }
+    }
+  }
+
+  return impact;
+}
+
+// Helper function to recalculate contribution when purchase meter reading changes
+async function recalculateContributionsAfterPurchaseUpdate(
+  updatedPurchaseId: string,
+  newMeterReading: number
+) {
+  const results = {
+    updatedContributions: [] as any[],
+    affectedPurchases: [] as string[],
+  };
+
+  // 1. Update the matching contribution's meter reading to sync with purchase
+  const matchingContribution = await prisma.userContribution.findUnique({
+    where: { purchaseId: updatedPurchaseId },
+    include: { purchase: true },
+  });
+
+  if (matchingContribution) {
+    // Get the previous purchase to calculate tokensConsumed
+    const previousPurchase = await prisma.tokenPurchase.findFirst({
+      where: {
+        createdAt: { lt: matchingContribution.purchase.createdAt },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const previousMeterReading = previousPurchase?.meterReading || 0;
+    const newTokensConsumed = newMeterReading - previousMeterReading;
+
+    // Update the matching contribution
+    const updatedContribution = await prisma.userContribution.update({
+      where: { id: matchingContribution.id },
+      data: {
+        meterReading: newMeterReading, // Sync with purchase
+        tokensConsumed: newTokensConsumed,
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    results.updatedContributions.push(updatedContribution);
+    results.affectedPurchases.push(updatedPurchaseId);
+  }
+
+  // 2. Find and recalculate the NEXT contribution (which uses this purchase as its previous)
+  const updatedPurchase = await prisma.tokenPurchase.findUnique({
+    where: { id: updatedPurchaseId },
+  });
+
+  if (updatedPurchase) {
+    const nextPurchase = await prisma.tokenPurchase.findFirst({
+      where: {
+        createdAt: { gt: updatedPurchase.createdAt },
+      },
+      orderBy: { createdAt: 'asc' },
+      include: { contribution: true },
+    });
+
+    if (nextPurchase?.contribution) {
+      const nextNewTokensConsumed = nextPurchase.contribution.meterReading - newMeterReading;
+
+      const updatedNextContribution = await prisma.userContribution.update({
+        where: { id: nextPurchase.contribution.id },
+        data: {
+          tokensConsumed: nextNewTokensConsumed,
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      results.updatedContributions.push(updatedNextContribution);
+      results.affectedPurchases.push(nextPurchase.id);
+    }
+  }
+
+  return results;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -108,28 +316,42 @@ export async function PUT(
       );
     }
 
-    // Validate request body and parameters
-    const validation = await validateRequest(
+    // Parse and validate request body
+    const requestBody = await request.json();
+    console.log('Purchase update request body:', JSON.stringify(requestBody, null, 2));
+
+    // Validate request body directly
+    try {
+      const bodyValidation = updateTokenPurchaseSchema.parse(requestBody);
+      console.log('Body validation passed:', JSON.stringify(bodyValidation, null, 2));
+    } catch (error) {
+      console.error('Body validation failed:', error);
+      return NextResponse.json(
+        { message: 'Invalid request body', error: error instanceof Error ? error.message : 'Unknown validation error' },
+        { status: 400 }
+      );
+    }
+
+    // Validate route parameters
+    const paramValidation = await validateRequest(
       request,
       {
-        body: updateTokenPurchaseSchema,
         params: idParamSchema,
       },
       { id }
     );
 
-    if (!validation.success) {
-      return createValidationErrorResponse(validation);
+    if (!paramValidation.success) {
+      console.error('Parameter validation failed:', JSON.stringify(paramValidation, null, 2));
+      return createValidationErrorResponse(paramValidation);
     }
 
-    const { body } = validation.data as {
-      body: {
-        totalTokens?: number;
-        totalPayment?: number;
-        meterReading?: number;
-        purchaseDate?: string | Date;
-        isEmergency?: boolean;
-      };
+    const body = requestBody as {
+      totalTokens?: number;
+      totalPayment?: number;
+      meterReading?: number;
+      purchaseDate?: string | Date;
+      isEmergency?: boolean;
     };
     const sanitizedData = sanitizeInput(body);
     const { totalTokens, totalPayment, meterReading, purchaseDate, isEmergency } =
@@ -156,8 +378,8 @@ export async function PUT(
       );
     }
 
-    // Check if purchase has contribution - prevent editing if it does
-    if (existingPurchase.contribution) {
+    // Check if purchase has contribution - prevent editing if it does (unless admin override)
+    if (existingPurchase.contribution && permissionCheck.user!.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Cannot edit purchase: This purchase already has a matching contribution.' },
         { status: 400 }
@@ -218,6 +440,36 @@ export async function PUT(
       }
     }
 
+    // Analyze impact of changes before making them
+    let impactAnalysis = null;
+    
+    // Analyze impact if admin is changing meter reading or tokens
+    if (permissionCheck.user!.role === 'ADMIN' && 
+        (meterReading !== undefined || totalTokens !== undefined)) {
+      try {
+        impactAnalysis = await analyzePurchaseChangeImpact(id, {
+          meterReading,
+          totalTokens,
+          totalPayment,
+        });
+
+        // Check for constraint violations
+        if (impactAnalysis.tokenConstraintViolations.length > 0) {
+          return NextResponse.json(
+            { 
+              message: 'Cannot apply changes: Token constraint violations detected',
+              violations: impactAnalysis.tokenConstraintViolations,
+              impactAnalysis 
+            },
+            { status: 400 }
+          );
+        }
+      } catch (error) {
+        console.error('Error analyzing purchase impact:', error);
+        // Continue with update if impact analysis fails for non-critical changes
+      }
+    }
+
     const updatedPurchase = await prisma.tokenPurchase.update({
       where: { id: id },
       data: updateData,
@@ -243,19 +495,90 @@ export async function PUT(
       },
     });
 
-    // Create audit log entry
+    // Perform contribution recalculation if meter reading changed
+    let recalculationResults = null;
+    if (impactAnalysis?.requiresRecalculation && meterReading !== undefined) {
+      recalculationResults = await recalculateContributionsAfterPurchaseUpdate(
+        id,
+        meterReading
+      );
+
+      // Create audit logs for each recalculated contribution
+      for (const updatedContribution of recalculationResults.updatedContributions) {
+        await prisma.auditLog.create({
+          data: {
+            userId: permissionCheck.user!.id,
+            action: 'RECALCULATE',
+            entityType: 'UserContribution',
+            entityId: updatedContribution.id,
+            oldValues: {
+              meterReading: impactAnalysis.oldValues.contributionMeterReading,
+              tokensConsumed: impactAnalysis.oldValues.contributionTokensConsumed,
+              trigger: 'Purchase meter reading changed',
+              originalPurchaseMeterReading: impactAnalysis.oldValues.purchaseMeterReading,
+            },
+            newValues: {
+              meterReading: updatedContribution.meterReading,
+              tokensConsumed: updatedContribution.tokensConsumed,
+              trigger: 'Purchase meter reading changed',
+              newPurchaseMeterReading: meterReading,
+            },
+          },
+        });
+      }
+    }
+
+    // Create audit log entry for purchase update
     await prisma.auditLog.create({
       data: {
         userId: permissionCheck.user!.id,
         action: 'UPDATE',
         entityType: 'TokenPurchase',
         entityId: id,
-        oldValues: existingPurchase,
-        newValues: updatedPurchase,
+        oldValues: {
+          ...existingPurchase,
+          cascadingChanges: recalculationResults ? {
+            affectedContributions: recalculationResults.affectedPurchases,
+            recalculationPerformed: true,
+          } : null,
+        },
+        newValues: {
+          ...updatedPurchase,
+          cascadingChanges: recalculationResults ? {
+            affectedContributions: recalculationResults.affectedPurchases,
+            recalculationPerformed: true,
+            updatedContributions: recalculationResults.updatedContributions.map(c => ({
+              id: c.id,
+              meterReading: c.meterReading,
+              tokensConsumed: c.tokensConsumed,
+            })),
+          } : null,
+        },
       },
     });
 
-    return NextResponse.json(updatedPurchase);
+    // Return response with recalculation info
+    const response = {
+      ...updatedPurchase,
+      ...(recalculationResults && {
+        recalculationSummary: {
+          contributionsRecalculated: true,
+          affectedContributions: recalculationResults.updatedContributions.length,
+          updatedContributions: recalculationResults.updatedContributions.map(c => ({
+            id: c.id,
+            userId: c.user.id,
+            userName: c.user.name,
+            oldMeterReading: impactAnalysis?.oldValues.contributionMeterReading,
+            newMeterReading: c.meterReading,
+            oldTokensConsumed: impactAnalysis?.oldValues.contributionTokensConsumed,
+            newTokensConsumed: c.tokensConsumed,
+          })),
+          trigger: 'Purchase meter reading changed',
+        },
+      }),
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error updating purchase:', error);
     return NextResponse.json(
@@ -314,6 +637,21 @@ export async function DELETE(
       );
     }
 
+    // Constraint: Only allow deletion of the globally latest purchase in the system
+    const globalLatestPurchase = await prisma.tokenPurchase.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!globalLatestPurchase || globalLatestPurchase.id !== id) {
+      return NextResponse.json(
+        { 
+          message: 'Cannot delete purchase: Only the latest purchase in the system may be deleted',
+          constraint: 'GLOBAL_LATEST_PURCHASE_ONLY'
+        },
+        { status: 400 }
+      );
+    }
+
     // Check permissions - only creator or admin can delete
     if (
       existingPurchase.createdBy !== permissionCheck.user!.id &&
@@ -325,17 +663,31 @@ export async function DELETE(
       );
     }
 
-    // Check if purchase has contribution - prevent deletion if it does
-    if (existingPurchase.contribution) {
+    // Check if purchase has contribution - prevent deletion if it does (unless admin override)
+    if (existingPurchase.contribution && permissionCheck.user!.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Cannot delete purchase with existing contribution' },
         { status: 400 }
       );
     }
 
-    await prisma.tokenPurchase.delete({
-      where: { id: id },
-    });
+    try {
+      await prisma.tokenPurchase.delete({
+        where: { id: id },
+      });
+    } catch (error: any) {
+      // If this fails due to constraint, provide helpful message for admin
+      if (error.code === 'P2003') {
+        return NextResponse.json(
+          { 
+            message: 'Cannot delete purchase: It has an associated contribution. Please delete the contribution first or contact system administrator.',
+            constraintViolation: true
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
 
     // Create audit log entry
     await prisma.auditLog.create({

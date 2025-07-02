@@ -3,7 +3,16 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { validateBusinessRules } from '@/lib/validation-middleware';
+import { UserPermissions, hasPermission, mergeWithDefaultPermissions, ADMIN_PERMISSIONS } from '@/types/permissions';
 import type { UpdateData } from '@/types/api';
+
+// Helper function to get user permissions
+function getUserPermissions(user: { role?: string; permissions?: any }): UserPermissions {
+  if (user.role === 'ADMIN') {
+    return ADMIN_PERMISSIONS;
+  }
+  return mergeWithDefaultPermissions(user.permissions || {});
+}
 
 export async function GET(
   request: NextRequest,
@@ -232,14 +241,48 @@ export async function DELETE(
       );
     }
 
-    // Check permissions - users can only delete their own contributions
-    if (
-      existingContribution.userId !== session.user.id &&
-      session.user.role !== 'ADMIN'
-    ) {
+    // Check permissions - users can delete their own contributions OR have deleteContributions permission OR be admin
+    const userPermissions = getUserPermissions(session.user);
+    const canDeleteOwn = existingContribution.userId === session.user.id;
+    const canDeleteAny = hasPermission(userPermissions, 'canDeleteContributions');
+    const isAdmin = session.user.role === 'ADMIN';
+
+    if (!canDeleteOwn && !canDeleteAny && !isAdmin) {
       return NextResponse.json(
-        { message: 'Forbidden: You can only delete your own contributions' },
+        { message: 'Forbidden: You do not have permission to delete this contribution' },
         { status: 403 }
+      );
+    }
+
+    // Constraint: Only allow deletion of the globally latest contribution in the system
+    const globalLatestContribution = await prisma.userContribution.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!globalLatestContribution || globalLatestContribution.id !== id) {
+      return NextResponse.json(
+        { 
+          message: 'Cannot delete contribution: Only the latest contribution in the system may be deleted',
+          constraint: 'GLOBAL_LATEST_CONTRIBUTION_ONLY'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Additional constraint: Check if latest token purchase has no contribution
+    // If so, prevent deletion to avoid having two purchases without contributions
+    const latestPurchase = await prisma.tokenPurchase.findFirst({
+      orderBy: { createdAt: 'desc' },
+      include: { contribution: true },
+    });
+
+    if (latestPurchase && !latestPurchase.contribution) {
+      return NextResponse.json(
+        { 
+          message: 'Cannot delete contribution: Latest token purchase has no contribution. Deleting this contribution would leave two purchases without contributions.',
+          constraint: 'PREVENT_MULTIPLE_UNCONSUMED_PURCHASES'
+        },
+        { status: 400 }
       );
     }
 

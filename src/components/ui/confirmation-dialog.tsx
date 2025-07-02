@@ -141,7 +141,7 @@ function ConfirmationDialog({
               <Button
                 onClick={onConfirm}
                 disabled={isLoading}
-                className={cn(confirmButton, 'flex-1')}
+                className={cn(confirmButton, 'flex-1 dark:bg-red-600 dark:hover:bg-red-700 dark:text-white')}
               >
                 {isLoading ? 'Processing...' : confirmLabel}
               </Button>

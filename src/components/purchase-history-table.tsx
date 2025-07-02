@@ -114,10 +114,6 @@ export function PurchaseHistoryTable({
   const [hasContributablePurchases, setHasContributablePurchases] =
     useState(false);
 
-  useEffect(() => {
-    fetchPurchases();
-  }, [fetchPurchases]);
-
   const fetchPurchases = useCallback(async () => {
     try {
       setLoading(true);
@@ -174,6 +170,10 @@ export function PurchaseHistoryTable({
     }
   }, [pagination.page, pagination.limit, filters, sortField, sortDirection]);
 
+  useEffect(() => {
+    fetchPurchases();
+  }, [fetchPurchases]);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -213,24 +213,34 @@ export function PurchaseHistoryTable({
   };
 
   const handleEdit = (purchase: Purchase) => {
-    // Check if purchase has a contribution - if so, it cannot be edited
-    if (purchase.contribution) {
+    // Check if purchase has a contribution - if so, it cannot be edited (unless admin)
+    if (purchase.contribution && !isAdmin) {
       showError(
         'Cannot edit purchase: This purchase already has a matching contribution.'
       );
       return;
     }
 
+    // Show warning for admin override
+    if (purchase.contribution && isAdmin) {
+      success('Admin override: Editing purchase with existing contribution');
+    }
+
     router.push(`/dashboard/purchases/edit/${purchase.id}`);
   };
 
   const handleDelete = (purchase: Purchase) => {
-    // Check if purchase has a contribution - if so, it cannot be deleted
-    if (purchase.contribution) {
+    // Check if purchase has a contribution - if so, it cannot be deleted (unless admin)
+    if (purchase.contribution && !isAdmin) {
       showError(
         'Cannot delete purchase: This purchase already has a matching contribution.'
       );
       return;
+    }
+
+    // Show warning for admin override
+    if (purchase.contribution && isAdmin) {
+      success('Admin override: Deleting purchase with existing contribution');
     }
 
     confirmDelete('purchase', async () => {
@@ -596,18 +606,20 @@ export function PurchaseHistoryTable({
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={!row.canContribute}
+                      disabled={!row.canContribute || !!row.contribution}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddContribution(row.id);
                       }}
                       className={`w-fit text-xs h-7 mt-1 ${
-                        row.canContribute
+                        row.canContribute && !row.contribution
                           ? 'text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-950'
                           : 'text-slate-400 border-slate-300 cursor-not-allowed dark:text-slate-500 dark:border-slate-600'
                       }`}
                       title={
-                        row.canContribute
+                        row.contribution
+                          ? 'Purchase already has a contribution'
+                          : row.canContribute
                           ? 'Add contribution for this purchase'
                           : 'You must contribute to older purchases first'
                       }
@@ -639,10 +651,12 @@ export function PurchaseHistoryTable({
                       e.stopPropagation();
                       handleEdit(row);
                     }}
-                    disabled={!!row.contribution}
+                    disabled={!!row.contribution && !isAdmin}
                     title={
-                      row.contribution
+                      row.contribution && !isAdmin
                         ? 'Cannot edit: Purchase has a contribution'
+                        : isAdmin && row.contribution
+                        ? 'Edit purchase (Admin override)'
                         : 'Edit purchase'
                     }
                   >
@@ -655,10 +669,12 @@ export function PurchaseHistoryTable({
                       e.stopPropagation();
                       handleDelete(row);
                     }}
-                    disabled={!!row.contribution}
+                    disabled={!!row.contribution && !isAdmin}
                     title={
-                      row.contribution
+                      row.contribution && !isAdmin
                         ? 'Cannot delete: Purchase has a contribution'
+                        : isAdmin && row.contribution
+                        ? 'Cannot delete: Has contribution (delete contribution first)'
                         : 'Delete purchase'
                     }
                     className="text-red-600 hover:text-red-700"
@@ -692,9 +708,11 @@ export function PurchaseHistoryTable({
                   onClick={() => handleAddContribution(purchase.id)}
                   variant="primary"
                   size="sm"
-                  disabled={!purchase.canContribute}
+                  disabled={!purchase.canContribute || !!purchase.contribution}
                   title={
-                    purchase.canContribute
+                    purchase.contribution
+                      ? 'Purchase already has a contribution'
+                      : purchase.canContribute
                       ? 'Add contribution for this purchase'
                       : 'You must contribute to older purchases first'
                   }
@@ -710,19 +728,19 @@ export function PurchaseHistoryTable({
                     onClick={() => handleEdit(purchase)}
                     variant="secondary"
                     size="sm"
-                    disabled={!!purchase.contribution}
+                    disabled={!!purchase.contribution && !isAdmin}
                   >
                     <Edit className="h-4 w-4 mr-1" />
-                    Edit {purchase.contribution ? '(Locked)' : ''}
+                    Edit {purchase.contribution && !isAdmin ? '(Locked)' : isAdmin && purchase.contribution ? '(Admin)' : ''}
                   </TouchButton>
                   <TouchButton
                     onClick={() => handleDelete(purchase)}
                     variant="danger"
                     size="sm"
-                    disabled={!!purchase.contribution}
+                    disabled={!!purchase.contribution && !isAdmin}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
-                    Delete {purchase.contribution ? '(Locked)' : ''}
+                    Delete {purchase.contribution && !isAdmin ? '(Locked)' : isAdmin && purchase.contribution ? '(Admin)' : ''}
                   </TouchButton>
                 </>
               )}
@@ -932,18 +950,20 @@ export function PurchaseHistoryTable({
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled={!purchase.canContribute}
+                          disabled={!purchase.canContribute || !!purchase.contribution}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleAddContribution(purchase.id);
                           }}
                           className={`w-fit text-xs h-7 ${
-                            purchase.canContribute
+                            purchase.canContribute && !purchase.contribution
                               ? 'text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-950'
                               : 'text-slate-400 border-slate-300 cursor-not-allowed dark:text-slate-500 dark:border-slate-600'
                           }`}
                           title={
-                            purchase.canContribute
+                            purchase.contribution
+                              ? 'Purchase already has a contribution'
+                              : purchase.canContribute
                               ? 'Add contribution for this purchase'
                               : 'You must contribute to older purchases first'
                           }
@@ -962,10 +982,12 @@ export function PurchaseHistoryTable({
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(purchase)}
-                            disabled={!!purchase.contribution}
+                            disabled={!!purchase.contribution && !isAdmin}
                             title={
-                              purchase.contribution
+                              purchase.contribution && !isAdmin
                                 ? 'Cannot edit: Purchase has a contribution'
+                                : isAdmin && purchase.contribution
+                                ? 'Edit purchase (Admin override)'
                                 : 'Edit purchase'
                             }
                           >
@@ -974,7 +996,15 @@ export function PurchaseHistoryTable({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(purchase.id)}
+                            onClick={() => handleDelete(purchase)}
+                            disabled={!!purchase.contribution && !isAdmin}
+                            title={
+                              purchase.contribution && !isAdmin
+                                ? 'Cannot delete: Purchase has a contribution'
+                                : isAdmin && purchase.contribution
+                                ? 'Delete purchase (Admin override)'
+                                : 'Delete purchase'
+                            }
                             className="text-red-600 hover:text-red-700 hover:border-red-300"
                           >
                             <Trash2 className="h-4 w-4" />

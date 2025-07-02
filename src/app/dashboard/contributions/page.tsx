@@ -4,7 +4,10 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, DollarSign, Zap, TrendingUp, User } from 'lucide-react';
+import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Plus, Users, DollarSign, Zap, TrendingUp, User, Trash2, Edit } from 'lucide-react';
 
 interface Contribution {
   id: string;
@@ -29,10 +32,14 @@ interface Contribution {
 export default function ContributionsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const confirmDelete = useDeleteConfirmation();
+  const { success, error: showError } = useToast();
+  const { checkPermission, isAdmin } = usePermissions();
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasAvailablePurchases, setHasAvailablePurchases] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -129,6 +136,58 @@ export default function ContributionsPage() {
     if (canEdit) {
       router.push(`/dashboard/contributions/edit/${contribution.id}`);
     }
+  };
+
+  const isLatestContribution = (contribution: Contribution) => {
+    // Find the globally latest contribution in the entire system
+    if (contributions.length === 0) return false;
+    
+    // Sort all contributions by creation date and get the most recent one
+    const latest = contributions.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+    
+    return latest.id === contribution.id;
+  };
+
+  const handleDeleteContribution = async (contribution: Contribution) => {
+    // Check if user can delete this contribution
+    const canDeleteOwn = contribution.user.id === session?.user?.id;
+    const canDeleteAny = checkPermission('canDeleteContributions');
+    
+    if (!canDeleteOwn && !canDeleteAny && !isAdmin) {
+      showError('You do not have permission to delete this contribution');
+      return;
+    }
+
+    // Check if this is the globally latest contribution
+    if (!isLatestContribution(contribution)) {
+      showError('Only the latest contribution in the system may be deleted');
+      return;
+    }
+
+    confirmDelete('contribution', async () => {
+      try {
+        setDeletingId(contribution.id);
+        const response = await fetch(`/api/contributions/${contribution.id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to delete contribution');
+        }
+
+        // Remove the contribution from the list
+        setContributions(prev => prev.filter(c => c.id !== contribution.id));
+        success('Contribution deleted successfully');
+      } catch (error) {
+        console.error('Error deleting contribution:', error);
+        showError(error instanceof Error ? error.message : 'Failed to delete contribution');
+      } finally {
+        setDeletingId(null);
+      }
+    });
   };
 
   if (status === 'loading') {
@@ -371,6 +430,11 @@ export default function ContributionsPage() {
                                     ({contribution.user.email})
                                   </span>
                                 )}
+                                {isLatestContribution(contribution) && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    Latest in System
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center space-x-4 mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 <span>
@@ -396,55 +460,89 @@ export default function ContributionsPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="flex items-center space-x-6">
-                              <div className="text-center">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                                  Purchase Cost
-                                </p>
-                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  ${contribution.purchase.totalPayment.toFixed(2)}
-                                </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  ({contribution.purchase.totalTokens.toLocaleString()} kWh)
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                                  Your Share
-                                </p>
-                                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                                  ${trueCost.toFixed(2)}
-                                </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  ({contribution.tokensConsumed.toLocaleString()} kWh)
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                                  You Paid
-                                </p>
-                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  ${contribution.contributionAmount.toFixed(2)}
-                                </p>
-                                <p
-                                  className={`text-xs ${overpayment >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                                >
-                                  {overpayment >= 0 ? '+' : ''}${overpayment.toFixed(2)}
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                                  Rate/kWh
-                                </p>
-                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  ${(contribution.purchase.totalPayment / contribution.purchase.totalTokens).toFixed(4)}
-                                </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  {efficiency.toFixed(1)}% eff.
-                                </p>
+                          <div className="flex items-center space-x-4">
+                            <div className="text-right">
+                              <div className="flex items-center space-x-6">
+                                <div className="text-center">
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                    Purchase Cost
+                                  </p>
+                                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                    ${contribution.purchase.totalPayment.toFixed(2)}
+                                  </p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    ({contribution.purchase.totalTokens.toLocaleString()} kWh)
+                                  </p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                    Your Share
+                                  </p>
+                                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                                    ${trueCost.toFixed(2)}
+                                  </p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    ({contribution.tokensConsumed.toLocaleString()} kWh)
+                                  </p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                    You Paid
+                                  </p>
+                                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                    ${contribution.contributionAmount.toFixed(2)}
+                                  </p>
+                                  <p
+                                    className={`text-xs ${overpayment >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                                  >
+                                    {overpayment >= 0 ? '+' : ''}${overpayment.toFixed(2)}
+                                  </p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                    Rate/kWh
+                                  </p>
+                                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                    ${(contribution.purchase.totalPayment / contribution.purchase.totalTokens).toFixed(4)}
+                                  </p>
+                                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    {efficiency.toFixed(1)}% eff.
+                                  </p>
+                                </div>
                               </div>
                             </div>
+                            {/* Action Buttons */}
+                            {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                              <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={() => handleContributionClick(contribution)}
+                                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors"
+                                  title="Edit contribution"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteContribution(contribution)}
+                                  disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    !isLatestContribution(contribution)
+                                      ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
+                                      : deletingId === contribution.id
+                                      ? 'text-slate-400 cursor-wait'
+                                      : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                  }`}
+                                  title={
+                                    !isLatestContribution(contribution)
+                                      ? 'Only the latest contribution in the system can be deleted'
+                                      : deletingId === contribution.id
+                                      ? 'Deleting...'
+                                      : 'Delete contribution'
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

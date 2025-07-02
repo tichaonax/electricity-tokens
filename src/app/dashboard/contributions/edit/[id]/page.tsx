@@ -16,9 +16,7 @@ const editContributionSchema = z.object({
   contributionAmount: z.number()
     .min(0.01, 'Contribution amount must be greater than $0.01')
     .max(10000, 'Contribution amount cannot exceed $10,000'),
-  tokensConsumed: z.number()
-    .min(1, 'Tokens consumed must be at least 1')
-    .max(100000, 'Tokens consumed cannot exceed 100,000'),
+  // tokensConsumed is calculated and readonly - removed from schema
 });
 
 type EditContributionForm = z.infer<typeof editContributionSchema>;
@@ -95,7 +93,7 @@ function EditContributionContent() {
 
       // Set form values
       setValue('contributionAmount', data.contributionAmount);
-      setValue('tokensConsumed', data.tokensConsumed);
+      // tokensConsumed is calculated and readonly
     } catch (error) {
       console.error('Error fetching contribution:', error);
       setError('Failed to load contribution data.');
@@ -104,7 +102,7 @@ function EditContributionContent() {
     }
   };
 
-  const validateMeterReading = async (contributionAmount: number, tokensConsumed: number) => {
+  const validateContribution = async (contributionAmount: number) => {
     try {
       const response = await fetch('/api/validate-contribution-meter', {
         method: 'POST',
@@ -113,7 +111,7 @@ function EditContributionContent() {
           purchaseId: contribution?.purchase.id,
           meterReading: contribution?.meterReading, // Keep existing meter reading
           contributionAmount,
-          tokensConsumed,
+          tokensConsumed: contribution?.tokensConsumed, // Use existing calculated value
           contributionId, // For edit validation
         }),
       });
@@ -140,7 +138,7 @@ function EditContributionContent() {
       setValidationErrors({});
 
       // Validate the contribution
-      const validation = await validateMeterReading(data.contributionAmount, data.tokensConsumed);
+      const validation = await validateContribution(data.contributionAmount);
       
       if (!validation.isValid) {
         const errors: Record<string, string> = {};
@@ -155,14 +153,13 @@ function EditContributionContent() {
         return;
       }
 
-      // Submit the update
+      // Submit the update - only contributionAmount can be edited
       const response = await fetch(`/api/contributions/${contributionId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contributionAmount: data.contributionAmount,
-          tokensConsumed: data.tokensConsumed,
-          // Meter reading stays the same (read-only in edit)
+          // tokensConsumed and meterReading are calculated/readonly and not updated
         }),
       });
 
@@ -181,10 +178,10 @@ function EditContributionContent() {
     }
   };
 
-  // Calculate derived values
+  // Calculate derived values using the readonly tokensConsumed from contribution data
   const calculateTrueCost = () => {
-    if (!contribution || !watchedValues.tokensConsumed) return 0;
-    return (watchedValues.tokensConsumed / contribution.purchase.totalTokens) * contribution.purchase.totalPayment;
+    if (!contribution) return 0;
+    return (contribution.tokensConsumed / contribution.purchase.totalTokens) * contribution.purchase.totalPayment;
   };
 
   const calculateEfficiency = () => {
@@ -279,71 +276,71 @@ function EditContributionContent() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Purchase Information (Read-only) */}
-            <Card>
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                   <Calendar className="h-5 w-5" />
                   Purchase Information
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-slate-600 dark:text-slate-400">
                   Reference information for this contribution (read-only)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-medium text-slate-700 dark:text-white">
                       Purchase Date
                     </label>
-                    <p className="text-slate-900 dark:text-slate-100">
+                    <p className="text-slate-900 dark:text-blue-300 font-medium">
                       {new Date(contribution.purchase.purchaseDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-medium text-slate-700 dark:text-white">
                       Purchase Type
                     </label>
                     <p className="text-slate-900 dark:text-slate-100">
                       {contribution.purchase.isEmergency ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                           Emergency
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                           Regular
                         </span>
                       )}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-medium text-slate-700 dark:text-white">
                       Total Tokens
                     </label>
-                    <p className="text-slate-900 dark:text-slate-100">
+                    <p className="text-slate-900 dark:text-blue-300 font-medium">
                       {contribution.purchase.totalTokens.toLocaleString()} kWh
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-medium text-slate-700 dark:text-white">
                       Total Cost
                     </label>
-                    <p className="text-slate-900 dark:text-slate-100">
+                    <p className="text-slate-900 dark:text-blue-300 font-medium">
                       ${contribution.purchase.totalPayment.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-medium text-slate-700 dark:text-white">
                       Meter Reading
                     </label>
-                    <p className="text-slate-900 dark:text-slate-100">
+                    <p className="text-slate-900 dark:text-blue-300 font-medium">
                       {contribution.meterReading.toLocaleString()} kWh
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <label className="text-sm font-medium text-slate-700 dark:text-white">
                       Rate per kWh
                     </label>
-                    <p className="text-slate-900 dark:text-slate-100">
+                    <p className="text-slate-900 dark:text-blue-300 font-medium">
                       ${(contribution.purchase.totalPayment / contribution.purchase.totalTokens).toFixed(4)}
                     </p>
                   </div>
@@ -352,20 +349,20 @@ function EditContributionContent() {
             </Card>
 
             {/* Edit Form */}
-            <Card>
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                   <Zap className="h-5 w-5" />
                   Edit Contribution
                 </CardTitle>
-                <CardDescription>
-                  Update your contribution amount and tokens consumed
+                <CardDescription className="text-slate-600 dark:text-slate-400">
+                  Update your contribution amount (tokens consumed is calculated automatically)
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
                       Contribution Amount ($) *
                     </label>
                     <Input
@@ -373,35 +370,34 @@ function EditContributionContent() {
                       step="0.01"
                       placeholder="0.00"
                       {...register('contributionAmount', { valueAsNumber: true })}
-                      className={errors.contributionAmount || validationErrors.contributionAmount ? 'border-red-300' : ''}
+                      className={`${errors.contributionAmount || validationErrors.contributionAmount ? 'border-red-300 dark:border-red-600' : ''} dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600`}
                     />
                     {errors.contributionAmount && (
-                      <p className="mt-1 text-sm text-red-600">{errors.contributionAmount.message}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.contributionAmount.message}</p>
                     )}
                     {validationErrors.contributionAmount && (
-                      <p className="mt-1 text-sm text-red-600">{validationErrors.contributionAmount}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.contributionAmount}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Tokens Consumed (kWh) *
+                    <label className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
+                      Tokens Consumed (kWh) - Calculated
                     </label>
-                    <Input
-                      type="number"
-                      step="1"
-                      placeholder="0"
-                      {...register('tokensConsumed', { valueAsNumber: true })}
-                      className={errors.tokensConsumed || validationErrors.tokensConsumed ? 'border-red-300' : ''}
-                    />
-                    {errors.tokensConsumed && (
-                      <p className="mt-1 text-sm text-red-600">{errors.tokensConsumed.message}</p>
-                    )}
-                    {validationErrors.tokensConsumed && (
-                      <p className="mt-1 text-sm text-red-600">{validationErrors.tokensConsumed}</p>
-                    )}
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        value={contribution.tokensConsumed}
+                        readOnly
+                        disabled
+                        className="bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-not-allowed"
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Zap className="h-4 w-4 text-slate-400" />
+                      </div>
+                    </div>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      Maximum available: {contribution.purchase.totalTokens.toLocaleString()} kWh
+                      Automatically calculated: Contribution meter reading ({contribution.meterReading.toLocaleString()}) - Previous purchase meter reading
                     </p>
                   </div>
 
@@ -410,7 +406,7 @@ function EditContributionContent() {
                       type="button"
                       variant="outline"
                       onClick={() => router.push('/dashboard/contributions')}
-                      className="flex-1"
+                      className="flex-1 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                     >
                       Cancel
                     </Button>
@@ -438,14 +434,14 @@ function EditContributionContent() {
           </div>
 
           {/* Live Calculations */}
-          {watchedValues.contributionAmount && watchedValues.tokensConsumed && (
-            <Card className="mt-6">
+          {watchedValues.contributionAmount && contribution && (
+            <Card className="mt-6 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                   <DollarSign className="h-5 w-5" />
                   Live Calculations
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-slate-600 dark:text-slate-400">
                   Real-time cost analysis based on your inputs
                 </CardDescription>
               </CardHeader>
@@ -473,7 +469,7 @@ function EditContributionContent() {
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">
-                      ${(calculateTrueCost() / (watchedValues.tokensConsumed || 1)).toFixed(4)}
+                      ${(calculateTrueCost() / (contribution.tokensConsumed || 1)).toFixed(4)}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">Your Rate/kWh</p>
                   </div>

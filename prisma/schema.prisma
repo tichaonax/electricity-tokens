@@ -102,7 +102,7 @@ model UserContribution {
   updatedAt         DateTime @updatedAt
 
   // Relations
-  purchase TokenPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  purchase TokenPurchase @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Removed compound unique constraint - now using @unique on purchaseId only

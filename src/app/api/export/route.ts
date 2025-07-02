@@ -199,25 +199,32 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error exporting data:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error message:', error instanceof Error ? error.message : String(error));
+    
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { 
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : String(error),
+        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : String(error)) : undefined
+      },
       { status: 500 }
     );
   }
 }
 
 async function exportPurchases(dateFilter: Record<string, unknown>) {
-  const whereClause =
-    Object.keys(dateFilter).length > 0
-      ? {
-          purchaseDate: dateFilter,
-        }
-      : {};
+  try {
+    const whereClause: any = {};
+    
+    if (Object.keys(dateFilter).length > 0) {
+      whereClause.purchaseDate = dateFilter;
+    }
 
-  console.log('exportPurchases whereClause:', whereClause);
-  console.log('dateFilter keys:', Object.keys(dateFilter));
+    console.log('exportPurchases whereClause:', whereClause);
+    console.log('dateFilter keys:', Object.keys(dateFilter));
 
-  const purchases = await prisma.tokenPurchase.findMany({
+    const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
       creator: {
@@ -226,7 +233,7 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
           email: true,
         },
       },
-      contributions: {
+      contribution: {
         include: {
           user: {
             select: {
@@ -243,14 +250,9 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
   console.log('Found purchases in exportPurchases:', purchases.length);
 
   const data = purchases.map((purchase) => {
-    const totalContributions = purchase.contributions.reduce(
-      (sum, c) => sum + c.contributionAmount,
-      0
-    );
-    const totalTokensConsumed = purchase.contributions.reduce(
-      (sum, c) => sum + c.tokensConsumed,
-      0
-    );
+    const contribution = purchase.contribution;
+    const totalContributions = contribution ? contribution.contributionAmount : 0;
+    const totalTokensConsumed = contribution ? contribution.tokensConsumed : 0;
 
     return {
       id: purchase.id,
@@ -261,20 +263,27 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
       isEmergency: purchase.isEmergency ? 'Yes' : 'No',
       createdBy: purchase.creator.name,
       createdByEmail: purchase.creator.email,
-      contributionCount: purchase.contributions.length,
-      totalContributions: totalContributions,
-      totalTokensConsumed: totalTokensConsumed,
+      hasContribution: contribution ? 'Yes' : 'No',
+      contributorName: contribution?.user?.name || 'N/A',
+      contributorEmail: contribution?.user?.email || 'N/A',
+      contributionAmount: totalContributions,
+      tokensConsumed: totalTokensConsumed,
       tokensRemaining: purchase.totalTokens - totalTokensConsumed,
       utilizationRate:
         purchase.totalTokens > 0
           ? ((totalTokensConsumed / purchase.totalTokens) * 100).toFixed(2) +
             '%'
           : '0%',
+      contributionDate: contribution?.createdAt.toISOString().split('T')[0] || 'N/A',
       createdAt: purchase.createdAt.toISOString(),
     };
   });
 
   return { data };
+  } catch (error) {
+    console.error('Error in exportPurchases:', error);
+    throw error;
+  }
 }
 
 async function exportContributions(
@@ -282,19 +291,20 @@ async function exportContributions(
   targetUserId: string,
   isAdmin: boolean
 ) {
-  const whereClause: Record<string, unknown> = {};
+  try {
+    const whereClause: any = {};
 
-  if (!isAdmin) {
-    whereClause.userId = targetUserId;
-  } else if (targetUserId) {
-    whereClause.userId = targetUserId;
-  }
+    if (!isAdmin) {
+      whereClause.userId = targetUserId;
+    } else if (targetUserId) {
+      whereClause.userId = targetUserId;
+    }
 
-  if (Object.keys(dateFilter).length > 0) {
-    whereClause.purchase = {
-      purchaseDate: dateFilter,
-    };
-  }
+    if (Object.keys(dateFilter).length > 0) {
+      whereClause.purchase = {
+        purchaseDate: dateFilter,
+      };
+    }
 
   const contributions = await prisma.userContribution.findMany({
     where: whereClause,
@@ -347,9 +357,14 @@ async function exportContributions(
   });
 
   return { data };
+  } catch (error) {
+    console.error('Error in exportContributions:', error);
+    throw error;
+  }
 }
 
 async function exportUsers() {
+  try {
   const users = await prisma.user.findMany({
     include: {
       contributions: {
@@ -396,6 +411,10 @@ async function exportUsers() {
   });
 
   return { data };
+  } catch (error) {
+    console.error('Error in exportUsers:', error);
+    throw error;
+  }
 }
 
 async function exportSummary(
@@ -404,19 +423,20 @@ async function exportSummary(
   currentUserId: string,
   userRole: string
 ) {
-  const whereClause: Record<string, unknown> = {};
+  try {
+    const whereClause: any = {};
 
-  if (userRole !== 'ADMIN') {
-    whereClause.userId = currentUserId;
-  } else if (targetUserId) {
-    whereClause.userId = targetUserId;
-  }
+    if (userRole !== 'ADMIN') {
+      whereClause.userId = currentUserId;
+    } else if (targetUserId) {
+      whereClause.userId = targetUserId;
+    }
 
-  if (Object.keys(dateFilter).length > 0) {
-    whereClause.purchase = {
-      purchaseDate: dateFilter,
-    };
-  }
+    if (Object.keys(dateFilter).length > 0) {
+      whereClause.purchase = {
+        purchaseDate: dateFilter,
+      };
+    }
 
   const contributions = await prisma.userContribution.findMany({
     where: whereClause,
@@ -516,6 +536,10 @@ async function exportSummary(
   });
 
   return { data };
+  } catch (error) {
+    console.error('Error in exportSummary:', error);
+    throw error;
+  }
 }
 
 function convertToCSV(data: Record<string, unknown>[]): string {

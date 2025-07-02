@@ -23,6 +23,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  UserPlus,
 } from 'lucide-react';
 import {
   UserPermissions,
@@ -290,13 +291,26 @@ function UserManagementContent() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              User Account Management
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Manage user accounts, roles, and permissions for the electricity
-              tokens system.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  User Account Management
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage user accounts, roles, and permissions for the electricity
+                  tokens system.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <button
+                  onClick={() => router.push('/dashboard/admin/users/new')}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm transition-colors"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add New User
+                </button>
+              </div>
+            </div>
           </div>
 
           {error && (
@@ -629,25 +643,25 @@ function UserManagementContent() {
               <div className="flex space-x-2">
                 <button
                   onClick={() => handlePermissionPreset('full-access')}
-                  className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-md hover:bg-green-200"
+                  className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-md hover:bg-green-200 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800"
                 >
                   Full Access
                 </button>
                 <button
                   onClick={() => handlePermissionPreset('default')}
-                  className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200"
+                  className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
                 >
                   Default User
                 </button>
                 <button
                   onClick={() => handlePermissionPreset('read-only')}
-                  className="px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200"
+                  className="px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                 >
                   Read Only
                 </button>
                 <button
                   onClick={() => handlePermissionPreset('contributor-only')}
-                  className="px-3 py-1 text-sm bg-purple-100 text-purple-800 rounded-md hover:bg-purple-200"
+                  className="px-3 py-1 text-sm bg-purple-100 text-purple-800 rounded-md hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:hover:bg-purple-800"
                 >
                   Contributor Only
                 </button>
@@ -700,6 +714,10 @@ function UserManagementContent() {
                     {
                       key: 'canEditContributions',
                       label: 'Edit Contributions',
+                    },
+                    {
+                      key: 'canDeleteContributions',
+                      label: 'Delete Contributions',
                     },
                   ].map(({ key, label }) => (
                     <label key={key} className="flex items-center">

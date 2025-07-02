@@ -124,6 +124,8 @@ export function ContributionForm({
     confidence: 'high' | 'medium' | 'low';
     reasoning: string;
   } | null>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const {
     register,
@@ -172,6 +174,118 @@ export function ContributionForm({
       setShowContributionWarning(false);
     }
   }, []);
+
+  const fetchPreviousPurchaseForTokens = async (
+    currentPurchaseDate: string
+  ) => {
+    try {
+      // Find the previous purchase before the current purchase date
+      const response = await fetch(
+        `/api/purchases?before=${currentPurchaseDate}&limit=1`
+      );
+      if (!response.ok) {
+        setPreviousMeterReading(0);
+        return;
+      }
+
+      const data = await response.json();
+      const previousPurchase = data.purchases?.[0];
+
+      if (previousPurchase) {
+        // Set previous meter reading for tokens consumed calculation
+        setPreviousMeterReading(previousPurchase.meterReading);
+      } else {
+        // No previous purchase - first purchase, so no previous consumption
+        setPreviousMeterReading(0);
+      }
+    } catch (error) {
+      console.error('Error fetching previous purchase:', error);
+      setPreviousMeterReading(0);
+    }
+  };
+
+  const fetchPurchaseAndPreviousReading = useCallback(
+    async (purchaseId: string) => {
+      try {
+        setLoadingPreviousReading(true);
+        const response = await fetch(`/api/purchases/${purchaseId}`);
+        if (!response.ok) {
+          setPreviousMeterReading(0);
+          return;
+        }
+
+        const purchase = await response.json();
+
+        if (purchase && purchase.meterReading !== undefined) {
+          // Set contribution meter reading to match purchase meter reading (constraint 2)
+          setValue('meterReading', purchase.meterReading);
+
+          // Fetch previous purchase to calculate tokens consumed
+          await fetchPreviousPurchaseForTokens(purchase.purchaseDate);
+
+          // Ensure validation is in a valid state since meter reading is set automatically
+          setMeterReadingValidation({
+            isValidating: false,
+            isValid: true,
+          });
+        } else {
+          setPreviousMeterReading(0);
+        }
+      } catch (error) {
+        console.error('Error fetching purchase meter reading:', error);
+        setPreviousMeterReading(0);
+      } finally {
+        setLoadingPreviousReading(false);
+      }
+    },
+    [setValue]
+  );
+
+  const fetchPurchases = async () => {
+    try {
+      setLoadingPurchases(true);
+      const response = await fetch('/api/purchases');
+      if (!response.ok) throw new Error('Failed to fetch purchases');
+
+      const data = await response.json();
+      setPurchases(data.purchases || []);
+
+      // If a specific purchase was preselected, set it and trigger related logic
+      if (selectedPurchaseId) {
+        setValue('purchaseId', selectedPurchaseId);
+        // Find the purchase and trigger the necessary side effects
+        const purchase = data.purchases?.find(
+          (p: Purchase) => p.id === selectedPurchaseId
+        );
+        if (purchase) {
+          setSelectedPurchase(purchase);
+          // Trigger the purchase-related data fetching
+          fetchPurchaseAndPreviousReading(purchase.id);
+          checkPurchaseContribution(purchase.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching purchases:', error);
+      setSubmitError('Failed to load purchases. Please refresh the page.');
+    } finally {
+      setLoadingPurchases(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await fetch('/api/users');
+      if (!response.ok) throw new Error('Failed to fetch users');
+
+      const data = await response.json();
+      setUsers(data.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   // Fetch purchases on component mount
   useEffect(() => {
@@ -249,118 +363,6 @@ export function ContributionForm({
       return () => clearTimeout(debounceTimer);
     }
   }, [watchedValues.meterReading, watchedValues.purchaseId]);
-
-  const fetchPurchases = async () => {
-    try {
-      setLoadingPurchases(true);
-      const response = await fetch('/api/purchases');
-      if (!response.ok) throw new Error('Failed to fetch purchases');
-
-      const data = await response.json();
-      setPurchases(data.purchases || []);
-
-      // If a specific purchase was preselected, set it and trigger related logic
-      if (selectedPurchaseId) {
-        setValue('purchaseId', selectedPurchaseId);
-        // Find the purchase and trigger the necessary side effects
-        const purchase = data.purchases?.find(
-          (p: Purchase) => p.id === selectedPurchaseId
-        );
-        if (purchase) {
-          setSelectedPurchase(purchase);
-          // Trigger the purchase-related data fetching
-          fetchPurchaseAndPreviousReading(purchase.id);
-          checkPurchaseContribution(purchase.id);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching purchases:', error);
-      setSubmitError('Failed to load purchases. Please refresh the page.');
-    } finally {
-      setLoadingPurchases(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      setLoadingUsers(true);
-      const response = await fetch('/api/users');
-      if (!response.ok) throw new Error('Failed to fetch users');
-
-      const data = await response.json();
-      setUsers(data.users || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
-
-  const fetchPurchaseAndPreviousReading = useCallback(
-    async (purchaseId: string) => {
-      try {
-        setLoadingPreviousReading(true);
-        const response = await fetch(`/api/purchases/${purchaseId}`);
-        if (!response.ok) {
-          setPreviousMeterReading(0);
-          return;
-        }
-
-        const purchase = await response.json();
-
-        if (purchase && purchase.meterReading !== undefined) {
-          // Set contribution meter reading to match purchase meter reading (constraint 2)
-          setValue('meterReading', purchase.meterReading);
-
-          // Fetch previous purchase to calculate tokens consumed
-          await fetchPreviousPurchaseForTokens(purchase.purchaseDate);
-
-          // Ensure validation is in a valid state since meter reading is set automatically
-          setMeterReadingValidation({
-            isValidating: false,
-            isValid: true,
-          });
-        } else {
-          setPreviousMeterReading(0);
-        }
-      } catch (error) {
-        console.error('Error fetching purchase meter reading:', error);
-        setPreviousMeterReading(0);
-      } finally {
-        setLoadingPreviousReading(false);
-      }
-    },
-    []
-  );
-
-  const fetchPreviousPurchaseForTokens = async (
-    currentPurchaseDate: string
-  ) => {
-    try {
-      // Find the previous purchase before the current purchase date
-      const response = await fetch(
-        `/api/purchases?before=${currentPurchaseDate}&limit=1`
-      );
-      if (!response.ok) {
-        setPreviousMeterReading(0);
-        return;
-      }
-
-      const data = await response.json();
-      const previousPurchase = data.purchases?.[0];
-
-      if (previousPurchase) {
-        // Set previous meter reading for tokens consumed calculation
-        setPreviousMeterReading(previousPurchase.meterReading);
-      } else {
-        // No previous purchase - first purchase, so no previous consumption
-        setPreviousMeterReading(0);
-      }
-    } catch (error) {
-      console.error('Error fetching previous purchase:', error);
-      setPreviousMeterReading(0);
-    }
-  };
 
   // Calculate true cost and efficiency metrics
   const calculateMetrics = () => {
@@ -794,7 +796,7 @@ export function ContributionForm({
                     Pre-selected token purchase (read-only)
                   </span>
                 ) : (
-                  <div>
+                  <>
                     <span>
                       Select the token purchase you want to contribute to.
                     </span>
@@ -809,7 +811,7 @@ export function ContributionForm({
                         order (oldest first)
                       </span>
                     )}
-                  </div>
+                  </>
                 )}
                 {contributedPurchaseIds.size > 0 && !selectedPurchaseId && (
                   <span className="block text-amber-600 dark:text-amber-400 mt-1">

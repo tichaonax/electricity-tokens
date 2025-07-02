@@ -9,6 +9,9 @@ import {
   createValidationErrorResponse,
   checkPermissions,
 } from '@/lib/validation-middleware';
+import { z } from 'zod';
+import bcrypt from 'bcryptjs';
+import { createAuditLog } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -104,6 +107,123 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching users:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+const createUserSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.enum(['USER', 'ADMIN']).default('USER'),
+  sendWelcomeEmail: z.boolean().default(false),
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    // Check authentication and admin permission
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true, requireAdmin: true }
+    );
+    if (!permissionCheck.success) {
+      return NextResponse.json(
+        { message: permissionCheck.error },
+        { status: 401 }
+      );
+    }
+
+    // Validate request body
+    const validation = await validateRequest(request, {
+      body: createUserSchema,
+    });
+
+    if (!validation.success) {
+      return createValidationErrorResponse(validation);
+    }
+
+    const { name, email, password, role, sendWelcomeEmail } = validation.data.body;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { message: 'User with this email already exists' },
+        { status: 409 }
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create user
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        locked: false,
+        permissions: role === 'ADMIN' ? null : {
+          canAddPurchases: true,
+          canEditPurchases: false,
+          canDeletePurchases: false,
+          canAddContributions: true,
+          canEditContributions: true,
+          canViewUsageReports: true,
+          canViewFinancialReports: true,
+          canViewEfficiencyReports: true,
+          canViewPersonalDashboard: true,
+          canViewCostAnalysis: true,
+          canExportData: false,
+          canImportData: false,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        locked: true,
+        createdAt: true,
+      },
+    });
+
+    // Log audit event
+    await createAuditLog({
+      userId: session.user.id,
+      action: 'CREATE',
+      entityType: 'User',
+      entityId: newUser.id,
+      newValues: {
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
+
+    // TODO: Send welcome email if requested
+    if (sendWelcomeEmail) {
+      // Implement email sending logic here
+      console.log(`Welcome email should be sent to ${email}`);
+    }
+
+    return NextResponse.json({
+      message: 'User created successfully',
+      user: newUser,
+    }, { status: 201 });
+
+  } catch (error) {
+    console.error('Error creating user:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

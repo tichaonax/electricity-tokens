@@ -73,10 +73,6 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
     endDate: '',
   });
 
-  useEffect(() => {
-    fetchCostAnalysis();
-  }, [userId, analysisType, dateRange, fetchCostAnalysis]);
-
   const fetchCostAnalysis = useCallback(async () => {
     try {
       setLoading(true);
@@ -117,6 +113,10 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
       setLoading(false);
     }
   }, [userId, analysisType, dateRange]);
+
+  useEffect(() => {
+    fetchCostAnalysis();
+  }, [fetchCostAnalysis]);
 
   const getEfficiencyColor = (efficiency: number) => {
     if (efficiency >= 95) return 'text-green-600';

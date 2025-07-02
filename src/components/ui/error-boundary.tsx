@@ -82,14 +82,17 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button onClick={resetError} className="flex items-center gap-2">
+          <Button 
+            onClick={resetError} 
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white"
+          >
             <RefreshCw className="w-4 h-4" />
             Try Again
           </Button>
           <Button 
             variant="outline" 
             onClick={() => window.location.href = '/dashboard'}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
           >
             <Home className="w-4 h-4" />
             Go Home

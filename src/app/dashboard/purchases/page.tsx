@@ -17,6 +17,13 @@ interface Purchase {
     name: string;
     email: string;
   };
+  contribution?: {
+    id: string;
+    user: {
+      id: string;
+      name: string;
+    };
+  } | null;
   createdAt: string;
 }
 
@@ -92,7 +99,7 @@ export default function PurchasesPage() {
             <div className="flex items-center space-x-4">
               <Button
                 onClick={() => router.push('/dashboard/purchases/new')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
               >
                 <Plus className="h-4 w-4" />
                 New Purchase
@@ -129,7 +136,7 @@ export default function PurchasesPage() {
               <div className="mt-6">
                 <Button
                   onClick={() => router.push('/dashboard/purchases/new')}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
                 >
                   <Plus className="h-4 w-4" />
                   New Purchase
@@ -187,19 +194,33 @@ export default function PurchasesPage() {
                                 by {purchase.creator.name}
                               </p>
                             </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(
-                                  `/dashboard/contributions/new?purchaseId=${purchase.id}`
-                                );
-                              }}
-                              className="text-xs"
-                            >
-                              Add Contribution
-                            </Button>
+                            {purchase.contribution ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/dashboard/contributions#contribution-${purchase.contribution!.id}`);
+                                }}
+                                className="text-xs dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                              >
+                                View Contribution
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(
+                                    `/dashboard/contributions/new?purchaseId=${purchase.id}`
+                                  );
+                                }}
+                                className="text-xs text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-950"
+                              >
+                                Add Contribution
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>

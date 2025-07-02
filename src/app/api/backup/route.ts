@@ -11,7 +11,11 @@ import { z } from 'zod';
 
 const backupQuerySchema = z.object({
   type: z.enum(['full', 'users', 'purchases', 'contributions']).default('full'),
-  includeAuditLogs: z.boolean().default(false),
+  includeAuditLogs: z
+    .string()
+    .optional()
+    .transform((val) => val === 'true')
+    .default('false'),
 });
 
 interface BackupUser {
@@ -28,6 +32,7 @@ interface BackupPurchase {
   id: string;
   totalTokens: number;
   totalPayment: number;
+  meterReading: number;
   purchaseDate: string;
   isEmergency: boolean;
   createdBy: string;
@@ -85,11 +90,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate query parameters
+    console.log('Backup API query params:', Object.fromEntries(request.nextUrl.searchParams.entries()));
+    
     const validation = await validateRequest(request, {
       query: backupQuerySchema,
     });
 
     if (!validation.success) {
+      console.log('Backup validation failed:', validation.error);
       return createValidationErrorResponse(validation);
     }
 
@@ -183,7 +191,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Backup audit logs (optional)
-    if ((type === 'full' && includeAuditLogs) || type === 'contributions') {
+    if (includeAuditLogs && (type === 'full' || type === 'users' || type === 'purchases' || type === 'contributions')) {
       const auditLogs = await prisma.auditLog.findMany({
         include: {
           user: {
@@ -213,8 +221,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error creating backup:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error message:', error instanceof Error ? error.message : String(error));
+    
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { 
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : String(error),
+        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : String(error)) : undefined
+      },
       { status: 500 }
     );
   }

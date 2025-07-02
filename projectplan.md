@@ -119,10 +119,12 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 #### 4.3 Data Export/Import ✅
 
-- [x] CSV export functionality
-- [x] Bulk data import feature
-- [x] PDF report generation
-- [x] Data backup/restore utilities
+- [x] CSV export functionality with comprehensive data formatting
+- [x] JSON export for purchases, contributions, and combined data
+- [x] PDF report generation for professional presentations
+- [x] Data backup/restore utilities with incremental and full backup options
+- [x] Admin-only export permissions with role-based access control
+- [x] Configurable export formats (CSV, JSON) with proper error handling
 
 ### ✅ Checkpoint 5: Reporting and Analytics - COMPLETED
 
@@ -283,13 +285,15 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 
 #### 1. Token Purchase Constraints ✅
 
-- **Mandatory Meter Reading**: Every Token Purchase MUST have a meter reading > 0
-- **Positive Values Only**: Total tokens and total payment must be positive numbers
-- **Maximum Limits**:
+- **Mandatory Meter Reading**: Every Token Purchase MUST have a meter reading > 0 (Zod validation)
+- **Positive Values Only**: Total tokens and total payment must be positive numbers (Zod validation)
+- **Maximum Limits** (Application-level enforcement via Zod schemas):
   - Total tokens cannot exceed 100,000 kWh
   - Total payment cannot exceed $1,000,000
   - Meter reading cannot exceed 1,000,000 kWh
 - **Emergency Purchase Flagging**: Clear identification of higher-rate emergency purchases
+- **Database Constraints**: Basic NOT NULL constraints on required fields, foreign key relationships
+- **One-to-One Purchase-Contribution**: Enforced via unique constraint on `purchaseId` in contributions table
 
 #### 2. Meter Reading Chronological Constraints ✅
 
@@ -306,6 +310,8 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Positive Contribution Amount**: Must be greater than $0
 - **Logical Token Consumption**: Tokens consumed should not significantly exceed meter reading difference
 - **Smart Suggestions**: Historical consumption analysis for contribution recommendations
+- **Database Constraint Enforcement**: `onDelete: Restrict` prevents purchase deletion with existing contributions
+- **One-to-One Relationship**: Purchase-contribution relationship enforced at database level with unique constraint
 
 #### 4. User and Authentication Constraints ✅
 
@@ -346,19 +352,49 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Confirmation Dialogs**: Destructive actions require confirmation
 - **Loading States**: Prevent multiple submissions during processing
 - **Accessibility**: WCAG 2.1 compliance with keyboard navigation support
-- **Dark Mode Compatibility**: All components must support both light and dark themes
+- **Dark Mode Compatibility**: All components must support both light and dark themes (comprehensive fixes implemented)
 - **Mobile Responsiveness**: Touch-friendly interface with minimum 44px touch targets
 - **Progressive Enhancement**: Core functionality works without JavaScript
 - **Offline Support**: Basic functionality available when offline
+- **Original Value Display**: Edit forms show original values prominently so users understand what they're changing
+- **Blocking Validation**: Critical constraint violations prevent form submission rather than showing warnings
 
 ### Constraint Enforcement Layers
 
-1. **Database Level**: Prisma schema constraints and PostgreSQL constraints
-2. **API Level**: Zod validation schemas and business rule middleware
-3. **UI Level**: React Hook Form validation and real-time feedback
+1. **Database Level**: Prisma schema constraints and PostgreSQL constraints (onDelete: Restrict, unique constraints)
+2. **API Level**: Zod validation schemas and business rule middleware (comprehensive input validation)
+3. **UI Level**: React Hook Form validation and real-time feedback (blocking validations, original value display)
 4. **Security Level**: Rate limiting, CSRF protection, and input sanitization
+5. **Application Level**: Complex business rules enforced in service layer (meter reading constraints, token calculations)
 
 ### Recently Implemented New Constraints ✅
+
+#### 16. **Global Deletion Constraints** ✅
+
+- **Latest-Only Deletion**: Only the globally latest contribution can be deleted across all users
+- **Purchase-Contribution Coupling**: Purchases with contributions cannot be deleted (enforced by `onDelete: Restrict`)
+- **Sequential Integrity Protection**: Prevents deletion of middle contributions that would break chronological sequence
+- **Database-Level Enforcement**: Prisma schema uses `onDelete: Restrict` to prevent cascade deletions
+- **UI State Management**: Delete buttons dynamically disabled based on global constraints
+- **Admin Override Logic**: Administrators can delete within constraints but cannot override database-level restrictions
+
+#### 17. **Admin Purchase Recalculation System** ✅
+
+- **Automatic Contribution Updates**: When admins edit purchase meter readings, associated contributions automatically recalculate
+- **Impact Analysis Engine**: Pre-change analysis identifies affected contributions and validates constraints
+- **Token Constraint Preservation**: Ensures recalculated consumption doesn't exceed available tokens
+- **Cascading Change Management**: Updates dependent calculations while maintaining data integrity
+- **Enhanced Audit Trails**: Records both original purchase changes and triggered recalculations
+- **Real-time Validation**: Prevents changes that would violate business rules or create invalid states
+
+#### 18. **Enhanced Form Validation and UX** ✅
+
+- **Blocking vs Warning Validations**: Critical constraints block submission; non-critical show warnings
+- **Original Value Prominence**: Edit forms prominently display current values being changed
+- **Last Meter Reading Display**: New purchase form shows last meter reading for context
+- **Real-time Change Indicators**: Live preview of changes with original vs new value comparisons
+- **Contribution Form Constraints**: Only contribution amount editable; tokens consumed automatically calculated
+- **Purchase Form Token Constraint**: Meter reading cannot exceed previous reading + tokens purchased
 
 #### 9. **Sequential Purchase-Contribution Workflow Constraints** ✅
 
@@ -433,6 +469,29 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Historical Analysis**: Smart contribution suggestions based on consumption patterns
 - **Audit Compliance**: All constraint violations logged with detailed error messages
 
+### Constraint Implementation Strategy ✅
+
+The application uses a **hybrid constraint enforcement approach**:
+
+#### Database-Level Constraints (PostgreSQL + Prisma):
+- **Referential Integrity**: Foreign key relationships prevent orphaned records
+- **Unique Constraints**: One-to-one purchase-contribution relationship via unique `purchaseId`
+- **Deletion Protection**: `onDelete: Restrict` prevents cascade deletions of purchases with contributions
+- **Data Type Enforcement**: Proper field types (Float, DateTime, Boolean) with NOT NULL constraints
+
+#### Application-Level Constraints (Zod + Business Logic):
+- **Value Range Validation**: Min/max limits for tokens, payments, meter readings
+- **Positive Number Enforcement**: All monetary and quantity values must be positive
+- **Chronological Ordering**: Meter readings must increase over time
+- **Token Consumption Logic**: Automatic calculation and validation of token usage
+- **Sequential Workflow**: Purchase-contribution ordering enforced in business logic
+
+#### Rationale for Hybrid Approach:
+- **Database constraints**: Handle critical referential integrity and prevent data corruption
+- **Application constraints**: Provide flexible business rule enforcement with detailed error messages
+- **UI constraints**: Deliver immediate user feedback and prevent invalid submissions
+- **Performance**: Complex validations in application layer avoid database overhead
+
 ### Recently Resolved Constraint Issues ✅
 
 #### Initial Implementation Issues:
@@ -442,6 +501,29 @@ Advanced yet user-friendly Next.js application for tracking electricity usage me
 - **Meter reading constraint restoration**: Re-implemented positive number requirement after database migration
 - **Sequential workflow implementation**: Complete redesign of purchase-contribution relationship with proper validation
 - **Meter reading synchronization**: Auto-setting contribution readings to match purchase readings
+
+#### Recent Dark Mode and UX Issues (Fixed):
+
+- **Dark Mode Consistency**: Fixed Try Again button, Quick Presets, Read Only button styling across admin interface
+- **Confirmation Dialog Dark Mode**: Enhanced Delete purchase dialog with proper dark mode button styling
+- **Contribution Edit Form Dark Mode**: Fixed labels, data values, and overall form styling for dark theme
+- **Purchase Table Dark Mode**: Fixed Add Contribution button styling and proper button state management
+- **Missing "Delete Contributions" Permission**: Added missing permission to admin UI permissions list
+
+#### Admin User Management Issues (Fixed):
+
+- **Missing Admin User Creation**: Implemented comprehensive admin user creation workflow with form validation
+- **LoadingButton Component Missing**: Created missing component with proper TypeScript interfaces
+- **Temporal Dead Zone Errors**: Fixed function hoisting issues in multiple components by reordering declarations
+- **User Creation API Issues**: Fixed import errors (`logAuditEvent` vs `createAuditLog`) in user creation endpoint
+
+#### Data Integrity and Constraint Fixes:
+
+- **Purchase Deletion with Contributions**: Changed `onDelete: Cascade` to `onDelete: Restrict` in Prisma schema
+- **Admin Purchase Recalculation**: Implemented automatic contribution updates when admins edit purchase meter readings
+- **Token Constraint Validation**: Enhanced validation to prevent meter reading changes that violate token limits
+- **Blocking vs Warning Validation**: Changed meter reading validation from warnings to blocking constraints
+- **Original Value Display**: Enhanced edit forms to prominently show current values being changed
 
 #### API and Database Relationship Issues:
 
@@ -629,18 +711,25 @@ This plan provides a structured approach to building a comprehensive electricity
 
 ## 📈 CURRENT STATUS
 
-**Completion Rate**: ~60% of total project plan
+**Completion Rate**: ~85% of total project plan
 **Fully Functional Features**:
 
-- Complete user management and authentication
-- Advanced admin panel with permissions system
-- Token purchase and contribution tracking
+- Complete user management and authentication with admin user creation
+- Advanced admin panel with fine-grained permissions system (12 individual permissions)
+- Token purchase and contribution tracking with automatic recalculation
 - Advanced reporting and analytics (11 report types)
-- Data export/import capabilities
-- Professional dashboard interface
-- Efficiency optimization tools
+- Data export/import capabilities with CSV/JSON formats
+- Professional dashboard interface with dark mode support
+- Efficiency optimization tools with ML-based predictions
+- Complete audit system with enterprise-grade logging
+- Security features with rate limiting, CSRF protection, and encryption
+- Responsive design with PWA capabilities and offline functionality
+- Comprehensive UX features with loading states, error handling, and confirmation dialogs
+- Global deletion constraints and data integrity protection
 
-**Next Phase**: Ready for Checkpoint 6.2 (Audit System) and 6.3 (Security Features)
+**Recently Completed**: Checkpoints 6.2 (Audit System), 6.3 (Security Features), 7.1 (Responsive Design), 7.2 (User Experience), and Admin Purchase Recalculation System
+
+**Next Phase**: Ready for Checkpoint 8 (Testing and Quality Assurance) and Checkpoint 9 (Deployment)
 
 ## 🎯 READY FOR PRODUCTION FEATURES
 
@@ -655,6 +744,46 @@ The following features are production-ready:
 - Professional UI with responsive design
 
 This foundation provides a robust, scalable platform for electricity usage tracking with advanced analytics capabilities.
+
+## 📋 COMPREHENSIVE DESIGN REVIEW
+
+### Database Schema Accuracy ✅
+- **One-to-One Relationship**: Purchase-contribution relationship correctly implemented with unique constraint
+- **Constraint Strategy**: Hybrid approach using database constraints for critical integrity, application constraints for business rules
+- **Deletion Protection**: `onDelete: Restrict` properly prevents data corruption from cascade deletions
+- **Missing Database Constraints**: Intentionally handled at application level (positive values, max limits) for flexibility
+
+### Business Rules Implementation ✅
+- **Sequential Ordering**: Proper chronological enforcement without compromising data integrity
+- **Token Consumption**: Accurate calculation using previous purchase baseline
+- **Admin Recalculation**: Automatic contribution updates when purchase meter readings change
+- **Global Constraints**: Latest-only deletion rules properly implemented across the system
+
+### UI/UX Compliance ✅
+- **Dark Mode**: Comprehensive styling fixes across all components and forms
+- **Original Value Display**: Edit forms prominently show current values being changed
+- **Blocking Validations**: Critical constraints prevent form submission rather than showing warnings
+- **Responsive Design**: Mobile-first approach with touch-friendly interface elements
+
+### Security and Data Integrity ✅
+- **Multi-layer Validation**: Database, API, UI, and security layers working in harmony
+- **Audit Trail Completeness**: All changes tracked with integrity verification
+- **Permission System**: Fine-grained 12-permission system with role-based access
+- **Export/Import Security**: Admin-only access with proper validation and error handling
+
+### Recent Enhancements Summary ✅
+- **Admin Purchase Recalculation**: Automatic contribution updates with impact analysis
+- **Enhanced Form Validation**: Blocking validations with prominent original value display
+- **Global Deletion Constraints**: Latest-only deletion with sequential integrity protection
+- **Dark Mode Consistency**: Comprehensive styling fixes across all UI components
+- **Export/Backup Functionality**: Professional data management with multiple formats
+
+### Current Implementation Gaps
+- **Testing Coverage**: Unit and integration tests not yet implemented (Checkpoint 8 pending)
+- **Production Deployment**: Environment setup and monitoring not yet configured (Checkpoint 9 pending)
+- **Documentation**: Technical and user documentation not yet complete (Checkpoint 10 pending)
+
+The project plan now accurately reflects the current implementation state with all major constraints and business rules properly documented.
 
 # Claude Context for Electricity Tokens App
 
@@ -787,6 +916,44 @@ This is an electricity usage tracking app built with Next.js, designed for manag
 
 **Status**: Complete user experience implementation with modern UX patterns and comprehensive user guidance!
 
+## ✅ NEW: Checkpoint 11 Completed: Admin Purchase Recalculation System
+
+### 11.1 Automatic Recalculation Features ✅
+
+- **Impact Analysis Engine**: Advanced pre-change analysis to identify affected contributions and validate constraints before modifications ✅
+- **Automatic Contribution Recalculation**: When admins change purchase meter readings, associated contributions are automatically recalculated to maintain data integrity ✅
+- **Token Constraint Validation**: Comprehensive validation ensures recalculated consumption doesn't exceed available tokens or create invalid negative values ✅
+- **Enhanced Audit Logging**: Detailed audit trails track both purchase changes and triggered recalculations with complete before/after values ✅
+- **Admin Impact Preview API**: Dedicated endpoint (/api/purchases/[id]/impact-analysis) allows admins to preview changes before applying them ✅
+- **Cascading Change Management**: Systematic handling of meter reading changes with automatic propagation to dependent calculations ✅
+- **Data Integrity Protection**: Multi-layer validation prevents constraint violations while enabling necessary admin corrections ✅
+- **Comprehensive Error Handling**: Detailed error messages guide admins when changes would violate business rules or token constraints ✅
+
+**Status**: Complete admin purchase recalculation system with automatic contribution updates and comprehensive impact analysis!
+
+### Technical Implementation Details:
+
+#### Purchase Edit API Enhancements (`/api/purchases/[id]/route.ts`):
+- **Impact Analysis Function**: Analyzes changes before application to identify affected contributions
+- **Automatic Recalculation Logic**: Recalculates `tokensConsumed` based on new meter reading baseline
+- **Constraint Validation**: Prevents changes that would violate token limits or create negative consumption
+- **Enhanced Response**: Returns recalculation summary with old/new values for transparency
+
+#### Impact Analysis API (`/api/purchases/[id]/impact-analysis/route.ts`):
+- **Admin-Only Endpoint**: Provides impact preview functionality for purchase changes
+- **Comprehensive Analysis**: Shows affected contributions, constraint violations, and change summaries
+- **Real-time Validation**: Validates constraints without making actual changes
+
+#### Enhanced Audit System:
+- **Cascading Change Logs**: Tracks both primary changes and triggered recalculations
+- **Detailed Context**: Records why changes were made and what calculations were affected
+- **Integrity Verification**: Maintains audit trail completeness for compliance
+
+#### Business Logic Implementation:
+- **Chronological Preservation**: Uses `createdAt` for ordering, meter reading changes don't affect sequence
+- **Focused Recalculation**: Only recalculates directly affected contribution, avoiding unnecessary cascading
+- **Report Cache Invalidation**: Marks dependent cached reports for regeneration (future implementation)
+
 ## Key Features
 
 - Token-based electricity tracking (1 token = 1 kWh)
@@ -795,6 +962,7 @@ This is an electricity usage tracking app built with Next.js, designed for manag
 - Emergency purchase tracking at higher rates
 - Audit trails and user management
 - Comprehensive reporting and analytics
+- **NEW**: Admin purchase recalculation with automatic contribution updates
 
 ## Development Commands
 
