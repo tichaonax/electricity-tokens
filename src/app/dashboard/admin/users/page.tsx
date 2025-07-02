@@ -100,20 +100,6 @@ function UserManagementContent() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
-      fetchUsers();
-    }
-  }, [
-    status,
-    session,
-    currentPage,
-    roleFilter,
-    lockedFilter,
-    searchFilter,
-    fetchUsers,
-  ]);
-
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
@@ -148,6 +134,20 @@ function UserManagementContent() {
       setLoading(false);
     }
   }, [currentPage, pagination.limit, roleFilter, lockedFilter, searchFilter]);
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      fetchUsers();
+    }
+  }, [
+    status,
+    session,
+    currentPage,
+    roleFilter,
+    lockedFilter,
+    searchFilter,
+    fetchUsers,
+  ]);
 
   const handleUserAction = async (
     userId: string,
