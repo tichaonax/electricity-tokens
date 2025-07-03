@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { MobileNav } from './mobile-nav';
 import { Badge } from './badge';
+import { ThemeToggleCompact } from './theme-toggle-compact';
 import { User, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
@@ -78,6 +79,11 @@ export function ResponsiveNav({
           {/* Right side - User info and menu */}
           <div className="flex items-center space-x-3">
             {children}
+
+            {/* Desktop theme toggle */}
+            <div className="hidden md:block">
+              <ThemeToggleCompact />
+            </div>
 
             {/* Desktop user menu */}
             <div className="relative hidden md:block" ref={userMenuRef}>

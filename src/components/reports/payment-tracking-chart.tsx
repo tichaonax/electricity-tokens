@@ -84,7 +84,7 @@ export function PaymentTrackingChart({ startDate, endDate }: PaymentTrackingChar
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching payment tracking:', error);
+      // console.error removed
       setError('Failed to load payment tracking. Please try again.');
     } finally {
       setLoading(false);

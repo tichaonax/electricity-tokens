@@ -37,7 +37,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     
     // Log error in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught an error:', error, errorInfo);
+      // ErrorBoundary caught an error
     }
   }
 
@@ -106,7 +106,7 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
 // Hook for functional error boundaries
 export function useErrorHandler() {
   return (error: Error, errorInfo?: React.ErrorInfo) => {
-    console.error('Error caught by useErrorHandler:', error, errorInfo);
+    // Error caught by useErrorHandler
     // Could integrate with error reporting service here
   };
 }

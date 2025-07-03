@@ -105,7 +105,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
         setOptimalContributions(data.optimalContributions || []);
       }
     } catch (error) {
-      console.error('Error fetching cost analysis:', error);
+      // console.error removed
       setError(
         error instanceof Error ? error.message : 'Failed to load cost analysis'
       );

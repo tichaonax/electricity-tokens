@@ -78,7 +78,7 @@ export function MonthlyCostChart({ startDate, endDate }: MonthlyCostChartProps) 
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching monthly costs:', error);
+      // console.error removed
       setError('Failed to load monthly costs. Please try again.');
     } finally {
       setLoading(false);

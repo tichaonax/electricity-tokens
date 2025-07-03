@@ -95,7 +95,7 @@ function EditContributionContent() {
       setValue('contributionAmount', data.contributionAmount);
       // tokensConsumed is calculated and readonly
     } catch (error) {
-      console.error('Error fetching contribution:', error);
+      // console.error removed
       setError('Failed to load contribution data.');
     } finally {
       setLoading(false);
@@ -171,7 +171,7 @@ function EditContributionContent() {
       // Success - redirect back to contributions
       router.push('/dashboard/contributions');
     } catch (error) {
-      console.error('Error updating contribution:', error);
+      // console.error removed
       setError(error instanceof Error ? error.message : 'Failed to update contribution');
     } finally {
       setSubmitting(false);

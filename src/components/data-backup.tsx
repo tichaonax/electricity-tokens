@@ -79,7 +79,7 @@ export function DataBackup() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Backup error:', error);
+      // console.error removed
       alert('Backup failed. Please try again.');
     } finally {
       setLoading(false);
@@ -126,7 +126,7 @@ export function DataBackup() {
       const result = await response.json();
       setRestoreResult(result);
     } catch (error) {
-      console.error('Restore error:', error);
+      // console.error removed
       alert('Restore failed. Please check the backup file and try again.');
     } finally {
       setLoading(false);

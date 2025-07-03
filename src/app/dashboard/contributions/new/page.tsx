@@ -55,14 +55,14 @@ function NewContributionContent() {
       }
 
       const result = await response.json();
-      console.log('Contribution created:', result);
+      // console.log removed
 
       // Redirect to contributions list after successful creation
       setTimeout(() => {
         router.push('/dashboard/contributions');
       }, 2000);
     } catch (error) {
-      console.error('Error creating contribution:', error);
+      // console.error removed
       throw error;
     } finally {
       setIsSubmitting(false);

@@ -61,7 +61,7 @@ export default function EditPurchasePage() {
       const data = await response.json();
       setPurchase(data);
     } catch (error) {
-      console.error('Error fetching purchase:', error);
+      // console.error removed
       setError('Failed to load purchase');
     } finally {
       setLoading(false);

@@ -94,7 +94,7 @@ export function EmergencyImpactChart({ startDate, endDate }: EmergencyImpactChar
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching emergency impact:', error);
+      // console.error removed
       setError('Failed to load emergency impact analysis. Please try again.');
     } finally {
       setLoading(false);

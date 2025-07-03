@@ -80,7 +80,7 @@ export function DataExport({ userRole }: DataExportProps) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Export failed:', response.status, errorText);
+        // console.error removed
         throw new Error(`Export failed: ${response.status} - ${errorText}`);
       }
 
@@ -105,7 +105,7 @@ export function DataExport({ userRole }: DataExportProps) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Export error:', error);
+      // console.error removed
       alert('Export failed. Please try again.');
     } finally {
       setLoading(false);

@@ -110,7 +110,7 @@ export default function NewUserPage() {
       success('User created successfully');
       router.push('/dashboard/admin/users');
     } catch (error) {
-      console.error('Error creating user:', error);
+      // console.error removed
       showError(error instanceof Error ? error.message : 'Failed to create user');
     } finally {
       setIsSubmitting(false);

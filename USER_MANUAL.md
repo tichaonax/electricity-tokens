@@ -71,7 +71,9 @@ After logging in, you'll see your **Dashboard** with:
 - 👥 **Admin Panel**: User and system management
 - 🔧 **Settings**: System configuration
 - 📋 **Audit Logs**: Complete activity history
-- 💾 **Backup**: Data management tools
+- 💾 **Data Management**: Export, import, backup & restore
+- 🔒 **Security Dashboard**: System monitoring and threat detection
+- 📊 **System Reports**: Performance and usage analytics
 
 ---
 
@@ -249,9 +251,12 @@ Navigate to **Reports** in the main menu to access:
 ## 🌙 App Features
 
 ### Dark Mode
-- **Toggle**: Use the switch in the top navigation
-- **Automatic**: Follows system preference
-- **Persistent**: Your choice is remembered
+- **Theme Options**: Light, Dark, or System (follows device preference)
+- **Desktop Toggle**: Click the theme icon in the top navigation bar
+- **Mobile Toggle**: Access through the mobile menu under "Settings"
+- **Cycle Through Options**: Light → Dark → System → Light...
+- **Persistent**: Your choice is saved and remembered across sessions
+- **Instant Application**: Changes apply immediately across the entire app
 
 ### Mobile App Features
 - **Add to Home Screen**: Install as PWA on mobile devices
@@ -325,6 +330,75 @@ Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 - You used: 25 tokens
 - Your fair share: (25 ÷ 100) × $150 = $37.50
 - Your rate: $37.50 ÷ 25 = $1.50 per kWh
+
+---
+
+## 💾 Data Management & Backup (Admin Only)
+
+### Accessing Data Management
+
+**For Administrators Only**: Navigate to **Admin Panel** → **Data Management** to access backup and restore tools.
+
+### Creating Backups
+
+**Backup Types Available**:
+1. **Full Backup**: Complete database including all users, purchases, contributions, and audit logs
+2. **Users Only**: Just user accounts and settings
+3. **Purchase Data**: Token purchases with their linked contributions (recommended for regular backups)
+
+**Steps to Create Backup**:
+1. **Go to Data Management**: Admin Panel → Data Management → Backup & Restore tab
+2. **Select Backup Type**: Choose from Full, Users Only, or Purchase Data
+3. **Choose Options**: 
+   - For Full Backup: Optionally include audit logs (last 10,000 entries)
+4. **Click "Create Backup"**: Download will start automatically
+5. **Save Securely**: Store backup files in a secure location
+
+**Backup File Format**: JSON files with timestamps (e.g., `backup_full_2025-07-03.json`)
+
+### Restoring from Backup
+
+⚠️ **Warning**: Restoring overwrites existing data and cannot be undone. Always create a current backup before restoring.
+
+**Steps to Restore**:
+1. **Go to Backup & Restore tab**
+2. **Upload Backup File**: Click "Choose File" and select a JSON backup
+3. **Review File Details**: System shows file size and content summary
+4. **Confirm Restore**: Click "Restore Data" (requires confirmation)
+5. **Monitor Progress**: See detailed results including any errors
+6. **Verify Data**: Check that all data restored correctly
+
+### Data Export Options
+
+**Regular Export Features** (Available to all users):
+- **CSV Export**: For spreadsheet analysis
+- **JSON Export**: Complete data structure
+- **PDF Reports**: Professional formatted reports
+- **Date Filtering**: Export specific time periods
+
+**Admin Export Features**:
+- **User Data**: Complete user account information
+- **System Analytics**: Usage patterns and performance metrics
+- **Audit Trail**: Complete activity logs
+
+### Best Practices
+
+**Regular Backup Schedule**:
+- **Daily**: Automatic purchase data backups
+- **Weekly**: Full system backup
+- **Monthly**: Archived backup stored off-site
+- **Before Updates**: Always backup before system changes
+
+**Backup Security**:
+- Store backups in multiple secure locations
+- Encrypt sensitive backup files
+- Test restore procedures periodically
+- Document backup and recovery procedures
+
+**When to Use Each Backup Type**:
+- **Full Backup**: Before major system changes, monthly archives
+- **Purchase Data**: Daily operational backups
+- **Users Only**: Before user management changes
 
 ---
 

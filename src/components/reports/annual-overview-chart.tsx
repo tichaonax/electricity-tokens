@@ -102,7 +102,7 @@ export function AnnualOverviewChart({ startDate, endDate }: AnnualOverviewChartP
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching annual overview:', error);
+      // console.error removed
       setError('Failed to load annual overview. Please try again.');
     } finally {
       setLoading(false);

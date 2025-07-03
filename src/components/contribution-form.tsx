@@ -169,7 +169,7 @@ export function ContributionForm({
       setUserHasContributed(hasContributed);
       setShowContributionWarning(hasContributed); // Show warning when contribution exists
     } catch (error) {
-      console.error('Error checking purchase contribution:', error);
+      // console.error removed
       setUserHasContributed(false);
       setShowContributionWarning(false);
     }
@@ -199,7 +199,7 @@ export function ContributionForm({
         setPreviousMeterReading(0);
       }
     } catch (error) {
-      console.error('Error fetching previous purchase:', error);
+      // console.error removed
       setPreviousMeterReading(0);
     }
   };
@@ -232,7 +232,7 @@ export function ContributionForm({
           setPreviousMeterReading(0);
         }
       } catch (error) {
-        console.error('Error fetching purchase meter reading:', error);
+        // console.error removed
         setPreviousMeterReading(0);
       } finally {
         setLoadingPreviousReading(false);
@@ -265,7 +265,7 @@ export function ContributionForm({
         }
       }
     } catch (error) {
-      console.error('Error fetching purchases:', error);
+      // console.error removed
       setSubmitError('Failed to load purchases. Please refresh the page.');
     } finally {
       setLoadingPurchases(false);
@@ -281,7 +281,7 @@ export function ContributionForm({
       const data = await response.json();
       setUsers(data.users || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      // console.error removed
     } finally {
       setLoadingUsers(false);
     }
@@ -584,7 +584,7 @@ export function ContributionForm({
           reasoning,
         });
       } catch (error) {
-        console.error('Error analyzing historical consumption:', error);
+        // console.error removed
         setHistoricalSuggestion(null);
       }
     },

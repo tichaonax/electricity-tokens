@@ -74,7 +74,7 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching usage trends:', error);
+      // console.error removed
       setError('Failed to load usage trends. Please try again.');
     } finally {
       setLoading(false);

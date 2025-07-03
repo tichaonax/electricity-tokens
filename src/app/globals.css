@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@variant dark (.dark &);
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -77,19 +79,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Improved contrast and visibility */
-.dark {
-  /* High contrast dark mode - white on black */
-  --background: 0 0% 0%; /* Pure black background */
-  --foreground: 0 0% 100%; /* Pure white text */
-  --muted-foreground: 0 0% 85%; /* Light gray for muted text */
-  --border: 0 0% 40%; /* Lighter borders for visibility */
-  --input: 0 0% 0%; /* Pure black input backgrounds */
-  --popover: 0 0% 0%; /* Pure black popover backgrounds */
-  --card: 0 0% 3%; /* Very dark card backgrounds */
-  --secondary: 0 0% 10%; /* Dark secondary backgrounds */
-  --accent: 0 0% 15%; /* Dark accent backgrounds */
-}
 
 /* Better icon visibility */
 .lucide {

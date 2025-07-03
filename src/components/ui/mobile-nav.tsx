@@ -141,111 +141,113 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
           </div>
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-y-auto">
-            {/* User info */}
-            {session?.user && (
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {session.user.name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {session.user.email}
-                    </p>
-                    <div className="mt-1">
-                      <Badge
-                        variant={
-                          session.user.role === 'ADMIN'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                        className="text-xs"
-                      >
-                        {session.user.role}
-                      </Badge>
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div className="pb-8">
+              {/* User info */}
+              {session?.user && (
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {session.user.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {session.user.email}
+                      </p>
+                      <div className="mt-1">
+                        <Badge
+                          variant={
+                            session.user.role === 'ADMIN'
+                              ? 'destructive'
+                              : 'secondary'
+                          }
+                          className="text-xs"
+                        >
+                          {session.user.role}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Navigation */}
-            <nav className="py-4">
-              <div className="space-y-1 px-2">
-                {/* Main navigation */}
-                <div className="mb-6">
-                  <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                    Main
-                  </p>
-                  {mainNavItems.map((item) => (
-                    <div key={item.path}>
-                      <button
-                        onClick={() => handleNavigation(item.path)}
-                        className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
-                      >
-                        <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
-                        {item.label}
-                        {item.subItems && (
-                          <ChevronRight className="ml-auto h-4 w-4 text-gray-400 dark:text-gray-500" />
-                        )}
-                      </button>
-
-                      {/* Sub-navigation */}
-                      {item.subItems && (
-                        <div className="ml-8 mt-1 space-y-1">
-                          {item.subItems.map((subItem) => (
-                            <button
-                              key={subItem.path}
-                              onClick={() => handleNavigation(subItem.path)}
-                              className="group flex items-center w-full min-h-[40px] px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-100 dark:active:bg-gray-500 transition-colors"
-                            >
-                              {subItem.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Admin navigation */}
-                {isAdmin && (
+              {/* Navigation */}
+              <nav className="py-4">
+                <div className="space-y-1 px-2">
+                  {/* Main navigation */}
                   <div className="mb-6">
                     <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                      Administration
+                      Main
                     </p>
-                    {adminNavItems.map((item) => (
-                      <button
-                        key={item.path}
-                        onClick={() => handleNavigation(item.path)}
-                        className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
-                      >
-                        <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
-                        {item.label}
-                      </button>
+                    {mainNavItems.map((item) => (
+                      <div key={item.path}>
+                        <button
+                          onClick={() => handleNavigation(item.path)}
+                          className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
+                        >
+                          <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
+                          {item.label}
+                          {item.subItems && (
+                            <ChevronRight className="ml-auto h-4 w-4 text-gray-400 dark:text-gray-500" />
+                          )}
+                        </button>
+
+                        {/* Sub-navigation */}
+                        {item.subItems && (
+                          <div className="ml-8 mt-1 space-y-1">
+                            {item.subItems.map((subItem) => (
+                              <button
+                                key={subItem.path}
+                                onClick={() => handleNavigation(subItem.path)}
+                                className="group flex items-center w-full min-h-[40px] px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-100 dark:active:bg-gray-500 transition-colors"
+                              >
+                                {subItem.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
-                )}
+
+                  {/* Admin navigation */}
+                  {isAdmin && (
+                    <div className="mb-6">
+                      <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                        Administration
+                      </p>
+                      {adminNavItems.map((item) => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigation(item.path)}
+                          className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
+                        >
+                          <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </nav>
+
+              {/* Help Section */}
+              <div className="px-2 mb-4">
+                <button
+                  onClick={() => handleNavigation('/help')}
+                  className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
+                >
+                  <HelpCircle className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
+                  Help & FAQ
+                </button>
               </div>
-            </nav>
 
-            {/* Help Section */}
-            <div className="px-2 mb-4">
-              <button
-                onClick={() => handleNavigation('/help')}
-                className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
-              >
-                <HelpCircle className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
-                Help & FAQ
-              </button>
+              {/* Theme Toggle */}
+              <ThemeToggle />
             </div>
-
-            {/* Theme Toggle */}
-            <ThemeToggle />
           </div>
 
           {/* Footer */}

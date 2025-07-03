@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/session-provider';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 import { CSRFProvider } from '@/components/security/CSRFProvider';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { ToastProvider } from '@/components/ui/toast';
@@ -74,25 +75,27 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SkipNavigation />
-        <AuthProvider>
-          <CSRFProvider>
-            <HighContrastProvider>
-              <AccessibilityAnnouncerProvider>
-                <ErrorBoundary>
-                  <ToastProvider>
-                    <ConfirmationProvider>
-                      <main id="main-content" tabIndex={-1}>
-                        {children}
-                      </main>
-                      <OfflineIndicator />
-                    </ConfirmationProvider>
-                  </ToastProvider>
-                </ErrorBoundary>
-              </AccessibilityAnnouncerProvider>
-            </HighContrastProvider>
-          </CSRFProvider>
-        </AuthProvider>
-        <Analytics />
+        <ThemeProvider>
+          <AuthProvider>
+            <CSRFProvider>
+              <HighContrastProvider>
+                <AccessibilityAnnouncerProvider>
+                  <ErrorBoundary>
+                    <ToastProvider>
+                      <ConfirmationProvider>
+                        <main id="main-content" tabIndex={-1}>
+                          {children}
+                        </main>
+                        <OfflineIndicator />
+                      </ConfirmationProvider>
+                    </ToastProvider>
+                  </ErrorBoundary>
+                </AccessibilityAnnouncerProvider>
+              </HighContrastProvider>
+            </CSRFProvider>
+          </AuthProvider>
+        </ThemeProvider>
+        <Analytics debug={false} />
       </body>
     </html>
   );

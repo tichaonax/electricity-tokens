@@ -38,7 +38,7 @@ export function ConfirmationProvider({ children }: { children: React.ReactNode }
       await dialog.onConfirm();
       setDialog(null);
     } catch (error) {
-      console.error('Confirmation action failed:', error);
+      // console.error removed
     } finally {
       setIsLoading(false);
     }

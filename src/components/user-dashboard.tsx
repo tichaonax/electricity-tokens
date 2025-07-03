@@ -110,7 +110,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
       const dashboardData = await response.json();
       setData(dashboardData);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      // console.error removed
       setError(
         error instanceof Error ? error.message : 'Failed to load dashboard data'
       );

@@ -58,7 +58,7 @@ export default function PurchasesPage() {
       const data = await response.json();
       setPurchases(data.purchases || []);
     } catch (error) {
-      console.error('Error fetching purchases:', error);
+      // console.error removed
       setError(
         error instanceof Error ? error.message : 'Failed to load purchases'
       );

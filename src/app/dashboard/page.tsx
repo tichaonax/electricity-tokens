@@ -38,7 +38,7 @@ export default function Dashboard() {
         setQuickStats(data.personalSummary);
       }
     } catch (error) {
-      console.error('Error fetching quick stats:', error);
+      // Error fetching quick stats
     } finally {
       setLoadingStats(false);
     }

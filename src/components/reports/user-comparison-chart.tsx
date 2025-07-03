@@ -87,7 +87,7 @@ export function UserComparisonChart({ startDate, endDate }: UserComparisonChartP
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching user comparison:', error);
+      // console.error removed
       setError('Failed to load user comparison. Please try again.');
     } finally {
       setLoading(false);

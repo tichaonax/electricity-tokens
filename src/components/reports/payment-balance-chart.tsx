@@ -81,7 +81,7 @@ export function PaymentBalanceChart({ startDate, endDate }: PaymentBalanceChartP
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching payment balance:', error);
+      // console.error removed
       setError('Failed to load payment balance. Please try again.');
     } finally {
       setLoading(false);

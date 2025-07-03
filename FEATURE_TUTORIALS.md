@@ -40,7 +40,17 @@ This document provides detailed, visual tutorials for all major features in the 
 - 🔔 **Notifications**: Welcome message and getting started tips
 - 🎯 **Quick Actions**: Buttons for main features
 
-#### Step 4: Profile Setup (Optional but Recommended)
+#### Step 4: Theme Selection (Optional but Recommended)
+1. **Choose Your Theme**: 
+   - **Desktop**: Click the theme icon (sun/moon) in the top navigation
+   - **Mobile**: Open mobile menu → look for theme toggle
+2. **Available Options**:
+   - **Light Mode**: Traditional bright interface
+   - **Dark Mode**: Eye-friendly dark interface  
+   - **System**: Follows your device's preference
+3. **Theme Persistence**: Your choice is automatically saved
+
+#### Step 5: Profile Setup (Optional but Recommended)
 1. **Click your name** in the top-right corner
 2. **Select "Profile"**
 3. **Update your information**:

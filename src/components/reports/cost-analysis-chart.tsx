@@ -71,7 +71,7 @@ export function CostAnalysisChart({ startDate, endDate }: CostAnalysisChartProps
       const result = await response.json();
       setData(result.data);
     } catch (error) {
-      console.error('Error fetching cost analysis:', error);
+      // console.error removed
       setError('Failed to load cost analysis. Please try again.');
     } finally {
       setLoading(false);

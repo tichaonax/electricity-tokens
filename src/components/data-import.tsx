@@ -81,7 +81,7 @@ export function DataImport() {
       setPreview(data);
       setStep('preview');
     } catch (error) {
-      console.error('Parse error:', error);
+      // console.error removed
       alert('Failed to parse file. Please check the format and try again.');
     } finally {
       setLoading(false);
@@ -119,7 +119,7 @@ export function DataImport() {
         alert('Validation successful! Data looks good.');
       }
     } catch (error) {
-      console.error('Validation error:', error);
+      // console.error removed
       alert('Validation failed. Please try again.');
     } finally {
       setLoading(false);
@@ -157,7 +157,7 @@ export function DataImport() {
       setResult(result);
       setStep('result');
     } catch (error) {
-      console.error('Import error:', error);
+      // console.error removed
       alert('Import failed. Please try again.');
     } finally {
       setLoading(false);

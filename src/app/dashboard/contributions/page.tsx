@@ -89,7 +89,7 @@ export default function ContributionsPage() {
       // Check if there are available purchases (purchases without contributions)
       await checkAvailablePurchases();
     } catch (error) {
-      console.error('Error fetching contributions:', error);
+      // console.error removed
       setError(
         error instanceof Error ? error.message : 'Failed to load contributions'
       );
@@ -108,7 +108,7 @@ export default function ContributionsPage() {
         setHasAvailablePurchases(hasAvailable);
       }
     } catch (error) {
-      console.error('Error checking available purchases:', error);
+      // console.error removed
       setHasAvailablePurchases(false);
     }
   };
@@ -182,7 +182,7 @@ export default function ContributionsPage() {
         setContributions(prev => prev.filter(c => c.id !== contribution.id));
         success('Contribution deleted successfully');
       } catch (error) {
-        console.error('Error deleting contribution:', error);
+        // console.error removed
         showError(error instanceof Error ? error.message : 'Failed to delete contribution');
       } finally {
         setDeletingId(null);

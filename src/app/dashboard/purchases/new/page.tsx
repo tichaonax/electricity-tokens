@@ -46,14 +46,14 @@ export default function NewPurchasePage() {
       }
 
       const result = await response.json();
-      console.log('Purchase created:', result);
+      // console.log removed
 
       // Redirect to purchases list after successful creation
       setTimeout(() => {
         router.push('/dashboard/purchases');
       }, 2000);
     } catch (error) {
-      console.error('Error creating purchase:', error);
+      // console.error removed
       throw error;
     } finally {
       setIsSubmitting(false);

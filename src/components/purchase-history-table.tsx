@@ -161,7 +161,7 @@ export function PurchaseHistoryTable({
       );
       setHasContributablePurchases(hasContributable);
     } catch (error) {
-      console.error('Error fetching purchases:', error);
+      // console.error removed
       setError(
         error instanceof Error ? error.message : 'Failed to load purchases'
       );
@@ -256,7 +256,7 @@ export function PurchaseHistoryTable({
         success('Purchase deleted successfully');
         fetchPurchases();
       } catch (error) {
-        console.error('Error deleting purchase:', error);
+        // console.error removed
         showError('Failed to delete purchase. Please try again.');
       }
     });
