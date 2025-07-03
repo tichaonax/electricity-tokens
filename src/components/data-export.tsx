@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 interface ExportOptions {
-  type: 'purchases' | 'contributions' | 'users' | 'summary';
+  type: 'purchases' | 'contributions' | 'users' | 'summary' | 'purchase-data';
   format: 'csv' | 'json' | 'pdf';
   startDate?: string;
   endDate?: string;
@@ -27,7 +27,7 @@ interface DataExportProps {
 export function DataExport({ userRole }: DataExportProps) {
   const [loading, setLoading] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
-    type: 'purchases',
+    type: 'purchase-data',
     format: 'csv',
   });
 
@@ -113,21 +113,27 @@ export function DataExport({ userRole }: DataExportProps) {
   };
 
   const exportTypes: Array<{
-    id: 'purchases' | 'contributions' | 'users' | 'summary';
+    id: 'purchases' | 'contributions' | 'users' | 'summary' | 'purchase-data';
     name: string;
     description: string;
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     {
+      id: 'purchase-data' as const,
+      name: 'Purchase Data (Recommended)',
+      description: 'Combined purchases with their linked contributions',
+      icon: ShoppingCart,
+    },
+    {
       id: 'purchases' as const,
       name: 'Token Purchases',
-      description: 'All token purchases with details',
+      description: 'All token purchases with details (legacy)',
       icon: ShoppingCart,
     },
     {
       id: 'contributions' as const,
       name: 'User Contributions',
-      description: 'User contributions and meter readings',
+      description: 'User contributions and meter readings (legacy)',
       icon: Users,
     },
     {

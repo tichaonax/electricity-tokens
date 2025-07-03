@@ -70,6 +70,14 @@ ENCRYPTION_KEY=your-encryption-key-32-chars
 RATE_LIMIT_SECRET=your-rate-limit-secret
 ```
 
+**Monitoring Variables (Optional):**
+
+```
+SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+SENTRY_ORG=your-organization
+SENTRY_PROJECT=electricity-tokens-tracker
+```
+
 **App Configuration:**
 
 ```
@@ -115,13 +123,16 @@ After deployment, create your first admin user:
 
 ### Post-Deployment Checklist
 
-- [ ] Health check works: `https://your-app.vercel.app/healthz`
+- [ ] Health check works: `https://your-app.vercel.app/api/health`
 - [ ] Admin user created and can login
 - [ ] Database schema deployed correctly
 - [ ] All environment variables configured
 - [ ] HTTPS redirects working
 - [ ] PWA functionality works on mobile
 - [ ] Error pages display correctly
+- [ ] System monitoring dashboard accessible: `/dashboard/admin/monitoring`
+- [ ] Backup system configured and tested
+- [ ] Error tracking (Sentry) working correctly
 
 ## 🔒 Security Configuration
 
@@ -147,9 +158,11 @@ Security headers are configured in:
 
 ### Health Monitoring
 
-- Health endpoint: `/healthz`
-- Monitor database connectivity
-- Check environment variables
+- Health endpoint: `/api/health`
+- System monitoring dashboard: `/dashboard/admin/monitoring`
+- Monitor database connectivity, performance, and memory usage
+- Check environment variables and system integrity
+- Real-time error tracking via Sentry integration
 
 ### Performance Monitoring
 
@@ -236,11 +249,23 @@ npx prisma db push --preview-feature
 
 ### Database Backups
 
-Set up automated backups with your database provider:
+The application includes built-in backup and recovery capabilities:
 
+**Built-in Backup System:**
+- Admin backup API: `/api/admin/backup`
+- Backup verification: `/api/admin/backup/verify`
+- Restore functionality: `/api/admin/backup/restore`
+- Automated backup recommendations based on system activity
+
+**External Database Backups:**
 - Vercel Postgres: Automatic backups included
-- Supabase: Configure backup schedule
-- Railway: Enable automatic backups
+- Supabase: Configure backup schedule in dashboard
+- Railway: Enable automatic backups in project settings
+
+**Backup Best Practices:**
+- Test backup integrity regularly via the admin dashboard
+- Store backups in multiple locations
+- Document disaster recovery procedures (see DISASTER_RECOVERY.md)
 
 ### Error Tracking
 
@@ -266,4 +291,8 @@ npm install @sentry/nextjs
 
 ---
 
-**Need Help?** Check the health endpoint first: `https://your-app.vercel.app/healthz`
+**Need Help?** 
+- Check the health endpoint: `https://your-app.vercel.app/api/health`
+- View system monitoring: `https://your-app.vercel.app/dashboard/admin/monitoring`
+- Review error logs in Sentry dashboard
+- Consult TROUBLESHOOTING.md for common issues

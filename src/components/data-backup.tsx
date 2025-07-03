@@ -11,12 +11,11 @@ import {
   HardDrive,
   Users,
   ShoppingCart,
-  FileText,
   Loader2,
 } from 'lucide-react';
 
 interface BackupOptions {
-  type: 'full' | 'users' | 'purchases' | 'contributions';
+  type: 'full' | 'users' | 'purchase-data';
   includeAuditLogs: boolean;
 }
 
@@ -148,16 +147,10 @@ export function DataBackup() {
       icon: Users,
     },
     {
-      id: 'purchases' as const,
-      name: 'Purchases Only',
-      description: 'Token purchases and transactions',
+      id: 'purchase-data' as const,
+      name: 'Purchase Data',
+      description: 'Token purchases with their linked contributions (maintains one-to-one relationship)',
       icon: ShoppingCart,
-    },
-    {
-      id: 'contributions' as const,
-      name: 'Contributions Only',
-      description: 'User contributions and meter readings',
-      icon: FileText,
     },
   ];
 

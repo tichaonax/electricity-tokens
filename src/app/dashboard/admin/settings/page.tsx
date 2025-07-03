@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Settings, ChevronLeft, Save, RefreshCw, Database, Shield, Zap } from 'lucide-react';
+import { ChevronLeft, Save, RefreshCw, Database, Shield, Zap } from 'lucide-react';
 
 interface SystemSettings {
   emergencyPurchaseMultiplier: number;
@@ -59,7 +59,7 @@ export default function SystemSettings() {
       // For now, use default settings
       // In real implementation: const response = await fetch('/api/admin/settings');
       setLoading(false);
-    } catch (err) {
+    } catch (error) {
       setError('Failed to load system settings');
       setLoading(false);
     }
@@ -98,7 +98,7 @@ export default function SystemSettings() {
     }
   };
 
-  const handleInputChange = (key: keyof SystemSettings, value: any) => {
+  const handleInputChange = (key: keyof SystemSettings, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
@@ -119,31 +119,31 @@ export default function SystemSettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <nav className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <button
                 onClick={() => router.push('/dashboard/admin')}
-                className="mr-4 p-2 text-gray-600 hover:text-gray-900"
+                className="mr-4 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                 System Settings
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
+              <span className="text-gray-700 dark:text-gray-300">
                 Welcome, {session.user?.name}
               </span>
-              <span className="text-sm text-gray-500 bg-red-100 px-2 py-1 rounded">
+              <span className="text-sm text-gray-500 dark:text-gray-400 bg-red-100 dark:bg-red-900/20 px-2 py-1 rounded">
                 ADMIN
               </span>
               <button
                 onClick={() => router.push('/dashboard')}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                className="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium"
               >
                 Back to Dashboard
               </button>
@@ -155,27 +155,27 @@ export default function SystemSettings() {
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">System Configuration</h2>
-            <p className="text-gray-600">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">System Configuration</h2>
+            <p className="text-gray-600 dark:text-gray-300">
               Configure application settings, defaults, and system behavior.
             </p>
           </div>
 
           {error && (
-            <Alert className="mb-6 border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <Alert className="mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+              <AlertDescription className="text-red-800 dark:text-red-200">{error}</AlertDescription>
             </Alert>
           )}
 
           {success && (
-            <Alert className="mb-6 border-green-200 bg-green-50">
-              <AlertDescription className="text-green-800">{success}</AlertDescription>
+            <Alert className="mb-6 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+              <AlertDescription className="text-green-800 dark:text-green-200">{success}</AlertDescription>
             </Alert>
           )}
 
           <div className="space-y-6">
             {/* Purchase Settings */}
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Zap className="h-5 w-5 mr-2 text-yellow-500" />
@@ -188,7 +188,7 @@ export default function SystemSettings() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Emergency Purchase Multiplier
                     </label>
                     <input
@@ -197,16 +197,16 @@ export default function SystemSettings() {
                       step="0.1"
                       value={settings.emergencyPurchaseMultiplier}
                       onChange={(e) => handleInputChange('emergencyPurchaseMultiplier', parseFloat(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={loading}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Cost multiplier for emergency purchases (e.g., 1.2 = 20% more expensive)
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Default Tokens Per Purchase
                     </label>
                     <input
@@ -214,16 +214,16 @@ export default function SystemSettings() {
                       min="1"
                       value={settings.defaultTokensPerPurchase}
                       onChange={(e) => handleInputChange('defaultTokensPerPurchase', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={loading}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Default number of tokens suggested for new purchases
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Max Users Per Purchase
                     </label>
                     <input
@@ -232,10 +232,10 @@ export default function SystemSettings() {
                       max="50"
                       value={settings.maxUsersPerPurchase}
                       onChange={(e) => handleInputChange('maxUsersPerPurchase', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={loading}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Maximum number of users that can contribute to a single purchase
                     </p>
                   </div>
@@ -244,7 +244,7 @@ export default function SystemSettings() {
             </Card>
 
             {/* Security Settings */}
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Shield className="h-5 w-5 mr-2 text-green-500" />
@@ -265,7 +265,7 @@ export default function SystemSettings() {
                     max="480"
                     value={settings.sessionTimeoutMinutes}
                     onChange={(e) => handleInputChange('sessionTimeoutMinutes', parseInt(e.target.value))}
-                    className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     disabled={loading}
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -276,7 +276,7 @@ export default function SystemSettings() {
             </Card>
 
             {/* System Settings */}
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Database className="h-5 w-5 mr-2 text-blue-500" />
@@ -287,12 +287,12 @@ export default function SystemSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
+                <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-md">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                       Maintenance Mode
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       When enabled, only admins can access the system
                     </div>
                   </div>
@@ -300,7 +300,7 @@ export default function SystemSettings() {
                     type="button"
                     onClick={() => handleInputChange('systemMaintenanceMode', !settings.systemMaintenanceMode)}
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      settings.systemMaintenanceMode ? 'bg-indigo-600' : 'bg-gray-200'
+                      settings.systemMaintenanceMode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
                     }`}
                     disabled={loading}
                   >
@@ -312,12 +312,12 @@ export default function SystemSettings() {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
+                <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-md">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                       Automatic Backups
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       Enable daily automatic database backups
                     </div>
                   </div>
@@ -325,7 +325,7 @@ export default function SystemSettings() {
                     type="button"
                     onClick={() => handleInputChange('autoBackupEnabled', !settings.autoBackupEnabled)}
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      settings.autoBackupEnabled ? 'bg-indigo-600' : 'bg-gray-200'
+                      settings.autoBackupEnabled ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
                     }`}
                     disabled={loading}
                   >
@@ -344,7 +344,7 @@ export default function SystemSettings() {
               <button
                 onClick={fetchSettings}
                 disabled={loading || saving}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 {loading ? 'Loading...' : 'Reset'}
@@ -353,7 +353,7 @@ export default function SystemSettings() {
               <button
                 onClick={handleSaveSettings}
                 disabled={loading || saving}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-md text-sm font-medium hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 <Save className={`h-4 w-4 mr-2 ${saving ? 'animate-spin' : ''}`} />
                 {saving ? 'Saving...' : 'Save Settings'}

@@ -27,6 +27,7 @@ async function createSampleData() {
       data: {
         totalTokens: 1000,
         totalPayment: 250.0,
+        meterReading: 5000,
         purchaseDate: new Date('2024-06-01'),
         isEmergency: false,
         createdBy: adminUser.id,
@@ -37,40 +38,31 @@ async function createSampleData() {
       data: {
         totalTokens: 500,
         totalPayment: 150.0,
+        meterReading: 6000, // 1000 kWh consumed since last purchase
         purchaseDate: new Date('2024-06-15'),
         isEmergency: true,
         createdBy: adminUser.id,
       },
     });
 
-    // Create sample user contributions
+    // Create sample user contributions (one-to-one with purchases)
     await prisma.userContribution.create({
       data: {
         purchaseId: purchase1.id,
-        userId: adminUser.id,
-        contributionAmount: 125.0,
-        meterReading: 5000,
-        tokensConsumed: 500,
-      },
-    });
-
-    await prisma.userContribution.create({
-      data: {
-        purchaseId: purchase1.id,
-        userId: regularUser.id,
-        contributionAmount: 125.0,
-        meterReading: 4800,
-        tokensConsumed: 500,
+        userId: regularUser.id, // Only ONE contribution per purchase
+        contributionAmount: 250.0, // Full amount for purchase1
+        meterReading: 5000, // Same as purchase (no previous consumption)
+        tokensConsumed: 0, // No previous purchase
       },
     });
 
     await prisma.userContribution.create({
       data: {
         purchaseId: purchase2.id,
-        userId: regularUser.id,
-        contributionAmount: 150.0,
-        meterReading: 5300,
-        tokensConsumed: 500,
+        userId: adminUser.id, // Only ONE contribution per purchase
+        contributionAmount: 150.0, // Full amount for purchase2
+        meterReading: 6000, // Same as purchase meter reading
+        tokensConsumed: 1000, // 6000 - 5000 = 1000 kWh consumed
       },
     });
 
@@ -87,7 +79,7 @@ async function createSampleData() {
 
     console.log('✅ Sample data created successfully!');
     console.log('- 2 token purchases');
-    console.log('- 3 user contributions');
+    console.log('- 2 user contributions (one-to-one)');
     console.log('- 1 audit log entry');
   } catch (error) {
     console.error('❌ Error creating sample data:', error);

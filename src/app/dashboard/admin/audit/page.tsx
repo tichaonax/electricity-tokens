@@ -235,7 +235,7 @@ export default function AuditTrail() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div>
       </div>
     );
@@ -246,31 +246,31 @@ export default function AuditTrail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <nav className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <button
                 onClick={() => router.push('/dashboard/admin')}
-                className="mr-4 p-2 text-gray-600 hover:text-gray-900"
+                className="mr-4 p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Audit Trail
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
+              <span className="text-gray-700 dark:text-gray-300">
                 Welcome, {session.user?.name}
               </span>
-              <span className="text-sm text-gray-500 bg-red-100 px-2 py-1 rounded">
+              <span className="text-sm text-gray-500 dark:text-gray-400 bg-red-100 dark:bg-red-900 px-2 py-1 rounded">
                 ADMIN
               </span>
               <button
                 onClick={() => router.push('/dashboard')}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                className="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium"
               >
                 Back to Dashboard
               </button>
@@ -282,15 +282,15 @@ export default function AuditTrail() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Audit Trail</h2>
-            <p className="text-gray-600">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Complete Audit Trail</h2>
+            <p className="text-gray-600 dark:text-gray-300">
               Comprehensive log of all system activities and user actions with detailed change tracking.
             </p>
           </div>
 
           {error && (
-            <Alert className="mb-6 border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <Alert className="mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+              <AlertDescription className="text-red-800 dark:text-red-200">{error}</AlertDescription>
             </Alert>
           )}
 
@@ -299,7 +299,7 @@ export default function AuditTrail() {
             <div className="flex space-x-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center px-3 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                className="flex items-center px-3 py-2 text-sm bg-indigo-600 dark:bg-indigo-700 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600"
               >
                 <Filter className="h-4 w-4 mr-1" />
                 Filters
@@ -307,34 +307,34 @@ export default function AuditTrail() {
               <button
                 onClick={fetchAuditLogs}
                 disabled={loading}
-                className="flex items-center px-3 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
+                className="flex items-center px-3 py-2 text-sm bg-gray-600 dark:bg-gray-700 text-white rounded-md hover:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50"
               >
                 <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
               <button
                 onClick={exportAuditLogs}
-                className="flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="flex items-center px-3 py-2 text-sm bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600"
               >
                 <Download className="h-4 w-4 mr-1" />
                 Export CSV
               </button>
             </div>
             
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               {pagination.total} total entries
             </div>
           </div>
 
           {/* Filters Panel */}
           {showFilters && (
-            <Card className="mb-6">
+            <Card className="mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg">Filter Audit Logs</CardTitle>
+                  <CardTitle className="text-lg text-gray-900 dark:text-white">Filter Audit Logs</CardTitle>
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-red-600 hover:text-red-800"
+                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                   >
                     Clear All
                   </button>
@@ -343,13 +343,13 @@ export default function AuditTrail() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Action
                     </label>
                     <select
                       value={filters.action}
                       onChange={(e) => handleFilterChange('action', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       <option value="">All Actions</option>
                       <option value="CREATE">Create</option>
@@ -365,13 +365,13 @@ export default function AuditTrail() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Entity Type
                     </label>
                     <select
                       value={filters.entityType}
                       onChange={(e) => handleFilterChange('entityType', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       <option value="">All Types</option>
                       <option value="User">User</option>
@@ -384,41 +384,41 @@ export default function AuditTrail() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Start Date
                     </label>
                     <input
                       type="date"
                       value={filters.startDate}
                       onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       End Date
                     </label>
                     <input
                       type="date"
                       value={filters.endDate}
                       onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Search
                     </label>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <input
                         type="text"
                         value={filters.search}
                         onChange={(e) => handleFilterChange('search', e.target.value)}
                         placeholder="Search users, entities, or details..."
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
                   </div>
@@ -428,13 +428,13 @@ export default function AuditTrail() {
           )}
 
           {/* Audit Logs Table */}
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <CardTitle className="flex items-center text-gray-900 dark:text-white">
                 <Eye className="h-5 w-5 mr-2" />
                 Audit Logs
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
                 Showing {auditLogs.length} of {pagination.total} audit entries
               </CardDescription>
             </CardHeader>
@@ -444,52 +444,52 @@ export default function AuditTrail() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
                 </div>
               ) : auditLogs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   No audit logs found matching your criteria.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Timestamp
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           User
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Action
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Entity
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Details
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {auditLogs.map((log) => (
-                        <tr key={log.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             <div className="flex items-center">
-                              <Clock className="h-4 w-4 text-gray-400 mr-2" />
+                              <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
                               <div>
                                 <div>{new Date(log.timestamp).toLocaleDateString()}</div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                   {new Date(log.timestamp).toLocaleTimeString()}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             <div>
                               <div className="font-medium">{log.userName}</div>
-                              <div className="text-xs text-gray-500">{log.userId.slice(0, 8)}...</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{log.userId.slice(0, 8)}...</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -498,13 +498,13 @@ export default function AuditTrail() {
                               <span className="ml-1">{log.action}</span>
                             </Badge>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             <div>
                               <div className="font-medium">{log.entityType}</div>
-                              <div className="text-xs text-gray-500">{log.entityId.slice(0, 8)}...</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{log.entityId.slice(0, 8)}...</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                          <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
                             <div className="truncate">
                               {formatChangeDetails(log.oldValues, log.newValues)}
                             </div>
@@ -512,7 +512,7 @@ export default function AuditTrail() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button
                               onClick={() => viewLogDetails(log)}
-                              className="text-indigo-600 hover:text-indigo-900"
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                             >
                               View Details
                             </button>
@@ -527,24 +527,24 @@ export default function AuditTrail() {
               {/* Pagination */}
               {pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     Showing page {pagination.page} of {pagination.totalPages}
                   </div>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                       disabled={pagination.page === 1}
-                      className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                      className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-900 dark:text-white"
                     >
                       Previous
                     </button>
-                    <span className="px-3 py-1 text-sm bg-indigo-50 border border-indigo-200 rounded-md">
+                    <span className="px-3 py-1 text-sm bg-indigo-50 dark:bg-indigo-900 border border-indigo-200 dark:border-indigo-700 rounded-md text-gray-900 dark:text-white">
                       {pagination.page}
                     </span>
                     <button
                       onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                       disabled={pagination.page === pagination.totalPages}
-                      className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                      className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-900 dark:text-white"
                     >
                       Next
                     </button>
@@ -559,12 +559,12 @@ export default function AuditTrail() {
       {/* Detailed Log Modal */}
       {showDetailModal && selectedLog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold">Audit Log Details</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Audit Log Details</h3>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -573,29 +573,29 @@ export default function AuditTrail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Basic Information */}
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">Basic Information</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Basic Information</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Timestamp:</span>
-                    <span>{new Date(selectedLog.timestamp).toLocaleString()}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Timestamp:</span>
+                    <span className="text-gray-900 dark:text-white">{new Date(selectedLog.timestamp).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">User:</span>
-                    <span>{selectedLog.userName}</span>
+                    <span className="text-gray-500 dark:text-gray-400">User:</span>
+                    <span className="text-gray-900 dark:text-white">{selectedLog.userName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Action:</span>
+                    <span className="text-gray-500 dark:text-gray-400">Action:</span>
                     <Badge variant={getActionBadgeColor(selectedLog.action)}>
                       {selectedLog.action}
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Entity Type:</span>
-                    <span>{selectedLog.entityType}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Entity Type:</span>
+                    <span className="text-gray-900 dark:text-white">{selectedLog.entityType}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Entity ID:</span>
-                    <span className="font-mono text-xs">{selectedLog.entityId}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Entity ID:</span>
+                    <span className="font-mono text-xs text-gray-900 dark:text-white">{selectedLog.entityId}</span>
                   </div>
                 </div>
               </div>
@@ -603,9 +603,9 @@ export default function AuditTrail() {
               {/* Metadata */}
               {selectedLog.metadata && (
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Metadata</h4>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3">Metadata</h4>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                    <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       {JSON.stringify(selectedLog.metadata, null, 2)}
                     </pre>
                   </div>
@@ -615,9 +615,9 @@ export default function AuditTrail() {
               {/* Old Values */}
               {selectedLog.oldValues && (
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Previous Values</h4>
-                  <div className="bg-red-50 p-3 rounded-md border border-red-200">
-                    <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3">Previous Values</h4>
+                  <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-md border border-red-200 dark:border-red-800">
+                    <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       {JSON.stringify(selectedLog.oldValues, null, 2)}
                     </pre>
                   </div>
@@ -627,9 +627,9 @@ export default function AuditTrail() {
               {/* New Values */}
               {selectedLog.newValues && (
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">New Values</h4>
-                  <div className="bg-green-50 p-3 rounded-md border border-green-200">
-                    <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3">New Values</h4>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md border border-green-200 dark:border-green-800">
+                    <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       {JSON.stringify(selectedLog.newValues, null, 2)}
                     </pre>
                   </div>
@@ -640,7 +640,7 @@ export default function AuditTrail() {
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 Close
               </button>

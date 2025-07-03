@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { PDFGenerator } from '@/lib/pdf-generator';
 
 const exportQuerySchema = z.object({
-  type: z.enum(['purchases', 'contributions', 'users', 'summary']),
+  type: z.enum(['purchases', 'contributions', 'users', 'summary', 'purchase-data']),
   format: z.enum(['csv', 'json', 'pdf']).default('csv'),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     const { query } = validation.data as {
       query: {
-        type: 'purchases' | 'contributions' | 'users' | 'summary';
+        type: 'purchases' | 'contributions' | 'users' | 'summary' | 'purchase-data';
         format: 'csv' | 'json' | 'pdf';
         startDate?: string;
         endDate?: string;
@@ -119,6 +119,18 @@ export async function GET(request: NextRequest) {
         filename = `summary_${new Date().toISOString().split('T')[0]}`;
         break;
 
+      case 'purchase-data':
+        console.log('Exporting purchase-data (combined) with dateFilter:', dateFilter);
+        const purchaseDataResult = await exportPurchaseData(dateFilter);
+        console.log(
+          'Purchase-data result:',
+          purchaseDataResult.data.length,
+          'records'
+        );
+        data = purchaseDataResult.data;
+        filename = `purchase_data_${new Date().toISOString().split('T')[0]}`;
+        break;
+
       default:
         return NextResponse.json(
           { message: 'Invalid export type' },
@@ -160,6 +172,10 @@ export async function GET(request: NextRequest) {
           case 'summary':
             console.log('Generating summary PDF report');
             pdfBlob = await pdfGenerator.generateUserSummaryReport(data);
+            break;
+          case 'purchase-data':
+            console.log('Generating purchase-data (combined) PDF report');
+            pdfBlob = await pdfGenerator.generatePurchaseReport(data);
             break;
           default:
             console.log('Generating generic PDF report');
@@ -282,6 +298,104 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
   return { data };
   } catch (error) {
     console.error('Error in exportPurchases:', error);
+    throw error;
+  }
+}
+
+async function exportPurchaseData(dateFilter: Record<string, unknown>) {
+  try {
+    const whereClause: any = {};
+    
+    if (Object.keys(dateFilter).length > 0) {
+      whereClause.purchaseDate = dateFilter;
+    }
+
+    console.log('exportPurchaseData whereClause:', whereClause);
+
+    // Get all purchases with their contributions
+    const purchases = await prisma.tokenPurchase.findMany({
+      where: whereClause,
+      include: {
+        creator: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        contribution: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { purchaseDate: 'desc' },
+    });
+
+    console.log('Found purchases in exportPurchaseData:', purchases.length);
+
+    // Validate constraints before export
+    const purchasesWithoutContributions = purchases.filter(p => !p.contribution);
+    if (purchasesWithoutContributions.length > 0) {
+      console.warn(`Found ${purchasesWithoutContributions.length} purchases without contributions during export`);
+    }
+
+    // Flatten purchase and contribution data into combined records
+    const data = purchases.map((purchase) => {
+      const contribution = purchase.contribution;
+      const costPerToken = purchase.totalPayment / purchase.totalTokens;
+
+      return {
+        // Purchase data
+        purchaseId: purchase.id,
+        purchaseDate: purchase.purchaseDate.toISOString().split('T')[0],
+        totalTokens: purchase.totalTokens,
+        totalPayment: purchase.totalPayment,
+        meterReading: purchase.meterReading,
+        costPerToken: costPerToken.toFixed(4),
+        isEmergency: purchase.isEmergency ? 'Yes' : 'No',
+        createdBy: purchase.creator.name,
+        createdByEmail: purchase.creator.email,
+        
+        // Contribution data (linked one-to-one)
+        contributionId: contribution?.id || 'N/A',
+        userEmail: contribution?.user?.email || 'N/A',
+        userName: contribution?.user?.name || 'N/A',
+        contributionAmount: contribution?.contributionAmount || 0,
+        contributionMeterReading: contribution?.meterReading || 0,
+        tokensConsumed: contribution?.tokensConsumed || 0,
+        contributionDate: contribution?.createdAt.toISOString().split('T')[0] || 'N/A',
+        
+        // Calculated fields
+        tokensRemaining: purchase.totalTokens - (contribution?.tokensConsumed || 0),
+        trueCost: contribution ? (contribution.tokensConsumed * costPerToken).toFixed(4) : '0',
+        efficiency: contribution && contribution.contributionAmount > 0 
+          ? ((contribution.tokensConsumed * costPerToken / contribution.contributionAmount) * 100).toFixed(2) + '%'
+          : '0%',
+        overpayment: contribution 
+          ? (contribution.contributionAmount - (contribution.tokensConsumed * costPerToken)).toFixed(4)
+          : '0',
+        utilizationRate: purchase.totalTokens > 0
+          ? (((contribution?.tokensConsumed || 0) / purchase.totalTokens) * 100).toFixed(2) + '%'
+          : '0%',
+        
+        // Status flags
+        hasContribution: contribution ? 'Yes' : 'No',
+        constraintCompliant: contribution ? 'Yes' : 'No',
+        
+        // Timestamps
+        purchaseCreatedAt: purchase.createdAt.toISOString(),
+        purchaseUpdatedAt: purchase.updatedAt.toISOString(),
+      };
+    });
+
+    return { data };
+  } catch (error) {
+    console.error('Error in exportPurchaseData:', error);
     throw error;
   }
 }

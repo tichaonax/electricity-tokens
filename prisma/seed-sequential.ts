@@ -132,16 +132,25 @@ async function main() {
   });
   console.log(`  ✅ Purchase 4: ${purchase4.totalTokens} tokens, meter: ${purchase4.meterReading}`);
 
-  // Leave Purchase 4 WITHOUT contribution to test constraint 1
-  console.log('  ⚠️  Purchase 4 left without contribution (to test constraint validation)');
+  // Create matching contribution for Purchase 4 (maintaining one-to-one constraint)
+  const contribution4 = await prisma.userContribution.create({
+    data: {
+      purchaseId: purchase4.id,
+      userId: user2.id,
+      contributionAmount: 105.00, // Proportional to usage (420/900 * 225)
+      meterReading: 6520, // Same as purchase meter reading (constraint 2)
+      tokensConsumed: 420, // 6520 - 6100 = 420 kWh from previous purchase
+    },
+  });
+  console.log(`  ✅ Contribution 4: User ${user2.name}, consumed: ${contribution4.tokensConsumed} kWh`);
 
   console.log('\n🎯 **Sequential Workflow Summary:**');
   console.log('   Purchase 1 (Jan): 1000 tokens, meter 5000 → Contribution ✅');
   console.log('   Purchase 2 (Feb): 800 tokens, meter 5750 (750 consumed) → Contribution ✅');
   console.log('   Purchase 3 (Mar): 500 tokens, meter 6100 (350 consumed) → Contribution ✅');
-  console.log('   Purchase 4 (Apr): 900 tokens, meter 6520 (420 consumed) → NO Contribution ❌');
-  console.log('\n📋 **Constraint Testing:**');
-  console.log('   ✅ Constraint 1: Try creating Purchase 5 → Should be BLOCKED');
+  console.log('   Purchase 4 (Apr): 900 tokens, meter 6520 (420 consumed) → Contribution ✅');
+  console.log('\n📋 **Constraint Compliance:**');
+  console.log('   ✅ Constraint 1: All purchases have exactly one contribution');
   console.log('   ✅ Constraint 2: All contributions have matching meter readings');
   console.log('   ✅ Tokens consumed calculated from previous purchase meter reading');
 
@@ -152,11 +161,11 @@ async function main() {
   console.log('   User2: user2@test.com / password123 (Jane Smith)');
   
   console.log('\n🧪 **Test Cases to Verify:**');
-  console.log('   1. Try to create a new purchase → Should fail (need contribution for Purchase 4)');
-  console.log('   2. Add contribution for Purchase 4 → Should succeed');
-  console.log('   3. Then create Purchase 5 → Should succeed');
-  console.log('   4. Check contribution form auto-sets meter reading');
-  console.log('   5. Check tokens consumed calculation from previous purchase');
+  console.log('   1. Create a new purchase → Should succeed (all purchases have contributions)');
+  console.log('   2. Try to create duplicate contribution → Should fail (unique constraint)');
+  console.log('   3. Check contribution form auto-sets meter reading');
+  console.log('   4. Check tokens consumed calculation from previous purchase');
+  console.log('   5. Verify one-to-one relationship is maintained');
 }
 
 main()

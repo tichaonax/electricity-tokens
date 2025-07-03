@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -75,27 +75,24 @@ export async function POST(request: NextRequest) {
         
         purchases.push(purchase);
         
-        // Create ONE user contribution for this purchase (new business rule)
-        // 80% of purchases get contributions immediately, 20% remain without contributions
-        if (Math.random() < 0.8) {
-          const contributingUser = users[Math.floor(Math.random() * users.length)];
-          
-          // Calculate realistic electricity consumption
-          const tokensConsumed = Math.floor(Math.random() * (tokens * 0.8)) + Math.floor(tokens * 0.1); // 10% to 90% of available tokens
-          const currentMeterReading = initialMeterReading + tokensConsumed + Math.floor(Math.random() * 20); // Slight variance for realism
-          
-          const contributionAmount = tokensConsumed * costPerToken * (0.9 + Math.random() * 0.2); // ±10% variation in contribution
-          
-          await prisma.userContribution.create({
-            data: {
-              userId: contributingUser.id,
-              purchaseId: purchase.id,
-              contributionAmount: Math.round(contributionAmount * 100) / 100,
-              tokensConsumed,
-              meterReading: currentMeterReading, // Current meter reading
-            }
-          });
-        }
+        // Create exactly ONE user contribution for this purchase (one-to-one constraint)
+        const contributingUser = users[Math.floor(Math.random() * users.length)];
+        
+        // Calculate realistic electricity consumption
+        const tokensConsumed = Math.floor(Math.random() * (tokens * 0.8)) + Math.floor(tokens * 0.1); // 10% to 90% of available tokens
+        const currentMeterReading = initialMeterReading + tokensConsumed + Math.floor(Math.random() * 20); // Slight variance for realism
+        
+        const contributionAmount = tokensConsumed * costPerToken * (0.9 + Math.random() * 0.2); // ±10% variation in contribution
+        
+        await prisma.userContribution.create({
+          data: {
+            userId: contributingUser.id,
+            purchaseId: purchase.id,
+            contributionAmount: Math.round(contributionAmount * 100) / 100,
+            tokensConsumed,
+            meterReading: currentMeterReading, // Current meter reading
+          }
+        });
       }
     }
 

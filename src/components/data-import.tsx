@@ -34,8 +34,8 @@ interface ImportPreview {
 
 export function DataImport() {
   const [file, setFile] = useState<File | null>(null);
-  const [importType, setImportType] = useState<'purchases' | 'contributions'>(
-    'purchases'
+  const [importType, setImportType] = useState<'purchases' | 'contributions' | 'purchase-data'>(
+    'purchase-data'
   );
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -176,8 +176,8 @@ export function DataImport() {
 
   const getExpectedColumns = (type: string) => {
     if (type === 'purchases') {
-      return ['purchaseDate', 'totalTokens', 'totalPayment', 'isEmergency'];
-    } else {
+      return ['purchaseDate', 'totalTokens', 'totalPayment', 'meterReading', 'isEmergency'];
+    } else if (type === 'contributions') {
       return [
         'userEmail',
         'purchaseDate',
@@ -185,6 +185,20 @@ export function DataImport() {
         'tokensConsumed',
         'contributionAmount',
       ];
+    } else if (type === 'purchase-data') {
+      return [
+        'purchaseDate',
+        'totalTokens', 
+        'totalPayment',
+        'meterReading',
+        'isEmergency',
+        'userEmail',
+        'contributionAmount',
+        'tokensConsumed',
+        'contributionMeterReading',
+      ];
+    } else {
+      return [];
     }
   };
 
@@ -204,7 +218,23 @@ export function DataImport() {
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
           Import Type
         </label>
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="importType"
+              value="purchase-data"
+              checked={importType === 'purchase-data'}
+              onChange={(e) =>
+                setImportType(e.target.value as 'purchases' | 'contributions' | 'purchase-data')
+              }
+              className="mr-2"
+            />
+            <div>
+              <div className="font-medium">Purchase Data (Recommended)</div>
+              <div className="text-sm text-slate-600 dark:text-slate-400">Combined purchase and contribution data - maintains one-to-one relationship</div>
+            </div>
+          </label>
           <label className="flex items-center">
             <input
               type="radio"
@@ -212,11 +242,14 @@ export function DataImport() {
               value="purchases"
               checked={importType === 'purchases'}
               onChange={(e) =>
-                setImportType(e.target.value as 'purchases' | 'contributions')
+                setImportType(e.target.value as 'purchases' | 'contributions' | 'purchase-data')
               }
               className="mr-2"
             />
-            Token Purchases
+            <div>
+              <div className="font-medium">Token Purchases Only</div>
+              <div className="text-sm text-slate-600 dark:text-slate-400">Import only purchase data (legacy)</div>
+            </div>
           </label>
           <label className="flex items-center">
             <input
@@ -225,11 +258,14 @@ export function DataImport() {
               value="contributions"
               checked={importType === 'contributions'}
               onChange={(e) =>
-                setImportType(e.target.value as 'purchases' | 'contributions')
+                setImportType(e.target.value as 'purchases' | 'contributions' | 'purchase-data')
               }
               className="mr-2"
             />
-            User Contributions
+            <div>
+              <div className="font-medium">User Contributions Only</div>
+              <div className="text-sm text-slate-600 dark:text-slate-400">Import only contribution data (legacy)</div>
+            </div>
           </label>
         </div>
       </div>
@@ -240,7 +276,9 @@ export function DataImport() {
           Expected CSV Format for{' '}
           {importType === 'purchases'
             ? 'Token Purchases'
-            : 'User Contributions'}
+            : importType === 'contributions'
+            ? 'User Contributions'
+            : 'Purchase Data (Combined)'}
         </h4>
         <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
           Your CSV file should include the following columns:

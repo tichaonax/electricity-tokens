@@ -10,7 +10,7 @@ import {
 import { z } from 'zod';
 
 const importSchema = z.object({
-  type: z.enum(['purchases', 'contributions']),
+  type: z.enum(['purchases', 'contributions', 'purchase-data']),
   data: z.array(z.record(z.unknown())),
   validateOnly: z.boolean().default(false),
 });
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     const { body } = validation.data as {
       body: {
-        type: 'purchases' | 'contributions';
+        type: 'purchases' | 'contributions' | 'purchase-data';
         data: Record<string, unknown>[];
         validateOnly: boolean;
       };
@@ -76,6 +76,14 @@ export async function POST(request: NextRequest) {
 
       case 'contributions':
         result = await importContributions(data, validateOnly);
+        break;
+
+      case 'purchase-data':
+        result = await importPurchaseData(
+          data,
+          validateOnly,
+          permissionCheck.user!.id
+        );
         break;
 
       default:
@@ -280,6 +288,150 @@ async function importContributions(
   return result;
 }
 
+async function importPurchaseData(
+  data: Record<string, unknown>[],
+  validateOnly: boolean,
+  createdBy: string
+): Promise<ImportResult> {
+  const result: ImportResult = {
+    success: true,
+    processed: 0,
+    errors: [],
+    created: 0,
+    updated: 0,
+  };
+
+  // Combined schema for purchase and contribution data
+  const purchaseDataSchema = z.object({
+    // Purchase fields
+    purchaseDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
+      message: 'Invalid purchase date format',
+    }),
+    totalTokens: z.number().positive('Total tokens must be positive'),
+    totalPayment: z.number().positive('Total payment must be positive'),
+    meterReading: z.number().nonnegative('Meter reading must be non-negative'),
+    isEmergency: z.boolean().optional().default(false),
+    
+    // Contribution fields
+    userEmail: z.string().email('Invalid user email format'),
+    contributionAmount: z.number().positive('Contribution amount must be positive'),
+    tokensConsumed: z.number().nonnegative('Tokens consumed must be non-negative'),
+    contributionMeterReading: z.number().nonnegative('Contribution meter reading must be non-negative'),
+  });
+
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    result.processed++;
+
+    try {
+      // Validate row data
+      const validatedData = purchaseDataSchema.parse(row);
+
+      if (!validateOnly) {
+        // Find user by email
+        const user = await prisma.user.findUnique({
+          where: { email: validatedData.userEmail },
+        });
+
+        if (!user) {
+          throw new Error(`User not found with email: ${validatedData.userEmail}`);
+        }
+
+        // Use transaction to ensure both purchase and contribution are created together
+        await prisma.$transaction(async (tx) => {
+          // Check for existing purchase with same criteria
+          const existingPurchase = await tx.tokenPurchase.findFirst({
+            where: {
+              purchaseDate: new Date(validatedData.purchaseDate),
+              totalTokens: validatedData.totalTokens,
+              totalPayment: validatedData.totalPayment,
+            },
+          });
+
+          let purchase;
+          if (existingPurchase) {
+            // Update existing purchase
+            purchase = await tx.tokenPurchase.update({
+              where: { id: existingPurchase.id },
+              data: {
+                totalTokens: validatedData.totalTokens,
+                totalPayment: validatedData.totalPayment,
+                meterReading: validatedData.meterReading,
+                isEmergency: validatedData.isEmergency,
+                updatedAt: new Date(),
+              },
+            });
+
+            // Check if there's already a contribution for this purchase
+            const existingContribution = await tx.userContribution.findUnique({
+              where: { purchaseId: purchase.id },
+            });
+
+            if (existingContribution) {
+              // Update existing contribution
+              await tx.userContribution.update({
+                where: { id: existingContribution.id },
+                data: {
+                  userId: user.id,
+                  contributionAmount: validatedData.contributionAmount,
+                  meterReading: validatedData.contributionMeterReading,
+                  tokensConsumed: validatedData.tokensConsumed,
+                  updatedAt: new Date(),
+                },
+              });
+            } else {
+              // Create new contribution for existing purchase
+              await tx.userContribution.create({
+                data: {
+                  purchaseId: purchase.id,
+                  userId: user.id,
+                  contributionAmount: validatedData.contributionAmount,
+                  meterReading: validatedData.contributionMeterReading,
+                  tokensConsumed: validatedData.tokensConsumed,
+                },
+              });
+            }
+            result.updated!++;
+          } else {
+            // Create new purchase
+            purchase = await tx.tokenPurchase.create({
+              data: {
+                purchaseDate: new Date(validatedData.purchaseDate),
+                totalTokens: validatedData.totalTokens,
+                totalPayment: validatedData.totalPayment,
+                meterReading: validatedData.meterReading,
+                isEmergency: validatedData.isEmergency,
+                createdBy,
+              },
+            });
+
+            // Create corresponding contribution
+            await tx.userContribution.create({
+              data: {
+                purchaseId: purchase.id,
+                userId: user.id,
+                contributionAmount: validatedData.contributionAmount,
+                meterReading: validatedData.contributionMeterReading,
+                tokensConsumed: validatedData.tokensConsumed,
+              },
+            });
+            result.created!++;
+          }
+        });
+      }
+    } catch (error) {
+      result.success = false;
+      result.errors.push({
+        row: i + 1,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        data: row,
+      });
+    }
+  }
+
+  return result;
+}
+
 // CSV parsing endpoint
 export async function PUT(request: NextRequest) {
   try {
@@ -309,7 +461,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (!['purchases', 'contributions'].includes(type)) {
+    if (!['purchases', 'contributions', 'purchase-data'].includes(type)) {
       return NextResponse.json(
         { message: 'Invalid import type' },
         { status: 400 }

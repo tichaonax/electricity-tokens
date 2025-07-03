@@ -10,7 +10,7 @@ import {
 import { z } from 'zod';
 
 const backupQuerySchema = z.object({
-  type: z.enum(['full', 'users', 'purchases', 'contributions']).default('full'),
+  type: z.enum(['full', 'users', 'purchase-data']).default('full'),
   includeAuditLogs: z
     .string()
     .optional()
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 
     const { query } = validation.data as {
       query: {
-        type: 'full' | 'users' | 'purchases' | 'contributions';
+        type: 'full' | 'users' | 'purchase-data';
         includeAuditLogs: boolean;
       };
     };
@@ -140,8 +140,9 @@ export async function GET(request: NextRequest) {
       backupData.metadata.recordCounts.users = users.length;
     }
 
-    // Backup token purchases
-    if (type === 'full' || type === 'purchases') {
+    // Backup token purchases and their contributions (combined operation)
+    if (type === 'full' || type === 'purchase-data') {
+      // Get all purchases with their contributions to maintain one-to-one relationship
       const tokenPurchases = await prisma.tokenPurchase.findMany({
         include: {
           creator: {
@@ -150,48 +151,63 @@ export async function GET(request: NextRequest) {
               name: true,
             },
           },
+          contribution: {
+            include: {
+              user: {
+                select: {
+                  email: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
+
+      // Verify constraint compliance before backup
+      const purchasesWithoutContributions = tokenPurchases.filter(p => !p.contribution);
+      const contributionsWithoutPurchases = await prisma.userContribution.findMany({
+        where: {
+          purchaseId: {
+            notIn: tokenPurchases.map(p => p.id),
+          },
+        },
+      });
+
+      if (purchasesWithoutContributions.length > 0 || contributionsWithoutPurchases.length > 0) {
+        return NextResponse.json({
+          message: 'Data constraint violation detected',
+          details: {
+            purchasesWithoutContributions: purchasesWithoutContributions.length,
+            orphanedContributions: contributionsWithoutPurchases.length,
+          },
+          error: 'Cannot backup data with constraint violations. Please ensure each purchase has exactly one contribution.',
+        }, { status: 400 });
+      }
+
       backupData.tokenPurchases = tokenPurchases.map((purchase) => ({
         ...purchase,
+        contribution: undefined, // Remove contribution from purchase object to avoid duplication
         purchaseDate: purchase.purchaseDate.toISOString(),
         createdAt: purchase.createdAt.toISOString(),
         updatedAt: purchase.updatedAt.toISOString(),
       }));
-      backupData.metadata.recordCounts.tokenPurchases = tokenPurchases.length;
-    }
 
-    // Backup user contributions
-    if (type === 'full' || type === 'contributions') {
-      const userContributions = await prisma.userContribution.findMany({
-        include: {
-          user: {
-            select: {
-              email: true,
-              name: true,
-            },
-          },
-          purchase: {
-            select: {
-              purchaseDate: true,
-              totalTokens: true,
-              totalPayment: true,
-              isEmergency: true,
-            },
-          },
-        },
-      });
-      backupData.userContributions = userContributions.map((contribution) => ({
-        ...contribution,
-        createdAt: contribution.createdAt.toISOString(),
-        updatedAt: contribution.updatedAt.toISOString(),
-      }));
-      backupData.metadata.recordCounts.userContributions =
-        userContributions.length;
+      backupData.userContributions = tokenPurchases
+        .filter(p => p.contribution)
+        .map((purchase) => ({
+          ...purchase.contribution!,
+          purchase: undefined, // Remove purchase from contribution object to avoid duplication
+          createdAt: purchase.contribution!.createdAt.toISOString(),
+          updatedAt: purchase.contribution!.updatedAt.toISOString(),
+        }));
+
+      backupData.metadata.recordCounts.tokenPurchases = tokenPurchases.length;
+      backupData.metadata.recordCounts.userContributions = tokenPurchases.filter(p => p.contribution).length;
     }
 
     // Backup audit logs (optional)
-    if (includeAuditLogs && (type === 'full' || type === 'users' || type === 'purchases' || type === 'contributions')) {
+    if (includeAuditLogs && (type === 'full' || type === 'users' || type === 'purchase-data')) {
       const auditLogs = await prisma.auditLog.findMany({
         include: {
           user: {
@@ -274,9 +290,31 @@ export async function POST(request: NextRequest) {
       errors: [] as string[],
     };
 
-    // Use transaction for data consistency
+    // Validate backup data constraints before restore
+    if (backupData.tokenPurchases && backupData.userContributions) {
+      const purchaseIds = new Set(backupData.tokenPurchases.map(p => p.id));
+      const contributionPurchaseIds = new Set(backupData.userContributions.map(c => c.purchaseId));
+      
+      // Check for purchases without contributions
+      const purchasesWithoutContributions = backupData.tokenPurchases.filter(p => !contributionPurchaseIds.has(p.id));
+      // Check for contributions without purchases
+      const contributionsWithoutPurchases = backupData.userContributions.filter(c => !purchaseIds.has(c.purchaseId));
+      
+      if (purchasesWithoutContributions.length > 0 || contributionsWithoutPurchases.length > 0) {
+        return NextResponse.json({
+          message: 'Backup data constraint violation',
+          details: {
+            purchasesWithoutContributions: purchasesWithoutContributions.length,
+            contributionsWithoutPurchases: contributionsWithoutPurchases.length,
+          },
+          error: 'Cannot restore data with constraint violations. Each purchase must have exactly one contribution.',
+        }, { status: 400 });
+      }
+    }
+
+    // Use transaction for data consistency with constraint validation
     await prisma.$transaction(async (tx) => {
-      // Restore users
+      // Restore users first (required for foreign key relationships)
       if (backupData.users) {
         for (const user of backupData.users) {
           try {
@@ -306,8 +344,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Restore token purchases
-      if (backupData.tokenPurchases) {
+      // Restore purchases and contributions together to maintain constraints
+      if (backupData.tokenPurchases && backupData.userContributions) {
+        // Create a map of contributions by purchase ID for efficiency
+        const contributionMap = new Map(
+          backupData.userContributions.map(c => [c.purchaseId, c])
+        );
+
         for (const purchase of backupData.tokenPurchases) {
           try {
             // Find creator by email
@@ -315,70 +358,75 @@ export async function POST(request: NextRequest) {
               where: { email: purchase.creator.email },
             });
 
-            if (creator) {
-              await tx.tokenPurchase.upsert({
-                where: { id: purchase.id },
-                update: {
-                  totalTokens: purchase.totalTokens,
-                  totalPayment: purchase.totalPayment,
-                  purchaseDate: new Date(purchase.purchaseDate),
-                  isEmergency: purchase.isEmergency,
-                },
-                create: {
-                  id: purchase.id,
-                  totalTokens: purchase.totalTokens,
-                  totalPayment: purchase.totalPayment,
-                  meterReading: purchase.meterReading || 0, // Add meterReading field
-                  purchaseDate: new Date(purchase.purchaseDate),
-                  isEmergency: purchase.isEmergency,
-                  createdBy: creator.id,
-                  createdAt: new Date(purchase.createdAt),
-                  updatedAt: new Date(purchase.updatedAt),
-                },
-              });
-              results.restored.tokenPurchases++;
+            if (!creator) {
+              results.errors.push(`Creator not found for purchase ${purchase.id}: ${purchase.creator.email}`);
+              continue;
             }
-          } catch (error) {
-            results.errors.push(
-              `Failed to restore purchase ${purchase.id}: ${error}`
-            );
-          }
-        }
-      }
 
-      // Restore user contributions
-      if (backupData.userContributions) {
-        for (const contribution of backupData.userContributions) {
-          try {
-            // Find user by email
-            const user = await tx.user.findUnique({
+            // Get the corresponding contribution
+            const contribution = contributionMap.get(purchase.id);
+            if (!contribution) {
+              results.errors.push(`No contribution found for purchase ${purchase.id}`);
+              continue;
+            }
+
+            // Find contribution user by email
+            const contributionUser = await tx.user.findUnique({
               where: { email: contribution.user.email },
             });
 
-            if (user) {
-              await tx.userContribution.upsert({
-                where: { id: contribution.id },
-                update: {
-                  contributionAmount: contribution.contributionAmount,
-                  meterReading: contribution.meterReading,
-                  tokensConsumed: contribution.tokensConsumed,
-                },
-                create: {
-                  id: contribution.id,
-                  purchaseId: contribution.purchaseId,
-                  userId: user.id,
-                  contributionAmount: contribution.contributionAmount,
-                  meterReading: contribution.meterReading,
-                  tokensConsumed: contribution.tokensConsumed,
-                  createdAt: new Date(contribution.createdAt),
-                  updatedAt: new Date(contribution.updatedAt),
-                },
-              });
-              results.restored.userContributions++;
+            if (!contributionUser) {
+              results.errors.push(`Contribution user not found for purchase ${purchase.id}: ${contribution.user.email}`);
+              continue;
             }
+
+            // Restore purchase and contribution atomically
+            await tx.tokenPurchase.upsert({
+              where: { id: purchase.id },
+              update: {
+                totalTokens: purchase.totalTokens,
+                totalPayment: purchase.totalPayment,
+                meterReading: purchase.meterReading || 0,
+                purchaseDate: new Date(purchase.purchaseDate),
+                isEmergency: purchase.isEmergency,
+              },
+              create: {
+                id: purchase.id,
+                totalTokens: purchase.totalTokens,
+                totalPayment: purchase.totalPayment,
+                meterReading: purchase.meterReading || 0,
+                purchaseDate: new Date(purchase.purchaseDate),
+                isEmergency: purchase.isEmergency,
+                createdBy: creator.id,
+                createdAt: new Date(purchase.createdAt),
+                updatedAt: new Date(purchase.updatedAt),
+              },
+            });
+
+            await tx.userContribution.upsert({
+              where: { id: contribution.id },
+              update: {
+                contributionAmount: contribution.contributionAmount,
+                meterReading: contribution.meterReading,
+                tokensConsumed: contribution.tokensConsumed,
+              },
+              create: {
+                id: contribution.id,
+                purchaseId: contribution.purchaseId,
+                userId: contributionUser.id,
+                contributionAmount: contribution.contributionAmount,
+                meterReading: contribution.meterReading,
+                tokensConsumed: contribution.tokensConsumed,
+                createdAt: new Date(contribution.createdAt),
+                updatedAt: new Date(contribution.updatedAt),
+              },
+            });
+
+            results.restored.tokenPurchases++;
+            results.restored.userContributions++;
           } catch (error) {
             results.errors.push(
-              `Failed to restore contribution ${contribution.id}: ${error}`
+              `Failed to restore purchase-contribution pair ${purchase.id}: ${error}`
             );
           }
         }

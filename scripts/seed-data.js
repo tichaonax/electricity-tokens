@@ -94,35 +94,29 @@ async function seedData() {
       purchases.push(purchase);
       console.log(`Created purchase: ${purchaseData.tokens} tokens for $${purchase.totalPayment} (meter: ${initialMeterReading}) on ${purchaseData.date.toDateString()}`);
       
-      // Create ONE user contribution for this purchase (new business rule)
-      // 80% of purchases get contributions immediately, 20% remain without contributions
-      if (Math.random() < 0.8) {
-        const contributingUser = users[Math.floor(Math.random() * users.length)];
-        
-        // Calculate realistic electricity consumption (always progresses forward)
-        const tokensConsumed = Math.floor(Math.random() * (purchaseData.tokens * 0.8)) + Math.floor(purchaseData.tokens * 0.1); // 10% to 90% of available tokens
-        const contributionMeterReading = initialMeterReading + tokensConsumed + Math.floor(Math.random() * 20); // Always higher than initial
-        
-        const contributionAmount = tokensConsumed * purchaseData.costPerToken * (0.9 + Math.random() * 0.2); // ±10% variation in contribution
-        
-        await prisma.userContribution.create({
-          data: {
-            userId: contributingUser.id,
-            purchaseId: purchase.id,
-            contributionAmount: Math.round(contributionAmount * 100) / 100,
-            tokensConsumed,
-            meterReading: contributionMeterReading,
-          }
-        });
-        
-        console.log(`  -> Contribution by ${contributingUser.name}: ${tokensConsumed} kWh consumed, meter reading: ${contributionMeterReading}`);
-        
-        // Update current meter reading for next purchase (advance by consumption + realistic daily usage)
-        currentMeterReading = contributionMeterReading + Math.floor(Math.random() * 50) + 20; // Add 20-70 kWh between purchases
-      } else {
-        // Even without contributions, advance the meter reading for next purchase (realistic usage)
-        currentMeterReading += Math.floor(Math.random() * 100) + 50; // Add 50-150 kWh for realistic progression
-      }
+      // Create exactly ONE user contribution for this purchase (one-to-one constraint)
+      const contributingUser = users[Math.floor(Math.random() * users.length)];
+      
+      // Calculate realistic electricity consumption (always progresses forward)
+      const tokensConsumed = Math.floor(Math.random() * (purchaseData.tokens * 0.8)) + Math.floor(purchaseData.tokens * 0.1); // 10% to 90% of available tokens
+      const contributionMeterReading = initialMeterReading + tokensConsumed + Math.floor(Math.random() * 20); // Always higher than initial
+      
+      const contributionAmount = tokensConsumed * purchaseData.costPerToken * (0.9 + Math.random() * 0.2); // ±10% variation in contribution
+      
+      await prisma.userContribution.create({
+        data: {
+          userId: contributingUser.id,
+          purchaseId: purchase.id,
+          contributionAmount: Math.round(contributionAmount * 100) / 100,
+          tokensConsumed,
+          meterReading: contributionMeterReading,
+        }
+      });
+      
+      console.log(`  -> Contribution by ${contributingUser.name}: ${tokensConsumed} kWh consumed, meter reading: ${contributionMeterReading}`);
+      
+      // Update current meter reading for next purchase (advance by consumption + realistic daily usage)
+      currentMeterReading = contributionMeterReading + Math.floor(Math.random() * 50) + 20; // Add 20-70 kWh between purchases
     }
 
     // Get summary of created data
