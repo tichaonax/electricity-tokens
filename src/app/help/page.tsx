@@ -364,11 +364,11 @@ export default function HelpPage() {
                     <li className="flex items-center">
                       <button
                         onClick={() => window.open('/FAQ.md', '_blank')}
-                        className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
+                        className="flex items-center group cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-md transition-colors"
                       >
-                        <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                        <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0" />
                         <div>
-                          <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                          <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                             FAQ.md
                           </span>
                           <span className="text-gray-600 dark:text-gray-300 ml-2">
@@ -380,11 +380,11 @@ export default function HelpPage() {
                     <li className="flex items-center">
                       <button
                         onClick={() => window.open('/USER_MANUAL.md', '_blank')}
-                        className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
+                        className="flex items-center group cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-md transition-colors"
                       >
-                        <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                        <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0" />
                         <div>
-                          <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                          <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                             USER_MANUAL.md
                           </span>
                           <span className="text-gray-600 dark:text-gray-300 ml-2">
@@ -398,11 +398,11 @@ export default function HelpPage() {
                         onClick={() =>
                           window.open('/FEATURE_TUTORIALS.md', '_blank')
                         }
-                        className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
+                        className="flex items-center group cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-md transition-colors"
                       >
-                        <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                        <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0" />
                         <div>
-                          <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                          <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                             FEATURE_TUTORIALS.md
                           </span>
                           <span className="text-gray-600 dark:text-gray-300 ml-2">
@@ -418,11 +418,11 @@ export default function HelpPage() {
                             onClick={() =>
                               window.open('/API_DOCUMENTATION.md', '_blank')
                             }
-                            className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
+                            className="flex items-center group cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-md transition-colors"
                           >
-                            <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                            <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0" />
                             <div>
-                              <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                                 API_DOCUMENTATION.md
                               </span>
                               <span className="text-gray-600 dark:text-gray-300 ml-2">
@@ -436,11 +436,11 @@ export default function HelpPage() {
                             onClick={() =>
                               window.open('/TROUBLESHOOTING.md', '_blank')
                             }
-                            className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
+                            className="flex items-center group cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-md transition-colors"
                           >
-                            <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                            <ExternalLink className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0" />
                             <div>
-                              <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                              <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                                 TROUBLESHOOTING.md
                               </span>
                               <span className="text-gray-600 dark:text-gray-300 ml-2">
