@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { MobileNav } from './mobile-nav';
 import { Badge } from './badge';
-import { User, ChevronDown } from 'lucide-react';
+import { User, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 interface ResponsiveNavProps {
@@ -14,11 +14,11 @@ interface ResponsiveNavProps {
   children?: React.ReactNode;
 }
 
-export function ResponsiveNav({ 
-  title, 
-  backPath, 
-  showBackButton = false, 
-  children 
+export function ResponsiveNav({
+  title,
+  backPath,
+  showBackButton = false,
+  children,
 }: ResponsiveNavProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -30,7 +30,10 @@ export function ResponsiveNav({
   // Close user menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
         setShowUserMenu(false);
       }
     }
@@ -75,7 +78,7 @@ export function ResponsiveNav({
           {/* Right side - User info and menu */}
           <div className="flex items-center space-x-3">
             {children}
-            
+
             {/* Desktop user menu */}
             <div className="relative hidden md:block" ref={userMenuRef}>
               <button
@@ -90,7 +93,10 @@ export function ResponsiveNav({
                     {session?.user?.name || 'User'}
                   </p>
                   <div className="flex items-center space-x-1">
-                    <Badge variant={isAdmin ? 'destructive' : 'secondary'} className="text-xs">
+                    <Badge
+                      variant={isAdmin ? 'destructive' : 'secondary'}
+                      className="text-xs"
+                    >
                       {session?.user?.role || 'USER'}
                     </Badge>
                   </div>
@@ -145,6 +151,18 @@ export function ResponsiveNav({
                         </button>
                       </>
                     )}
+
+                    {/* Help & FAQ */}
+                    <button
+                      onClick={() => {
+                        router.push('/help');
+                        setShowUserMenu(false);
+                      }}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                    >
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      Help & FAQ
+                    </button>
 
                     {/* Sign out */}
                     <div className="border-t border-gray-100 dark:border-slate-600 mt-1">
