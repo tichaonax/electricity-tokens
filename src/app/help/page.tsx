@@ -360,64 +360,94 @@ export default function HelpPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Access our comprehensive documentation files:
                   </p>
-                  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                  <ul className="text-sm space-y-3">
                     <li className="flex items-center">
-                      •{' '}
                       <button
                         onClick={() => window.open('/FAQ.md', '_blank')}
-                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                        className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
                       >
-                        FAQ.md
+                        <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                        <div>
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                            FAQ.md
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-300 ml-2">
+                            - Frequently asked questions with detailed answers
+                          </span>
+                        </div>
                       </button>
-                      - Frequently asked questions with detailed answers
                     </li>
                     <li className="flex items-center">
-                      •{' '}
                       <button
                         onClick={() => window.open('/USER_MANUAL.md', '_blank')}
-                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                        className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
                       >
-                        USER_MANUAL.md
+                        <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                        <div>
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                            USER_MANUAL.md
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-300 ml-2">
+                            - Complete user guide with step-by-step instructions
+                          </span>
+                        </div>
                       </button>
-                      - Complete user guide with step-by-step instructions
                     </li>
                     <li className="flex items-center">
-                      •{' '}
                       <button
                         onClick={() =>
                           window.open('/FEATURE_TUTORIALS.md', '_blank')
                         }
-                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                        className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
                       >
-                        FEATURE_TUTORIALS.md
+                        <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                        <div>
+                          <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                            FEATURE_TUTORIALS.md
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-300 ml-2">
+                            - Tutorials for specific features
+                          </span>
+                        </div>
                       </button>
-                      - Tutorials for specific features
                     </li>
                     {isAdmin && (
                       <>
                         <li className="flex items-center">
-                          •{' '}
                           <button
                             onClick={() =>
                               window.open('/API_DOCUMENTATION.md', '_blank')
                             }
-                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                            className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
                           >
-                            API_DOCUMENTATION.md
+                            <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                            <div>
+                              <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                                API_DOCUMENTATION.md
+                              </span>
+                              <span className="text-gray-600 dark:text-gray-300 ml-2">
+                                - API reference for administrators
+                              </span>
+                            </div>
                           </button>
-                          - API reference for administrators
                         </li>
                         <li className="flex items-center">
-                          •{' '}
                           <button
                             onClick={() =>
                               window.open('/TROUBLESHOOTING.md', '_blank')
                             }
-                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                            className="flex items-center group cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 p-2 rounded-md transition-colors"
                           >
-                            TROUBLESHOOTING.md
+                            <ExternalLink className="h-4 w-4 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0" />
+                            <div>
+                              <span className="font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800 dark:group-hover:text-indigo-300">
+                                TROUBLESHOOTING.md
+                              </span>
+                              <span className="text-gray-600 dark:text-gray-300 ml-2">
+                                - Advanced troubleshooting guide
+                              </span>
+                            </div>
                           </button>
-                          - Advanced troubleshooting guide
                         </li>
                       </>
                     )}
