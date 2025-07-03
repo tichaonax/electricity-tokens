@@ -3,10 +3,16 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { HelpPopover } from '@/components/ui/help-popover';
-import { Users, Shield, Settings, FileText } from 'lucide-react';
+import { Users, Shield, Settings, FileText, Activity } from 'lucide-react';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -34,9 +40,9 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <ResponsiveNav 
-        title="Admin Panel" 
-        backPath="/dashboard" 
+      <ResponsiveNav
+        title="Admin Panel"
+        backPath="/dashboard"
         showBackButton={true}
       >
         <button
@@ -56,17 +62,20 @@ export default function AdminPanel() {
                 title="Admin Panel Help"
                 items={[
                   {
-                    title: "User Management",
-                    description: "Create, edit, and manage user accounts. Control permissions and roles for secure access."
+                    title: 'User Management',
+                    description:
+                      'Create, edit, and manage user accounts. Control permissions and roles for secure access.',
                   },
                   {
-                    title: "Security Dashboard",
-                    description: "Monitor system security, view audit logs, and track suspicious activities."
+                    title: 'Security Dashboard',
+                    description:
+                      'Monitor system security, view audit logs, and track suspicious activities.',
                   },
                   {
-                    title: "System Settings",
-                    description: "Configure application settings, defaults, and system-wide preferences."
-                  }
+                    title: 'System Settings',
+                    description:
+                      'Configure application settings, defaults, and system-wide preferences.',
+                  },
                 ]}
               />
             </div>
@@ -77,13 +86,15 @@ export default function AdminPanel() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* User Management Card */}
-            <Card 
+            <Card
               className="hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/admin/users')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">User Management</CardTitle>
+                  <CardTitle className="text-lg font-medium">
+                    User Management
+                  </CardTitle>
                   <CardDescription>
                     Manage user accounts, roles, and permissions
                   </CardDescription>
@@ -92,22 +103,26 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600">
-                  • View and edit user accounts<br />
-                  • Lock/unlock user accounts<br />
-                  • Assign admin roles<br />
-                  • Monitor user activity
+                  • View and edit user accounts
+                  <br />
+                  • Lock/unlock user accounts
+                  <br />
+                  • Assign admin roles
+                  <br />• Monitor user activity
                 </div>
               </CardContent>
             </Card>
 
             {/* System Security Card */}
-            <Card 
+            <Card
               className="hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/admin/security')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Security & Audit</CardTitle>
+                  <CardTitle className="text-lg font-medium">
+                    Security & Audit
+                  </CardTitle>
                   <CardDescription>
                     Monitor security and audit trails
                   </CardDescription>
@@ -116,22 +131,26 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600">
-                  • View audit logs<br />
-                  • Monitor user sessions<br />
-                  • Security configuration<br />
-                  • System integrity checks
+                  • View audit logs
+                  <br />
+                  • Monitor user sessions
+                  <br />
+                  • Security configuration
+                  <br />• System integrity checks
                 </div>
               </CardContent>
             </Card>
 
             {/* Security Dashboard Card */}
-            <Card 
+            <Card
               className="hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/admin/security')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Security Dashboard</CardTitle>
+                  <CardTitle className="text-lg font-medium">
+                    Security Dashboard
+                  </CardTitle>
                   <CardDescription>
                     Comprehensive security monitoring and threats
                   </CardDescription>
@@ -140,22 +159,26 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600">
-                  • Real-time threat detection<br />
-                  • Rate limiting & protection<br />
-                  • Security event monitoring<br />
-                  • System integrity checks
+                  • Real-time threat detection
+                  <br />
+                  • Rate limiting & protection
+                  <br />
+                  • Security event monitoring
+                  <br />• System integrity checks
                 </div>
               </CardContent>
             </Card>
 
             {/* Audit Trail Card */}
-            <Card 
+            <Card
               className="hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/admin/audit')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Audit Trail</CardTitle>
+                  <CardTitle className="text-lg font-medium">
+                    Audit Trail
+                  </CardTitle>
                   <CardDescription>
                     Complete audit log with detailed tracking
                   </CardDescription>
@@ -164,22 +187,26 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600">
-                  • Complete change history<br />
-                  • Advanced filtering & search<br />
-                  • Export capabilities<br />
-                  • Data integrity verification
+                  • Complete change history
+                  <br />
+                  • Advanced filtering & search
+                  <br />
+                  • Export capabilities
+                  <br />• Data integrity verification
                 </div>
               </CardContent>
             </Card>
 
             {/* System Configuration Card */}
-            <Card 
+            <Card
               className="hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/admin/settings')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">System Settings</CardTitle>
+                  <CardTitle className="text-lg font-medium">
+                    System Settings
+                  </CardTitle>
                   <CardDescription>
                     Configure application settings
                   </CardDescription>
@@ -188,22 +215,26 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600">
-                  • Application configuration<br />
-                  • Default settings<br />
-                  • System maintenance<br />
-                  • Data management
+                  • Application configuration
+                  <br />
+                  • Default settings
+                  <br />
+                  • System maintenance
+                  <br />• Data management
                 </div>
               </CardContent>
             </Card>
 
             {/* System Reports Card */}
-            <Card 
+            <Card
               className="hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => router.push('/dashboard/admin/reports')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">System Reports</CardTitle>
+                  <CardTitle className="text-lg font-medium">
+                    System Reports
+                  </CardTitle>
                   <CardDescription>
                     System-wide analytics and reports
                   </CardDescription>
@@ -212,10 +243,40 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600">
-                  • System usage statistics<br />
-                  • Performance metrics<br />
-                  • User activity reports<br />
-                  • Data integrity reports
+                  • System usage statistics
+                  <br />
+                  • Performance metrics
+                  <br />
+                  • User activity reports
+                  <br />• Data integrity reports
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System Monitoring Card */}
+            <Card
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => router.push('/dashboard/admin/monitoring')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-lg font-medium">
+                    System Monitoring
+                  </CardTitle>
+                  <CardDescription>
+                    Real-time system health and performance
+                  </CardDescription>
+                </div>
+                <Activity className="h-8 w-8 text-teal-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-gray-600">
+                  • System health checks
+                  <br />
+                  • Database performance
+                  <br />
+                  • Error tracking
+                  <br />• Analytics dashboard
                 </div>
               </CardContent>
             </Card>
@@ -223,34 +284,48 @@ export default function AdminPanel() {
             {/* Quick Actions Card */}
             <Card className="md:col-span-2 lg:col-span-1">
               <CardHeader>
-                <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
-                <CardDescription>
-                  Common administrative tasks
-                </CardDescription>
+                <CardTitle className="text-lg font-medium">
+                  Quick Actions
+                </CardTitle>
+                <CardDescription>Common administrative tasks</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <button
                   onClick={() => router.push('/test-seed')}
                   className="w-full text-left px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                 >
-                  <div className="font-medium text-blue-900">Seed Test Data</div>
-                  <div className="text-blue-700">Generate sample data for testing</div>
+                  <div className="font-medium text-blue-900">
+                    Seed Test Data
+                  </div>
+                  <div className="text-blue-700">
+                    Generate sample data for testing
+                  </div>
                 </button>
-                
+
                 <button
                   onClick={() => router.push('/dashboard/data-management')}
                   className="w-full text-left px-3 py-2 text-sm bg-green-50 hover:bg-green-100 rounded-md transition-colors"
                 >
-                  <div className="font-medium text-green-900">Data Management</div>
-                  <div className="text-green-700">Export, import, and backup data</div>
+                  <div className="font-medium text-green-900">
+                    Data Management
+                  </div>
+                  <div className="text-green-700">
+                    Export, import, and backup data
+                  </div>
                 </button>
-                
+
                 <button
-                  onClick={() => router.push('/dashboard/admin/users?filter=locked')}
+                  onClick={() =>
+                    router.push('/dashboard/admin/users?filter=locked')
+                  }
                   className="w-full text-left px-3 py-2 text-sm bg-red-50 hover:bg-red-100 rounded-md transition-colors"
                 >
-                  <div className="font-medium text-red-900">Locked Accounts</div>
-                  <div className="text-red-700">View and manage locked users</div>
+                  <div className="font-medium text-red-900">
+                    Locked Accounts
+                  </div>
+                  <div className="text-red-700">
+                    View and manage locked users
+                  </div>
                 </button>
               </CardContent>
             </Card>
@@ -260,7 +335,9 @@ export default function AdminPanel() {
           <div className="mt-8">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-medium">System Status</CardTitle>
+                <CardTitle className="text-lg font-medium">
+                  System Status
+                </CardTitle>
                 <CardDescription>
                   Current system health and statistics
                 </CardDescription>
@@ -268,19 +345,29 @@ export default function AdminPanel() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">Active</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      Active
+                    </div>
                     <div className="text-sm text-blue-700">System Status</div>
                   </div>
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">Online</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      Online
+                    </div>
                     <div className="text-sm text-green-700">Database</div>
                   </div>
                   <div className="bg-purple-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">Secured</div>
-                    <div className="text-sm text-purple-700">Authentication</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      Secured
+                    </div>
+                    <div className="text-sm text-purple-700">
+                      Authentication
+                    </div>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">Normal</div>
+                    <div className="text-2xl font-bold text-orange-600">
+                      Normal
+                    </div>
                     <div className="text-sm text-orange-700">Performance</div>
                   </div>
                 </div>
