@@ -360,28 +360,64 @@ export default function HelpPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Access our comprehensive documentation files:
                   </p>
-                  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                    <li>
-                      • <strong>FAQ.md</strong> - Frequently asked questions
-                      with detailed answers
+                  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                    <li className="flex items-center">
+                      •{' '}
+                      <button
+                        onClick={() => window.open('/FAQ.md', '_blank')}
+                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                      >
+                        FAQ.md
+                      </button>
+                      - Frequently asked questions with detailed answers
                     </li>
-                    <li>
-                      • <strong>USER_MANUAL.md</strong> - Complete user guide
-                      with step-by-step instructions
+                    <li className="flex items-center">
+                      •{' '}
+                      <button
+                        onClick={() => window.open('/USER_MANUAL.md', '_blank')}
+                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                      >
+                        USER_MANUAL.md
+                      </button>
+                      - Complete user guide with step-by-step instructions
                     </li>
-                    <li>
-                      • <strong>FEATURE_TUTORIALS.md</strong> - Tutorials for
-                      specific features
+                    <li className="flex items-center">
+                      •{' '}
+                      <button
+                        onClick={() =>
+                          window.open('/FEATURE_TUTORIALS.md', '_blank')
+                        }
+                        className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                      >
+                        FEATURE_TUTORIALS.md
+                      </button>
+                      - Tutorials for specific features
                     </li>
                     {isAdmin && (
                       <>
-                        <li>
-                          • <strong>API_DOCUMENTATION.md</strong> - API
-                          reference for administrators
+                        <li className="flex items-center">
+                          •{' '}
+                          <button
+                            onClick={() =>
+                              window.open('/API_DOCUMENTATION.md', '_blank')
+                            }
+                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                          >
+                            API_DOCUMENTATION.md
+                          </button>
+                          - API reference for administrators
                         </li>
-                        <li>
-                          • <strong>TROUBLESHOOTING.md</strong> - Advanced
-                          troubleshooting guide
+                        <li className="flex items-center">
+                          •{' '}
+                          <button
+                            onClick={() =>
+                              window.open('/TROUBLESHOOTING.md', '_blank')
+                            }
+                            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline ml-1 mr-2"
+                          >
+                            TROUBLESHOOTING.md
+                          </button>
+                          - Advanced troubleshooting guide
                         </li>
                       </>
                     )}
