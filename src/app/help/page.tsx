@@ -192,20 +192,34 @@ export default function HelpPage() {
                   <Card
                     key={item.title}
                     className={`border ${colorClasses[item.color as keyof typeof colorClasses]} cursor-pointer hover:shadow-md transition-shadow`}
+                    onClick={() => {
+                      // Map categories to FAQ.md sections
+                      const sectionMap: Record<string, string> = {
+                        'Getting Started': '#-getting-started',
+                        'Daily Usage': '#-daily-usage',
+                        'Cost & Billing': '#-cost--billing',
+                        'Technical Issues': '#-technical-issues',
+                      };
+                      const section = sectionMap[item.title] || '';
+                      window.open(`/FAQ.md${section}`, '_blank');
+                    }}
                   >
                     <CardHeader className="pb-3">
-                      <div className="flex items-center space-x-3">
-                        <Icon
-                          className={`h-6 w-6 text-${item.color}-600 dark:text-${item.color}-400`}
-                        />
-                        <div>
-                          <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">
-                            {item.title}
-                          </CardTitle>
-                          <CardDescription className="text-xs text-gray-500 dark:text-gray-400">
-                            {item.description}
-                          </CardDescription>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Icon
+                            className={`h-6 w-6 text-${item.color}-600 dark:text-${item.color}-400`}
+                          />
+                          <div>
+                            <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">
+                              {item.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs text-gray-500 dark:text-gray-400">
+                              {item.description} - Click to view in FAQ
+                            </CardDescription>
+                          </div>
                         </div>
+                        <ExternalLink className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
