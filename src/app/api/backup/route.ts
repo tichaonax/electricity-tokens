@@ -90,8 +90,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate query parameters
-    console.log('Backup API query params:', Object.fromEntries(request.nextUrl.searchParams.entries()));
-    
+    console.log(
+      'Backup API query params:',
+      Object.fromEntries(request.nextUrl.searchParams.entries())
+    );
+
     const validation = await validateRequest(request, {
       query: backupQuerySchema,
     });
@@ -165,24 +168,35 @@ export async function GET(request: NextRequest) {
       });
 
       // Verify constraint compliance before backup
-      const purchasesWithoutContributions = tokenPurchases.filter(p => !p.contribution);
-      const contributionsWithoutPurchases = await prisma.userContribution.findMany({
-        where: {
-          purchaseId: {
-            notIn: tokenPurchases.map(p => p.id),
+      const purchasesWithoutContributions = tokenPurchases.filter(
+        (p) => !p.contribution
+      );
+      const contributionsWithoutPurchases =
+        await prisma.userContribution.findMany({
+          where: {
+            purchaseId: {
+              notIn: tokenPurchases.map((p) => p.id),
+            },
           },
-        },
-      });
+        });
 
-      if (purchasesWithoutContributions.length > 0 || contributionsWithoutPurchases.length > 0) {
-        return NextResponse.json({
-          message: 'Data constraint violation detected',
-          details: {
-            purchasesWithoutContributions: purchasesWithoutContributions.length,
-            orphanedContributions: contributionsWithoutPurchases.length,
+      if (
+        purchasesWithoutContributions.length > 0 ||
+        contributionsWithoutPurchases.length > 0
+      ) {
+        return NextResponse.json(
+          {
+            message: 'Data constraint violation detected',
+            details: {
+              purchasesWithoutContributions:
+                purchasesWithoutContributions.length,
+              orphanedContributions: contributionsWithoutPurchases.length,
+            },
+            error:
+              'Cannot backup data with constraint violations. Please ensure each purchase has exactly one contribution.',
           },
-          error: 'Cannot backup data with constraint violations. Please ensure each purchase has exactly one contribution.',
-        }, { status: 400 });
+          { status: 400 }
+        );
       }
 
       backupData.tokenPurchases = tokenPurchases.map((purchase) => ({
@@ -194,7 +208,7 @@ export async function GET(request: NextRequest) {
       }));
 
       backupData.userContributions = tokenPurchases
-        .filter(p => p.contribution)
+        .filter((p) => p.contribution)
         .map((purchase) => ({
           ...purchase.contribution!,
           purchase: undefined, // Remove purchase from contribution object to avoid duplication
@@ -203,11 +217,15 @@ export async function GET(request: NextRequest) {
         }));
 
       backupData.metadata.recordCounts.tokenPurchases = tokenPurchases.length;
-      backupData.metadata.recordCounts.userContributions = tokenPurchases.filter(p => p.contribution).length;
+      backupData.metadata.recordCounts.userContributions =
+        tokenPurchases.filter((p) => p.contribution).length;
     }
 
     // Backup audit logs (optional)
-    if (includeAuditLogs && (type === 'full' || type === 'users' || type === 'purchase-data')) {
+    if (
+      includeAuditLogs &&
+      (type === 'full' || type === 'users' || type === 'purchase-data')
+    ) {
       const auditLogs = await prisma.auditLog.findMany({
         include: {
           user: {
@@ -237,14 +255,25 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error creating backup:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    console.error('Error message:', error instanceof Error ? error.message : String(error));
-    
+    console.error(
+      'Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
+    console.error(
+      'Error message:',
+      error instanceof Error ? error.message : String(error)
+    );
+
     return NextResponse.json(
-      { 
+      {
         message: 'Internal server error',
         error: error instanceof Error ? error.message : String(error),
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : String(error)) : undefined
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.stack
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
@@ -292,23 +321,38 @@ export async function POST(request: NextRequest) {
 
     // Validate backup data constraints before restore
     if (backupData.tokenPurchases && backupData.userContributions) {
-      const purchaseIds = new Set(backupData.tokenPurchases.map(p => p.id));
-      const contributionPurchaseIds = new Set(backupData.userContributions.map(c => c.purchaseId));
-      
+      const purchaseIds = new Set(backupData.tokenPurchases.map((p) => p.id));
+      const contributionPurchaseIds = new Set(
+        backupData.userContributions.map((c) => c.purchaseId)
+      );
+
       // Check for purchases without contributions
-      const purchasesWithoutContributions = backupData.tokenPurchases.filter(p => !contributionPurchaseIds.has(p.id));
+      const purchasesWithoutContributions = backupData.tokenPurchases.filter(
+        (p) => !contributionPurchaseIds.has(p.id)
+      );
       // Check for contributions without purchases
-      const contributionsWithoutPurchases = backupData.userContributions.filter(c => !purchaseIds.has(c.purchaseId));
-      
-      if (purchasesWithoutContributions.length > 0 || contributionsWithoutPurchases.length > 0) {
-        return NextResponse.json({
-          message: 'Backup data constraint violation',
-          details: {
-            purchasesWithoutContributions: purchasesWithoutContributions.length,
-            contributionsWithoutPurchases: contributionsWithoutPurchases.length,
+      const contributionsWithoutPurchases = backupData.userContributions.filter(
+        (c) => !purchaseIds.has(c.purchaseId)
+      );
+
+      if (
+        purchasesWithoutContributions.length > 0 ||
+        contributionsWithoutPurchases.length > 0
+      ) {
+        return NextResponse.json(
+          {
+            message: 'Backup data constraint violation',
+            details: {
+              purchasesWithoutContributions:
+                purchasesWithoutContributions.length,
+              contributionsWithoutPurchases:
+                contributionsWithoutPurchases.length,
+            },
+            error:
+              'Cannot restore data with constraint violations. Each purchase must have exactly one contribution.',
           },
-          error: 'Cannot restore data with constraint violations. Each purchase must have exactly one contribution.',
-        }, { status: 400 });
+          { status: 400 }
+        );
       }
     }
 
@@ -348,7 +392,7 @@ export async function POST(request: NextRequest) {
       if (backupData.tokenPurchases && backupData.userContributions) {
         // Create a map of contributions by purchase ID for efficiency
         const contributionMap = new Map(
-          backupData.userContributions.map(c => [c.purchaseId, c])
+          backupData.userContributions.map((c) => [c.purchaseId, c])
         );
 
         for (const purchase of backupData.tokenPurchases) {
@@ -359,14 +403,18 @@ export async function POST(request: NextRequest) {
             });
 
             if (!creator) {
-              results.errors.push(`Creator not found for purchase ${purchase.id}: ${purchase.creator.email}`);
+              results.errors.push(
+                `Creator not found for purchase ${purchase.id}: ${purchase.creator.email}`
+              );
               continue;
             }
 
             // Get the corresponding contribution
             const contribution = contributionMap.get(purchase.id);
             if (!contribution) {
-              results.errors.push(`No contribution found for purchase ${purchase.id}`);
+              results.errors.push(
+                `No contribution found for purchase ${purchase.id}`
+              );
               continue;
             }
 
@@ -376,7 +424,9 @@ export async function POST(request: NextRequest) {
             });
 
             if (!contributionUser) {
-              results.errors.push(`Contribution user not found for purchase ${purchase.id}: ${contribution.user.email}`);
+              results.errors.push(
+                `Contribution user not found for purchase ${purchase.id}: ${contribution.user.email}`
+              );
               continue;
             }
 
@@ -432,6 +482,19 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    // Automatically run balance fix after successful restore
+    try {
+      const { fixAllAccountBalances } = await import('@/lib/balance-fix');
+      console.log('🔧 Running automatic balance fix after restore...');
+      await fixAllAccountBalances();
+      console.log('✅ Balance fix completed automatically');
+    } catch (balanceFixError) {
+      console.warn('⚠️ Balance fix failed after restore:', balanceFixError);
+      results.errors.push(
+        `Balance fix failed: ${balanceFixError instanceof Error ? balanceFixError.message : String(balanceFixError)}`
+      );
+    }
 
     return NextResponse.json({
       message: 'Backup restored successfully',

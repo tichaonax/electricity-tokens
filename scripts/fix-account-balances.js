@@ -123,7 +123,7 @@ async function calculateCorrectBalance(userId) {
   }
 }
 
-async function fixAllAccountBalances() {
+async function fixAllAccountBalances(skipApiTest = false) {
   try {
     log('🔧 Fixing Account Balances After Restore', colors.blue);
     log('=========================================', colors.blue);
@@ -168,37 +168,39 @@ async function fixAllAccountBalances() {
           colors.green
         );
 
-        // Test the current API calculation
-        try {
-          const response = await fetch(
-            `http://localhost:3000/api/contributions?userId=${user.id}&calculateBalance=true`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            const apiBalance = data.runningBalance || 0;
+        // Test the current API calculation (skip when called from API to avoid circular calls)
+        if (!skipApiTest) {
+          try {
+            const response = await fetch(
+              `http://localhost:3000/api/contributions?userId=${user.id}&calculateBalance=true`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              const apiBalance = data.runningBalance || 0;
 
+              log(
+                `📊 API currently shows: $${apiBalance.toFixed(2)}`,
+                colors.yellow
+              );
+
+              if (Math.abs(correctBalance - apiBalance) > 0.01) {
+                log(`⚠️ Balance mismatch detected!`, colors.red);
+                log(`   Correct: $${correctBalance.toFixed(2)}`, colors.green);
+                log(`   API shows: $${apiBalance.toFixed(2)}`, colors.red);
+                log(
+                  `   Difference: $${(correctBalance - apiBalance).toFixed(2)}`,
+                  colors.red
+                );
+              } else {
+                log(`✅ API balance matches calculated balance`, colors.green);
+              }
+            }
+          } catch (apiError) {
             log(
-              `📊 API currently shows: $${apiBalance.toFixed(2)}`,
+              `⚠️ Could not test API balance (server might not be running)`,
               colors.yellow
             );
-
-            if (Math.abs(correctBalance - apiBalance) > 0.01) {
-              log(`⚠️ Balance mismatch detected!`, colors.red);
-              log(`   Correct: $${correctBalance.toFixed(2)}`, colors.green);
-              log(`   API shows: $${apiBalance.toFixed(2)}`, colors.red);
-              log(
-                `   Difference: $${(correctBalance - apiBalance).toFixed(2)}`,
-                colors.red
-              );
-            } else {
-              log(`✅ API balance matches calculated balance`, colors.green);
-            }
           }
-        } catch (apiError) {
-          log(
-            `⚠️ Could not test API balance (server might not be running)`,
-            colors.yellow
-          );
         }
       }
 
@@ -206,15 +208,17 @@ async function fixAllAccountBalances() {
     }
 
     log('🎉 Balance verification completed!', colors.green);
-    log('', colors.reset);
-    log('If you found mismatches:', colors.cyan);
-    log(
-      '1. The API calculation relies on purchase/contribution order',
-      colors.cyan
-    );
-    log('2. After restore, timestamps might affect this order', colors.cyan);
-    log('3. The balance should recalculate correctly over time', colors.cyan);
-    log('4. Or restart the application to refresh calculations', colors.cyan);
+    if (!skipApiTest) {
+      log('', colors.reset);
+      log('If you found mismatches:', colors.cyan);
+      log(
+        '1. The API calculation relies on purchase/contribution order',
+        colors.cyan
+      );
+      log('2. After restore, timestamps might affect this order', colors.cyan);
+      log('3. The balance should recalculate correctly over time', colors.cyan);
+      log('4. Or restart the application to refresh calculations', colors.cyan);
+    }
   } catch (error) {
     log('❌ Error fixing account balances:', colors.red);
     log(error.message, colors.red);
