@@ -19,25 +19,26 @@
 
 const { exec } = require('child_process');
 const { promisify } = require('util');
-const { PrismaClient } = require('@prisma/client');
 
+let PrismaClient;
 const execAsync = promisify(exec);
 
 async function initializeDatabase() {
   console.log('🚀 Initializing database for Electricity Tokens Tracker...');
   
   try {
-    // Step 1: Test connection
+    // Step 1: Generate client first
+    console.log('🔧 Generating Prisma client...');
+    await execAsync('npx prisma generate');
+    console.log('✅ Prisma client generated');
+    
+    // Step 2: Test connection
     console.log('🔍 Testing database connection...');
+    ({ PrismaClient } = require('@prisma/client'));
     const prisma = new PrismaClient();
     await prisma.$connect();
     await prisma.$disconnect();
     console.log('✅ Database connection successful');
-    
-    // Step 2: Generate client
-    console.log('🔧 Generating Prisma client...');
-    await execAsync('npx prisma generate');
-    console.log('✅ Prisma client generated');
     
     // Step 3: Push schema
     console.log('📊 Creating database tables...');

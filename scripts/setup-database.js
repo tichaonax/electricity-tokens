@@ -18,8 +18,8 @@
 
 const { exec } = require('child_process');
 const { promisify } = require('util');
-const { PrismaClient } = require('@prisma/client');
 
+let PrismaClient;
 const execAsync = promisify(exec);
 
 // Colors for console output
@@ -40,6 +40,19 @@ async function testDatabaseConnection() {
   log('🔍 Testing database connection...', colors.cyan);
   
   try {
+    // Try to require PrismaClient, generate if it doesn't exist
+    try {
+      ({ PrismaClient } = require('@prisma/client'));
+    } catch (requireError) {
+      if (requireError.message.includes('did not initialize yet') || requireError.code === 'MODULE_NOT_FOUND') {
+        log('⚠️ Prisma client not found, generating first...', colors.yellow);
+        await generatePrismaClient();
+        ({ PrismaClient } = require('@prisma/client'));
+      } else {
+        throw requireError;
+      }
+    }
+    
     const prisma = new PrismaClient();
     await prisma.$connect();
     await prisma.$disconnect();
@@ -177,17 +190,17 @@ async function main() {
   log('================================================', colors.blue);
   log('', colors.reset);
   
-  // Step 1: Test database connection
-  const connectionOk = await testDatabaseConnection();
-  if (!connectionOk) {
+  // Step 1: Generate Prisma client first (required for connection test)
+  const clientOk = await generatePrismaClient();
+  if (!clientOk) {
     process.exit(1);
   }
   
   log('', colors.reset);
   
-  // Step 2: Generate Prisma client
-  const clientOk = await generatePrismaClient();
-  if (!clientOk) {
+  // Step 2: Test database connection (now that client is generated)
+  const connectionOk = await testDatabaseConnection();
+  if (!connectionOk) {
     process.exit(1);
   }
   

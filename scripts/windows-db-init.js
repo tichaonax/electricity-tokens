@@ -9,7 +9,8 @@
 
 const { exec } = require('child_process');
 const { promisify } = require('util');
-const { PrismaClient } = require('@prisma/client');
+
+let PrismaClient;
 const fs = require('fs');
 const path = require('path');
 
@@ -85,21 +86,22 @@ async function initializeDatabaseWindows() {
   console.log('');
   
   try {
-    // Step 1: Test connection
-    console.log('🔍 Testing database connection...');
-    const prisma = new PrismaClient();
-    await prisma.$connect();
-    await prisma.$disconnect();
-    console.log('✅ Database connection successful');
-    console.log('');
-    
-    // Step 2: Clean up any locked processes/files
+    // Step 1: Clean up any locked processes/files first
     await killPrismaProcesses();
     await clearPrismaCache();
     console.log('');
     
-    // Step 3: Generate client with retries
+    // Step 2: Generate client with retries
     await generatePrismaClientSafe();
+    console.log('');
+    
+    // Step 3: Test connection
+    console.log('🔍 Testing database connection...');
+    ({ PrismaClient } = require('@prisma/client'));
+    const prisma = new PrismaClient();
+    await prisma.$connect();
+    await prisma.$disconnect();
+    console.log('✅ Database connection successful');
     console.log('');
     
     // Step 4: Push schema
