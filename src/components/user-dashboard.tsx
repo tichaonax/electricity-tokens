@@ -534,15 +534,14 @@ export function UserDashboard({ userId }: UserDashboardProps) {
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
           <div className="flex justify-between items-center">
             <span className="text-slate-600 dark:text-slate-400">
-              Over/Under Payment:
+              Account Balance:
             </span>
             <span
               className={`font-medium ${data.personalSummary.overpayment >= 0 ? 'text-green-600' : 'text-red-600'}`}
             >
-              ${Math.abs(data.personalSummary.overpayment).toFixed(2)}
-              {data.personalSummary.overpayment >= 0
-                ? ' overpaid'
-                : ' underpaid'}
+              {data.personalSummary.overpayment >= 0 ? '+' : ''}$
+              {data.personalSummary.overpayment.toFixed(2)}
+              {data.personalSummary.overpayment >= 0 ? ' credit' : ' owed'}
             </span>
           </div>
         </div>

@@ -109,9 +109,40 @@ export function calculateUserTrueCost(
   let regularTrueCost = 0;
   let emergencyTrueCost = 0;
 
-  contributions.forEach((contribution) => {
+  // Sort contributions by purchase date to ensure chronological order
+  const sortedContributions = [...contributions].sort((a, b) => {
+    if (!a.purchase?.purchaseDate || !b.purchase?.purchaseDate) return 0;
+    const dateA = new Date(a.purchase.purchaseDate);
+    const dateB = new Date(b.purchase.purchaseDate);
+    return dateA.getTime() - dateB.getTime();
+  });
+
+  // Find the earliest purchase date globally to determine the first purchase
+  const earliestPurchaseDate = sortedContributions[0]?.purchase?.purchaseDate;
+
+  // Calculate running balance using the same logic as the balance fix script
+  let runningBalance = 0;
+
+  sortedContributions.forEach((contribution) => {
     const purchase = contribution.purchase;
     if (!purchase) return;
+
+    // Check if this is the first purchase globally
+    const isFirstPurchase =
+      purchase.purchaseDate &&
+      earliestPurchaseDate &&
+      new Date(purchase.purchaseDate).getTime() ===
+        new Date(earliestPurchaseDate).getTime();
+
+    // For the first purchase, no tokens were consumed before it
+    const effectiveTokensConsumed = isFirstPurchase
+      ? 0
+      : contribution.tokensConsumed;
+
+    const fairShare =
+      (effectiveTokensConsumed / purchase.totalTokens) * purchase.totalPayment;
+    const balanceChange = contribution.contributionAmount - fairShare;
+    runningBalance += balanceChange;
 
     const trueCost = calculateProportionalCost(
       contribution.tokensConsumed,
@@ -136,7 +167,9 @@ export function calculateUserTrueCost(
     totalTokensUsed > 0 ? totalTrueCost / totalTokensUsed : 0;
   const efficiency =
     totalTrueCost > 0 ? (totalTrueCost / totalAmountPaid) * 100 : 0;
-  const overpayment = totalAmountPaid - totalTrueCost;
+
+  // Use the running balance as the overpayment (account balance)
+  const overpayment = runningBalance;
 
   const regularCostPerKwh =
     regularTokens > 0 ? regularTrueCost / regularTokens : 0;
