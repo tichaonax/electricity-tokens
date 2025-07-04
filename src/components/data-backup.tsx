@@ -349,21 +349,29 @@ export function DataBackup() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-              <div>
+              <div className="text-green-800 dark:text-green-200">
                 <span className="font-medium">Users:</span>{' '}
-                {restoreResult.results.restored.users}
+                <span className="font-bold text-green-900 dark:text-green-100">
+                  {restoreResult.results.restored.users}
+                </span>
               </div>
-              <div>
+              <div className="text-green-800 dark:text-green-200">
                 <span className="font-medium">Purchases:</span>{' '}
-                {restoreResult.results.restored.tokenPurchases}
+                <span className="font-bold text-green-900 dark:text-green-100">
+                  {restoreResult.results.restored.tokenPurchases}
+                </span>
               </div>
-              <div>
+              <div className="text-green-800 dark:text-green-200">
                 <span className="font-medium">Contributions:</span>{' '}
-                {restoreResult.results.restored.userContributions}
+                <span className="font-bold text-green-900 dark:text-green-100">
+                  {restoreResult.results.restored.userContributions}
+                </span>
               </div>
-              <div>
+              <div className="text-green-800 dark:text-green-200">
                 <span className="font-medium">Audit Logs:</span>{' '}
-                {restoreResult.results.restored.auditLogs}
+                <span className="font-bold text-green-900 dark:text-green-100">
+                  {restoreResult.results.restored.auditLogs}
+                </span>
               </div>
             </div>
 
