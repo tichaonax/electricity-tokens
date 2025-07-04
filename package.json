@@ -14,6 +14,7 @@
     "prepare": "husky",
     "db:setup": "node scripts/setup-database.js",
     "db:init": "node scripts/init-database.js",
+    "db:init:windows": "node scripts/windows-db-init.js",
     "db:reset": "node scripts/reset-db.js",
     "db:seed": "node scripts/create-test-user.js",
     "user:manage": "node scripts/manage-user.js",
