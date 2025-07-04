@@ -495,7 +495,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                       </span>
                     </td>
                     <td className="text-right p-2 text-slate-900 dark:text-slate-100">
-                      {contrib.tokensConsumed}
+                      {contrib.tokensConsumed.toFixed(2)}
                     </td>
                     <td className="text-right p-2 text-slate-900 dark:text-slate-100">
                       ${contrib.actualContribution.toFixed(2)}

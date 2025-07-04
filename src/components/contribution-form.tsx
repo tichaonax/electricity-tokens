@@ -862,7 +862,7 @@ export function ContributionForm({
                       {hasContributed ? '✓ ' : canContribute ? '' : '⏳ '}
                       {new Date(
                         purchase.purchaseDate
-                      ).toLocaleDateString()} - {purchase.totalTokens} tokens (
+                      ).toLocaleDateString()} - {purchase.totalTokens.toFixed(2)} tokens (
                       {purchase.isEmergency ? 'Emergency' : 'Regular'})
                       {hasContributed
                         ? ' - Already Contributed'
@@ -1040,7 +1040,7 @@ export function ContributionForm({
                   </span>
                 </div>
                 <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                  {watchedValues.tokensConsumed} tokens × $
+                  {watchedValues.tokensConsumed.toFixed(2)} tokens × $
                   {(
                     selectedPurchase.totalPayment / selectedPurchase.totalTokens
                   ).toFixed(4)}

@@ -97,7 +97,7 @@ async function calculateCorrectBalance(userId) {
         colors.blue
       );
       log(
-        `    Tokens Consumed: ${effectiveTokensConsumed} kWh (recorded: ${contribution.tokensConsumed})`,
+        `    Tokens Consumed: ${effectiveTokensConsumed.toFixed(2)} kWh (recorded: ${contribution.tokensConsumed.toFixed(2)})`,
         colors.blue
       );
       log(

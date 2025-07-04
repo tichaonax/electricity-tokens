@@ -395,7 +395,7 @@ export function PaymentBalanceChart({ startDate, endDate }: PaymentBalanceChartP
                         ${detail.contributionAmount.toFixed(2)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                        {detail.tokensConsumed}
+                        {detail.tokensConsumed.toFixed(2)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                         ${detail.trueCost.toFixed(2)}

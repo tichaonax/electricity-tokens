@@ -324,7 +324,7 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
               <div className="space-y-1 text-sm">
                 <p>Emergency purchases: {data.insights.totalEmergencyPurchases} of {data.insights.totalEmergencyPurchases + data.insights.totalRegularPurchases} total</p>
                 <p>Average loss per emergency: ${data.insights.averageSavingsPerEmergency.toFixed(2)}</p>
-                <p>Emergency tokens: {data.summary.emergencyTokens} of {data.summary.totalTokens} total</p>
+                <p>Emergency tokens: {data.summary.emergencyTokens.toFixed(2)} of {data.summary.totalTokens.toFixed(2)} total</p>
               </div>
             </div>
 
