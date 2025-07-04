@@ -260,32 +260,55 @@ export async function validateBusinessRules(
     const { purchaseId, requestedTokens, excludeContributionId } =
       rules.checkTokenAvailability;
 
-    // Get the purchase
-    const purchase = await prisma.tokenPurchase.findUnique({
+    // Get the current purchase to find the previous one
+    const currentPurchase = await prisma.tokenPurchase.findUnique({
       where: { id: purchaseId },
-      include: {
-        contribution: true,
-      },
     });
 
-    if (!purchase) {
+    if (!currentPurchase) {
       return { success: false, error: 'Purchase not found' };
     }
 
-    // Calculate consumed tokens (handle edit case)
+    // Find the previous purchase (the one being consumed from)
+    const previousPurchase = await prisma.tokenPurchase.findFirst({
+      where: {
+        purchaseDate: {
+          lt: currentPurchase.purchaseDate,
+        },
+      },
+      include: {
+        contribution: true,
+      },
+      orderBy: {
+        purchaseDate: 'desc',
+      },
+    });
+
+    // If there's no previous purchase, tokens consumed should be 0
+    if (!previousPurchase) {
+      if (requestedTokens > 0) {
+        return {
+          success: false,
+          error: `No previous purchase found. For the first purchase, tokens consumed should be 0.`,
+        };
+      }
+      return { success: true };
+    }
+
+    // Calculate consumed tokens from the previous purchase (handle edit case)
     let consumedTokens = 0;
-    if (purchase.contribution) {
+    if (previousPurchase.contribution) {
       // If we're editing a contribution, exclude it from the calculation
-      if (!excludeContributionId || purchase.contribution.id !== excludeContributionId) {
-        consumedTokens = purchase.contribution.tokensConsumed;
+      if (!excludeContributionId || previousPurchase.contribution.id !== excludeContributionId) {
+        consumedTokens = previousPurchase.contribution.tokensConsumed;
       }
     }
 
-    // Check if requested tokens would exceed available tokens
-    if (consumedTokens + requestedTokens > purchase.totalTokens) {
+    // Check if requested tokens would exceed available tokens from previous purchase
+    if (consumedTokens + requestedTokens > previousPurchase.totalTokens) {
       return {
         success: false,
-        error: `Insufficient tokens available. Requested: ${requestedTokens}, Available: ${purchase.totalTokens - consumedTokens}`,
+        error: `Insufficient tokens available from previous purchase. Requested: ${requestedTokens}, Available: ${previousPurchase.totalTokens - consumedTokens}`,
       };
     }
   }

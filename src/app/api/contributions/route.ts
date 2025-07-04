@@ -49,9 +49,10 @@ export async function GET(request: NextRequest) {
         limit?: number;
         purchaseId?: string;
         userId?: string;
+        calculateBalance?: boolean;
       };
     };
-    const { page = 1, limit = 10, purchaseId, userId } = query || {};
+    const { page = 1, limit = 10, purchaseId, userId, calculateBalance } = query || {};
 
     const skip = (page - 1) * limit;
 
@@ -99,7 +100,76 @@ export async function GET(request: NextRequest) {
       prisma.userContribution.count({ where }),
     ]);
 
-    return NextResponse.json({
+    // Calculate running balance if requested
+    let runningBalance = 0;
+    if (calculateBalance && userId) {
+      // Calculate balance for the specific user
+      const balanceContributions = await prisma.userContribution.findMany({
+        where: { userId },
+        include: {
+          purchase: {
+            select: {
+              totalTokens: true,
+              totalPayment: true,
+              purchaseDate: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      console.log('=== ACCOUNT BALANCE DEBUG ===');
+      console.log('User ID:', userId);
+      console.log('Total contributions found:', balanceContributions.length);
+      
+      // First, we need to identify which contributions are for the very first purchase
+      // A contribution is for the "first purchase" if there was no purchase before it
+      const contributionsWithPreviousCheck = await Promise.all(
+        balanceContributions.map(async (contribution) => {
+          const previousPurchase = await prisma.tokenPurchase.findFirst({
+            where: {
+              purchaseDate: {
+                lt: contribution.purchase.purchaseDate,
+              },
+            },
+            orderBy: {
+              purchaseDate: 'desc',
+            },
+          });
+          
+          return {
+            ...contribution,
+            isFirstPurchase: !previousPurchase,
+          };
+        })
+      );
+
+      runningBalance = contributionsWithPreviousCheck.reduce((balance, contribution, index) => {
+        // For contributions to the first purchase, tokens consumed should be 0
+        // since there's no previous baseline to measure against
+        const effectiveTokensConsumed = contribution.isFirstPurchase ? 0 : contribution.tokensConsumed;
+        
+        const fairShare = (effectiveTokensConsumed / contribution.purchase.totalTokens) * contribution.purchase.totalPayment;
+        const balanceChange = contribution.contributionAmount - fairShare;
+        const newBalance = balance + balanceChange;
+        
+        console.log(`\nContribution ${index + 1}:${contribution.isFirstPurchase ? ' (FIRST PURCHASE - no previous consumption)' : ''}`);
+        console.log('  Purchase date:', contribution.purchase.purchaseDate);
+        console.log('  Purchase:', contribution.purchase.totalTokens, 'kWh for $', contribution.purchase.totalPayment);
+        console.log('  Tokens consumed (recorded):', contribution.tokensConsumed, 'kWh');
+        console.log('  Tokens consumed (effective):', effectiveTokensConsumed, 'kWh');
+        console.log('  You paid: $', contribution.contributionAmount);
+        console.log('  Fair share: $', fairShare.toFixed(4));
+        console.log('  Balance change:', balanceChange > 0 ? '+$' : '$', balanceChange.toFixed(2));
+        console.log('  Running balance: $', newBalance.toFixed(2));
+        
+        return newBalance;
+      }, 0);
+      
+      console.log('\n=== FINAL ACCOUNT BALANCE: $', runningBalance.toFixed(2), '===\n');
+    }
+
+    const response: any = {
       contributions,
       pagination: {
         page,
@@ -107,7 +177,13 @@ export async function GET(request: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    });
+    };
+
+    if (calculateBalance) {
+      response.runningBalance = runningBalance;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching contributions:', error);
     return NextResponse.json(
@@ -242,10 +318,6 @@ export async function POST(request: NextRequest) {
     // Validate business rules
     const businessRuleCheck = await validateBusinessRules(
       {
-        checkTokenAvailability: {
-          purchaseId,
-          requestedTokens: tokensConsumed,
-        },
         checkDuplicateContribution: {
           purchaseId,
           userId: targetUserId,

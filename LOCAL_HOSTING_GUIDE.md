@@ -234,19 +234,24 @@ npm install
 ### 3.5 Set Up Database Schema
 
 ```cmd
-# Generate database client
+# Option 1: Interactive setup (recommended for first-time users)
+npm run db:setup
+
+# Option 2: Automated setup (for experienced users)
+npm run db:init
+
+# Option 3: Manual setup (if above commands fail)
 npx prisma generate
-
-# Create database tables
-npx prisma migrate deploy
-
-# This creates all necessary tables for the application
+npx prisma db push --accept-data-loss
 ```
 
 **Success indicators**:
 
 - No error messages
-- "Migration applied successfully" messages
+- "Database initialization completed successfully" message
+- All 7 tables created (users, accounts, sessions, verification_tokens, token_purchases, user_contributions, audit_logs)
+
+**⚠️ Important**: If you get a 500 error when trying to sign in, it means the database setup didn't complete properly. See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for troubleshooting.
 - Database tables created
 
 ---

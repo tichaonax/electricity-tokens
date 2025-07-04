@@ -88,7 +88,7 @@ ADMIN_EMAIL=admin@yourdomain.com
 
 #### 4. Deploy Database Schema
 
-After first deployment, run database migrations:
+After first deployment, initialize the database:
 
 ```bash
 # Install Vercel CLI
@@ -100,11 +100,24 @@ vercel login
 # Link your project
 vercel link
 
-# Run database setup (one time only)
+# Pull environment variables
 vercel env pull .env.local
-npx prisma db push
-npx prisma generate
+
+# Initialize database (one time only)
+npm run db:init
+
+# Alternative manual commands if above fails:
+# npx prisma generate
+# npx prisma db push --accept-data-loss
 ```
+
+**⚠️ Important**: If you get a 500 error on first sign-in, it means the database tables weren't created. Run the database initialization:
+
+```bash
+npm run db:init
+```
+
+See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for detailed troubleshooting.
 
 #### 5. Create Admin User
 

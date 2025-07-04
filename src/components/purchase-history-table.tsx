@@ -850,7 +850,7 @@ export function PurchaseHistoryTable({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {new Date(purchase.purchaseDate).toLocaleDateString()}
+                        {new Date(purchase.purchaseDate + 'T00:00:00').toLocaleDateString()}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">
                         {new Date(purchase.createdAt).toLocaleTimeString()}

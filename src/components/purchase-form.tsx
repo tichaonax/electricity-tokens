@@ -132,7 +132,7 @@ export function PurchaseForm({
       totalPayment: initialData?.totalPayment || undefined,
       meterReading: initialData?.meterReading || undefined,
       purchaseDate: initialData?.purchaseDate
-        ? new Date(initialData.purchaseDate)
+        ? new Date(initialData.purchaseDate + 'T00:00:00')
         : new Date(),
       isEmergency: initialData?.isEmergency || false,
     },
@@ -314,7 +314,7 @@ export function PurchaseForm({
   // Additional validation for meter reading vs tokens purchased
   useEffect(() => {
     if (watchedValues.meterReading && watchedValues.totalTokens && contextInfo.previousPurchase) {
-      const expectedMaximum = contextInfo.previousPurchase.meterReading + watchedValues.totalTokens;
+      const expectedMaximum = contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens;
       
       if (watchedValues.meterReading > expectedMaximum) {
         setMeterReadingValidation(prev => ({
@@ -452,7 +452,7 @@ export function PurchaseForm({
               <div>
                 <span className="text-slate-500 dark:text-slate-400 block">Current Date:</span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {initialData.purchaseDate ? new Date(initialData.purchaseDate).toLocaleDateString() : 'N/A'}
+                  {initialData.purchaseDate ? new Date(initialData.purchaseDate + 'T00:00:00').toLocaleDateString() : 'N/A'}
                 </span>
               </div>
             </div>
@@ -512,7 +512,10 @@ export function PurchaseForm({
               min="0"
               max="100000"
               placeholder="Enter total tokens"
-              {...register('totalTokens', { valueAsNumber: true })}
+              {...register('totalTokens', { 
+                valueAsNumber: true,
+                setValueAs: (value) => Math.round(parseFloat(value) * 100) / 100
+              })}
               className={errors.totalTokens ? 'border-red-500' : ''}
             />
             <FormDescription>
@@ -661,9 +664,9 @@ export function PurchaseForm({
                           <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
                             <div className="font-medium">Maximum Allowed Reading:</div>
                             <div>
-                              {(contextInfo.previousPurchase.meterReading + watchedValues.totalTokens).toLocaleString()} kWh 
+                              {(contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens).toLocaleString()} kWh 
                               <span className="text-xs ml-1">
-                                (prev: {contextInfo.previousPurchase.meterReading.toLocaleString()} + tokens: {watchedValues.totalTokens.toLocaleString()})
+                                (prev reading: {contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: {contextInfo.previousPurchase.totalTokens.toLocaleString()})
                               </span>
                             </div>
                             <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
@@ -697,7 +700,7 @@ export function PurchaseForm({
                 max={
                   contextInfo.nextPurchase?.meterReading || 
                   (watchedValues.totalTokens && contextInfo.previousPurchase ? 
-                    contextInfo.previousPurchase.meterReading + watchedValues.totalTokens : 
+                    contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens : 
                     1000000)
                 }
                 placeholder={
@@ -776,9 +779,9 @@ export function PurchaseForm({
               Purchase Date *
               {mode === 'edit' && initialData?.purchaseDate && (
                 <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
-                  (was: {new Date(initialData.purchaseDate).toLocaleDateString()})
+                  (was: {new Date(initialData.purchaseDate + 'T00:00:00').toLocaleDateString()})
                   {watchedValues.purchaseDate && 
-                   new Date(watchedValues.purchaseDate).toLocaleDateString() !== new Date(initialData.purchaseDate).toLocaleDateString() && (
+                   new Date(watchedValues.purchaseDate).toLocaleDateString() !== new Date(initialData.purchaseDate + 'T00:00:00').toLocaleDateString() && (
                     <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
                       → changing to {new Date(watchedValues.purchaseDate).toLocaleDateString()}
                     </span>

@@ -149,24 +149,7 @@ export async function PUT(
         );
       }
 
-      // Validate business rules for token consumption
-      const businessRulesValidation = await validateBusinessRules(
-        {
-          checkTokenAvailability: {
-            purchaseId: existingContribution.purchaseId,
-            requestedTokens: tokensConsumed,
-            excludeContributionId: id, // Exclude current contribution from availability check
-          },
-        },
-        prisma
-      );
-
-      if (!businessRulesValidation.success) {
-        return NextResponse.json(
-          { message: businessRulesValidation.error },
-          { status: 400 }
-        );
-      }
+      // Token availability validation removed - meter reading bounds validation is sufficient
 
       updateData.tokensConsumed = parseFloat(tokensConsumed.toString());
     }

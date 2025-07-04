@@ -293,7 +293,7 @@ function EditContributionContent() {
                       Purchase Date
                     </label>
                     <p className="text-slate-900 dark:text-blue-300 font-medium">
-                      {new Date(contribution.purchase.purchaseDate).toLocaleDateString()}
+                      {new Date(contribution.purchase.purchaseDate + 'T00:00:00').toLocaleDateString()}
                     </p>
                   </div>
                   <div>

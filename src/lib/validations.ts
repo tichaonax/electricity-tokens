@@ -165,7 +165,7 @@ export const createUserContributionSchema = z
   .object({
     purchaseId: cuidSchema,
     userId: cuidSchema, // Always required - will be auto-set to current user
-    contributionAmount: positiveNumberSchema.max(
+    contributionAmount: nonNegativeNumberSchema.max(
       1000000,
       'Contribution amount cannot exceed 1,000,000'
     ),
@@ -185,7 +185,7 @@ export const createUserContributionSchema = z
 
 export const updateUserContributionSchema = z
   .object({
-    contributionAmount: positiveNumberSchema
+    contributionAmount: nonNegativeNumberSchema
       .max(1000000, 'Contribution amount cannot exceed 1,000,000')
       .optional(),
     meterReading: nonNegativeNumberSchema
@@ -229,6 +229,11 @@ export const contributionQuerySchema = z.object({
     .optional(),
   purchaseId: cuidSchema.optional(),
   userId: cuidSchema.optional(),
+  calculateBalance: z
+    .string()
+    .regex(/^(true|false)$/, 'calculateBalance must be true or false')
+    .transform((val) => val === 'true')
+    .optional(),
 });
 
 // Reports validation schemas
