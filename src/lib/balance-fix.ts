@@ -22,11 +22,10 @@ function log(message: string, color: string = colors.reset): void {
   console.log(`${color}${message}${colors.reset}`);
 }
 
-async function calculateCorrectBalance(userId: string): Promise<number | null> {
+async function calculateCorrectBalance(scope: string): Promise<number | null> {
   try {
-    // Get all contributions for this user, ordered by purchase date (not createdAt)
+    // Get all contributions in the system (global balance), ordered by purchase date (not createdAt)
     const contributions = await prisma.userContribution.findMany({
-      where: { userId },
       include: {
         purchase: {
           select: {
@@ -78,57 +77,52 @@ async function calculateCorrectBalance(userId: string): Promise<number | null> {
 
     return runningBalance;
   } catch (error) {
-    console.error(`Error calculating balance for user ${userId}:`, error);
+    console.error(`Error calculating global balance:`, error);
     return null;
   }
 }
 
 export async function fixAllAccountBalances(): Promise<void> {
   try {
-    log('🔧 Fixing Account Balances After Restore', colors.blue);
-    log('=========================================', colors.blue);
+    log('🔧 Fixing Global Account Balance After Restore', colors.blue);
+    log('==============================================', colors.blue);
 
-    // Get all users who have contributions
-    const usersWithContributions = await prisma.user.findMany({
-      where: {
-        contributions: {
-          some: {},
+    // Get ALL contributions in the system (global balance calculation)
+    const allContributions = await prisma.userContribution.findMany({
+      include: {
+        purchase: {
+          select: {
+            totalTokens: true,
+            totalPayment: true,
+            purchaseDate: true,
+            createdAt: true,
+          },
         },
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
+      orderBy: {
+        purchase: {
+          purchaseDate: 'asc', // Order by purchase date, not contribution creation
+        },
       },
     });
 
-    if (usersWithContributions.length === 0) {
-      log(
-        '✅ No users with contributions found. Nothing to fix.',
-        colors.green
-      );
+    if (allContributions.length === 0) {
+      log('✅ No contributions found. Nothing to fix.', colors.green);
       return;
     }
 
-    log(
-      `Found ${usersWithContributions.length} users with contributions`,
-      colors.cyan
-    );
+    log(`Found ${allContributions.length} total contributions`, colors.cyan);
 
-    for (const user of usersWithContributions) {
-      log(`👤 Processing user: ${user.name} (${user.email})`, colors.cyan);
+    const correctBalance = await calculateCorrectBalance('global');
 
-      const correctBalance = await calculateCorrectBalance(user.id);
-
-      if (correctBalance !== null) {
-        log(
-          `✅ Correct balance calculated: $${correctBalance.toFixed(2)}`,
-          colors.green
-        );
-      }
+    if (correctBalance !== null) {
+      log(
+        `✅ Global account balance calculated: $${correctBalance.toFixed(2)}`,
+        colors.green
+      );
     }
 
-    log('🎉 Balance verification completed!', colors.green);
+    log('🎉 Global balance verification completed!', colors.green);
   } catch (error) {
     log('❌ Error fixing account balances:', colors.red);
     console.error(error);
