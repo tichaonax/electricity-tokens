@@ -75,9 +75,9 @@ export function ContributionsClient() {
     }
   }, [contributions]);
 
-  const fetchRunningBalance = async (userId: string) => {
+  const fetchRunningBalance = async () => {
     try {
-      const response = await fetch(`/api/contributions?userId=${userId}&calculateBalance=true`);
+      const response = await fetch(`/api/contributions?calculateBalance=true`);
       if (response.ok) {
         const data = await response.json();
         setRunningBalance(data.runningBalance || 0);
@@ -100,10 +100,8 @@ export function ContributionsClient() {
       const data = await response.json();
       setContributions(data.contributions || []);
       
-      // Fetch running balance if user is authenticated
-      if (session?.user?.id) {
-        await fetchRunningBalance(session.user.id);
-      }
+      // Fetch global running balance
+      await fetchRunningBalance();
       
       // Check if there are available purchases (purchases without contributions)
       await checkAvailablePurchases();

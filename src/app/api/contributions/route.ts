@@ -106,15 +106,14 @@ export async function GET(request: NextRequest) {
       prisma.userContribution.count({ where }),
     ]);
 
-    // Calculate running balance if requested using the same logic as the cost calculations
+    // Calculate running balance if requested - this is a GLOBAL balance, not per-user
     let runningBalance = 0;
-    if (calculateBalance && userId) {
+    if (calculateBalance) {
       // Import and use the updated cost calculation function
       const { calculateUserTrueCost } = await import('@/lib/cost-calculations');
 
-      // Get all contributions for this user, ordered by purchase date (not createdAt)
+      // Get ALL contributions in the system, ordered by purchase date (not createdAt)
       const balanceContributions = await prisma.userContribution.findMany({
-        where: { userId },
         include: {
           purchase: {
             select: {
@@ -131,16 +130,15 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      console.log('=== ACCOUNT BALANCE DEBUG ===');
-      console.log('User ID:', userId);
+      console.log('=== GLOBAL ACCOUNT BALANCE DEBUG ===');
       console.log('Total contributions found:', balanceContributions.length);
 
-      // Use the same calculation logic as the cost calculations library
+      // Use the same calculation logic as the cost calculations library for ALL contributions
       const costBreakdown = calculateUserTrueCost(balanceContributions);
       runningBalance = costBreakdown.overpayment;
 
       console.log(
-        '\n=== FINAL ACCOUNT BALANCE: $',
+        '\n=== FINAL GLOBAL ACCOUNT BALANCE: $',
         runningBalance.toFixed(2),
         '===\n'
       );
