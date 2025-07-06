@@ -27,6 +27,7 @@ model User {
   // Relations
   contributions     UserContribution[]
   createdPurchases  TokenPurchase[]
+  meterReadings     MeterReading[]
   auditLogs         AuditLog[]
   accounts          Account[]
   sessions          Session[]
@@ -123,6 +124,23 @@ model AuditLog {
   user User @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model MeterReading {
+  id           String   @id @default(cuid())
+  userId       String
+  reading      Float
+  readingDate  DateTime
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure chronological order - one reading per user per day
+  @@unique([userId, readingDate])
+  @@map("meter_readings")
 }
 
 enum Role {

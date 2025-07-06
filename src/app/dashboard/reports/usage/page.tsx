@@ -181,13 +181,13 @@ export default function UsageReportsPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={setCurrentMonth}>
+                <Button type="button" variant="outline" size="sm" onClick={setCurrentMonth}>
                   This Month
                 </Button>
-                <Button variant="outline" size="sm" onClick={setLastThreeMonths}>
+                <Button type="button" variant="outline" size="sm" onClick={setLastThreeMonths}>
                   Last 3 Months
                 </Button>
-                <Button variant="outline" size="sm" onClick={clearDateRange}>
+                <Button type="button" variant="outline" size="sm" onClick={clearDateRange}>
                   All Time
                 </Button>
               </div>

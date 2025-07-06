@@ -70,8 +70,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     actualTheme,
   };
 
+  // During SSR, provide a default theme context to prevent hydration mismatch
   if (!mounted) {
-    return <>{children}</>;
+    return (
+      <ThemeContext.Provider 
+        value={{
+          theme: 'system',
+          setTheme: () => {},
+          actualTheme: 'light',
+        }}
+      >
+        {children}
+      </ThemeContext.Provider>
+    );
   }
 
   return (

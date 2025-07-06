@@ -1,5 +1,6 @@
 import { FileX, Home, ArrowLeft, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
+import { BackButton } from '@/components/ui/back-button';
 
 export default function NotFound() {
   return (
@@ -50,13 +51,10 @@ export default function NotFound() {
                 Go to Dashboard
               </Link>
               
-              <button
-                onClick={() => window.history.back()}
-                className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-              >
+              <BackButton className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Go Back
-              </button>
+              </BackButton>
               
               <Link
                 href="/help"

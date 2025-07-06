@@ -2,16 +2,37 @@
 
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
+import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="px-2 py-4 border-t border-gray-200 dark:border-gray-700 mb-8">
+        <div className="space-y-1">
+          <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            Theme
+          </p>
+          <p className="px-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Loading theme options...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
   };
 
   return (
-    <div className="px-2 py-4 border-t border-gray-200 dark:border-gray-700 mb-8">
+    <div className="px-2 py-4 border-t border-gray-200 dark:border-gray-700">
       <div className="space-y-1">
         <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
           Theme
@@ -20,7 +41,7 @@ export function ThemeToggle() {
           Select your theme preference.
         </p>
         
-        <div className="space-y-1 pb-4">
+        <div className="space-y-2 pb-2">
           <button
             onClick={() => handleThemeChange('light')}
             className={`group flex items-center w-full min-h-[44px] px-3 py-2 text-sm rounded-md transition-colors ${

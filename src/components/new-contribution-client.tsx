@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { ContributionForm } from '@/components/contribution-form';
 import { type CreateUserContributionInput } from '@/lib/validations';
 import { LogOut } from 'lucide-react';
+import { NavigationFormButton } from '@/components/ui/navigation-form-button';
+import { navigateToDashboard } from '@/app/actions/navigation';
 
 export function NewContributionClient() {
   const { data: session, status } = useSession();
@@ -75,12 +77,12 @@ export function NewContributionClient() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+              <NavigationFormButton
+                action={navigateToDashboard}
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 bg-transparent border-none p-2"
               >
                 ← Back to Dashboard
-              </button>
+              </NavigationFormButton>
               <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 New Contribution
               </h1>

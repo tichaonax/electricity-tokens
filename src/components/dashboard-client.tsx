@@ -7,7 +7,21 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { HelpPopover } from '@/components/ui/help-popover';
 import { ContributionProgress } from '@/components/contribution-progress';
-import { InteractiveButton } from '@/components/ui/interactive-button';
+import { NavigationFormButton } from '@/components/ui/navigation-form-button';
+import { ProgressiveConsumptionWidget } from '@/components/ui/progressive-consumption-widget';
+import { RunningBalanceWidget } from '@/components/ui/running-balance-widget';
+import { MaxDailyConsumptionWidget } from '@/components/ui/max-daily-consumption-widget';
+import { 
+  navigateToNewPurchase, 
+  navigateToContributions, 
+  navigateToCostAnalysis,
+  navigateToPersonalDashboard,
+  navigateToDataManagement,
+  navigateToUsageReports,
+  navigateToFinancialReports,
+  navigateToEfficiencyReports,
+  navigateToAdmin
+} from '@/app/actions/navigation';
 
 interface QuickStats {
   totalTokensUsed: number;
@@ -101,6 +115,13 @@ export function DashboardClient() {
           {/* Contribution Progress */}
           <ContributionProgress />
 
+          {/* Dashboard Widgets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <ProgressiveConsumptionWidget />
+            <RunningBalanceWidget />
+            <MaxDailyConsumptionWidget />
+          </div>
+
           {/* Quick Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Token Purchases Card - Show to all users */}
@@ -151,8 +172,8 @@ export function DashboardClient() {
 
             {/* New Purchase Card - Only show if user can add purchases */}
             {checkPermission('canAddPurchases') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/purchases/new')}
+              <NavigationFormButton
+                action={navigateToNewPurchase}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -193,13 +214,13 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
 
             {/* User Contributions Card - Only show if user can add contributions */}
             {checkPermission('canAddContributions') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/contributions')}
+              <NavigationFormButton
+                action={navigateToContributions}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -240,13 +261,13 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
 
             {/* Cost Analysis Card */}
             {checkPermission('canViewCostAnalysis') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/cost-analysis')}
+              <NavigationFormButton
+                action={navigateToCostAnalysis}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -287,13 +308,13 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
 
             {/* Personal Dashboard Card */}
             {checkPermission('canViewPersonalDashboard') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/personal')}
+              <NavigationFormButton
+                action={navigateToPersonalDashboard}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -334,13 +355,13 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
 
             {/* Data Management Card */}
             {checkPermission('canExportData') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/data-management')}
+              <NavigationFormButton
+                action={navigateToDataManagement}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -381,13 +402,13 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
 
             {/* Usage Reports Card */}
             {checkPermission('canViewUsageReports') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/reports/usage')}
+              <NavigationFormButton
+                action={navigateToUsageReports}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -428,13 +449,13 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
 
             {/* Financial Reports Card */}
             {checkPermission('canViewFinancialReports') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/reports/financial')}
+              <NavigationFormButton
+                action={navigateToFinancialReports}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -475,13 +496,13 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
 
             {/* Efficiency Metrics Card */}
             {checkPermission('canViewEfficiencyReports') && (
-              <InteractiveButton
-                onClick={() => router.push('/dashboard/reports/efficiency')}
+              <NavigationFormButton
+                action={navigateToEfficiencyReports}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
               >
                 <div className="p-5">
@@ -522,7 +543,7 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </InteractiveButton>
+              </NavigationFormButton>
             )}
           </div>
 
@@ -534,8 +555,8 @@ export function DashboardClient() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {/* Admin Panel Card - Only visible to admins */}
               {isAdmin && (
-                <InteractiveButton
-                  onClick={() => router.push('/dashboard/admin')}
+                <NavigationFormButton
+                  action={navigateToAdmin}
                   className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200 dark:border-red-800 block text-left"
                 >
                   <div className="p-5">
@@ -576,7 +597,7 @@ export function DashboardClient() {
                       </span>
                     </div>
                   </div>
-                </InteractiveButton>
+                </NavigationFormButton>
               )}
             </div>
 

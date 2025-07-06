@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import {
   Menu,
@@ -17,6 +16,19 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { Badge } from './badge';
+import { NavigationFormButton } from './navigation-form-button';
+import { 
+  navigateToDashboard, 
+  navigateToPurchaseHistory, 
+  navigateToUsageReports, 
+  navigateToFinancialReports, 
+  navigateToEfficiencyReports,
+  navigateToAdmin,
+  navigateToUserManagement,
+  navigateToSecurityDashboard,
+  navigateToAuditTrail,
+  navigateToHelp
+} from '@/app/actions/navigation';
 import { ThemeToggle } from './theme-toggle';
 
 interface MobileNavProps {
@@ -26,15 +38,9 @@ interface MobileNavProps {
 export function MobileNav({ isAdmin = false }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
-  const router = useRouter();
 
   const toggleNav = () => setIsOpen(!isOpen);
   const closeNav = () => setIsOpen(false);
-
-  const handleNavigation = (path: string) => {
-    router.push(path);
-    closeNav();
-  };
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/' });
@@ -45,21 +51,20 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
     {
       icon: Home,
       label: 'Dashboard',
-      path: '/dashboard',
+      action: navigateToDashboard,
     },
     {
       icon: FileText,
       label: 'Purchase History',
-      path: '/dashboard/purchases/history',
+      action: navigateToPurchaseHistory,
     },
     {
       icon: BarChart3,
       label: 'Reports',
-      path: '/dashboard/reports',
       subItems: [
-        { label: 'Usage Reports', path: '/dashboard/reports/usage' },
-        { label: 'Financial Reports', path: '/dashboard/reports/financial' },
-        { label: 'Efficiency Reports', path: '/dashboard/reports/efficiency' },
+        { label: 'Usage Reports', action: navigateToUsageReports },
+        { label: 'Financial Reports', action: navigateToFinancialReports },
+        { label: 'Efficiency Reports', action: navigateToEfficiencyReports },
       ],
     },
   ];
@@ -68,22 +73,22 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
     {
       icon: Settings,
       label: 'Admin Panel',
-      path: '/dashboard/admin',
+      action: navigateToAdmin,
     },
     {
       icon: User,
       label: 'User Management',
-      path: '/dashboard/admin/users',
+      action: navigateToUserManagement,
     },
     {
       icon: Shield,
       label: 'Security Dashboard',
-      path: '/dashboard/admin/security',
+      action: navigateToSecurityDashboard,
     },
     {
       icon: FileText,
       label: 'Audit Trail',
-      path: '/dashboard/admin/audit',
+      action: navigateToAuditTrail,
     },
   ];
 
@@ -118,7 +123,7 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
         />
 
         {/* Slide-out panel */}
-        <div className="relative flex flex-col w-80 max-w-xs bg-white dark:bg-gray-800 h-full shadow-xl overflow-hidden">
+        <div className="relative flex flex-col w-80 max-w-xs bg-white dark:bg-gray-800 h-full shadow-xl overflow-hidden max-h-screen">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3">
@@ -141,8 +146,8 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
           </div>
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-y-auto overscroll-contain">
-            <div className="pb-8">
+          <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+            <div className="pb-6 space-y-0">
               {/* User info */}
               {session?.user && (
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
@@ -182,10 +187,10 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
                     <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                       Main
                     </p>
-                    {mainNavItems.map((item) => (
-                      <div key={item.path}>
-                        <button
-                          onClick={() => handleNavigation(item.path)}
+                    {mainNavItems.map((item, index) => (
+                      <div key={index}>
+                        <NavigationFormButton
+                          action={item.action}
                           className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
                         >
                           <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
@@ -193,19 +198,19 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
                           {item.subItems && (
                             <ChevronRight className="ml-auto h-4 w-4 text-gray-400 dark:text-gray-500" />
                           )}
-                        </button>
+                        </NavigationFormButton>
 
                         {/* Sub-navigation */}
                         {item.subItems && (
                           <div className="ml-8 mt-1 space-y-1">
-                            {item.subItems.map((subItem) => (
-                              <button
-                                key={subItem.path}
-                                onClick={() => handleNavigation(subItem.path)}
+                            {item.subItems.map((subItem, subIndex) => (
+                              <NavigationFormButton
+                                key={subIndex}
+                                action={subItem.action}
                                 className="group flex items-center w-full min-h-[40px] px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-100 dark:active:bg-gray-500 transition-colors"
                               >
                                 {subItem.label}
-                              </button>
+                              </NavigationFormButton>
                             ))}
                           </div>
                         )}
@@ -219,15 +224,15 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
                       <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                         Administration
                       </p>
-                      {adminNavItems.map((item) => (
-                        <button
-                          key={item.path}
-                          onClick={() => handleNavigation(item.path)}
+                      {adminNavItems.map((item, index) => (
+                        <NavigationFormButton
+                          key={index}
+                          action={item.action}
                           className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
                         >
                           <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
                           {item.label}
-                        </button>
+                        </NavigationFormButton>
                       ))}
                     </div>
                   )}
@@ -236,22 +241,27 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
 
               {/* Help Section */}
               <div className="px-2 mb-4">
-                <button
-                  onClick={() => handleNavigation('/help')}
+                <NavigationFormButton
+                  action={navigateToHelp}
                   className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
                 >
                   <HelpCircle className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
                   Help & FAQ
-                </button>
+                </NavigationFormButton>
               </div>
 
               {/* Theme Toggle */}
-              <ThemeToggle />
+              <div className="mt-4">
+                <ThemeToggle />
+              </div>
+              
+              {/* Extra padding for better scrolling */}
+              <div className="h-6"></div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
             <button
               onClick={handleSignOut}
               className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"

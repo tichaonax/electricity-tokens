@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { HelpPopover } from '@/components/ui/help-popover';
-import { Users, Shield, Settings, FileText, Activity, Trash2 } from 'lucide-react';
+import { Users, Shield, Settings, FileText, Activity, Trash2, Gauge } from 'lucide-react';
 import { DataResetComponent } from '@/components/admin/data-reset';
 
 export default function AdminPanel() {
@@ -222,6 +222,34 @@ export default function AdminPanel() {
                   <br />
                   • System maintenance
                   <br />• Data management
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Meter Readings Card */}
+            <Card
+              className="hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+              onClick={() => router.push('/dashboard/meter-readings')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-lg font-medium">
+                    Meter Readings
+                  </CardTitle>
+                  <CardDescription>
+                    Manage daily electricity meter readings
+                  </CardDescription>
+                </div>
+                <Gauge className="h-8 w-8 text-cyan-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  • View meter reading history
+                  <br />
+                  • Add new meter readings
+                  <br />
+                  • Validate consumption data
+                  <br />• Track usage patterns
                 </div>
               </CardContent>
             </Card>

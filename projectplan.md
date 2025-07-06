@@ -173,6 +173,139 @@ The application is ready for production deployment and daily use by households w
 
 ---
 
-**Last Updated**: July 3, 2025  
+## 🔍 Database Structure Analysis (July 5, 2025)
+
+### **Current Data Architecture Understanding**
+
+After examining the codebase, here's a comprehensive breakdown of the database structure and data relationships:
+
+#### **Core Tables & Relationships**
+
+1. **TokenPurchase** (`token_purchases`)
+   - **Purpose**: Represents actual electricity token purchases
+   - **Key Fields**: 
+     - `totalTokens`: Amount of electricity tokens purchased
+     - `totalPayment`: Total cost of the purchase
+     - `meterReading`: Initial meter reading when purchase was made
+     - `isEmergency`: Boolean flag for higher-cost emergency purchases
+     - `purchaseDate`: When the purchase was made
+   - **Relationship**: One-to-one with UserContribution
+
+2. **UserContribution** (`user_contributions`)
+   - **Purpose**: Individual user's participation in shared purchases
+   - **Key Fields**:
+     - `purchaseId`: Links to a specific purchase (unique constraint)
+     - `userId`: Which user this contribution belongs to
+     - `contributionAmount`: How much the user paid
+     - `meterReading`: User's meter reading at time of contribution
+     - `tokensConsumed`: Calculated usage (current - purchase initial reading)
+   - **Relationship**: One-to-one with TokenPurchase, Many-to-one with User
+
+3. **MeterReading** (`meter_readings`)
+   - **Purpose**: Historical meter reading records
+   - **Key Fields**: `reading`, `readingDate`, `userId`
+   - **Relationship**: Many-to-one with User
+
+#### **Data Flow & Business Logic**
+
+**Purchase Process:**
+1. Someone makes a **TokenPurchase** (buys electricity tokens)
+2. A **UserContribution** is created linking a user to that purchase
+3. The system calculates `tokensConsumed` = current meter reading - purchase initial reading
+4. User pays a `contributionAmount` which may differ from their proportional cost
+
+**Cost Calculation Logic:**
+- **Proportional Cost**: `(tokensUsed / totalTokensInPurchase) * totalPurchaseCost`
+- **True Cost vs Paid Amount**: Tracks overpayment/underpayment
+- **Emergency Premium**: Additional cost for emergency purchases
+- **Efficiency**: Percentage of how well payments match actual usage
+
+#### **Dashboard API Data Query Pattern**
+
+The existing dashboard API (`/src/app/api/dashboard/route.ts`) focuses on **UserContributions** as the primary data source:
+
+```typescript
+// Primary query - gets user contributions with purchase data
+const contributions = await prisma.userContribution.findMany({
+  where: {
+    userId: targetUserId,
+    createdAt: { gte: historyStart }  // Filters by contribution date
+  },
+  include: {
+    purchase: true,  // Includes purchase details
+    user: { select: { id: true, name: true } }
+  }
+});
+```
+
+### **Key Insights for June Data Issue**
+
+#### **Why June Data Might Not Appear**
+
+1. **Date Filtering**: Dashboard filters by `createdAt` date on contributions, not purchase dates
+2. **Default Time Range**: Uses `monthsBack` parameter (default 6 months) from current date
+3. **User-Specific Data**: Only shows contributions for the authenticated user
+4. **Contribution vs Purchase Dates**: System filters by when contribution was recorded, not when purchase was made
+
+#### **Data Structure Implications**
+
+**Contributions vs Purchases:**
+- **Contributions**: Individual user's electricity usage and payments (what dashboard shows)
+- **Purchases**: Actual token purchases made (shared resource)
+- **Key Difference**: Dashboard focuses on user-specific usage patterns, not purchase history
+
+**Current Schema Constraints:**
+- One-to-one relationship between Purchase and Contribution (enforced by unique constraint)
+- This means the system has evolved from shared purchases to individual purchases
+- Each purchase now has exactly one associated contribution
+
+### **Debugging June Data - Action Items**
+
+#### **Immediate Checks Needed**
+
+1. **Verify Data Existence**: Check if June contributions exist in database
+2. **Check Date Ranges**: Ensure widget date calculations include June
+3. **User Association**: Verify contributions are linked to correct user
+4. **Widget vs Dashboard Logic**: Compare how widgets query data vs dashboard API
+
+#### **Database Queries to Run**
+
+```sql
+-- Check for June contributions
+SELECT * FROM user_contributions 
+WHERE DATE_TRUNC('month', createdAt) = '2025-06-01' 
+AND userId = 'target_user_id';
+
+-- Check for June purchases
+SELECT * FROM token_purchases 
+WHERE DATE_TRUNC('month', purchaseDate) = '2025-06-01';
+
+-- Check user's recent contributions
+SELECT * FROM user_contributions 
+WHERE userId = 'target_user_id' 
+ORDER BY createdAt DESC 
+LIMIT 10;
+```
+
+### **Cost Calculation Engine**
+
+The system uses a sophisticated cost calculation engine (`/src/lib/cost-calculations.ts`) that:
+
+1. **Handles Proportional Costs**: Calculates fair share based on actual usage
+2. **Manages Emergency Rates**: Tracks higher costs for emergency purchases
+3. **Calculates Running Balance**: Tracks overpayment/underpayment over time
+4. **Provides Efficiency Metrics**: Shows how well payments align with usage
+
+### **Recommendation for Widget Implementation**
+
+**For new widgets to work correctly:**
+1. **Use UserContribution queries**: Follow the same pattern as dashboard API
+2. **Include purchase data**: Use `include: { purchase: true }` for cost calculations
+3. **Filter by contribution dates**: Use `createdAt` for time-based filtering
+4. **Apply user-specific filtering**: Ensure widgets show user's own data
+
+---
+
+**Last Updated**: July 5, 2025  
 **Status**: ✅ COMPLETE - Production Ready  
 **Next Phase**: Maintenance and user support

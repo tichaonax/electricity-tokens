@@ -10,6 +10,9 @@ export interface UserPermissions {
   canEditContributions: boolean;
   canDeleteContributions: boolean;
   
+  // Meter Reading Management
+  canAddMeterReadings: boolean;
+  
   // Reports Access
   canViewUsageReports: boolean;
   canViewFinancialReports: boolean;
@@ -36,6 +39,9 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   canEditContributions: true,
   canDeleteContributions: false,
   
+  // Meter Reading Management - No access by default
+  canAddMeterReadings: false,
+  
   // Reports Access - Basic access
   canViewUsageReports: true,
   canViewFinancialReports: true,
@@ -58,6 +64,7 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canAddContributions: true,
   canEditContributions: true,
   canDeleteContributions: true,
+  canAddMeterReadings: true,
   canViewUsageReports: true,
   canViewFinancialReports: true,
   canViewEfficiencyReports: true,
@@ -75,6 +82,7 @@ export const READ_ONLY_PERMISSIONS: UserPermissions = {
   canAddContributions: false,
   canEditContributions: false,
   canDeleteContributions: false,
+  canAddMeterReadings: false,
   canViewUsageReports: true,
   canViewFinancialReports: true,
   canViewEfficiencyReports: false,
@@ -92,6 +100,7 @@ export const CONTRIBUTOR_ONLY_PERMISSIONS: UserPermissions = {
   canAddContributions: true,
   canEditContributions: true,
   canDeleteContributions: false,
+  canAddMeterReadings: false,
   canViewUsageReports: false,
   canViewFinancialReports: false,
   canViewEfficiencyReports: false,
