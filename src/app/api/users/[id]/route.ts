@@ -10,7 +10,12 @@ import {
   sanitizeInput,
   checkPermissions,
 } from '@/lib/validation-middleware';
-import { auditUpdate, auditDelete, auditPermissionChange, auditAccountLockChange } from '@/lib/audit';
+import {
+  auditUpdate,
+  auditDelete,
+  auditPermissionChange,
+  auditAccountLockChange,
+} from '@/lib/audit';
 
 export async function GET(
   request: NextRequest,
@@ -131,16 +136,19 @@ export async function PUT(
         name?: string;
         role?: string;
         locked?: boolean;
-        permissions?: any;
+        permissions?: Record<string, boolean>;
+        resetPassword?: boolean;
       };
     };
     const sanitizedData = sanitizeInput(body);
-    const { name, role, locked, permissions } = sanitizedData as {
-      name?: string;
-      role?: string;
-      locked?: boolean;
-      permissions?: any;
-    };
+    const { name, role, locked, permissions, resetPassword } =
+      sanitizedData as {
+        name?: string;
+        role?: string;
+        locked?: boolean;
+        permissions?: Record<string, boolean>;
+        resetPassword?: boolean;
+      };
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -231,6 +239,21 @@ export async function PUT(
       }
     }
 
+    // Password reset can only be triggered by admin
+    if (resetPassword !== undefined) {
+      if (!isAdmin) {
+        return NextResponse.json(
+          { message: 'Forbidden: Only admins can force password resets' },
+          { status: 403 }
+        );
+      }
+
+      if (resetPassword === true) {
+        updateData.passwordResetRequired = true;
+        updateData.passwordResetAt = new Date();
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: id },
       data: updateData,
@@ -253,9 +276,10 @@ export async function PUT(
     });
 
     // Extract IP and User Agent for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const auditContext = {
@@ -276,30 +300,20 @@ export async function PUT(
     }
 
     if (locked !== undefined) {
-      await auditAccountLockChange(
-        auditContext,
-        id,
-        Boolean(locked),
-        { 
-          targetUserName: existingUser.name,
-          reason: locked ? 'Account locked by admin' : 'Account unlocked by admin'
-        }
-      );
+      await auditAccountLockChange(auditContext, id, Boolean(locked), {
+        targetUserName: existingUser.name,
+        reason: locked
+          ? 'Account locked by admin'
+          : 'Account unlocked by admin',
+      });
     }
 
     // General audit log for other changes
     if (name !== undefined || role !== undefined) {
-      await auditUpdate(
-        auditContext,
-        'User',
-        id,
-        existingUser,
-        updatedUser,
-        { 
-          targetUserName: existingUser.name,
-          changesType: 'profile_update'
-        }
-      );
+      await auditUpdate(auditContext, 'User', id, existingUser, updatedUser, {
+        targetUserName: existingUser.name,
+        changesType: 'profile_update',
+      });
     }
 
     return NextResponse.json(updatedUser);
@@ -400,9 +414,10 @@ export async function DELETE(
     });
 
     // Extract IP and User Agent for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     // Create audit log entry using centralized utility
@@ -418,7 +433,7 @@ export async function DELETE(
       {
         deletedUserName: existingUser.name,
         deletedUserEmail: existingUser.email,
-        reason: 'Account deleted by admin'
+        reason: 'Account deleted by admin',
       }
     );
 

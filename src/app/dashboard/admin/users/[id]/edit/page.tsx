@@ -1,0 +1,699 @@
+'use client';
+
+import { useSession } from 'next-auth/react';
+import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ResponsiveNav } from '@/components/ui/responsive-nav';
+import {
+  Lock,
+  Unlock,
+  Shield,
+  User,
+  Mail,
+  Calendar,
+  Settings,
+  ArrowLeft,
+  Save,
+  RotateCcw,
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import {
+  UserPermissions,
+  PERMISSION_PRESETS,
+  PermissionPreset,
+  mergeWithDefaultPermissions,
+} from '@/types/permissions';
+
+interface UserEditFormData {
+  name: string;
+  role: 'ADMIN' | 'USER';
+  locked: boolean;
+  permissions: UserPermissions;
+  resetPassword: boolean;
+}
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'ADMIN' | 'USER';
+  locked: boolean;
+  permissions: UserPermissions | null;
+  createdAt: string;
+  updatedAt: string;
+  _count: {
+    contributions: number;
+    createdPurchases: number;
+  };
+}
+
+export default function EditUser() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const params = useParams();
+  const userId = params.id as string;
+
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState<UserEditFormData>({
+    name: '',
+    role: 'USER',
+    locked: false,
+    permissions: {
+      canAddPurchases: false,
+      canEditPurchases: false,
+      canDeletePurchases: false,
+      canAddContributions: true,
+      canEditContributions: false,
+      canDeleteContributions: false,
+      canViewUsageReports: false,
+      canViewFinancialReports: false,
+      canViewEfficiencyReports: false,
+      canViewPersonalDashboard: true,
+      canViewCostAnalysis: false,
+      canExportData: false,
+      canImportData: false,
+      canAddMeterReadings: false,
+    },
+    resetPassword: false,
+  });
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+      router.push('/dashboard');
+    }
+  }, [status, session, router]);
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      fetchUser();
+    }
+  }, [status, session, userId, fetchUser]);
+
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user');
+      }
+
+      const userData: User = await response.json();
+      setUser(userData);
+
+      // Update form with user data
+      const permissions = mergeWithDefaultPermissions(
+        userData.permissions || {}
+      );
+      setFormData({
+        name: userData.name,
+        role: userData.role,
+        locked: userData.locked,
+        permissions,
+        resetPassword: false,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          role: formData.role,
+          locked: formData.locked,
+          permissions: formData.permissions,
+          resetPassword: formData.resetPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update user');
+      }
+
+      setSuccess('User updated successfully');
+      // Refresh user data
+      await fetchUser();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePermissionPreset = (preset: PermissionPreset) => {
+    const presetPermissions = PERMISSION_PRESETS[preset];
+    setFormData((prev) => ({ ...prev, permissions: presetPermissions }));
+  };
+
+  const updateFormField = <K extends keyof UserEditFormData>(
+    field: K,
+    value: UserEditFormData[K]
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updatePermission = (key: keyof UserPermissions, value: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      permissions: { ...prev.permissions, [key]: value },
+    }));
+  };
+
+  const isCurrentUser = user?.id === session?.user?.id;
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (!session || session.user?.role !== 'ADMIN') {
+    return null;
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <ResponsiveNav
+          title="Edit User"
+          backPath="/dashboard/admin/users"
+          showBackButton={true}
+        />
+        <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <Alert className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+              <AlertDescription className="text-red-800 dark:text-red-200">
+                {error || 'User not found'}
+              </AlertDescription>
+            </Alert>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <ResponsiveNav
+        title={`Edit ${user.name}`}
+        backPath="/dashboard/admin/users"
+        showBackButton={true}
+      />
+
+      <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          {error && (
+            <Alert className="mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+              <AlertDescription className="text-red-800 dark:text-red-200">
+                {error}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {success && (
+            <Alert className="mb-6 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+              <AlertDescription className="text-green-800 dark:text-green-200">
+                {success}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="space-y-6">
+            {/* User Info Card */}
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
+                  <User className="h-5 w-5 mr-2" />
+                  User Information
+                </CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Basic user account details and status
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Email:
+                    </span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {user.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Joined:
+                    </span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  <Badge
+                    variant={
+                      user.role === 'ADMIN' ? 'destructive' : 'secondary'
+                    }
+                  >
+                    {user.role === 'ADMIN' && (
+                      <Shield className="h-3 w-3 mr-1" />
+                    )}
+                    {user.role}
+                  </Badge>
+                  <Badge
+                    variant={user.locked ? 'destructive' : 'default'}
+                    className={
+                      user.locked
+                        ? ''
+                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    }
+                  >
+                    {user.locked ? (
+                      <>
+                        <Lock className="h-3 w-3 mr-1" />
+                        Locked
+                      </>
+                    ) : (
+                      <>
+                        <Unlock className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
+                        Active
+                      </>
+                    )}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Contributions:
+                    </span>
+                    <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">
+                      {user._count.contributions}
+                    </span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Purchases Created:
+                    </span>
+                    <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">
+                      {user._count.createdPurchases}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Edit Form */}
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
+                  <Settings className="h-5 w-5 mr-2" />
+                  Edit User Settings
+                </CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Update user account settings and permissions
+                  {isCurrentUser && (
+                    <span className="text-amber-600 dark:text-amber-400 ml-2">
+                      (Note: Some options are disabled because this is your own
+                      account)
+                    </span>
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                      Basic Information
+                    </h4>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="name"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        Full Name
+                      </label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) =>
+                          updateFormField('name', e.target.value)
+                        }
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="role"
+                          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                          Role
+                        </label>
+                        <select
+                          id="role"
+                          value={formData.role}
+                          onChange={(e) =>
+                            updateFormField(
+                              'role',
+                              e.target.value as 'ADMIN' | 'USER'
+                            )
+                          }
+                          disabled={isCurrentUser}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                        >
+                          <option value="USER">User</option>
+                          <option value="ADMIN">Admin</option>
+                        </select>
+                        {isCurrentUser && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            You cannot change your own role
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Account Locked
+                          </label>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Lock this user account to prevent login
+                          </p>
+                        </div>
+                        <Switch
+                          checked={formData.locked}
+                          onCheckedChange={(checked) =>
+                            updateFormField('locked', checked)
+                          }
+                          disabled={isCurrentUser}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Force Password Reset
+                        </label>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          User will be required to change password on next login
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.resetPassword}
+                        onCheckedChange={(checked) =>
+                          updateFormField('resetPassword', checked)
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* Permissions Section - Only show for USER role */}
+                  {formData.role === 'USER' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                          Permissions
+                        </h4>
+                        <div className="flex space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handlePermissionPreset('full-access')
+                            }
+                          >
+                            Full Access
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePermissionPreset('default')}
+                          >
+                            Default
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePermissionPreset('read-only')}
+                          >
+                            Read Only
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Purchase Management */}
+                        <div className="space-y-3">
+                          <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                            Purchase Management
+                          </h5>
+                          {[
+                            { name: 'canAddPurchases', label: 'Add Purchases' },
+                            {
+                              name: 'canEditPurchases',
+                              label: 'Edit Purchases',
+                            },
+                            {
+                              name: 'canDeletePurchases',
+                              label: 'Delete Purchases',
+                            },
+                          ].map((permission) => (
+                            <div
+                              key={permission.name}
+                              className="flex items-center space-x-3"
+                            >
+                              <Switch
+                                checked={
+                                  formData.permissions[
+                                    permission.name as keyof UserPermissions
+                                  ]
+                                }
+                                onCheckedChange={(checked) =>
+                                  updatePermission(
+                                    permission.name as keyof UserPermissions,
+                                    checked
+                                  )
+                                }
+                              />
+                              <label className="text-sm text-gray-700 dark:text-gray-300">
+                                {permission.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Contribution Management */}
+                        <div className="space-y-3">
+                          <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                            Contribution Management
+                          </h5>
+                          {[
+                            {
+                              name: 'canAddContributions',
+                              label: 'Add Contributions',
+                            },
+                            {
+                              name: 'canEditContributions',
+                              label: 'Edit Contributions',
+                            },
+                            {
+                              name: 'canDeleteContributions',
+                              label: 'Delete Contributions',
+                            },
+                          ].map((permission) => (
+                            <div
+                              key={permission.name}
+                              className="flex items-center space-x-3"
+                            >
+                              <Switch
+                                checked={
+                                  formData.permissions[
+                                    permission.name as keyof UserPermissions
+                                  ]
+                                }
+                                onCheckedChange={(checked) =>
+                                  updatePermission(
+                                    permission.name as keyof UserPermissions,
+                                    checked
+                                  )
+                                }
+                              />
+                              <label className="text-sm text-gray-700 dark:text-gray-300">
+                                {permission.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Reports Access */}
+                        <div className="space-y-3">
+                          <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                            Reports Access
+                          </h5>
+                          {[
+                            {
+                              name: 'canViewUsageReports',
+                              label: 'Usage Reports',
+                            },
+                            {
+                              name: 'canViewFinancialReports',
+                              label: 'Financial Reports',
+                            },
+                            {
+                              name: 'canViewEfficiencyReports',
+                              label: 'Efficiency Reports',
+                            },
+                          ].map((permission) => (
+                            <div
+                              key={permission.name}
+                              className="flex items-center space-x-3"
+                            >
+                              <Switch
+                                checked={
+                                  formData.permissions[
+                                    permission.name as keyof UserPermissions
+                                  ]
+                                }
+                                onCheckedChange={(checked) =>
+                                  updatePermission(
+                                    permission.name as keyof UserPermissions,
+                                    checked
+                                  )
+                                }
+                              />
+                              <label className="text-sm text-gray-700 dark:text-gray-300">
+                                {permission.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Other Permissions */}
+                        <div className="space-y-3">
+                          <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                            Other Permissions
+                          </h5>
+                          {[
+                            {
+                              name: 'canViewPersonalDashboard',
+                              label: 'Personal Dashboard',
+                            },
+                            {
+                              name: 'canViewCostAnalysis',
+                              label: 'Cost Analysis',
+                            },
+                            { name: 'canExportData', label: 'Export Data' },
+                            { name: 'canImportData', label: 'Import Data' },
+                            {
+                              name: 'canAddMeterReadings',
+                              label: 'Add Meter Readings',
+                            },
+                          ].map((permission) => (
+                            <div
+                              key={permission.name}
+                              className="flex items-center space-x-3"
+                            >
+                              <Switch
+                                checked={
+                                  formData.permissions[
+                                    permission.name as keyof UserPermissions
+                                  ]
+                                }
+                                onCheckedChange={(checked) =>
+                                  updatePermission(
+                                    permission.name as keyof UserPermissions,
+                                    checked
+                                  )
+                                }
+                              />
+                              <label className="text-sm text-gray-700 dark:text-gray-300">
+                                {permission.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Form Actions */}
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.push('/dashboard/admin/users')}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Users
+                    </Button>
+
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fetchUser()}
+                        disabled={saving}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Reset
+                      </Button>
+                      <Button type="submit" disabled={saving}>
+                        <Save className="h-4 w-4 mr-2" />
+                        {saving ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

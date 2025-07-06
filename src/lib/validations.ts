@@ -57,6 +57,7 @@ export const updateUserSchema = z
     role: userRoleSchema.optional(),
     locked: z.boolean().optional(),
     permissions: userPermissionsSchema.optional(),
+    resetPassword: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided for update',
@@ -179,7 +180,8 @@ export const createUserContributionSchema = z
     ),
   })
   .refine((data) => data.tokensConsumed <= data.meterReading * 1.1, {
-    message: 'Electricity consumed should not significantly exceed meter reading difference',
+    message:
+      'Electricity consumed should not significantly exceed meter reading difference',
     path: ['tokensConsumed'],
   });
 
@@ -209,7 +211,8 @@ export const updateUserContributionSchema = z
       return true;
     },
     {
-      message: 'Electricity consumed should not significantly exceed meter reading difference',
+      message:
+        'Electricity consumed should not significantly exceed meter reading difference',
       path: ['tokensConsumed'],
     }
   );

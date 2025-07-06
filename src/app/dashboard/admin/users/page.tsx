@@ -29,7 +29,6 @@ import {
   UserPermissions,
   PERMISSION_PRESETS,
   PermissionPreset,
-  mergeWithDefaultPermissions,
 } from '@/types/permissions';
 
 interface User {
@@ -209,12 +208,6 @@ function UserManagementContent() {
     fetchUsers();
   };
 
-  const handleEditPermissions = (user: User) => {
-    setSelectedUser(user);
-    setEditingPermissions(mergeWithDefaultPermissions(user.permissions || {}));
-    setShowPermissionsModal(true);
-  };
-
   const handleSavePermissions = async () => {
     if (!selectedUser || !editingPermissions) return;
 
@@ -297,8 +290,8 @@ function UserManagementContent() {
                   User Account Management
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Manage user accounts, roles, and permissions for the electricity
-                  tokens system.
+                  Manage user accounts, roles, and permissions for the
+                  electricity tokens system.
                 </p>
               </div>
               <div className="flex-shrink-0">
@@ -493,6 +486,20 @@ function UserManagementContent() {
                             {new Date(user.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            {/* Edit Button - Available for all users */}
+                            <button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/admin/users/${user.id}/edit`
+                                )
+                              }
+                              disabled={actionLoading === user.id}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 disabled:opacity-50"
+                              title="Edit User"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+
                             {user.id !== session.user?.id && (
                               <>
                                 {user.locked ? (
@@ -538,18 +545,6 @@ function UserManagementContent() {
                                     disabled={actionLoading === user.id}
                                     className="text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 disabled:opacity-50"
                                     title="Demote to User"
-                                  >
-                                    <Edit3 className="h-4 w-4" />
-                                  </button>
-                                )}
-
-                                {/* Permissions Button - Only for regular users */}
-                                {user.role === 'USER' && (
-                                  <button
-                                    onClick={() => handleEditPermissions(user)}
-                                    disabled={actionLoading === user.id}
-                                    className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 disabled:opacity-50"
-                                    title="Edit Permissions"
                                   >
                                     <Settings className="h-4 w-4" />
                                   </button>
