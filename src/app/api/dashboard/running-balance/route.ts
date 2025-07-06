@@ -13,13 +13,13 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    console.log('Running balance API - User ID:', userId);
     const now = new Date();
     const sevenDaysAgo = subDays(now, 7);
     const fourteenDaysAgo = subDays(now, 14);
 
-    // Get all user contributions with purchase data
+    // Get ALL user contributions globally (no user filtering - this shows system-wide status)
     const contributions = await prisma.userContribution.findMany({
-      where: { userId },
       select: { 
         tokensConsumed: true,
         contributionAmount: true,
@@ -31,7 +31,11 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      orderBy: { createdAt: 'desc' }
     });
+    
+    console.log('Running balance API - Found global contributions:', contributions.length);
+    console.log('Running balance API - Global contributions:', contributions);
 
     // Get recent consumption for trend analysis
     const recentContributions = contributions.filter(
@@ -42,18 +46,19 @@ export async function GET(request: NextRequest) {
       contrib => contrib.createdAt >= fourteenDaysAgo && contrib.createdAt < sevenDaysAgo
     );
 
-    // Calculate contribution balance (what user has paid vs fair share)
+    // Calculate cumulative totals from all contributions
     const totalContributed = contributions.reduce((sum, contrib) => sum + contrib.contributionAmount, 0);
     const totalConsumed = contributions.reduce((sum, contrib) => sum + contrib.tokensConsumed, 0);
     
-    // Calculate fair share cost based on actual consumption
-    const totalFairShareCost = contributions.reduce((sum, contrib) => {
+    // Calculate the true cost (what should have been paid based on actual consumption)
+    const totalTrueCost = contributions.reduce((sum, contrib) => {
       if (!contrib.purchase) return sum;
       const costPerKwh = contrib.purchase.totalPayment / contrib.purchase.totalTokens;
       return sum + (contrib.tokensConsumed * costPerKwh);
     }, 0);
     
-    const contributionBalance = totalContributed - totalFairShareCost; // Positive = overpaid, Negative = owes
+    // Calculate the actual balance: Amount Paid - Amount That Should Have Been Paid
+    const contributionBalance = totalContributed - totalTrueCost;
 
     // Calculate consumption trends  
     const lastWeekConsumption = recentContributions.reduce((sum, contrib) => sum + contrib.tokensConsumed, 0);
@@ -89,28 +94,63 @@ export async function GET(request: NextRequest) {
       trendPercentage = 100;
     }
 
-    // Determine status based on contribution balance
+    // Determine status based on actual balance (positive = credit, negative = debt)
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
     
-    if (contributionBalance < -50) {
-      status = 'critical'; // Owes significant amount
+    if (contributionBalance < -20) {
+      status = 'critical'; // Significant debt
     } else if (contributionBalance < 0) {
-      status = 'warning'; // Owes money
+      status = 'warning'; // Some debt
     } else {
-      status = 'healthy'; // Has credit or is even
+      status = 'healthy'; // Credit or balanced
+    }
+
+    // Calculate anticipated payment/credit based on usage since last contribution
+    let tokensConsumedSinceLastContribution = 0;
+    let estimatedCostSinceLastContribution = 0;
+    let anticipatedPayment = Math.abs(contributionBalance); // Start with current balance (absolute value)
+    
+    // Get the latest meter reading for any user (most recent by reading date)
+    const latestMeterReading = await prisma.meterReading.findFirst({
+      orderBy: { readingDate: 'desc' }
+    });
+    
+    // Get the latest contribution to find the meter reading at that time
+    const latestContribution = await prisma.userContribution.findFirst({
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    if (latestMeterReading && latestContribution) {
+      // Calculate tokens consumed since last contribution
+      tokensConsumedSinceLastContribution = Math.max(0, latestMeterReading.reading - latestContribution.meterReading);
+      
+      // Calculate historical fair share cost per kWh
+      const historicalCostPerKwh = totalConsumed > 0 ? totalTrueCost / totalConsumed : 0;
+      
+      // Estimate cost for recent usage (negative = payment owed)
+      estimatedCostSinceLastContribution = -(tokensConsumedSinceLastContribution * historicalCostPerKwh);
+      
+      // Calculate anticipated payment: current balance + new usage cost
+      // Both are negative if money is owed, positive if credit available
+      anticipatedPayment = contributionBalance + estimatedCostSinceLastContribution;
     }
 
     const response = {
       contributionBalance,
       totalContributed,
       totalConsumed,
-      totalFairShareCost,
+      totalFairShareCost: totalTrueCost, // What should have been paid based on consumption
       averageDaily,
       status,
       lastWeekConsumption,
       lastWeekContributed,
       consumptionTrend,
       trendPercentage,
+      // New fields for anticipated payment
+      tokensConsumedSinceLastContribution,
+      estimatedCostSinceLastContribution,
+      anticipatedPayment,
+      historicalCostPerKwh: totalConsumed > 0 ? totalTrueCost / totalConsumed : 0,
     };
 
     return NextResponse.json(response);

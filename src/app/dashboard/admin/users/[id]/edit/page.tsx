@@ -69,6 +69,8 @@ export default function EditUser() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const [formData, setFormData] = useState<UserEditFormData>({
     name: '',
@@ -101,12 +103,6 @@ export default function EditUser() {
     }
   }, [status, session, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
-      fetchUser();
-    }
-  }, [status, session, userId, fetchUser]);
-
   const fetchUser = async () => {
     try {
       setLoading(true);
@@ -137,6 +133,12 @@ export default function EditUser() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      fetchUser();
+    }
+  }, [status, session, userId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,6 +191,48 @@ export default function EditUser() {
       ...prev,
       permissions: { ...prev.permissions, [key]: value },
     }));
+  };
+
+  const generateTemporaryPassword = () => {
+    // Generate a secure 12-character temporary password
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const handleForcePasswordResetWithTemp = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      
+      const tempPassword = generateTemporaryPassword();
+      
+      const response = await fetch(`/api/admin/users/${userId}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          generateTemporary: true,
+          temporaryPassword: tempPassword
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reset password');
+      }
+
+      setGeneratedPassword(tempPassword);
+      setShowPasswordDialog(true);
+      setFormData(prev => ({ ...prev, resetPassword: true }));
+      setSuccess('Temporary password generated successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isCurrentUser = user?.id === session?.user?.id;
@@ -431,21 +475,47 @@ export default function EditUser() {
                       </div>
                     </div>
 
-                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
+                    <div className="rounded-lg border p-4 space-y-4">
+                      <div>
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Force Password Reset
+                          Password Reset Options
                         </label>
                         <p className="text-xs text-gray-600 dark:text-gray-400">
-                          User will be required to change password on next login
+                          Manage user password reset requirements
                         </p>
                       </div>
-                      <Switch
-                        checked={formData.resetPassword}
-                        onCheckedChange={(checked) =>
-                          updateFormField('resetPassword', checked)
-                        }
-                      />
+                      
+                      <div className="flex flex-row items-center justify-between">
+                        <div className="space-y-0.5">
+                          <label className="text-sm text-gray-700 dark:text-gray-300">
+                            Force Password Reset
+                          </label>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            User will be required to change password on next login
+                          </p>
+                        </div>
+                        <Switch
+                          checked={formData.resetPassword}
+                          onCheckedChange={(checked) =>
+                            updateFormField('resetPassword', checked)
+                          }
+                        />
+                      </div>
+
+                      <div className="pt-2 border-t">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleForcePasswordResetWithTemp}
+                          disabled={saving}
+                          className="w-full"
+                        >
+                          Generate Temporary Password
+                        </Button>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                          Creates a temporary password and forces reset on next login
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -682,7 +752,7 @@ export default function EditUser() {
                         <RotateCcw className="h-4 w-4 mr-2" />
                         Reset
                       </Button>
-                      <Button type="submit" disabled={saving}>
+                      <Button type="submit" variant="outline" disabled={saving}>
                         <Save className="h-4 w-4 mr-2" />
                         {saving ? 'Saving...' : 'Save Changes'}
                       </Button>
@@ -694,6 +764,58 @@ export default function EditUser() {
           </div>
         </div>
       </main>
+
+      {/* Temporary Password Dialog */}
+      {showPasswordDialog && generatedPassword && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Temporary Password Generated
+            </h3>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Share this temporary password with {user?.name}. They will be required to change it on their next login.
+              </p>
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
+                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                  Temporary Password
+                </label>
+                <div className="mt-1 flex items-center space-x-2">
+                  <code className="text-lg font-mono text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-2 py-1 rounded border">
+                    {generatedPassword}
+                  </code>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigator.clipboard.writeText(generatedPassword)}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3">
+                <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                  <strong>Important:</strong> Save this password securely. It cannot be retrieved again and will only work until the user changes it.
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setShowPasswordDialog(false);
+                    setGeneratedPassword(null);
+                  }}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

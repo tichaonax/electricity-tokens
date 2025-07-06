@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { checkPermissions } from '@/lib/validation-middleware';
+import { hasPermission, mergeWithDefaultPermissions, ADMIN_PERMISSIONS } from '@/types/permissions';
 
 // Validation schemas
 const createMeterReadingSchema = z.object({
@@ -25,17 +25,15 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     // Check authentication
-    const permissionCheck = checkPermissions(
-      session,
-      { canAddMeterReadings: true },
-      { requireAuth: true }
-    );
-    if (!permissionCheck.success) {
+    if (!session?.user) {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Authentication required' },
         { status: 401 }
       );
     }
+
+    // For reading meter readings, allow all authenticated users to view their own data
+    // No additional permission check needed for GET operations
 
     // Parse and validate query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -62,8 +60,8 @@ export async function GET(request: NextRequest) {
     const where: any = {};
 
     // Non-admin users can only see their own readings
-    if (permissionCheck.user!.role !== 'ADMIN') {
-      where.userId = permissionCheck.user!.id;
+    if (session.user.role !== 'ADMIN') {
+      where.userId = session.user.id;
     } else if (userId) {
       where.userId = userId;
     }
@@ -120,16 +118,23 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    // Check authentication and permissions
-    const permissionCheck = checkPermissions(
-      session,
-      { canAddMeterReadings: true },
-      { requireAuth: true }
-    );
-    if (!permissionCheck.success) {
+    // Check authentication
+    if (!session?.user) {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    // Check permissions
+    const userPermissions = session.user.role === 'ADMIN' 
+      ? ADMIN_PERMISSIONS 
+      : mergeWithDefaultPermissions(session.user.permissions || {});
+    
+    if (!hasPermission(userPermissions, 'canAddMeterReadings')) {
+      return NextResponse.json(
+        { message: 'Permission denied' },
+        { status: 403 }
       );
     }
 
@@ -144,37 +149,49 @@ export async function POST(request: NextRequest) {
     }
 
     const { reading, readingDate, notes } = validation.data;
-    const userId = permissionCheck.user!.id;
+    const userId = session.user.id;
 
     // Convert readingDate to Date object (start of day in UTC)
     const dateObj = new Date(readingDate + 'T00:00:00.000Z');
 
-    // Validate chronological order - reading must be >= previous reading
-    const previousReading = await prisma.meterReading.findFirst({
+    // Validate chronological order - reading must be >= most recent reading
+    // For same-day readings, also check against readings from the same day
+    const mostRecentReading = await prisma.meterReading.findFirst({
       where: {
         userId,
-        readingDate: {
-          lt: dateObj,
-        },
+        OR: [
+          {
+            readingDate: {
+              lt: dateObj,
+            },
+          },
+          {
+            readingDate: dateObj,
+            reading: {
+              lte: reading, // Allow equal or higher readings on the same day
+            },
+          },
+        ],
       },
-      orderBy: {
-        readingDate: 'desc',
-      },
+      orderBy: [
+        { readingDate: 'desc' },
+        { reading: 'desc' }, // Highest reading for the same day
+      ],
     });
 
-    if (previousReading && reading < previousReading.reading) {
+    if (mostRecentReading && reading < mostRecentReading.reading) {
       return NextResponse.json(
         { 
-          message: `Reading must be greater than or equal to previous reading (${previousReading.reading.toFixed(2)} on ${previousReading.readingDate.toISOString().split('T')[0]})`,
+          message: `Reading must be greater than or equal to most recent reading (${mostRecentReading.reading.toFixed(2)} on ${mostRecentReading.readingDate.toISOString().split('T')[0]})`,
         },
         { status: 400 }
       );
     }
 
-    // Historical consumption validation
-    if (previousReading) {
-      const currentConsumption = reading - previousReading.reading;
-      const daysBetween = Math.ceil((dateObj.getTime() - previousReading.readingDate.getTime()) / (1000 * 60 * 60 * 24));
+    // Historical consumption validation (only for different days)
+    if (mostRecentReading && mostRecentReading.readingDate.getTime() !== dateObj.getTime()) {
+      const currentConsumption = reading - mostRecentReading.reading;
+      const daysBetween = Math.ceil((dateObj.getTime() - mostRecentReading.readingDate.getTime()) / (1000 * 60 * 60 * 24));
       const dailyConsumption = daysBetween > 0 ? currentConsumption / daysBetween : currentConsumption;
 
       // Get historical consumption data for validation
@@ -307,7 +324,7 @@ export async function POST(request: NextRequest) {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
-        userId: permissionCheck.user!.id,
+        userId: session.user.id,
         action: 'CREATE',
         entityType: 'MeterReading',
         entityId: meterReading.id,
@@ -318,14 +335,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(meterReading, { status: 201 });
   } catch (error) {
     console.error('Error creating meter reading:', error);
-    
-    // Handle unique constraint violation (duplicate date for user)
-    if (error instanceof Error && error.message.includes('Unique constraint')) {
-      return NextResponse.json(
-        { message: 'A meter reading already exists for this date' },
-        { status: 400 }
-      );
-    }
 
     return NextResponse.json(
       { message: 'Internal server error' },

@@ -7,7 +7,7 @@ import { ThemeToggleCompact } from './theme-toggle-compact';
 import { User, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { NavigationFormButton } from './navigation-form-button';
-import { navigateToDashboard, navigateToAdmin, navigateToUserManagement, navigateToHelp } from '@/app/actions/navigation';
+import { navigateToDashboard, navigateToAdmin, navigateToUserManagement, navigateToHelp, navigateToProfile } from '@/app/actions/navigation';
 
 interface ResponsiveNavProps {
   title: string;
@@ -130,6 +130,13 @@ export function ResponsiveNav({
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
                     >
                       Dashboard
+                    </NavigationFormButton>
+
+                    <NavigationFormButton
+                      action={navigateToProfile}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                    >
+                      Profile & Settings
                     </NavigationFormButton>
 
                     {isAdmin && (

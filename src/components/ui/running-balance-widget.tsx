@@ -14,6 +14,11 @@ interface BalanceData {
   lastWeekContributed: number;
   consumptionTrend: 'increasing' | 'decreasing' | 'stable';
   trendPercentage: number;
+  // New fields for anticipated payment
+  tokensConsumedSinceLastContribution: number;
+  estimatedCostSinceLastContribution: number;
+  anticipatedPayment: number;
+  historicalCostPerKwh: number;
 }
 
 export function RunningBalanceWidget() {
@@ -28,9 +33,14 @@ export function RunningBalanceWidget() {
     try {
       setLoading(true);
       const response = await fetch('/api/dashboard/running-balance');
+      console.log('Running balance API response status:', response.status);
       if (response.ok) {
         const result = await response.json();
+        console.log('Running balance API data:', result);
         setData(result);
+      } else {
+        const errorText = await response.text();
+        console.error('Running balance API error:', response.status, errorText);
       }
     } catch (error) {
       console.error('Failed to fetch balance data:', error);
@@ -110,9 +120,9 @@ export function RunningBalanceWidget() {
   const getStatusMessage = () => {
     switch (data.status) {
       case 'healthy':
-        return data.contributionBalance >= 0 ? 'Has credit' : 'Balanced';
+        return data.contributionBalance >= 0 ? 'Credit available' : 'Balanced';
       case 'warning':
-        return 'Owes money';
+        return 'Amount owed';
       case 'critical':
         return 'Significant debt';
       default:
@@ -124,7 +134,7 @@ export function RunningBalanceWidget() {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Running Balance
+          Account Balance
         </h3>
         <div className="flex items-center space-x-2">
           {getStatusIcon()}
@@ -135,20 +145,78 @@ export function RunningBalanceWidget() {
       </div>
 
       <div className="space-y-4">
-        {/* Contribution Balance */}
+        {/* Account Balance */}
         <div className="text-center py-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
           <div className={`text-3xl font-bold mb-1 ${
             data.contributionBalance >= 0 
               ? 'text-green-600 dark:text-green-400' 
               : 'text-red-600 dark:text-red-400'
           }`}>
-            {data.contributionBalance >= 0 ? '+' : ''}${data.contributionBalance.toFixed(2)}
+            {data.contributionBalance < 0 ? '-' : ''}${Math.abs(data.contributionBalance).toFixed(2)}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Contribution Balance
+            Account Balance
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-            {data.contributionBalance >= 0 ? 'Credit available' : 'Amount owed'}
+          <div className={`text-xs mt-1 ${
+            data.contributionBalance >= 0 
+              ? 'text-green-600 dark:text-green-400' 
+              : 'text-red-600 dark:text-red-400'
+          }`}>
+            {data.contributionBalance >= 0 ? 'credit' : 'owed'}
+          </div>
+        </div>
+        
+        {/* Anticipated Next Payment */}
+        <div className="text-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div className={`text-2xl font-bold mb-1 ${
+            data.anticipatedPayment < 0 
+              ? 'text-red-700 dark:text-red-400' 
+              : 'text-green-700 dark:text-green-400'
+          }`}>
+            {data.anticipatedPayment < 0 ? '-' : ''}${Math.abs(data.anticipatedPayment).toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Anticipated Next Payment
+          </div>
+          <div className={`text-xs mt-1 ${
+            data.anticipatedPayment < 0 
+              ? 'text-red-600 dark:text-red-300' 
+              : 'text-green-600 dark:text-green-300'
+          }`}>
+            {data.anticipatedPayment < 0 ? 'payment due' : 'credit expected'}
+          </div>
+        </div>
+
+        {/* Usage Since Last Contribution */}
+        <div className="py-3 px-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+          <div className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
+            Usage Since Last Contribution
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-orange-600 dark:text-orange-300">
+                Tokens Consumed
+              </span>
+              <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                {data.tokensConsumedSinceLastContribution.toFixed(1)} kWh
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-orange-600 dark:text-orange-300">
+                Estimated Cost
+              </span>
+              <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                ${data.estimatedCostSinceLastContribution.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-orange-600 dark:text-orange-300">
+                Rate (Historical Avg)
+              </span>
+              <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                ${data.historicalCostPerKwh.toFixed(3)}/kWh
+              </span>
+            </div>
           </div>
         </div>
 

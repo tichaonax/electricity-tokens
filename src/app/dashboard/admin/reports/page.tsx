@@ -119,31 +119,31 @@ export default function SystemReports() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <nav className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <button
                 onClick={() => router.push('/dashboard/admin')}
-                className="mr-4 p-2 text-gray-600 hover:text-gray-900"
+                className="mr-4 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 System Reports
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
+              <span className="text-gray-700 dark:text-gray-300">
                 Welcome, {session.user?.name}
               </span>
-              <span className="text-sm text-gray-500 bg-red-100 px-2 py-1 rounded">
+              <span className="text-sm text-gray-500 dark:text-gray-400 bg-red-100 dark:bg-red-900 px-2 py-1 rounded">
                 ADMIN
               </span>
               <button
                 onClick={() => router.push('/dashboard')}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                className="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium"
               >
                 Back to Dashboard
               </button>
@@ -155,22 +155,22 @@ export default function SystemReports() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">System Reports</h2>
-            <p className="text-gray-600">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">System Reports</h2>
+            <p className="text-gray-600 dark:text-gray-400">
               Comprehensive system analytics, performance metrics, and usage statistics.
             </p>
           </div>
 
           {error && (
-            <Alert className="mb-6 border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <Alert className="mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+              <AlertDescription className="text-red-800 dark:text-red-200">{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Report Controls */}
-          <Card className="mb-6">
+          <Card className="mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
                 <Calendar className="h-5 w-5 mr-2" />
                 Report Configuration
               </CardTitle>
@@ -178,13 +178,13 @@ export default function SystemReports() {
             <CardContent>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                 <div className="flex items-center space-x-4">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Report Period:
                   </label>
                   <select
                     value={reportPeriod}
                     onChange={(e) => setReportPeriod(e.target.value as any)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     disabled={loading}
                   >
                     <option value="week">Last Week</option>
@@ -197,14 +197,14 @@ export default function SystemReports() {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => exportReport('csv')}
-                    className="flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                    className="flex items-center px-3 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600"
                   >
                     <Download className="h-4 w-4 mr-1" />
                     CSV
                   </button>
                   <button
                     onClick={() => exportReport('pdf')}
-                    className="flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
+                    className="flex items-center px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
                   >
                     <Download className="h-4 w-4 mr-1" />
                     PDF
@@ -216,61 +216,61 @@ export default function SystemReports() {
 
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {loading ? '...' : stats.totalUsers.toLocaleString()}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Active users in period
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Purchases</CardTitle>
+                <FileText className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {loading ? '...' : stats.totalPurchases.toLocaleString()}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Token purchases made
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {loading ? '...' : `$${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Total payment processed
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">System Uptime</CardTitle>
+                <TrendingUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {loading ? '...' : `${stats.systemUptime}%`}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Availability percentage
                 </p>
               </CardContent>
@@ -279,39 +279,39 @@ export default function SystemReports() {
 
           {/* Detailed Statistics */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
+                <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
                   <Database className="h-5 w-5 mr-2" />
                   Usage Statistics
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
                   Token consumption and user behavior metrics
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Total Tokens Consumed</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Tokens Consumed</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : stats.totalTokens.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Average Usage per User</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Average Usage per User</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : `${stats.averageUsagePerUser} tokens`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Emergency Purchase Rate</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Emergency Purchase Rate</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : `${stats.emergencyPurchaseRate}%`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Average Cost per kWh</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Average Cost per kWh</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : `$${(stats.totalRevenue / stats.totalTokens || 0).toFixed(4)}`}
                     </span>
                   </div>
@@ -319,39 +319,39 @@ export default function SystemReports() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
+                <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
                   <TrendingUp className="h-5 w-5 mr-2" />
                   Performance Metrics
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
                   System performance and growth indicators
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Data Growth Rate</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Data Growth Rate</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : `+${stats.dataGrowthRate}%`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Average Purchases per User</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Average Purchases per User</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : (stats.totalPurchases / stats.totalUsers || 0).toFixed(1)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">System Response Time</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">System Response Time</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : '< 200ms'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Database Size</span>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Database Size</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {loading ? '...' : '2.3 GB'}
                     </span>
                   </div>
@@ -361,21 +361,21 @@ export default function SystemReports() {
           </div>
 
           {/* Report Summary */}
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
                 <FileText className="h-5 w-5 mr-2" />
                 Report Summary
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-600 dark:text-gray-400">
                 Key insights and recommendations for the selected period
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-                  <h4 className="font-medium text-blue-900 mb-2">Usage Trends</h4>
-                  <p className="text-sm text-blue-800">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-200 mb-2">Usage Trends</h4>
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
                     {stats.averageUsagePerUser > 150 
                       ? `High usage detected with an average of ${stats.averageUsagePerUser} tokens per user. Consider promoting energy efficiency.`
                       : `Usage levels are within normal range at ${stats.averageUsagePerUser} tokens per user.`
@@ -383,9 +383,9 @@ export default function SystemReports() {
                   </p>
                 </div>
                 
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <h4 className="font-medium text-yellow-900 mb-2">Emergency Purchases</h4>
-                  <p className="text-sm text-yellow-800">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                  <h4 className="font-medium text-yellow-900 dark:text-yellow-200 mb-2">Emergency Purchases</h4>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     {stats.emergencyPurchaseRate > 15
                       ? `Emergency purchase rate is ${stats.emergencyPurchaseRate}%, which is above the recommended 15%. Consider improving purchase planning.`
                       : `Emergency purchase rate of ${stats.emergencyPurchaseRate}% is within acceptable limits.`
@@ -393,9 +393,9 @@ export default function SystemReports() {
                   </p>
                 </div>
                 
-                <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-                  <h4 className="font-medium text-green-900 mb-2">System Performance</h4>
-                  <p className="text-sm text-green-800">
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                  <h4 className="font-medium text-green-900 dark:text-green-200 mb-2">System Performance</h4>
+                  <p className="text-sm text-green-800 dark:text-green-300">
                     System uptime of {stats.systemUptime}% exceeds the target of 99.5%. All performance metrics are within normal parameters.
                   </p>
                 </div>

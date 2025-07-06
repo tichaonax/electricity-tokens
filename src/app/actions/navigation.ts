@@ -76,6 +76,10 @@ export async function navigateToHelp() {
   redirect('/help');
 }
 
+export async function navigateToProfile() {
+  redirect('/dashboard/profile');
+}
+
 // Reports navigation actions
 export async function navigateToUsageReports() {
   redirect('/dashboard/reports/usage');

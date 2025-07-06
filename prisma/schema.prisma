@@ -14,15 +14,16 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  password    String?
-  role        Role     @default(USER)
-  locked      Boolean  @default(false)
-  permissions Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  name                  String
+  password              String?
+  role                  Role     @default(USER)
+  locked                Boolean  @default(false)
+  passwordResetRequired Boolean  @default(false)
+  permissions           Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   // Relations
   contributions     UserContribution[]
@@ -138,8 +139,8 @@ model MeterReading {
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Ensure chronological order - one reading per user per day
-  @@unique([userId, readingDate])
+  // Index for efficient querying by user and date
+  @@index([userId, readingDate])
   @@map("meter_readings")
 }
 

@@ -91,6 +91,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           permissions: user.permissions,
+          passwordResetRequired: user.passwordResetRequired,
         };
       },
     }),
@@ -100,6 +101,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.permissions = user.permissions;
+        token.passwordResetRequired = user.passwordResetRequired;
       }
       return token;
     },
@@ -108,6 +110,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub!;
         session.user.role = token.role as string;
         session.user.permissions = token.permissions;
+        session.user.passwordResetRequired = token.passwordResetRequired;
       }
       return session;
     },

@@ -47,6 +47,9 @@ export const userPermissionsSchema = z.object({
   canImportData: z.boolean(),
 });
 
+// Note: Email is intentionally NOT included in updateUserSchema
+// Email addresses cannot be changed for security and identity integrity reasons
+// Users must create a new account if they need to use a different email address
 export const updateUserSchema = z
   .object({
     name: z

@@ -235,7 +235,7 @@ export function ContributionsClient() {
             <div className="flex items-center space-x-2 sm:space-x-4">
               <NavigationFormButton
                 action={navigateToNewContribution}
-                className="flex items-center gap-1 sm:gap-2 border border-gray-300 px-2 sm:px-4 py-2 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm text-gray-900 dark:text-gray-100"
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">New Contribution</span>
@@ -286,7 +286,7 @@ export function ContributionsClient() {
               <div className="mt-6">
                 <NavigationFormButton
                   action={navigateToNewContribution}
-                  className="flex items-center gap-2 border border-gray-300 px-4 py-2 rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-gray-900 dark:text-gray-100"
                 >
                   <Plus className="h-4 w-4" />
                   New Contribution

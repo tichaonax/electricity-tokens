@@ -14,6 +14,7 @@ import {
   User,
   ChevronRight,
   HelpCircle,
+  UserCog,
 } from 'lucide-react';
 import { Badge } from './badge';
 import { NavigationFormButton } from './navigation-form-button';
@@ -27,7 +28,8 @@ import {
   navigateToUserManagement,
   navigateToSecurityDashboard,
   navigateToAuditTrail,
-  navigateToHelp
+  navigateToHelp,
+  navigateToProfile
 } from '@/app/actions/navigation';
 import { ThemeToggle } from './theme-toggle';
 
@@ -52,6 +54,11 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
       icon: Home,
       label: 'Dashboard',
       action: navigateToDashboard,
+    },
+    {
+      icon: UserCog,
+      label: 'Profile & Settings',
+      action: navigateToProfile,
     },
     {
       icon: FileText,

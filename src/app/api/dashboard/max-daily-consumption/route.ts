@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    
     const now = new Date();
     const today = startOfDay(now);
     const yesterday = startOfDay(subDays(now, 1));
@@ -29,24 +30,44 @@ export async function GET(request: NextRequest) {
       orderBy: { readingDate: 'desc' },
     });
 
-    // Calculate daily consumption from consecutive meter readings
+    // Group readings by day and get maximum reading per day
+    const dailyMaxReadings = new Map<string, { reading: number; date: Date }>();
+    
+    // Group readings by day
+    for (const reading of meterReadings) {
+      const dayKey = startOfDay(reading.readingDate).toISOString();
+      const existing = dailyMaxReadings.get(dayKey);
+      
+      if (!existing || reading.reading > existing.reading) {
+        dailyMaxReadings.set(dayKey, {
+          reading: reading.reading,
+          date: reading.readingDate,
+        });
+      }
+    }
+
+    // Convert to sorted array for consumption calculation
+    const sortedDailyReadings = Array.from(dailyMaxReadings.entries())
+      .sort(([, a], [, b]) => b.date.getTime() - a.date.getTime())
+      .map(([dayKey, data]) => ({ dayKey, ...data }));
+
+    // Calculate daily consumption from consecutive daily maximum readings
     const dailyConsumption = new Map<string, number>();
     const weekdayConsumption: number[] = [];
     const weekendConsumption: number[] = [];
     
-    // Process consecutive meter readings to calculate daily usage
-    for (let i = 0; i < meterReadings.length - 1; i++) {
-      const currentReading = meterReadings[i];
-      const previousReading = meterReadings[i + 1];
+    // Process consecutive daily maximum readings to calculate daily usage
+    for (let i = 0; i < sortedDailyReadings.length - 1; i++) {
+      const currentDay = sortedDailyReadings[i];
+      const previousDay = sortedDailyReadings[i + 1];
       
-      // Calculate consumption for the current reading date
-      const consumption = currentReading.reading - previousReading.reading;
+      // Calculate consumption for the current day
+      const consumption = currentDay.reading - previousDay.reading;
       
       if (consumption >= 0) { // Only count positive consumption
-        const day = startOfDay(currentReading.readingDate).toISOString();
-        dailyConsumption.set(day, consumption);
+        dailyConsumption.set(currentDay.dayKey, consumption);
 
-        if (isWeekend(currentReading.readingDate)) {
+        if (isWeekend(currentDay.date)) {
           weekendConsumption.push(consumption);
         } else {
           weekdayConsumption.push(consumption);
@@ -172,8 +193,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching max daily consumption data:', error);
+    
+    // Return a more specific error message
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch consumption data' },
+      { error: 'Failed to fetch consumption data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

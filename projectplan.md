@@ -306,6 +306,105 @@ The system uses a sophisticated cost calculation engine (`/src/lib/cost-calculat
 
 ---
 
-**Last Updated**: July 5, 2025  
+## 🔍 Wrapper Components Analysis and Removal Plan (July 6, 2025)
+
+### Project Goal
+Identify and remove unnecessary wrapper components in the codebase that serve as simple abstraction layers without adding significant value. This will simplify the codebase and reduce unnecessary indirection.
+
+### Analysis Summary
+
+After searching through the codebase, I've identified several wrapper components that can be simplified by direct imports:
+
+#### 1. Confirmed Wrapper Components Found
+
+**A. Client Components (Unnecessarily Complex)**
+- **`dashboard-client.tsx`** - Used by `/src/app/dashboard/page.tsx`
+- **`cost-analysis-client.tsx`** - Used by `/src/app/dashboard/cost-analysis/page.tsx`  
+- **`contributions-client.tsx`** - Used by `/src/app/dashboard/contributions/page.tsx`
+- **`data-management-client.tsx`** - Used by `/src/app/dashboard/data-management/page.tsx`
+- **`new-contribution-client.tsx`** - Used by `/src/app/dashboard/contributions/new/page.tsx`
+
+**B. Wrapper Components (Dynamic Import Wrappers)**
+- **`dashboard-wrapper.tsx`** - Dynamically imports `DashboardClient` with SSR disabled
+- **`cost-analysis-wrapper.tsx`** - Dynamically imports `CostAnalysisClient` with SSR disabled
+
+#### 2. Pages Using Wrapper Components
+
+All of these pages are simple one-liner imports that could be simplified:
+
+1. `/src/app/dashboard/page.tsx` → imports `DashboardClient`
+2. `/src/app/dashboard/cost-analysis/page.tsx` → imports `CostAnalysisClient`
+3. `/src/app/dashboard/contributions/page.tsx` → imports `ContributionsClient`
+4. `/src/app/dashboard/data-management/page.tsx` → imports `DataManagementClient`
+5. `/src/app/dashboard/contributions/new/page.tsx` → imports `NewContributionClient`
+
+#### 3. Underlying Components That Could Be Used Directly
+
+- **`cost-analysis.tsx`** - The actual implementation used by `CostAnalysisClient`
+- Main dashboard functionality is embedded in `DashboardClient` (no separate component)
+- Contribution functionality is embedded in `ContributionsClient` (no separate component)
+- Data management functionality is embedded in `DataManagementClient` (no separate component)
+- New contribution functionality is embedded in `NewContributionClient` (no separate component)
+
+#### 4. Simplification Opportunities
+
+The main simplification opportunity is with:
+- **Cost Analysis**: We can use `CostAnalysis` component directly instead of `CostAnalysisClient`
+- **Wrapper files**: Remove the `-wrapper.tsx` files entirely as they're not being used
+- **Client files**: For most client files, they serve as page-level components that handle session management and routing
+
+### Todo Items
+
+- [ ] **Remove unused wrapper files** - Delete `dashboard-wrapper.tsx` and `cost-analysis-wrapper.tsx` (they're not being used)
+- [ ] **Simplify cost analysis page** - Replace `CostAnalysisClient` import with direct `CostAnalysis` component usage
+- [ ] **Evaluate client components** - Determine if the session management and routing logic in client components should be moved to page level
+- [ ] **Update imports** - Update page files to use simplified imports
+- [ ] **Test functionality** - Ensure all pages work correctly after simplification
+- [ ] **Clean up unused files** - Remove any wrapper component files that are no longer needed
+
+### Direct Import Alternatives
+
+**For Cost Analysis:**
+**Current:**
+```tsx
+import { CostAnalysisClient } from '@/components/cost-analysis-client';
+```
+
+**Alternative:**
+```tsx
+import { CostAnalysis } from '@/components/cost-analysis';
+// Add session management and navigation directly in page
+```
+
+**For Other Components:**
+Most other "client" components contain significant page-level logic (session management, routing, navigation) that may be appropriate to keep at the component level. However, they could potentially be simplified by:
+
+1. Moving session logic to page level
+2. Using the underlying business logic components directly
+3. Reducing the abstraction layers
+
+### Recommendation
+
+**Phase 1 (Low Risk):**
+- Remove unused wrapper files (`dashboard-wrapper.tsx`, `cost-analysis-wrapper.tsx`)
+- Simplify cost analysis page to use `CostAnalysis` directly
+
+**Phase 2 (Medium Risk):**
+- Evaluate whether client components' session/routing logic should be moved to page level
+- Consider if the abstraction provided by client components is valuable
+
+**Phase 3 (Optional):**
+- If client components are determined to be unnecessary wrappers, move their logic to page components and use business logic components directly
+
+### Implementation Notes
+
+- All changes should be tested to ensure functionality remains intact
+- Session management and authentication logic should be preserved
+- Navigation functionality must be maintained
+- Consider the SSR implications when removing dynamic imports
+
+---
+
+**Last Updated**: July 6, 2025  
 **Status**: ✅ COMPLETE - Production Ready  
-**Next Phase**: Maintenance and user support
+**Next Phase**: Wrapper component simplification and maintenance

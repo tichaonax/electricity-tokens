@@ -22,37 +22,26 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     // Check authentication
-    const permissionCheck = checkPermissions(
-      session,
-      {},
-      { requireAuth: true }
-    );
-    if (!permissionCheck.success) {
+    if (!session?.user) {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    // Validate query parameters
-    const validation = await validateRequest(request, {
-      query: usageReportQuerySchema,
-    });
+    // Parse query parameters manually
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') as 'monthly-trends' | 'cost-analysis' | 'user-comparison' | 'emergency-impact';
+    const startDate = searchParams.get('startDate') || undefined;
+    const endDate = searchParams.get('endDate') || undefined;
+    const userId = searchParams.get('userId') || undefined;
 
-    if (!validation.success) {
-      return createValidationErrorResponse(validation);
+    if (!type || !['monthly-trends', 'cost-analysis', 'user-comparison', 'emergency-impact'].includes(type)) {
+      return NextResponse.json(
+        { message: 'Invalid or missing report type' },
+        { status: 400 }
+      );
     }
-
-    const { query } = validation.data as {
-      query: {
-        type: 'monthly-trends' | 'cost-analysis' | 'user-comparison' | 'emergency-impact';
-        startDate?: string;
-        endDate?: string;
-        userId?: string;
-      };
-    };
-
-    const { type, startDate, endDate, userId } = query;
     console.log('Usage report params:', { type, startDate, endDate, userId });
 
     let data;

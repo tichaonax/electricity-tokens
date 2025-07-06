@@ -6,16 +6,19 @@ declare module 'next-auth' {
     user: {
       id: string;
       role: string;
+      passwordResetRequired?: boolean;
     } & DefaultSession['user'];
   }
 
   interface User extends DefaultUser {
     role: string;
+    passwordResetRequired?: boolean;
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     role: string;
+    passwordResetRequired?: boolean;
   }
 }

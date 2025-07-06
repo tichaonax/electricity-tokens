@@ -71,17 +71,6 @@ export default function MeterReadingsPage() {
     }
   }, [status]);
 
-  // Trigger validation when reading or date changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (newReading.reading && newReading.readingDate) {
-        validateReading();
-      }
-    }, 500); // Debounce validation
-
-    return () => clearTimeout(timeoutId);
-  }, [newReading.reading, newReading.readingDate, validateReading]);
-
   const fetchMeterReadings = async () => {
     try {
       setLoading(true);
@@ -132,6 +121,17 @@ export default function MeterReadingsPage() {
       setValidating(false);
     }
   }, [newReading.reading, newReading.readingDate]);
+
+  // Trigger validation when reading or date changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (newReading.reading && newReading.readingDate) {
+        validateReading();
+      }
+    }, 500); // Debounce validation
+
+    return () => clearTimeout(timeoutId);
+  }, [newReading.reading, newReading.readingDate, validateReading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -299,7 +299,7 @@ export default function MeterReadingsPage() {
               </p>
             </div>
             {!showAddForm && (
-              <Button onClick={() => setShowAddForm(true)}>
+              <Button variant="outline" onClick={() => setShowAddForm(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Reading
               </Button>
@@ -453,7 +453,7 @@ export default function MeterReadingsPage() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button type="submit">
+                  <Button type="submit" variant="outline">
                     {editingId ? 'Update Reading' : 'Add Reading'}
                   </Button>
                   <Button type="button" variant="outline" onClick={cancelEdit}>
@@ -476,7 +476,7 @@ export default function MeterReadingsPage() {
                   Start tracking your electricity usage by adding your first meter reading.
                 </p>
                 {!showAddForm && (
-                  <Button onClick={() => setShowAddForm(true)}>
+                  <Button variant="outline" onClick={() => setShowAddForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Reading
                   </Button>
