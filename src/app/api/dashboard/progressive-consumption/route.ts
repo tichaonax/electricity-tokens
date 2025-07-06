@@ -128,6 +128,49 @@ export async function GET() {
     const previousCostPerKwh =
       previousConsumed > 0 ? previousContributed / previousConsumed : 0;
 
+    // Get historical data since beginning of time
+    const allPurchases = await prisma.tokenPurchase.findMany({
+      select: {
+        totalTokens: true,
+        totalPayment: true,
+      },
+    });
+
+    const allContributions = await prisma.userContribution.findMany({
+      select: {
+        tokensConsumed: true,
+        contributionAmount: true,
+        purchase: {
+          select: {
+            totalTokens: true,
+            totalPayment: true,
+          },
+        },
+      },
+    });
+
+    // Calculate totals since beginning of time
+    const totalPurchasedTokens = allPurchases.reduce(
+      (sum, purchase) => sum + purchase.totalTokens,
+      0
+    );
+    const totalPurchasedCost = allPurchases.reduce(
+      (sum, purchase) => sum + purchase.totalPayment,
+      0
+    );
+
+    const totalConsumedTokens = allContributions.reduce(
+      (sum, contrib) => sum + contrib.tokensConsumed,
+      0
+    );
+    const totalConsumedCost = allContributions.reduce(
+      (sum, contrib) => sum + contrib.contributionAmount,
+      0
+    );
+
+    const averageCostPerKwhAllTime =
+      totalConsumedTokens > 0 ? totalConsumedCost / totalConsumedTokens : 0;
+
     // Calculate trend
     let trend: 'up' | 'down' | 'stable' = 'stable';
     let trendPercentage = 0;
@@ -169,6 +212,13 @@ export async function GET() {
       },
       trend,
       trendPercentage,
+      historical: {
+        totalPurchasedTokens,
+        totalPurchasedCost,
+        totalConsumedTokens,
+        totalConsumedCost,
+        averageCostPerKwhAllTime,
+      },
     };
 
     return NextResponse.json(response);
