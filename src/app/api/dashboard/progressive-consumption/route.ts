@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -12,17 +12,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = session.user.id;
     const now = new Date();
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
     const previousMonthStart = startOfMonth(subMonths(now, 1));
     const previousMonthEnd = endOfMonth(subMonths(now, 1));
 
-    // Get current month contributions (user's usage of shared purchases)
+    // Get meter readings to calculate actual consumption for both months
+    const allMeterReadings = await prisma.meterReading.findMany({
+      where: {
+        readingDate: {
+          gte: previousMonthStart,
+          lte: currentMonthEnd,
+        },
+      },
+      select: {
+        reading: true,
+        readingDate: true,
+      },
+      orderBy: { readingDate: 'asc' },
+    });
+
+    // Get global contributions for cost calculations
     const currentMonthContributions = await prisma.userContribution.findMany({
       where: {
-        userId,
         createdAt: {
           gte: currentMonthStart,
           lte: currentMonthEnd,
@@ -34,10 +47,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Get previous month contributions
     const previousMonthContributions = await prisma.userContribution.findMany({
       where: {
-        userId,
         createdAt: {
           gte: previousMonthStart,
           lte: previousMonthEnd,
@@ -49,24 +60,83 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Calculate totals from contributions
-    const currentConsumed = currentMonthContributions.reduce((sum, contrib) => sum + contrib.tokensConsumed, 0);
-    const previousConsumed = previousMonthContributions.reduce((sum, contrib) => sum + contrib.tokensConsumed, 0);
-    const currentContributed = currentMonthContributions.reduce((sum, contrib) => sum + contrib.contributionAmount, 0);
-    const previousContributed = previousMonthContributions.reduce((sum, contrib) => sum + contrib.contributionAmount, 0);
+    // Find meter readings at month boundaries
+    const currentMonthReadings = allMeterReadings.filter(
+      (r) => r.readingDate >= currentMonthStart
+    );
+    const previousMonthReadings = allMeterReadings.filter(
+      (r) =>
+        r.readingDate >= previousMonthStart && r.readingDate < currentMonthStart
+    );
+
+    // Calculate consumption for current month (July)
+    let currentConsumed = 0;
+    if (currentMonthReadings.length >= 1) {
+      // Get baseline reading from end of previous month or first reading of current month
+      const firstCurrentReading = currentMonthReadings[0];
+      const lastCurrentReading =
+        currentMonthReadings[currentMonthReadings.length - 1];
+
+      // Find the reading closest to the start of current month for baseline
+      const baselineReading =
+        allMeterReadings.find((r) => r.readingDate < currentMonthStart) ||
+        firstCurrentReading;
+
+      if (baselineReading && currentMonthReadings.length > 0) {
+        currentConsumed = lastCurrentReading.reading - baselineReading.reading;
+      }
+    }
+
+    // Calculate consumption for previous month (June)
+    let previousConsumed = 0;
+    if (previousMonthReadings.length >= 1) {
+      // Get baseline reading from end of month before previous month
+      const firstPreviousReading = previousMonthReadings[0];
+      const lastPreviousReading =
+        previousMonthReadings[previousMonthReadings.length - 1];
+
+      // Find the reading closest to the start of previous month for baseline
+      const baselineReading =
+        allMeterReadings.find((r) => r.readingDate < previousMonthStart) ||
+        firstPreviousReading;
+
+      if (baselineReading) {
+        previousConsumed =
+          lastPreviousReading.reading - baselineReading.reading;
+      }
+    } else {
+      // Fallback to contributions data
+      previousConsumed = previousMonthContributions.reduce(
+        (sum, contrib) => sum + contrib.tokensConsumed,
+        0
+      );
+    }
+
+    // Calculate cost totals from contributions (global)
+    const currentContributed = currentMonthContributions.reduce(
+      (sum, contrib) => sum + contrib.contributionAmount,
+      0
+    );
+    const previousContributed = previousMonthContributions.reduce(
+      (sum, contrib) => sum + contrib.contributionAmount,
+      0
+    );
 
     // Calculate cost per kWh trends
-    const currentCostPerKwh = currentConsumed > 0 ? currentContributed / currentConsumed : 0;
-    const previousCostPerKwh = previousConsumed > 0 ? previousContributed / previousConsumed : 0;
-    
+    const currentCostPerKwh =
+      currentConsumed > 0 ? currentContributed / currentConsumed : 0;
+    const previousCostPerKwh =
+      previousConsumed > 0 ? previousContributed / previousConsumed : 0;
+
     // Calculate trend
     let trend: 'up' | 'down' | 'stable' = 'stable';
     let trendPercentage = 0;
 
     if (previousConsumed > 0) {
-      const consumptionChange = ((currentConsumed - previousConsumed) / previousConsumed) * 100;
+      const consumptionChange =
+        ((currentConsumed - previousConsumed) / previousConsumed) * 100;
       trendPercentage = consumptionChange;
-      
+
       if (Math.abs(consumptionChange) < 5) {
         trend = 'stable';
       } else if (consumptionChange > 0) {
@@ -80,9 +150,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Format current month period
-    const currentPeriod = now.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
+    const currentPeriod = now.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
     });
 
     const response = {
