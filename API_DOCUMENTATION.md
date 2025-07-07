@@ -101,6 +101,137 @@ Authorization: Bearer <session-token>
 }
 ```
 
+## Permissions System
+
+The application implements a comprehensive role-based permission system that controls access to various features and data. Users can have fine-grained permissions that determine what actions they can perform within the system.
+
+### Permission Structure
+
+User permissions are stored as a JSON object in the `permissions` field of the User model. Each permission is a boolean flag that grants or denies access to specific functionality.
+
+### Available Permissions
+
+#### Purchase Management
+
+- `canAddPurchases`: Can create new token purchases
+- `canEditPurchases`: Can modify existing purchases
+- `canDeletePurchases`: Can delete purchases
+
+#### Contribution Management
+
+- `canAddContributions`: Can create new user contributions
+- `canEditContributions`: Can modify existing contributions
+- `canDeleteContributions`: Can delete contributions
+
+#### Meter Reading Management
+
+- `canAddMeterReadings`: Can record new meter readings
+
+#### Reports Access
+
+- `canViewUsageReports`: Can access usage analytics and reports
+- `canViewFinancialReports`: Can view financial summaries and reports
+- `canViewEfficiencyReports`: Can access efficiency analysis reports
+
+#### Personal Dashboard
+
+- `canViewPersonalDashboard`: Can access the personal dashboard
+- `canViewCostAnalysis`: Can view cost analysis features
+- `canViewAccountBalance`: Can view account balance information _(New)_
+
+#### Data Management
+
+- `canExportData`: Can export system data
+- `canImportData`: Can import data into the system
+
+### Default Permission Sets
+
+#### Regular Users (DEFAULT_USER_PERMISSIONS)
+
+```json
+{
+  "canAddPurchases": true,
+  "canEditPurchases": false,
+  "canDeletePurchases": false,
+  "canAddContributions": true,
+  "canEditContributions": true,
+  "canDeleteContributions": false,
+  "canAddMeterReadings": false,
+  "canViewUsageReports": true,
+  "canViewFinancialReports": true,
+  "canViewEfficiencyReports": false,
+  "canViewPersonalDashboard": true,
+  "canViewCostAnalysis": true,
+  "canViewAccountBalance": false,
+  "canExportData": false,
+  "canImportData": false
+}
+```
+
+#### Admin Users (ADMIN_PERMISSIONS)
+
+Administrators automatically receive all permissions set to `true`.
+
+#### Read-Only Users (READ_ONLY_PERMISSIONS)
+
+```json
+{
+  "canAddPurchases": false,
+  "canEditPurchases": false,
+  "canDeletePurchases": false,
+  "canAddContributions": false,
+  "canEditContributions": false,
+  "canDeleteContributions": false,
+  "canAddMeterReadings": false,
+  "canViewUsageReports": true,
+  "canViewFinancialReports": true,
+  "canViewEfficiencyReports": false,
+  "canViewPersonalDashboard": true,
+  "canViewCostAnalysis": true,
+  "canViewAccountBalance": false,
+  "canExportData": false,
+  "canImportData": false
+}
+```
+
+#### Contributor-Only Users (CONTRIBUTOR_ONLY_PERMISSIONS)
+
+```json
+{
+  "canAddPurchases": false,
+  "canEditPurchases": false,
+  "canDeletePurchases": false,
+  "canAddContributions": true,
+  "canEditContributions": true,
+  "canDeleteContributions": false,
+  "canAddMeterReadings": false,
+  "canViewUsageReports": false,
+  "canViewFinancialReports": false,
+  "canViewEfficiencyReports": false,
+  "canViewPersonalDashboard": true,
+  "canViewCostAnalysis": false,
+  "canViewAccountBalance": false,
+  "canExportData": false,
+  "canImportData": false
+}
+```
+
+### Permission Inheritance
+
+- **Admin Role**: Automatically has all permissions regardless of the `permissions` field
+- **User Role**: Uses custom permissions if set, otherwise falls back to `DEFAULT_USER_PERMISSIONS`
+- **Unauthenticated**: No permissions granted
+
+### Account Balance Permission
+
+The `canViewAccountBalance` permission was added to control visibility of account balance information on the dashboard. This sensitive financial information is now restricted by default for regular users and must be explicitly granted by an administrator.
+
+**Impact:**
+
+- Regular users will not see the "Account Balance" badge on their dashboard by default
+- Administrators retain full access to all financial information
+- This permission can be granted individually to trusted users who need balance visibility
+
 ## API Endpoints
 
 ### Authentication Endpoints
@@ -849,7 +980,7 @@ This endpoint provides real-time account balance information and smart predictio
   "contributionBalance": -4.75,
   "totalContributed": 77.0,
   "totalConsumed": 288.0,
-  "totalFairShareCost": 81.60,
+  "totalFairShareCost": 81.6,
   "averageDaily": 9.6,
   "status": "warning",
   "lastWeekConsumption": 0.0,
@@ -867,26 +998,27 @@ This endpoint provides real-time account balance information and smart predictio
 
 **Response Fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `contributionBalance` | number | Current account balance (negative = debt, positive = credit) |
-| `totalContributed` | number | Total amount user has contributed to date |
-| `totalConsumed` | number | Total kWh consumed by user |
-| `totalFairShareCost` | number | What user should have paid based on consumption |
-| `averageDaily` | number | Average daily consumption in kWh |
-| `status` | string | Balance status: "healthy", "warning", or "critical" |
-| `lastWeekConsumption` | number | kWh consumed in the last 7 days |
-| `lastWeekContributed` | number | Amount contributed in the last 7 days |
-| `consumptionTrend` | string | Usage trend: "increasing", "decreasing", or "stable" |
-| `trendPercentage` | number | Percentage change in consumption trend |
-| `tokensConsumedSinceLastContribution` | number | kWh used since last token purchase |
-| `estimatedCostSinceLastContribution` | number | Cost of usage since last purchase (negative = cost) |
-| `anticipatedPayment` | number | **NEW:** Predicted amount user needs to pay |
-| `historicalCostPerKwh` | number | **NEW:** Average historical rate per kWh |
-| `anticipatedOthersPayment` | number | **NEW:** Predicted amount others will contribute |
-| `anticipatedTokenPurchase` | number | **NEW:** Total recommended token purchase amount |
+| Field                                 | Type   | Description                                                  |
+| ------------------------------------- | ------ | ------------------------------------------------------------ |
+| `contributionBalance`                 | number | Current account balance (negative = debt, positive = credit) |
+| `totalContributed`                    | number | Total amount user has contributed to date                    |
+| `totalConsumed`                       | number | Total kWh consumed by user                                   |
+| `totalFairShareCost`                  | number | What user should have paid based on consumption              |
+| `averageDaily`                        | number | Average daily consumption in kWh                             |
+| `status`                              | string | Balance status: "healthy", "warning", or "critical"          |
+| `lastWeekConsumption`                 | number | kWh consumed in the last 7 days                              |
+| `lastWeekContributed`                 | number | Amount contributed in the last 7 days                        |
+| `consumptionTrend`                    | string | Usage trend: "increasing", "decreasing", or "stable"         |
+| `trendPercentage`                     | number | Percentage change in consumption trend                       |
+| `tokensConsumedSinceLastContribution` | number | kWh used since last token purchase                           |
+| `estimatedCostSinceLastContribution`  | number | Cost of usage since last purchase (negative = cost)          |
+| `anticipatedPayment`                  | number | **NEW:** Predicted amount user needs to pay                  |
+| `historicalCostPerKwh`                | number | **NEW:** Average historical rate per kWh                     |
+| `anticipatedOthersPayment`            | number | **NEW:** Predicted amount others will contribute             |
+| `anticipatedTokenPurchase`            | number | **NEW:** Total recommended token purchase amount             |
 
 **Anticipated Payment Algorithm:**
+
 - `anticipatedPayment = contributionBalance + estimatedCostSinceLastContribution`
 - `anticipatedOthersPayment = estimatedCostSinceLastContribution × (othersHistoricalUsage ÷ userHistoricalFairShare)`
 - `anticipatedTokenPurchase = anticipatedPayment + anticipatedOthersPayment`

@@ -4,24 +4,25 @@ export interface UserPermissions {
   canAddPurchases: boolean;
   canEditPurchases: boolean;
   canDeletePurchases: boolean;
-  
+
   // Contribution Management
   canAddContributions: boolean;
   canEditContributions: boolean;
   canDeleteContributions: boolean;
-  
+
   // Meter Reading Management
   canAddMeterReadings: boolean;
-  
+
   // Reports Access
   canViewUsageReports: boolean;
   canViewFinancialReports: boolean;
   canViewEfficiencyReports: boolean;
-  
+
   // Personal Dashboard
   canViewPersonalDashboard: boolean;
   canViewCostAnalysis: boolean;
-  
+  canViewAccountBalance: boolean;
+
   // Data Management
   canExportData: boolean;
   canImportData: boolean;
@@ -33,24 +34,25 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   canAddPurchases: true,
   canEditPurchases: false,
   canDeletePurchases: false,
-  
+
   // Contribution Management - Full access
   canAddContributions: true,
   canEditContributions: true,
   canDeleteContributions: false,
-  
+
   // Meter Reading Management - No access by default
   canAddMeterReadings: false,
-  
+
   // Reports Access - Basic access
   canViewUsageReports: true,
   canViewFinancialReports: true,
   canViewEfficiencyReports: false,
-  
-  // Personal Dashboard - Full access
+
+  // Personal Dashboard - Limited access for regular users
   canViewPersonalDashboard: true,
   canViewCostAnalysis: true,
-  
+  canViewAccountBalance: false, // Account balance restricted by default
+
   // Data Management - No access by default
   canExportData: false,
   canImportData: false,
@@ -70,6 +72,7 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canViewEfficiencyReports: true,
   canViewPersonalDashboard: true,
   canViewCostAnalysis: true,
+  canViewAccountBalance: true,
   canExportData: true,
   canImportData: true,
 };
@@ -88,6 +91,7 @@ export const READ_ONLY_PERMISSIONS: UserPermissions = {
   canViewEfficiencyReports: false,
   canViewPersonalDashboard: true,
   canViewCostAnalysis: true,
+  canViewAccountBalance: false, // Restricted access to balance
   canExportData: false,
   canImportData: false,
 };
@@ -106,12 +110,15 @@ export const CONTRIBUTOR_ONLY_PERMISSIONS: UserPermissions = {
   canViewEfficiencyReports: false,
   canViewPersonalDashboard: true,
   canViewCostAnalysis: false,
+  canViewAccountBalance: false, // No balance access for contributors
   canExportData: false,
   canImportData: false,
 };
 
 // Helper function to merge permissions with defaults
-export function mergeWithDefaultPermissions(userPermissions?: Partial<UserPermissions>): UserPermissions {
+export function mergeWithDefaultPermissions(
+  userPermissions?: Partial<UserPermissions>
+): UserPermissions {
   return {
     ...DEFAULT_USER_PERMISSIONS,
     ...userPermissions,
@@ -119,7 +126,10 @@ export function mergeWithDefaultPermissions(userPermissions?: Partial<UserPermis
 }
 
 // Helper function to check if user has specific permission
-export function hasPermission(userPermissions: UserPermissions | null | undefined, permission: keyof UserPermissions): boolean {
+export function hasPermission(
+  userPermissions: UserPermissions | null | undefined,
+  permission: keyof UserPermissions
+): boolean {
   if (!userPermissions) return false;
   return userPermissions[permission] === true;
 }
@@ -127,7 +137,7 @@ export function hasPermission(userPermissions: UserPermissions | null | undefine
 // Permission groups for easy admin selection
 export const PERMISSION_PRESETS = {
   'full-access': ADMIN_PERMISSIONS,
-  'default': DEFAULT_USER_PERMISSIONS,
+  default: DEFAULT_USER_PERMISSIONS,
   'read-only': READ_ONLY_PERMISSIONS,
   'contributor-only': CONTRIBUTOR_ONLY_PERMISSIONS,
 } as const;

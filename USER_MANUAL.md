@@ -30,6 +30,7 @@ Electricity Tokens Tracker is a modern web application designed to help househol
 ### First Login
 
 After logging in, you'll see your **Dashboard** with:
+
 - Quick overview of recent activity
 - Current contribution status
 - System notifications
@@ -42,23 +43,29 @@ After logging in, you'll see your **Dashboard** with:
 ### Main Dashboard Sections
 
 #### **Recent Activity**
+
 - Shows your latest contributions and purchases
 - Quick links to add new contributions
 - Status indicators for pending actions
 
 #### **Current Status**
+
 - Total tokens consumed this month
 - Amount contributed vs. expected
-- Balance (overpaid/underpaid)
+- Balance (overpaid/underpaid) - _Requires permission from admin_
 - Usage trends
 
-#### **Anticipated Payment Predictions** 
+> **Note**: The account balance information is now restricted by default for regular users. If you don't see the balance badge on your dashboard, ask an administrator to grant you the "View Account Balance" permission.
+
+#### **Anticipated Payment Predictions**
+
 - **Smart Token Purchase Estimation**: Based on current usage and historical patterns
 - **Your Next Payment**: Predicted amount you'll need to contribute
 - **Others' Expected Payment**: Estimated contribution from other household members
 - **Total Token Purchase**: Recommended purchase amount for the household
 
 #### **Quick Actions**
+
 - Add contribution to recent purchase
 - View purchase history
 - Access reports and analytics
@@ -67,6 +74,7 @@ After logging in, you'll see your **Dashboard** with:
 ### Navigation Menu
 
 **For Regular Users:**
+
 - 🏠 **Dashboard**: Main overview
 - 💰 **Purchase Form**: Create new token purchases
 - 📝 **Contribute**: Add your meter readings and payments
@@ -74,6 +82,7 @@ After logging in, you'll see your **Dashboard** with:
 - 👤 **Profile**: Manage your account
 
 **For Admin Users (Additional):**
+
 - 👥 **Admin Panel**: User and system management
 - 🔧 **Settings**: System configuration
 - 📋 **Audit Logs**: Complete activity history
@@ -88,6 +97,7 @@ After logging in, you'll see your **Dashboard** with:
 ### When to Create a Purchase
 
 Create a new purchase when:
+
 - You buy electricity tokens from your utility provider
 - The household needs to reload the meter
 - Planning for upcoming electricity needs
@@ -99,23 +109,23 @@ Create a new purchase when:
    - Or use the "+" button on the dashboard
 
 2. **Enter Purchase Details**:
-   
+
    **Total Tokens**: Number of tokens purchased (kWh)
    - Example: 100 (for 100 kWh)
    - Must be a positive number
-   
+
    **Total Payment**: Amount paid in dollars
    - Example: 150.50
    - Include any taxes or fees
-   
+
    **Meter Reading**: Current meter reading when purchase was made
    - Example: 5000
    - This is the starting point for consumption calculation
-   
+
    **Purchase Date**: When the purchase was made
    - Use the date picker
    - Defaults to today
-   
+
    **Emergency Purchase**: Check if this was an emergency purchase
    - Emergency purchases typically cost more
    - Used for cost analysis and optimization
@@ -128,6 +138,7 @@ Create a new purchase when:
 ### Purchase Validation Rules
 
 The system enforces these rules:
+
 - **Sequential meter readings**: Each new purchase must have a higher meter reading than the previous one
 - **Positive values**: All amounts must be greater than zero
 - **Reasonable limits**: Maximum 100,000 tokens and $1,000,000 payment
@@ -140,6 +151,7 @@ The system enforces these rules:
 ### Understanding Contributions
 
 After someone creates a purchase, each household member needs to:
+
 1. **Record their meter reading** when they check it
 2. **Calculate their fair share** based on actual consumption
 3. **Pay their contribution** to the person who made the purchase
@@ -160,7 +172,7 @@ After someone creates a purchase, each household member needs to:
    **Current Meter Reading**: The meter reading you see now
    - Example: 5025 (if purchase was at 5000, you used 25 kWh)
    - Must be higher than the purchase meter reading
-   
+
    **Your Contribution Amount**: How much you're paying
    - System calculates suggested amount based on usage
    - You can adjust if there are special arrangements
@@ -196,19 +208,21 @@ The Electricity Tokens Tracker includes smart prediction functionality that help
 The system uses a **proportional scaling algorithm** based on:
 
 1. **Your current usage** since the last token purchase
-2. **Your historical consumption patterns** 
+2. **Your historical consumption patterns**
 3. **Others' historical usage patterns** in the household
 4. **Your current account balance** (credit or debt)
 
 ### The Three Prediction Sections
 
 #### **🔵 Anticipated Next Payment**
+
 - **What it shows**: How much you'll likely need to contribute to the next token purchase
 - **Calculation**: Your current balance + your estimated usage cost
 - **Example**: If you owe $4.75 and have used $6.97 worth of electricity, your anticipated payment is $11.72
 - **Use it for**: Planning your personal budget for electricity costs
 
-#### **🟣 Anticipated Others Payment** 
+#### **🟣 Anticipated Others Payment**
+
 - **What it shows**: How much other household members will likely contribute
 - **Calculation**: Based on proportional scaling of their historical usage vs. your current usage
 - **Formula**: `Your current cost × (Others' historical usage ÷ Your historical fair share)`
@@ -216,6 +230,7 @@ The system uses a **proportional scaling algorithm** based on:
 - **Use it for**: Estimating how much others should contribute when planning purchases
 
 #### **🟠 Anticipated Token Purchase**
+
 - **What it shows**: Total recommended token purchase amount for the household
 - **Calculation**: Your anticipated payment + Others' anticipated payment
 - **Example**: $11.72 + $10.33 = $22.05 total needed
@@ -224,16 +239,19 @@ The system uses a **proportional scaling algorithm** based on:
 ### Practical Benefits
 
 **📈 Better Planning**:
+
 - Know exactly how much to budget for electricity
 - Plan token purchases before running out
 - Avoid emergency purchases at higher rates
 
 **⚖️ Fair Cost Sharing**:
+
 - Transparent calculations based on actual usage patterns
 - Everyone pays proportional to their consumption
 - Clear visibility into expected contributions
 
 **💰 Cost Optimization**:
+
 - Buy the right amount of tokens - not too little, not too much
 - Coordinate household purchases more effectively
 - Reduce waste from unused tokens
@@ -241,14 +259,17 @@ The system uses a **proportional scaling algorithm** based on:
 ### Reading the Predictions
 
 **Negative Values** (shown in red):
+
 - Represent money that needs to be paid
 - Example: -$11.72 means you need to pay $11.72
 
 **Positive Values** (shown in green):
+
 - Represent credit or overpayment
 - Example: +$5.00 means you have a $5 credit
 
 **Status Indicators**:
+
 - **Payment due**: You need to contribute money
 - **Credit expected**: You have overpaid and have credit
 - **Contribution due**: Others need to pay their share
@@ -256,6 +277,7 @@ The system uses a **proportional scaling algorithm** based on:
 ### Example Scenario
 
 **Current Situation**:
+
 - You have a -$4.75 balance (you owe money)
 - You've used 24.6 kWh since last purchase (worth $6.97)
 - Historical total purchases: $202.50
@@ -263,8 +285,9 @@ The system uses a **proportional scaling algorithm** based on:
 - Others' historical usage: $120.90
 
 **Predictions**:
+
 - **Your Next Payment**: -$4.75 + (-$6.97) = **-$11.72**
-- **Others Payment**: -$6.97 × ($120.90 ÷ $81.60) = **-$10.33**  
+- **Others Payment**: -$6.97 × ($120.90 ÷ $81.60) = **-$10.33**
 - **Total Purchase Needed**: -$11.72 + (-$10.33) = **-$22.05**
 
 **Action**: Purchase approximately $22 worth of electricity tokens to cover everyone's usage.
@@ -272,16 +295,19 @@ The system uses a **proportional scaling algorithm** based on:
 ### Tips for Using Predictions
 
 **🎯 Plan Ahead**:
+
 - Check predictions weekly to plan purchases
 - Coordinate with household members based on predicted contributions
 - Use predictions to budget monthly electricity expenses
 
 **📊 Track Accuracy**:
+
 - Compare predictions to actual costs after purchases
 - Adjust usage patterns if predictions show concerning trends
 - Use historical data to improve future predictions
 
 **💡 Optimize Purchases**:
+
 - Buy tokens when predictions show need approaching
 - Avoid emergency purchases by planning with predictions
 - Consider bulk purchases when total predictions are high
@@ -295,18 +321,21 @@ The system uses a **proportional scaling algorithm** based on:
 Navigate to **Reports** in the main menu to access:
 
 #### **Usage Reports**
+
 - **Monthly Trends**: See your electricity consumption over time
 - **Cost Analysis**: Track spending patterns and efficiency
 - **Comparison**: How your usage compares to household average
 - **Emergency Impact**: Cost of emergency purchases vs. planned ones
 
 #### **Financial Reports**
+
 - **Payment Summary**: What you've paid vs. consumed
 - **Balance Analysis**: Are you overpaying or underpaying?
 - **Annual Overview**: Yearly spending and usage summary
 - **Cost Efficiency**: Rate per kWh trends
 
 #### **Efficiency Metrics**
+
 - **Usage Prediction**: AI-powered forecasting of future consumption
 - **Purchase Optimization**: Recommendations for timing and amounts
 - **Savings Opportunities**: Potential cost reductions
@@ -314,16 +343,19 @@ Navigate to **Reports** in the main menu to access:
 ### Understanding Your Reports
 
 #### **Monthly Usage Chart**
+
 - **Green bars**: Normal consumption months
 - **Red bars**: High consumption (check for inefficiencies)
 - **Trend line**: Shows whether usage is increasing or decreasing
 
 #### **Cost Per kWh**
+
 - **Lower is better**: More efficient purchasing
 - **Spikes indicate**: Emergency purchases or small bulk purchases
 - **Baseline rate**: Your utility's standard rate
 
 #### **Balance Tracking**
+
 - **Positive balance**: You've overpaid (others owe you)
 - **Negative balance**: You owe money to the group
 - **Zero balance**: Perfect contribution matching
@@ -344,6 +376,7 @@ Navigate to **Reports** in the main menu to access:
 ### Security Settings
 
 **Change Password**:
+
 1. Go to Profile → Security
 2. Enter current password
 3. Enter new password (minimum 8 characters)
@@ -351,6 +384,7 @@ Navigate to **Reports** in the main menu to access:
 5. Click "Update Password"
 
 **Session Management**:
+
 - View active sessions
 - Log out from other devices
 - Set session timeout preferences
@@ -360,6 +394,7 @@ Navigate to **Reports** in the main menu to access:
 ## 🌙 App Features
 
 ### Dark Mode
+
 - **Theme Options**: Light, Dark, or System (follows device preference)
 - **Desktop Toggle**: Click the theme icon in the top navigation bar
 - **Mobile Toggle**: Access through the mobile menu under "Settings"
@@ -368,11 +403,13 @@ Navigate to **Reports** in the main menu to access:
 - **Instant Application**: Changes apply immediately across the entire app
 
 ### Mobile App Features
+
 - **Add to Home Screen**: Install as PWA on mobile devices
 - **Offline Support**: Basic functionality works without internet
 - **Touch-Friendly**: Optimized for mobile interactions
 
 ### Accessibility
+
 - **Keyboard Navigation**: Full keyboard support
 - **Screen Reader**: Compatible with assistive technologies
 - **High Contrast**: Available in settings
@@ -385,12 +422,14 @@ Navigate to **Reports** in the main menu to access:
 ### Understanding Notifications
 
 **Dashboard Notifications**:
+
 - 🟢 **Success**: Actions completed successfully
 - 🟡 **Warning**: Attention needed (unusual meter readings, missing contributions)
 - 🔴 **Error**: Problems that need immediate attention
 - 🔵 **Info**: General information and tips
 
 **Common Notifications**:
+
 - "New purchase created" - Someone bought tokens
 - "Contribution needed" - You haven't contributed to a recent purchase
 - "Unusual meter reading" - Reading seems inconsistent
@@ -412,16 +451,19 @@ Navigate to **Reports** in the main menu to access:
 ### Best Practices
 
 **Regular Monitoring**:
+
 - Check your meter reading weekly
 - Contribute to purchases promptly
 - Review monthly reports to identify trends
 
 **Cost Optimization**:
+
 - **Buy in bulk**: Larger purchases often have better rates
 - **Avoid emergencies**: Plan purchases before running out
 - **Monitor usage**: High consumption periods affect everyone's costs
 
 **Household Coordination**:
+
 - **Communicate**: Discuss usage patterns and costs
 - **Plan together**: Coordinate purchases for better rates
 - **Be fair**: Contribute based on actual consumption
@@ -429,12 +471,14 @@ Navigate to **Reports** in the main menu to access:
 ### Understanding Your Electricity Bill
 
 **Rate Calculation**:
+
 ```
 Your Rate = Total Payment ÷ Tokens Used
 Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 ```
 
 **Example**:
+
 - Purchase: 100 tokens for $150
 - You used: 25 tokens
 - Your fair share: (25 ÷ 100) × $150 = $37.50
@@ -451,14 +495,16 @@ Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 ### Creating Backups
 
 **Backup Types Available**:
+
 1. **Full Backup**: Complete database including all users, purchases, contributions, and audit logs
 2. **Users Only**: Just user accounts and settings
 3. **Purchase Data**: Token purchases with their linked contributions (recommended for regular backups)
 
 **Steps to Create Backup**:
+
 1. **Go to Data Management**: Admin Panel → Data Management → Backup & Restore tab
 2. **Select Backup Type**: Choose from Full, Users Only, or Purchase Data
-3. **Choose Options**: 
+3. **Choose Options**:
    - For Full Backup: Optionally include audit logs (last 10,000 entries)
 4. **Click "Create Backup"**: Download will start automatically
 5. **Save Securely**: Store backup files in a secure location
@@ -470,6 +516,7 @@ Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 ⚠️ **Warning**: Restoring overwrites existing data and cannot be undone. Always create a current backup before restoring.
 
 **Steps to Restore**:
+
 1. **Go to Backup & Restore tab**
 2. **Upload Backup File**: Click "Choose File" and select a JSON backup
 3. **Review File Details**: System shows file size and content summary
@@ -480,12 +527,14 @@ Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 ### Data Export Options
 
 **Regular Export Features** (Available to all users):
+
 - **CSV Export**: For spreadsheet analysis
 - **JSON Export**: Complete data structure
 - **PDF Reports**: Professional formatted reports
 - **Date Filtering**: Export specific time periods
 
 **Admin Export Features**:
+
 - **User Data**: Complete user account information
 - **System Analytics**: Usage patterns and performance metrics
 - **Audit Trail**: Complete activity logs
@@ -493,18 +542,21 @@ Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 ### Best Practices
 
 **Regular Backup Schedule**:
+
 - **Daily**: Automatic purchase data backups
 - **Weekly**: Full system backup
 - **Monthly**: Archived backup stored off-site
 - **Before Updates**: Always backup before system changes
 
 **Backup Security**:
+
 - Store backups in multiple secure locations
 - Encrypt sensitive backup files
 - Test restore procedures periodically
 - Document backup and recovery procedures
 
 **When to Use Each Backup Type**:
+
 - **Full Backup**: Before major system changes, monthly archives
 - **Purchase Data**: Daily operational backups
 - **Users Only**: Before user management changes
@@ -586,17 +638,20 @@ A: Predictions are estimates based on historical data. Check that your meter rea
 ### Contacting Support
 
 **For Technical Issues**:
+
 - Note the exact error message
 - Include your browser and device type
 - Describe what you were trying to do
 - Screenshot the problem if possible
 
 **For Account Issues**:
+
 - Contact your household admin first
 - Provide your registered email address
 - Describe the specific problem
 
 **For Billing Questions**:
+
 - Review your contribution history in Reports
 - Check the balance tracking section
 - Verify meter readings are accurate
@@ -614,14 +669,14 @@ A: Predictions are estimates based on historical data. Check that your meter rea
 
 ### Common Tasks
 
-| Task | Navigation | Key Info |
-|------|------------|----------|
-| Add Purchase | Purchase Form | Need: tokens, cost, meter reading |
-| Contribute | Contribute | Need: current meter reading |
-| Check Balance | Dashboard | See overview section |
-| View Usage | Reports → Usage | Monthly trends and analysis |
-| Change Password | Profile → Security | Requires current password |
-| Contact Admin | Dashboard | Look for admin contact info |
+| Task            | Navigation         | Key Info                          |
+| --------------- | ------------------ | --------------------------------- |
+| Add Purchase    | Purchase Form      | Need: tokens, cost, meter reading |
+| Contribute      | Contribute         | Need: current meter reading       |
+| Check Balance   | Dashboard          | See overview section              |
+| View Usage      | Reports → Usage    | Monthly trends and analysis       |
+| Change Password | Profile → Security | Requires current password         |
+| Contact Admin   | Dashboard          | Look for admin contact info       |
 
 ### Important Numbers
 
@@ -633,6 +688,7 @@ A: Predictions are estimates based on historical data. Check that your meter rea
 ### Key Formulas
 
 **Basic Calculations**:
+
 ```
 Tokens Consumed = Current Reading - Purchase Reading
 Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
@@ -641,6 +697,7 @@ Your Rate = Your Payment ÷ Your Tokens
 ```
 
 **Anticipated Payment Predictions**:
+
 ```
 Your Anticipated Payment = Your Current Balance + Your Usage Cost Since Last Purchase
 Others' Anticipated Payment = Your Usage Cost × (Others' Historical Usage ÷ Your Historical Fair Share)

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   LineChart,
   Line,
@@ -89,6 +90,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { checkPermission } = usePermissions();
 
   useEffect(() => {
     fetchDashboardData();
@@ -531,20 +533,22 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           </div>
         </div>
 
-        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
-          <div className="flex justify-between items-center">
-            <span className="text-slate-600 dark:text-slate-400">
-              Account Balance:
-            </span>
-            <span
-              className={`font-medium ${data.personalSummary.overpayment >= 0 ? 'text-green-600' : 'text-red-600'}`}
-            >
-              {data.personalSummary.overpayment >= 0 ? '+' : ''}$
-              {data.personalSummary.overpayment.toFixed(2)}
-              {data.personalSummary.overpayment >= 0 ? ' credit' : ' owed'}
-            </span>
+        {checkPermission('canViewAccountBalance') && (
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600 dark:text-slate-400">
+                Account Balance:
+              </span>
+              <span
+                className={`font-medium ${data.personalSummary.overpayment >= 0 ? 'text-green-600' : 'text-red-600'}`}
+              >
+                {data.personalSummary.overpayment >= 0 ? '+' : ''}$
+                {data.personalSummary.overpayment.toFixed(2)}
+                {data.personalSummary.overpayment >= 0 ? ' credit' : ' owed'}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
           <div className="flex justify-between items-center">

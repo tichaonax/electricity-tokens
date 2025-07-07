@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
       backupData.users = users.map((user) => ({
         ...user,
         permissions:
-          (user.permissions as Record<string, unknown> | null) || undefined,
+          (user.permissions as Record<string, unknown> | null) || null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       }));
