@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { ArrowLeft, Clock, User, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,8 +12,8 @@ interface AuditLog {
   entityType: string;
   entityId: string;
   timestamp: string;
-  oldValues?: any;
-  newValues?: any;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
   user: {
     id: string;
     name: string;
@@ -21,7 +21,7 @@ interface AuditLog {
   };
 }
 
-export default function AuditLogsPage() {
+function AuditLogsContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,15 +44,15 @@ export default function AuditLogsPage() {
     if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
       fetchAuditLogs();
     }
-  }, [status, session, entityType, entityId]);
+  }, [status, session, entityType, entityId, fetchAuditLogs]);
 
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       if (entityType) params.append('entityType', entityType);
       if (entityId) params.append('entityId', entityId);
-      
+
       const response = await fetch(`/api/admin/audit-logs?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch audit logs');
@@ -60,13 +60,15 @@ export default function AuditLogsPage() {
       const data = await response.json();
       setAuditLogs(data.auditLogs || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch audit logs');
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch audit logs'
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [entityType, entityId]);
 
-  const formatValue = (value: any) => {
+  const formatValue = (value: unknown) => {
     if (value === null || value === undefined) return 'null';
     if (typeof value === 'object') return JSON.stringify(value, null, 2);
     return String(value);
@@ -128,10 +130,9 @@ export default function AuditLogsPage() {
               No audit logs found
             </h3>
             <p className="text-slate-600 dark:text-slate-400">
-              {entityType && entityId 
+              {entityType && entityId
                 ? 'No audit logs found for this specific entity.'
-                : 'No audit logs available.'
-              }
+                : 'No audit logs available.'}
             </p>
           </div>
         ) : (
@@ -144,12 +145,17 @@ export default function AuditLogsPage() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-full ${
-                      log.action === 'CREATE' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' :
-                      log.action === 'UPDATE' ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400' :
-                      log.action === 'DELETE' ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400' :
-                      'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
-                    }`}>
+                    <div
+                      className={`p-2 rounded-full ${
+                        log.action === 'CREATE'
+                          ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400'
+                          : log.action === 'UPDATE'
+                            ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400'
+                            : log.action === 'DELETE'
+                              ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'
+                              : 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'
+                      }`}
+                    >
                       <FileText className="h-4 w-4" />
                     </div>
                     <div>
@@ -204,5 +210,19 @@ export default function AuditLogsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AuditLogsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div>
+        </div>
+      }
+    >
+      <AuditLogsContent />
+    </Suspense>
   );
 }

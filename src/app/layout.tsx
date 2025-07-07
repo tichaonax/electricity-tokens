@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/session-provider';
@@ -29,8 +29,6 @@ export const metadata: Metadata = {
   description: 'Track and manage electricity usage with token-based billing',
   manifest: '/manifest.json',
   themeColor: '#4f46e5',
-  viewport:
-    'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   icons: {
     icon: [
       { url: '/icons/icon-32x32.svg', sizes: '32x32', type: 'image/svg+xml' },
@@ -63,6 +61,13 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'ET Tracker',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
