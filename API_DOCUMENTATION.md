@@ -837,28 +837,59 @@ Get personalized dashboard data for current user.
 
 #### GET /api/dashboard/running-balance
 
-Get comprehensive running balance data with anticipated payments.
+Get comprehensive running balance data with anticipated payment predictions.
+
+**Description:**
+This endpoint provides real-time account balance information and smart predictions for future token purchase costs based on current usage and historical patterns.
 
 **Response:**
 
 ```json
 {
-  "contributionBalance": -15.5,
-  "totalContributed": 450.0,
-  "totalConsumed": 465.5,
-  "totalFairShareCost": 465.5,
-  "averageDaily": 15.2,
+  "contributionBalance": -4.75,
+  "totalContributed": 77.0,
+  "totalConsumed": 288.0,
+  "totalFairShareCost": 81.60,
+  "averageDaily": 9.6,
   "status": "warning",
-  "lastWeekConsumption": 106.4,
+  "lastWeekConsumption": 0.0,
   "lastWeekContributed": 0.0,
-  "consumptionTrend": "increasing",
-  "trendPercentage": 12.5,
-  "tokensConsumedSinceLastContribution": 25.5,
-  "estimatedCostSinceLastContribution": 38.25,
-  "anticipatedPayment": -38.25,
-  "historicalCostPerKwh": 1.5
+  "consumptionTrend": "stable",
+  "trendPercentage": 0.0,
+  "tokensConsumedSinceLastContribution": 24.6,
+  "estimatedCostSinceLastContribution": -6.97,
+  "anticipatedPayment": -11.72,
+  "historicalCostPerKwh": 0.283,
+  "anticipatedOthersPayment": -10.33,
+  "anticipatedTokenPurchase": -22.05
 }
 ```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `contributionBalance` | number | Current account balance (negative = debt, positive = credit) |
+| `totalContributed` | number | Total amount user has contributed to date |
+| `totalConsumed` | number | Total kWh consumed by user |
+| `totalFairShareCost` | number | What user should have paid based on consumption |
+| `averageDaily` | number | Average daily consumption in kWh |
+| `status` | string | Balance status: "healthy", "warning", or "critical" |
+| `lastWeekConsumption` | number | kWh consumed in the last 7 days |
+| `lastWeekContributed` | number | Amount contributed in the last 7 days |
+| `consumptionTrend` | string | Usage trend: "increasing", "decreasing", or "stable" |
+| `trendPercentage` | number | Percentage change in consumption trend |
+| `tokensConsumedSinceLastContribution` | number | kWh used since last token purchase |
+| `estimatedCostSinceLastContribution` | number | Cost of usage since last purchase (negative = cost) |
+| `anticipatedPayment` | number | **NEW:** Predicted amount user needs to pay |
+| `historicalCostPerKwh` | number | **NEW:** Average historical rate per kWh |
+| `anticipatedOthersPayment` | number | **NEW:** Predicted amount others will contribute |
+| `anticipatedTokenPurchase` | number | **NEW:** Total recommended token purchase amount |
+
+**Anticipated Payment Algorithm:**
+- `anticipatedPayment = contributionBalance + estimatedCostSinceLastContribution`
+- `anticipatedOthersPayment = estimatedCostSinceLastContribution × (othersHistoricalUsage ÷ userHistoricalFairShare)`
+- `anticipatedTokenPurchase = anticipatedPayment + anticipatedOthersPayment`
 
 #### GET /api/contribution-progress
 

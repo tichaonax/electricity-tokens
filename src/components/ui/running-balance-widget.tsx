@@ -19,6 +19,9 @@ interface BalanceData {
   estimatedCostSinceLastContribution: number;
   anticipatedPayment: number;
   historicalCostPerKwh: number;
+  // NEW: Anticipated others payment fields
+  anticipatedOthersPayment: number;
+  anticipatedTokenPurchase: number;
 }
 
 export function RunningBalanceWidget() {
@@ -33,10 +36,8 @@ export function RunningBalanceWidget() {
     try {
       setLoading(true);
       const response = await fetch('/api/dashboard/running-balance');
-      console.log('Running balance API response status:', response.status);
       if (response.ok) {
         const result = await response.json();
-        console.log('Running balance API data:', result);
         setData(result);
       } else {
         const errorText = await response.text();
@@ -166,24 +167,76 @@ export function RunningBalanceWidget() {
           </div>
         </div>
         
-        {/* Anticipated Next Payment */}
-        <div className="text-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className={`text-2xl font-bold mb-1 ${
-            data.anticipatedPayment < 0 
-              ? 'text-red-700 dark:text-red-400' 
-              : 'text-green-700 dark:text-green-400'
-          }`}>
-            {data.anticipatedPayment < 0 ? '-' : ''}${Math.abs(data.anticipatedPayment).toFixed(2)}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Anticipated Next Payment
-          </div>
-          <div className={`text-xs mt-1 ${
-            data.anticipatedPayment < 0 
-              ? 'text-red-600 dark:text-red-300' 
-              : 'text-green-600 dark:text-green-300'
-          }`}>
-            {data.anticipatedPayment < 0 ? 'payment due' : 'credit expected'}
+        {/* NEW: Anticipated Payment Predictions Section - Similar to Historical Summary */}
+        <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-600 mt-4">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">
+            Anticipated Payment Analysis
+          </h4>
+
+          {/* Three Payment Predictions in Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Anticipated Next Payment */}
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className={`text-2xl font-bold mb-1 ${
+                data.anticipatedPayment < 0 
+                  ? 'text-red-700 dark:text-red-400' 
+                  : 'text-green-700 dark:text-green-400'
+              }`}>
+                {data.anticipatedPayment < 0 ? '-' : ''}${Math.abs(data.anticipatedPayment).toFixed(2)}
+              </div>
+              <div className="text-sm text-blue-600 dark:text-blue-300 mb-1">
+                Anticipated Next Payment
+              </div>
+              <div className={`text-xs ${
+                data.anticipatedPayment < 0 
+                  ? 'text-red-500 dark:text-red-400' 
+                  : 'text-green-500 dark:text-green-400'
+              }`}>
+                {data.anticipatedPayment < 0 ? 'payment due' : 'credit expected'}
+              </div>
+            </div>
+
+            {/* Anticipated Others Payment */}
+            <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div className={`text-2xl font-bold mb-1 ${
+                data.anticipatedOthersPayment < 0 
+                  ? 'text-red-700 dark:text-red-400' 
+                  : 'text-green-700 dark:text-green-400'
+              }`}>
+                {data.anticipatedOthersPayment < 0 ? '-' : ''}${Math.abs(data.anticipatedOthersPayment).toFixed(2)}
+              </div>
+              <div className="text-sm text-purple-600 dark:text-purple-300 mb-1">
+                Anticipated Others Payment
+              </div>
+              <div className={`text-xs ${
+                data.anticipatedOthersPayment < 0 
+                  ? 'text-red-500 dark:text-red-400' 
+                  : 'text-green-500 dark:text-green-400'
+              }`}>
+                {data.anticipatedOthersPayment < 0 ? 'contribution due' : 'credit expected'}
+              </div>
+            </div>
+
+            {/* Anticipated Token Purchase */}
+            <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+              <div className={`text-2xl font-bold mb-1 ${
+                data.anticipatedTokenPurchase < 0 
+                  ? 'text-red-700 dark:text-red-400' 
+                  : 'text-green-700 dark:text-green-400'
+              }`}>
+                {data.anticipatedTokenPurchase < 0 ? '-' : ''}${Math.abs(data.anticipatedTokenPurchase).toFixed(2)}
+              </div>
+              <div className="text-sm text-orange-600 dark:text-orange-300 mb-1">
+                Anticipated Token Purchase
+              </div>
+              <div className={`text-xs ${
+                data.anticipatedTokenPurchase < 0 
+                  ? 'text-red-500 dark:text-red-400' 
+                  : 'text-green-500 dark:text-green-400'
+              }`}>
+                {data.anticipatedTokenPurchase < 0 ? 'total amount' : 'total credit'}
+              </div>
+            </div>
           </div>
         </div>
 
