@@ -12,6 +12,9 @@ export interface BackupMetadata {
     userContributions: number;
     meterReadings: number;
     auditLogs: number;
+    accounts: number;
+    sessions: number;
+    verificationTokens: number;
   };
   checksums: {
     users: string;
@@ -19,6 +22,9 @@ export interface BackupMetadata {
     userContributions: string;
     meterReadings: string;
     auditLogs: string;
+    accounts: string;
+    sessions: string;
+    verificationTokens: string;
   };
 }
 
@@ -30,6 +36,9 @@ export interface BackupData {
     userContributions: Record<string, unknown>[];
     meterReadings: Record<string, unknown>[];
     auditLogs: Record<string, unknown>[];
+    accounts: Record<string, unknown>[];
+    sessions: Record<string, unknown>[];
+    verificationTokens: Record<string, unknown>[];
   };
 }
 
@@ -48,11 +57,23 @@ export class BackupService {
         userContributions,
         meterReadings,
         auditLogs,
+        accounts,
+        sessions,
+        verificationTokens,
       ] = await Promise.all([
         prisma.user.findMany({
-          include: {
-            accounts: true,
-            sessions: true,
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            role: true,
+            locked: true,
+            passwordResetRequired: true,
+            permissions: true,
+            themePreference: true,
+            createdAt: true,
+            updatedAt: true,
           },
         }),
         prisma.tokenPurchase.findMany({
@@ -74,6 +95,15 @@ export class BackupService {
           },
         }),
         prisma.meterReading.findMany({
+          select: {
+            id: true,
+            userId: true,
+            reading: true,
+            readingDate: true,
+            notes: true,
+            createdAt: true,
+            updatedAt: true,
+          },
           orderBy: { readingDate: 'asc' },
         }),
         prisma.auditLog.findMany({
@@ -83,6 +113,9 @@ export class BackupService {
             },
           },
         }),
+        prisma.account.findMany(),
+        prisma.session.findMany(),
+        prisma.verificationToken.findMany(),
       ]);
 
       // Calculate checksums for integrity verification
@@ -92,6 +125,9 @@ export class BackupService {
         userContributions: await this.calculateChecksum(userContributions),
         meterReadings: await this.calculateChecksum(meterReadings),
         auditLogs: await this.calculateChecksum(auditLogs),
+        accounts: await this.calculateChecksum(accounts),
+        sessions: await this.calculateChecksum(sessions),
+        verificationTokens: await this.calculateChecksum(verificationTokens),
       };
 
       // Create metadata
@@ -105,6 +141,9 @@ export class BackupService {
           userContributions,
           meterReadings,
           auditLogs,
+          accounts,
+          sessions,
+          verificationTokens,
         }).length,
         recordCounts: {
           users: users.length,
@@ -112,6 +151,9 @@ export class BackupService {
           userContributions: userContributions.length,
           meterReadings: meterReadings.length,
           auditLogs: auditLogs.length,
+          accounts: accounts.length,
+          sessions: sessions.length,
+          verificationTokens: verificationTokens.length,
         },
         checksums,
       };
@@ -124,6 +166,9 @@ export class BackupService {
           userContributions,
           meterReadings,
           auditLogs,
+          accounts,
+          sessions,
+          verificationTokens,
         },
       };
 
@@ -169,6 +214,9 @@ export class BackupService {
         userContributions,
         meterReadings,
         auditLogs,
+        accounts,
+        sessions,
+        verificationTokens,
       ] = await Promise.all([
         prisma.user.findMany({
           where: {
@@ -177,9 +225,18 @@ export class BackupService {
               { createdAt: { gte: sinceDate } },
             ],
           },
-          include: {
-            accounts: true,
-            sessions: true,
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            role: true,
+            locked: true,
+            passwordResetRequired: true,
+            permissions: true,
+            themePreference: true,
+            createdAt: true,
+            updatedAt: true,
           },
         }),
         prisma.tokenPurchase.findMany({
@@ -219,6 +276,15 @@ export class BackupService {
               { createdAt: { gte: sinceDate } },
             ],
           },
+          select: {
+            id: true,
+            userId: true,
+            reading: true,
+            readingDate: true,
+            notes: true,
+            createdAt: true,
+            updatedAt: true,
+          },
           orderBy: { readingDate: 'asc' },
         }),
         prisma.auditLog.findMany({
@@ -231,6 +297,31 @@ export class BackupService {
             },
           },
         }),
+        prisma.account.findMany({
+          where: {
+            user: {
+              OR: [
+                { updatedAt: { gte: sinceDate } },
+                { createdAt: { gte: sinceDate } },
+              ],
+            },
+          },
+        }),
+        prisma.session.findMany({
+          where: {
+            user: {
+              OR: [
+                { updatedAt: { gte: sinceDate } },
+                { createdAt: { gte: sinceDate } },
+              ],
+            },
+          },
+        }),
+        prisma.verificationToken.findMany({
+          where: {
+            expires: { gte: sinceDate },
+          },
+        }),
       ]);
 
       // Calculate checksums
@@ -240,6 +331,9 @@ export class BackupService {
         userContributions: await this.calculateChecksum(userContributions),
         meterReadings: await this.calculateChecksum(meterReadings),
         auditLogs: await this.calculateChecksum(auditLogs),
+        accounts: await this.calculateChecksum(accounts),
+        sessions: await this.calculateChecksum(sessions),
+        verificationTokens: await this.calculateChecksum(verificationTokens),
       };
 
       // Create metadata
@@ -253,6 +347,9 @@ export class BackupService {
           userContributions,
           meterReadings,
           auditLogs,
+          accounts,
+          sessions,
+          verificationTokens,
         }).length,
         recordCounts: {
           users: users.length,
@@ -260,6 +357,9 @@ export class BackupService {
           userContributions: userContributions.length,
           meterReadings: meterReadings.length,
           auditLogs: auditLogs.length,
+          accounts: accounts.length,
+          sessions: sessions.length,
+          verificationTokens: verificationTokens.length,
         },
         checksums,
       };
@@ -272,6 +372,9 @@ export class BackupService {
           userContributions,
           meterReadings,
           auditLogs,
+          accounts,
+          sessions,
+          verificationTokens,
         },
       };
 
@@ -318,6 +421,9 @@ export class BackupService {
         userContributions: backupData.data.userContributions.length,
         meterReadings: backupData.data.meterReadings.length,
         auditLogs: backupData.data.auditLogs.length,
+        accounts: backupData.data.accounts?.length || 0,
+        sessions: backupData.data.sessions?.length || 0,
+        verificationTokens: backupData.data.verificationTokens?.length || 0,
       };
 
       Object.entries(actualCounts).forEach(([table, count]) => {
@@ -347,16 +453,19 @@ export class BackupService {
 
       // Verify required fields exist
       const requiredFields = {
-        users: ['id', 'email', 'name'],
+        users: ['id', 'email', 'name', 'role', 'locked'],
         tokenPurchases: ['id', 'totalTokens', 'totalPayment', 'meterReading'],
         userContributions: ['id', 'purchaseId', 'userId', 'contributionAmount'],
-        meterReadings: ['id', 'reading', 'readingDate'],
+        meterReadings: ['id', 'userId', 'reading', 'readingDate'],
         auditLogs: ['id', 'userId', 'action', 'timestamp'],
+        accounts: ['id', 'userId', 'type', 'provider', 'providerAccountId'],
+        sessions: ['id', 'sessionToken', 'userId', 'expires'],
+        verificationTokens: ['identifier', 'token', 'expires'],
       };
 
       Object.entries(requiredFields).forEach(([table, fields]) => {
         const data = backupData.data[table as keyof typeof backupData.data];
-        if (data.length > 0) {
+        if (data && data.length > 0) {
           const firstRecord = data[0];
           fields.forEach((field) => {
             if (!(field in firstRecord)) {

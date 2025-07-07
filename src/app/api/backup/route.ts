@@ -22,8 +22,12 @@ interface BackupUser {
   id: string;
   email: string;
   name: string;
+  password?: string | null;
   role: 'ADMIN' | 'USER';
   locked: boolean;
+  passwordResetRequired: boolean;
+  permissions?: Record<string, unknown> | null;
+  themePreference?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -61,11 +65,40 @@ interface BackupContribution {
 
 interface BackupMeterReading {
   id: string;
+  userId: string;
   reading: number;
   readingDate: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface BackupAccount {
+  id: string;
+  userId: string;
+  type: string;
+  provider: string;
+  providerAccountId: string;
+  refresh_token?: string;
+  access_token?: string;
+  expires_at?: number;
+  token_type?: string;
+  scope?: string;
+  id_token?: string;
+  session_state?: string;
+}
+
+interface BackupSession {
+  id: string;
+  sessionToken: string;
+  userId: string;
+  expires: string;
+}
+
+interface BackupVerificationToken {
+  identifier: string;
+  token: string;
+  expires: string;
 }
 
 interface BackupData {
@@ -80,6 +113,9 @@ interface BackupData {
   userContributions?: BackupContribution[];
   meterReadings?: BackupMeterReading[];
   auditLogs?: Record<string, unknown>[];
+  accounts?: BackupAccount[];
+  sessions?: BackupSession[];
+  verificationTokens?: BackupVerificationToken[];
 }
 
 export async function GET(request: NextRequest) {
@@ -139,14 +175,19 @@ export async function GET(request: NextRequest) {
           id: true,
           email: true,
           name: true,
+          password: true,
           role: true,
           locked: true,
+          passwordResetRequired: true,
+          permissions: true,
+          themePreference: true,
           createdAt: true,
           updatedAt: true,
         },
       });
       backupData.users = users.map((user) => ({
         ...user,
+        permissions: user.permissions || undefined,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       }));
@@ -241,6 +282,7 @@ export async function GET(request: NextRequest) {
 
       backupData.meterReadings = meterReadings.map((reading) => ({
         id: reading.id,
+        userId: reading.userId,
         reading: reading.reading,
         readingDate: reading.readingDate.toISOString(),
         notes: reading.notes || undefined,
@@ -249,6 +291,50 @@ export async function GET(request: NextRequest) {
       }));
 
       backupData.metadata.recordCounts.meterReadings = meterReadings.length;
+    }
+
+    // Backup accounts (full backup only for security)
+    if (type === 'full') {
+      const accounts = await prisma.account.findMany();
+      backupData.accounts = accounts.map((account) => ({
+        id: account.id,
+        userId: account.userId,
+        type: account.type,
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+        refresh_token: account.refresh_token || undefined,
+        access_token: account.access_token || undefined,
+        expires_at: account.expires_at || undefined,
+        token_type: account.token_type || undefined,
+        scope: account.scope || undefined,
+        id_token: account.id_token || undefined,
+        session_state: account.session_state || undefined,
+      }));
+      backupData.metadata.recordCounts.accounts = accounts.length;
+    }
+
+    // Backup sessions (full backup only for security)
+    if (type === 'full') {
+      const sessions = await prisma.session.findMany();
+      backupData.sessions = sessions.map((session) => ({
+        id: session.id,
+        sessionToken: session.sessionToken,
+        userId: session.userId,
+        expires: session.expires.toISOString(),
+      }));
+      backupData.metadata.recordCounts.sessions = sessions.length;
+    }
+
+    // Backup verification tokens (full backup only for security)
+    if (type === 'full') {
+      const verificationTokens = await prisma.verificationToken.findMany();
+      backupData.verificationTokens = verificationTokens.map((token) => ({
+        identifier: token.identifier,
+        token: token.token,
+        expires: token.expires.toISOString(),
+      }));
+      backupData.metadata.recordCounts.verificationTokens =
+        verificationTokens.length;
     }
 
     // Backup audit logs (optional)
@@ -346,6 +432,9 @@ export async function POST(request: NextRequest) {
         userContributions: 0,
         meterReadings: 0,
         auditLogs: 0,
+        accounts: 0,
+        sessions: 0,
+        verificationTokens: 0,
       },
       errors: [] as string[],
     };
@@ -397,15 +486,23 @@ export async function POST(request: NextRequest) {
               where: { email: user.email },
               update: {
                 name: user.name,
+                password: user.password,
                 role: user.role,
                 locked: user.locked,
+                passwordResetRequired: user.passwordResetRequired,
+                permissions: user.permissions || null,
+                themePreference: user.themePreference,
               },
               create: {
                 id: user.id,
                 email: user.email,
                 name: user.name,
+                password: user.password,
                 role: user.role,
                 locked: user.locked,
+                passwordResetRequired: user.passwordResetRequired,
+                permissions: user.permissions || null,
+                themePreference: user.themePreference,
                 createdAt: new Date(user.createdAt),
                 updatedAt: new Date(user.updatedAt),
               },
@@ -526,6 +623,7 @@ export async function POST(request: NextRequest) {
               },
               create: {
                 id: reading.id,
+                userId: reading.userId,
                 reading: reading.reading,
                 readingDate: new Date(reading.readingDate),
                 notes: reading.notes,
@@ -537,6 +635,106 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             results.errors.push(
               `Failed to restore meter reading ${reading.id}: ${error}`
+            );
+          }
+        }
+      }
+
+      // Restore accounts
+      if (backupData.accounts) {
+        for (const account of backupData.accounts) {
+          try {
+            await tx.account.upsert({
+              where: {
+                provider_providerAccountId: {
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                },
+              },
+              update: {
+                type: account.type,
+                refresh_token: account.refresh_token,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state,
+              },
+              create: {
+                id: account.id,
+                userId: account.userId,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                refresh_token: account.refresh_token,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state,
+              },
+            });
+            results.restored.accounts++;
+          } catch (error) {
+            results.errors.push(
+              `Failed to restore account ${account.id}: ${error}`
+            );
+          }
+        }
+      }
+
+      // Restore sessions
+      if (backupData.sessions) {
+        for (const session of backupData.sessions) {
+          try {
+            await tx.session.upsert({
+              where: { sessionToken: session.sessionToken },
+              update: {
+                userId: session.userId,
+                expires: new Date(session.expires),
+              },
+              create: {
+                id: session.id,
+                sessionToken: session.sessionToken,
+                userId: session.userId,
+                expires: new Date(session.expires),
+              },
+            });
+            results.restored.sessions++;
+          } catch (error) {
+            results.errors.push(
+              `Failed to restore session ${session.id}: ${error}`
+            );
+          }
+        }
+      }
+
+      // Restore verification tokens
+      if (backupData.verificationTokens) {
+        for (const token of backupData.verificationTokens) {
+          try {
+            await tx.verificationToken.upsert({
+              where: {
+                identifier_token: {
+                  identifier: token.identifier,
+                  token: token.token,
+                },
+              },
+              update: {
+                expires: new Date(token.expires),
+              },
+              create: {
+                identifier: token.identifier,
+                token: token.token,
+                expires: new Date(token.expires),
+              },
+            });
+            results.restored.verificationTokens++;
+          } catch (error) {
+            results.errors.push(
+              `Failed to restore verification token ${token.identifier}: ${error}`
             );
           }
         }
