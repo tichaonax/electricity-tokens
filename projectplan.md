@@ -405,6 +405,81 @@ Most other "client" components contain significant page-level logic (session man
 
 ---
 
+## 🔍 Account Balance Calculation Investigation (July 6, 2025)
+
+### Problem Analysis
+The user reports incorrect account balance calculations after a new meter reading:
+- New meter reading: 1362 kWh (7/6/25)
+- Previous meter reading: 1348.5 kWh  
+- Consumption: 13.5 kWh
+- Account Balance shows: -$4.75 owed
+- Anticipated Next Payment shows: -$7.44
+
+The anticipated payment should be much higher since significant consumption (13.5+ kWh) just occurred.
+
+### Current Architecture Understanding
+
+#### Data Flow
+1. **MeterReading** table stores actual meter readings with dates
+2. **UserContribution** table stores consumption records linked to purchases
+3. **TokenPurchase** table stores token purchases with rates
+4. **Running Balance API** (`/api/dashboard/running-balance`) calculates account balance
+
+#### Key Issues Identified
+
+1. **Disconnect between MeterReading and UserContribution**:
+   - MeterReading stores actual readings (1362 kWh)
+   - UserContribution stores consumption at time of purchase/contribution
+   - No automatic linkage between latest meter reading and balance calculation
+
+2. **Running Balance Logic Problem**:
+   - Line 124-125 in `/src/app/api/dashboard/running-balance/route.ts`:
+   ```typescript
+   tokensConsumedSinceLastContribution = Math.max(0, latestMeterReading.reading - latestContribution.meterReading);
+   ```
+   - This correctly calculates consumption since last contribution
+   - But the anticipated payment calculation may have issues
+
+3. **Account Balance Calculation**:
+   - Uses global contributions (all users) instead of user-specific
+   - Line 22: `const contributions = await prisma.userContribution.findMany({` (no user filter)
+   - This is intentional for system-wide balance but may confuse users
+
+### Investigation Plan
+
+#### Phase 1: Data Verification
+- [ ] Check actual database values for the specific user
+- [ ] Verify meter reading 1362 kWh is recorded in MeterReading table
+- [ ] Check latest UserContribution record and its meterReading value
+- [ ] Verify calculation: 1362 - 1348.5 = 13.5 kWh consumption
+
+#### Phase 2: Logic Analysis
+- [ ] Trace through running balance calculation step by step
+- [ ] Verify `tokensConsumedSinceLastContribution` calculation
+- [ ] Check `estimatedCostSinceLastContribution` calculation  
+- [ ] Verify `anticipatedPayment` calculation logic
+
+#### Phase 3: Cost Calculation Review
+- [ ] Check `historicalCostPerKwh` calculation
+- [ ] Verify if 13.5 kWh × historical rate = expected cost
+- [ ] Check if balance calculation accounts for new consumption properly
+
+#### Phase 4: User-Specific vs Global Data
+- [ ] Determine if balance should be user-specific or global
+- [ ] Check if frontend properly handles the balance display
+- [ ] Verify if the issue is calculation or display
+
+### Files to Examine
+- `/src/app/api/dashboard/running-balance/route.ts` - Main balance calculation
+- `/src/components/ui/running-balance-widget.tsx` - Display component
+- `/src/lib/cost-calculations.ts` - Cost calculation utilities
+- Database records for the specific user
+
+### Expected Outcome
+Identify why the anticipated payment is -$7.44 instead of a higher amount that properly reflects the 13.5 kWh recent consumption.
+
+---
+
 **Last Updated**: July 6, 2025  
 **Status**: ✅ COMPLETE - Production Ready  
-**Next Phase**: Wrapper component simplification and maintenance
+**Next Phase**: Account balance investigation and wrapper component simplification

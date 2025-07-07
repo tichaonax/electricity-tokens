@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { hasPermission, mergeWithDefaultPermissions, ADMIN_PERMISSIONS } from '@/types/permissions';
+import { createAuditLog } from '@/lib/audit';
 
 // Validation schemas
 const createMeterReadingSchema = z.object({
@@ -13,11 +14,11 @@ const createMeterReadingSchema = z.object({
 });
 
 const queryMeterReadingsSchema = z.object({
-  page: z.coerce.number().min(1).optional().default(1),
-  limit: z.coerce.number().min(1).max(100).optional().default(10),
-  userId: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
+  page: z.string().nullable().transform(val => val ? Number(val) : 1).pipe(z.number().min(1)),
+  limit: z.string().nullable().transform(val => val ? Number(val) : 10).pipe(z.number().min(1).max(100)),
+  userId: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -59,10 +60,9 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const where: any = {};
 
-    // Non-admin users can only see their own readings
-    if (session.user.role !== 'ADMIN') {
-      where.userId = session.user.id;
-    } else if (userId) {
+    // Allow all users to see all meter readings (shared electricity system)
+    // Only apply userId filter if specifically requested via query parameter
+    if (userId) {
       where.userId = userId;
     }
 
@@ -89,15 +89,48 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { readingDate: 'desc' },
+        orderBy: [
+          { readingDate: 'desc' },
+          { createdAt: 'desc' } // Secondary sort by creation time for same-date readings
+        ],
         skip,
         take: limit,
       }),
       prisma.meterReading.count({ where }),
     ]);
 
+    // Get audit information for each meter reading
+    const meterReadingsWithAudit = await Promise.all(
+      meterReadings.map(async (reading) => {
+        // Get the most recent UPDATE audit log for this meter reading
+        const latestUpdateAudit = await prisma.auditLog.findFirst({
+          where: {
+            entityType: 'MeterReading',
+            entityId: reading.id,
+            action: 'UPDATE',
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: { timestamp: 'desc' },
+        });
+
+        return {
+          ...reading,
+          latestUpdateAudit,
+        };
+      })
+    );
+
+
     return NextResponse.json({
-      meterReadings,
+      meterReadings: meterReadingsWithAudit,
       pagination: {
         page,
         limit,
@@ -150,48 +183,133 @@ export async function POST(request: NextRequest) {
 
     const { reading, readingDate, notes } = validation.data;
     const userId = session.user.id;
+    
+    if (!userId) {
+      return NextResponse.json(
+        { message: 'User ID not found in session' },
+        { status: 401 }
+      );
+    }
 
     // Convert readingDate to Date object (start of day in UTC)
     const dateObj = new Date(readingDate + 'T00:00:00.000Z');
 
-    // Validate chronological order - reading must be >= most recent reading
-    // For same-day readings, also check against readings from the same day
-    const mostRecentReading = await prisma.meterReading.findFirst({
+    // Comprehensive chronological validation
+    
+    // Step 1: Get the maximum reading on the same date (if any) - GLOBAL across all users
+    const maxReadingOnSameDate = await prisma.meterReading.findFirst({
       where: {
-        userId,
-        OR: [
-          {
-            readingDate: {
-              lt: dateObj,
-            },
-          },
-          {
-            readingDate: dateObj,
-            reading: {
-              lte: reading, // Allow equal or higher readings on the same day
-            },
-          },
-        ],
+        readingDate: dateObj,
+      },
+      orderBy: {
+        reading: 'desc',
+      },
+    });
+
+    // Step 2: Get the most recent reading before this date - GLOBAL across all users
+    const mostRecentBeforeDate = await prisma.meterReading.findFirst({
+      where: {
+        readingDate: {
+          lt: dateObj,
+        },
       },
       orderBy: [
         { readingDate: 'desc' },
-        { reading: 'desc' }, // Highest reading for the same day
+        { reading: 'desc' },
       ],
     });
 
-    if (mostRecentReading && reading < mostRecentReading.reading) {
+    // Step 3: Get the earliest reading after this date - GLOBAL across all users
+    const earliestAfterDate = await prisma.meterReading.findFirst({
+      where: {
+        readingDate: {
+          gt: dateObj,
+        },
+      },
+      orderBy: [
+        { readingDate: 'asc' },
+        { reading: 'asc' },
+      ],
+    });
+
+    // Validation Rule 1: Must be >= maximum reading on the same date
+    if (maxReadingOnSameDate && reading < maxReadingOnSameDate.reading) {
       return NextResponse.json(
         { 
-          message: `Reading must be greater than or equal to most recent reading (${mostRecentReading.reading.toFixed(2)} on ${mostRecentReading.readingDate.toISOString().split('T')[0]})`,
+          message: `Reading must be greater than or equal to the highest reading on the same date (${maxReadingOnSameDate.reading.toFixed(2)})`,
         },
         { status: 400 }
       );
     }
 
+    // Validation Rule 2: Must be >= most recent reading before this date
+    if (mostRecentBeforeDate && reading < mostRecentBeforeDate.reading) {
+      return NextResponse.json(
+        { 
+          message: `Reading must be greater than or equal to the most recent reading (${mostRecentBeforeDate.reading.toFixed(2)} on ${mostRecentBeforeDate.readingDate.toISOString().split('T')[0]})`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validation Rule 3: Must be <= earliest reading after this date
+    if (earliestAfterDate && reading > earliestAfterDate.reading) {
+      return NextResponse.json(
+        { 
+          message: `Reading cannot be greater than the next chronological reading (${earliestAfterDate.reading.toFixed(2)} on ${earliestAfterDate.readingDate.toISOString().split('T')[0]}). Meter readings must increase chronologically.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate maximum meter reading constraint: 
+    // Reading cannot exceed initial meter reading + total tokens purchased to date
+    try {
+      const firstPurchase = await prisma.tokenPurchase.findFirst({
+        orderBy: { purchaseDate: 'asc' },
+      });
+
+      if (firstPurchase) {
+        // Calculate total tokens purchased to date (up to the meter reading date)
+        const totalTokensPurchased = await prisma.tokenPurchase.aggregate({
+          where: {
+            purchaseDate: { lte: dateObj },
+          },
+          _sum: {
+            totalTokens: true,
+          },
+        });
+
+        const maxAllowedReading = firstPurchase.meterReading + (totalTokensPurchased._sum.totalTokens || 0);
+        
+        if (reading > maxAllowedReading) {
+          return NextResponse.json(
+            { 
+              message: `Meter reading cannot exceed ${maxAllowedReading.toFixed(2)} kWh (initial reading ${firstPurchase.meterReading.toFixed(2)} + total tokens purchased ${(totalTokensPurchased._sum.totalTokens || 0).toFixed(2)})`,
+            },
+            { status: 400 }
+          );
+        }
+      } else {
+        // If no purchases exist, meter readings cannot be created
+        // The constraint requires: reading ≤ initial_meter_reading + total_tokens
+        // Without purchases, there's no valid constraint to check against
+        return NextResponse.json(
+          { 
+            message: 'No token purchases found. Please create a token purchase first to establish the initial meter reading and constraints.',
+          },
+          { status: 400 }
+        );
+      }
+    } catch (maxReadingError) {
+      console.error('Error validating maximum meter reading:', maxReadingError);
+      // Don't block the operation if this validation fails - log and continue
+    }
+
     // Historical consumption validation (only for different days)
-    if (mostRecentReading && mostRecentReading.readingDate.getTime() !== dateObj.getTime()) {
-      const currentConsumption = reading - mostRecentReading.reading;
-      const daysBetween = Math.ceil((dateObj.getTime() - mostRecentReading.readingDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (mostRecentBeforeDate && mostRecentBeforeDate.readingDate.getTime() !== dateObj.getTime()) {
+      const currentConsumption = reading - mostRecentBeforeDate.reading;
+      const daysBetween = Math.ceil((dateObj.getTime() - mostRecentBeforeDate.readingDate.getTime()) / (1000 * 60 * 60 * 24));
       const dailyConsumption = daysBetween > 0 ? currentConsumption / daysBetween : currentConsumption;
 
       // Get historical consumption data for validation
@@ -277,30 +395,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate no future readings exist that are less than this reading
-    const futureReading = await prisma.meterReading.findFirst({
-      where: {
-        userId,
-        readingDate: {
-          gt: dateObj,
-        },
-        reading: {
-          lt: reading,
-        },
-      },
-      orderBy: {
-        readingDate: 'asc',
-      },
-    });
-
-    if (futureReading) {
-      return NextResponse.json(
-        { 
-          message: `Reading cannot be greater than future reading (${futureReading.reading.toFixed(2)} on ${futureReading.readingDate.toISOString().split('T')[0]})`,
-        },
-        { status: 400 }
-      );
-    }
 
     // Create meter reading
     const meterReading = await prisma.meterReading.create({
@@ -322,22 +416,27 @@ export async function POST(request: NextRequest) {
     });
 
     // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: 'CREATE',
-        entityType: 'MeterReading',
-        entityId: meterReading.id,
-        newValues: meterReading,
-      },
+    await createAuditLog({
+      userId: session.user.id,
+      action: 'CREATE',
+      entityType: 'MeterReading',
+      entityId: meterReading.id,
+      newValues: meterReading,
     });
 
     return NextResponse.json(meterReading, { status: 201 });
   } catch (error) {
     console.error('Error creating meter reading:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
 
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }

@@ -13,6 +13,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/auth/signin',
   },
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -38,16 +39,21 @@ export const authOptions: NextAuthOptions = {
         if (!user || user.locked || !user.password) {
           // Log failed login attempt if user exists
           if (user) {
-            await auditAuthentication(
-              user.id,
-              'LOGIN_FAILED',
-              { 
-                reason: user.locked ? 'account_locked' : 'invalid_credentials',
-                email: credentials.email 
-              },
-              ipAddress as string,
-              userAgent as string
-            );
+            try {
+              await auditAuthentication(
+                user.id,
+                'LOGIN_FAILED',
+                { 
+                  reason: user.locked ? 'account_locked' : 'invalid_credentials',
+                  email: credentials.email 
+                },
+                ipAddress as string,
+                userAgent as string
+              );
+            } catch (error) {
+              console.error('Failed to log authentication audit:', error);
+              // Don't throw - allow auth to proceed
+            }
           }
           return null;
         }
@@ -60,30 +66,40 @@ export const authOptions: NextAuthOptions = {
 
         if (!isPasswordValid) {
           // Log failed login attempt
-          await auditAuthentication(
-            user.id,
-            'LOGIN_FAILED',
-            { 
-              reason: 'invalid_password',
-              email: credentials.email 
-            },
-            ipAddress as string,
-            userAgent as string
-          );
+          try {
+            await auditAuthentication(
+              user.id,
+              'LOGIN_FAILED',
+              { 
+                reason: 'invalid_password',
+                email: credentials.email 
+              },
+              ipAddress as string,
+              userAgent as string
+            );
+          } catch (error) {
+            console.error('Failed to log authentication audit:', error);
+            // Don't throw - allow auth to proceed
+          }
           return null;
         }
 
         // Log successful login
-        await auditAuthentication(
-          user.id,
-          'LOGIN',
-          { 
-            email: credentials.email,
-            loginMethod: 'credentials'
-          },
-          ipAddress as string,
-          userAgent as string
-        );
+        try {
+          await auditAuthentication(
+            user.id,
+            'LOGIN',
+            { 
+              email: credentials.email,
+              loginMethod: 'credentials'
+            },
+            ipAddress as string,
+            userAgent as string
+          );
+        } catch (error) {
+          console.error('Failed to log authentication audit:', error);
+          // Don't throw - allow auth to proceed
+        }
 
         return {
           id: user.id,
@@ -113,6 +129,25 @@ export const authOptions: NextAuthOptions = {
         session.user.passwordResetRequired = token.passwordResetRequired;
       }
       return session;
+    },
+  },
+  events: {
+    async signOut({ token }) {
+      // Log logout event - wrap in try/catch to prevent auth failures
+      try {
+        if (token?.sub) {
+          await auditAuthentication(
+            token.sub,
+            'LOGOUT',
+            { 
+              logoutMethod: 'user_initiated'
+            }
+          );
+        }
+      } catch (error) {
+        console.error('Failed to log logout audit:', error);
+        // Don't throw - allow logout to proceed
+      }
     },
   },
 };

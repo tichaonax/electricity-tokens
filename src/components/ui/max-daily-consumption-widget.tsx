@@ -34,7 +34,19 @@ export function MaxDailyConsumptionWidget() {
   const fetchMaxConsumptionData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/dashboard/max-daily-consumption');
+      // Add cache-busting parameters to ensure fresh data
+      const cacheBuster = new URLSearchParams({
+        t: Date.now().toString(),
+        v: 'fresh'
+      });
+      const response = await fetch(`/api/dashboard/max-daily-consumption?${cacheBuster}`, {
+        // Force fresh fetch, bypassing cache
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (response.ok) {
         const result = await response.json();
         setData(result);

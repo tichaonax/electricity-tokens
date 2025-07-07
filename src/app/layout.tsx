@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/session-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { UserThemeSync } from '@/components/providers/user-theme-sync';
 import { CSRFProvider } from '@/components/security/CSRFProvider';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { ToastProvider } from '@/components/ui/toast';
@@ -75,8 +76,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SkipNavigation />
-        <ThemeProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <UserThemeSync />
             <CSRFProvider>
               <HighContrastProvider>
                 <AccessibilityAnnouncerProvider>
@@ -93,8 +95,8 @@ export default function RootLayout({
                 </AccessibilityAnnouncerProvider>
               </HighContrastProvider>
             </CSRFProvider>
-          </AuthProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
         <Analytics debug={false} />
       </body>
     </html>

@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Calculate personal summary (all time)
+    // Calculate personal summary (all time) - user specific
     const allTimeContributions = await prisma.userContribution.findMany({
       where: { userId: targetUserId },
       include: { purchase: true },
@@ -154,6 +154,15 @@ export async function GET(request: NextRequest) {
       allTimeContributions as Contribution[]
     );
     const lastContribution = allTimeContributions[0];
+
+    // Calculate GLOBAL totals for Quick Stats (all users, all time)
+    const globalContributions = await prisma.userContribution.findMany({
+      include: { purchase: true },
+    });
+
+    const globalSummary = calculateUserTrueCost(
+      globalContributions as Contribution[]
+    );
 
     // Calculate current month metrics
     const currentMonthContributions = contributions.filter(
@@ -304,8 +313,9 @@ export async function GET(request: NextRequest) {
 
     const response: DashboardResponse = {
       personalSummary: {
-        ...personalSummary,
-        contributionCount: allTimeContributions.length,
+        // Use GLOBAL totals for Quick Stats display
+        ...globalSummary,
+        contributionCount: globalContributions.length,
         lastContributionDate: lastContribution?.createdAt.toISOString() || null,
       },
       currentMonth: {

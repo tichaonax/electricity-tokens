@@ -24,6 +24,14 @@ export async function GET() {
     const yesterday = startOfDay(subDays(now, 1));
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
+    
+    console.log('Date range debug:', {
+      now: now.toISOString(),
+      currentMonthStart: currentMonthStart.toISOString(),
+      currentMonthEnd: currentMonthEnd.toISOString(),
+      today: today.toISOString(),
+      yesterday: yesterday.toISOString()
+    });
     const last7Days = subDays(now, 7);
 
     // Get meter readings for current month and a bit before for calculation context
@@ -46,6 +54,10 @@ export async function GET() {
       'Max Daily Consumption API - Found meter readings:',
       meterReadings.length
     );
+    console.log('Raw meter readings:', meterReadings.map(r => ({
+      date: r.readingDate.toISOString().split('T')[0],
+      reading: r.reading
+    })));
 
     // Calculate daily consumption from consecutive meter readings
     const dailyConsumption = new Map<string, number>();
@@ -57,6 +69,8 @@ export async function GET() {
       const currentReading = meterReadings[i];
       const previousReading = meterReadings[i - 1];
 
+      console.log(`Processing reading ${i}: current=${currentReading.reading} on ${currentReading.readingDate.toISOString().split('T')[0]}, previous=${previousReading.reading} on ${previousReading.readingDate.toISOString().split('T')[0]}`);
+
       // Only include consumption for current month
       if (
         currentReading.readingDate >= currentMonthStart &&
@@ -64,7 +78,12 @@ export async function GET() {
       ) {
         // Calculate consumption between consecutive readings
         const consumption = currentReading.reading - previousReading.reading;
-        const dayKey = startOfDay(currentReading.readingDate).toISOString();
+        
+        // FIXED: Assign consumption to the CURRENT reading's date (the date when consumption was measured)
+        const currentDateStr = currentReading.readingDate.toISOString().split('T')[0];
+        const dayKey = currentDateStr + 'T00:00:00.000Z';
+
+        console.log(`  Consumption calculation: ${currentReading.reading} - ${previousReading.reading} = ${consumption} for ${dayKey}`);
 
         if (consumption >= 0) {
           // Only count positive consumption
@@ -72,12 +91,18 @@ export async function GET() {
           const existingConsumption = dailyConsumption.get(dayKey) || 0;
           dailyConsumption.set(dayKey, existingConsumption + consumption);
 
+          console.log(`  Added ${consumption} to daily consumption for ${dayKey}, total now: ${dailyConsumption.get(dayKey)}`);
+
           if (isWeekend(currentReading.readingDate)) {
             weekendConsumption.push(consumption);
           } else {
             weekdayConsumption.push(consumption);
           }
+        } else {
+          console.log(`  Skipped negative consumption: ${consumption}`);
         }
+      } else {
+        console.log(`  Skipped reading outside current month range`);
       }
     }
 
@@ -85,6 +110,16 @@ export async function GET() {
       'Max Daily Consumption API - Daily consumption entries:',
       dailyConsumption.size
     );
+    console.log('Final daily consumption map:', Array.from(dailyConsumption.entries()).map(([date, amount]) => ({
+      date: date.split('T')[0],
+      consumption: amount
+    })));
+    console.log('Date ranges:', {
+      currentMonthStart: currentMonthStart.toISOString().split('T')[0],
+      currentMonthEnd: currentMonthEnd.toISOString().split('T')[0],
+      today: today.toISOString().split('T')[0],
+      yesterday: yesterday.toISOString().split('T')[0]
+    });
 
     // Check if we have any consumption data
     if (dailyConsumption.size === 0) {
@@ -149,12 +184,19 @@ export async function GET() {
     const currentMonthAverage = averageDailyConsumption; // Since we're only calculating for current month now
 
     // Today's and yesterday's consumption from meter readings
-    const todayKey = today.toISOString();
-    const yesterdayKey = yesterday.toISOString();
+    // FIXED: Use consistent date format matching the consumption map keys
+    const todayKey = today.toISOString().split('T')[0] + 'T00:00:00.000Z';
+    const yesterdayKey = yesterday.toISOString().split('T')[0] + 'T00:00:00.000Z';
+    
+    console.log('Looking up consumption with keys:', { todayKey, yesterdayKey });
+    console.log('Available keys in map:', Array.from(dailyConsumption.keys()));
+    
     const todayConsumption = dailyConsumption.get(todayKey) || 0;
     const yesterdayConsumption = dailyConsumption.has(yesterdayKey)
       ? dailyConsumption.get(yesterdayKey)!
       : 'Not Available';
+      
+    console.log('Found consumption:', { todayConsumption, yesterdayConsumption });
 
     // Check if it's a new record (within current month)
     const currentMonthMax =

@@ -8,6 +8,7 @@ interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   actualTheme: 'light' | 'dark';
+  saveThemeToDatabase: (theme: Theme) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -19,13 +20,33 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    // Get theme from localStorage or default to system
+    // Load theme from localStorage for initial load
     const savedTheme = localStorage.getItem('theme') as Theme;
-    if (savedTheme) {
+    if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
       setTheme(savedTheme);
     }
-    
   }, []);
+
+  // Save theme preference to database
+  const saveThemeToDatabase = async (newTheme: Theme) => {
+    try {
+      await fetch('/api/user/theme', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ theme: newTheme }),
+      });
+    } catch (error) {
+      console.error('Failed to save theme preference to database:', error);
+    }
+  };
+
+  // Handle theme changes
+  const handleSetTheme = (newTheme: Theme) => {
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+  };
 
   useEffect(() => {
     if (!mounted) return;
@@ -50,7 +71,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // For light mode, we don't add any class (default)
       
       setActualTheme(resolvedTheme);
-      localStorage.setItem('theme', newTheme);
     };
 
     applyTheme(theme);
@@ -66,8 +86,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const value: ThemeContextType = {
     theme,
-    setTheme,
+    setTheme: handleSetTheme,
     actualTheme,
+    saveThemeToDatabase,
   };
 
   // During SSR, provide a default theme context to prevent hydration mismatch
@@ -78,6 +99,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           theme: 'system',
           setTheme: () => {},
           actualTheme: 'light',
+          saveThemeToDatabase: async () => {},
         }}
       >
         {children}

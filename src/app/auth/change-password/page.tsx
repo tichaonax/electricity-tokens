@@ -172,7 +172,7 @@ export default function ChangePassword() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:text-white"
                 >
                   {loading ? 'Changing Password...' : 'Change Password'}
                 </Button>

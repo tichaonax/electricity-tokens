@@ -237,7 +237,7 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
         <div>
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             Monthly Usage Trends
@@ -246,11 +246,12 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
             Track token purchases, consumption, and utilization patterns over time
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setChartType('line')}
+            className="flex-1 sm:flex-none"
           >
             <TrendingUp className="h-4 w-4 mr-2" />
             Line Chart
@@ -259,6 +260,7 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
             variant="outline"
             size="sm"
             onClick={() => setChartType('bar')}
+            className="flex-1 sm:flex-none"
           >
             <BarChart3 className="h-4 w-4 mr-2" />
             Bar Chart
@@ -319,7 +321,9 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
             Monthly Breakdown
           </h4>
         </div>
-        <div className="overflow-x-auto">
+        
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
@@ -376,6 +380,61 @@ export function UsageTrendsChart({ startDate, endDate }: UsageTrendsChartProps) 
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden divide-y divide-slate-200 dark:divide-slate-700">
+          {data.map((item, index) => {
+            const monthDate = new Date(item.month + '-01');
+            const monthName = monthDate.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long' 
+            });
+            
+            return (
+              <div key={index} className="p-4">
+                <div className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-3">
+                  {monthName}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-slate-600 dark:text-slate-400">Purchased</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      {item.totalTokensPurchased.toLocaleString()} tokens
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-600 dark:text-slate-400">Consumed</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      {item.totalTokensConsumed.toLocaleString()} tokens
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-600 dark:text-slate-400">Utilization</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      {item.utilizationRate}%
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-600 dark:text-slate-400">Avg Cost</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      ${item.averageCostPerToken}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Emergency Rate</span>
+                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                      {item.emergencyRate}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

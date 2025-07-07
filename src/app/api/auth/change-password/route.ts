@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
       data: {
         password: hashedPassword,
         passwordResetRequired: false,
-        passwordResetAt: null,
       },
     });
 

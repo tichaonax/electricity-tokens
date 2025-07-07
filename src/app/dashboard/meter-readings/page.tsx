@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, Plus, Gauge, Calendar, AlertTriangle, CheckCircle, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Gauge, Calendar, AlertTriangle, CheckCircle, Edit, Trash2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,11 +15,21 @@ interface MeterReading {
   readingDate: string;
   notes: string | null;
   createdAt: string;
+  updatedAt: string;
   user: {
     id: string;
     name: string;
     email: string;
   };
+  latestUpdateAudit?: {
+    id: string;
+    timestamp: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  } | null;
 }
 
 interface NewMeterReading {
@@ -152,16 +162,19 @@ export default function MeterReadingsPage() {
       const method = editingId ? 'PUT' : 'POST';
       const url = editingId ? `/api/meter-readings/${editingId}` : '/api/meter-readings';
       
+      const requestBody = {
+        reading: parseFloat(newReading.reading),
+        readingDate: newReading.readingDate,
+        notes: newReading.notes || undefined,
+      };
+      
+      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          reading: parseFloat(newReading.reading),
-          readingDate: newReading.readingDate,
-          notes: newReading.notes || undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -184,7 +197,7 @@ export default function MeterReadingsPage() {
   const handleEdit = (reading: MeterReading) => {
     setNewReading({
       reading: reading.reading.toString(),
-      readingDate: reading.readingDate.split('T')[0],
+      readingDate: new Date(reading.readingDate).toISOString().split('T')[0],
       notes: reading.notes || '',
     });
     setEditingId(reading.id);
@@ -295,7 +308,7 @@ export default function MeterReadingsPage() {
                 Daily Meter Readings
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
-                Track your daily electricity meter readings for accurate consumption monitoring.
+                Track all electricity meter readings for accurate consumption monitoring across all users.
               </p>
             </div>
             {!showAddForm && (
@@ -453,7 +466,11 @@ export default function MeterReadingsPage() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button type="submit" variant="outline">
+                  <Button 
+                    type="submit" 
+                    variant="outline"
+                    disabled={validationResult && !validationResult.valid}
+                  >
                     {editingId ? 'Update Reading' : 'Add Reading'}
                   </Button>
                   <Button type="button" variant="outline" onClick={cancelEdit}>
@@ -483,28 +500,149 @@ export default function MeterReadingsPage() {
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-50 dark:bg-slate-700">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Reading
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Consumption
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Notes
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50 dark:bg-slate-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Reading
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Consumption
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Notes
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Created/Modified By
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                      {meterReadings.map((reading, index) => {
+                        const previousReading = meterReadings[index + 1];
+                        const consumption = previousReading 
+                          ? reading.reading - previousReading.reading 
+                          : null;
+                        
+                        return (
+                          <tr key={reading.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <Calendar className="h-4 w-4 text-slate-400 mr-2" />
+                                <span className="text-sm text-slate-900 dark:text-slate-100">
+                                  {new Date(reading.readingDate).toISOString().split('T')[0]}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <Gauge className="h-4 w-4 text-blue-600 mr-2" />
+                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                  {reading.reading.toFixed(2)} kWh
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {consumption !== null ? (
+                                <div className="flex items-center">
+                                  {consumption >= 0 ? (
+                                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                                  ) : (
+                                    <AlertTriangle className="h-4 w-4 text-red-600 mr-2" />
+                                  )}
+                                  <span className={`text-sm font-medium ${
+                                    consumption >= 0 ? 'text-green-600' : 'text-red-600'
+                                  }`}>
+                                    {consumption >= 0 ? '+' : ''}{consumption.toFixed(2)} kWh
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                  -
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                {reading.notes || '-'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm">
+                                <div className="text-slate-900 dark:text-slate-100 font-medium">
+                                  {reading.user?.name || 'Unknown'}
+                                </div>
+                                <div className="text-slate-500 dark:text-slate-400 text-xs">
+                                  Created: {new Date(reading.createdAt).toLocaleDateString()} {new Date(reading.createdAt).toLocaleTimeString()}
+                                  {reading.latestUpdateAudit ? (
+                                    <div className="text-amber-600 dark:text-amber-400">
+                                      Updated: {new Date(reading.latestUpdateAudit.timestamp).toLocaleDateString()} {new Date(reading.latestUpdateAudit.timestamp).toLocaleTimeString()}
+                                      <br />
+                                      by {reading.latestUpdateAudit.user.name}
+                                    </div>
+                                  ) : reading.updatedAt && reading.updatedAt !== reading.createdAt ? (
+                                    <div className="text-amber-600 dark:text-amber-400">
+                                      Updated: {new Date(reading.updatedAt).toLocaleDateString()} {new Date(reading.updatedAt).toLocaleTimeString()}
+                                      <br />
+                                      (Legacy update - no audit info)
+                                    </div>
+                                  ) : null}
+                                  {session?.user?.role === 'ADMIN' && (reading.latestUpdateAudit || (reading.updatedAt && reading.updatedAt !== reading.createdAt)) && (
+                                    <div className="mt-1">
+                                      <a
+                                        href={`/dashboard/admin/audit-logs?entityType=MeterReading&entityId=${reading.id}`}
+                                        className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                        View Audit Log
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEdit(reading)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDelete(reading.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden">
+                  <div className="divide-y divide-slate-200 dark:divide-slate-700">
                     {meterReadings.map((reading, index) => {
                       const previousReading = meterReadings[index + 1];
                       const consumption = previousReading 
@@ -512,49 +650,25 @@ export default function MeterReadingsPage() {
                         : null;
                       
                       return (
-                        <tr key={reading.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 text-slate-400 mr-2" />
-                              <span className="text-sm text-slate-900 dark:text-slate-100">
-                                {new Date(reading.readingDate).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <Gauge className="h-4 w-4 text-blue-600 mr-2" />
-                              <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                {reading.reading.toFixed(2)} kWh
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {consumption !== null ? (
-                              <div className="flex items-center">
-                                {consumption >= 0 ? (
-                                  <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                                ) : (
-                                  <AlertTriangle className="h-4 w-4 text-red-600 mr-2" />
-                                )}
-                                <span className={`text-sm font-medium ${
-                                  consumption >= 0 ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                  {consumption >= 0 ? '+' : ''}{consumption.toFixed(2)} kWh
+                        <div key={reading.id} className="p-4">
+                          {/* Date and Reading */}
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="flex items-center mb-1">
+                                <Calendar className="h-4 w-4 text-slate-400 mr-2" />
+                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                  {new Date(reading.readingDate).toISOString().split('T')[0]}
                                 </span>
                               </div>
-                            ) : (
-                              <span className="text-sm text-slate-500 dark:text-slate-400">
-                                -
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-slate-600 dark:text-slate-400">
-                              {reading.notes || '-'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <Gauge className="h-4 w-4 text-blue-600 mr-2" />
+                                <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                                  {reading.reading.toFixed(2)} kWh
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Actions */}
                             <div className="flex gap-2">
                               <Button
                                 type="button"
@@ -574,13 +688,81 @@ export default function MeterReadingsPage() {
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
-                          </td>
-                        </tr>
+                          </div>
+
+                          {/* Consumption */}
+                          {consumption !== null && (
+                            <div className="flex items-center mb-2">
+                              {consumption >= 0 ? (
+                                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                              ) : (
+                                <AlertTriangle className="h-4 w-4 text-red-600 mr-2" />
+                              )}
+                              <span className="text-sm text-slate-600 dark:text-slate-400 mr-2">
+                                Consumption:
+                              </span>
+                              <span className={`text-sm font-medium ${
+                                consumption >= 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {consumption >= 0 ? '+' : ''}{consumption.toFixed(2)} kWh
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Notes */}
+                          {reading.notes && (
+                            <div className="mb-2">
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                Notes: {reading.notes}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Creator/Modifier Info */}
+                          <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+                            <div>
+                              <span className="font-medium">Created by:</span> {reading.user?.name || 'Unknown'}
+                            </div>
+                            <div>
+                              {new Date(reading.createdAt).toLocaleDateString()} {new Date(reading.createdAt).toLocaleTimeString()}
+                            </div>
+                            
+                            {reading.latestUpdateAudit ? (
+                              <div className="text-amber-600 dark:text-amber-400">
+                                <div>
+                                  <span className="font-medium">Updated by:</span> {reading.latestUpdateAudit.user.name}
+                                </div>
+                                <div>
+                                  {new Date(reading.latestUpdateAudit.timestamp).toLocaleDateString()} {new Date(reading.latestUpdateAudit.timestamp).toLocaleTimeString()}
+                                </div>
+                              </div>
+                            ) : reading.updatedAt && reading.updatedAt !== reading.createdAt ? (
+                              <div className="text-amber-600 dark:text-amber-400">
+                                <div>Updated: {new Date(reading.updatedAt).toLocaleDateString()} {new Date(reading.updatedAt).toLocaleTimeString()}</div>
+                                <div>(Legacy update - no audit info)</div>
+                              </div>
+                            ) : null}
+                            
+                            {session?.user?.role === 'ADMIN' && (reading.latestUpdateAudit || (reading.updatedAt && reading.updatedAt !== reading.createdAt)) && (
+                              <div className="mt-2">
+                                <a
+                                  href={`/dashboard/admin/audit-logs?entityType=MeterReading&entityId=${reading.id}`}
+                                  className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  View Audit Log
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       );
                     })}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
 

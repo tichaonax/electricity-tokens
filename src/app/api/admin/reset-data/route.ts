@@ -34,10 +34,12 @@ export async function POST(request: NextRequest) {
       const beforeCounts = {
         purchases: await tx.tokenPurchase.count(),
         contributions: await tx.userContribution.count(),
+        meterReadings: await tx.meterReading.count(),
+        auditLogs: await tx.auditLog.count(),
         users: await tx.user.count(),
       };
 
-      console.log(`📊 Before reset: ${beforeCounts.purchases} purchases, ${beforeCounts.contributions} contributions, ${beforeCounts.users} users`);
+      console.log(`📊 Before reset: ${beforeCounts.purchases} purchases, ${beforeCounts.contributions} contributions, ${beforeCounts.meterReadings} meter readings, ${beforeCounts.users} users`);
 
       // Get sample of data being deleted for audit trail
       const samplePurchases = await tx.tokenPurchase.findMany({
@@ -73,14 +75,20 @@ export async function POST(request: NextRequest) {
       const deletedPurchases = await tx.tokenPurchase.deleteMany({});
       console.log(`✅ Deleted ${deletedPurchases.count} purchases`);
 
+      // Delete all meter readings
+      console.log('🗑️ Deleting all meter readings...');
+      const deletedMeterReadings = await tx.meterReading.deleteMany({});
+      console.log(`✅ Deleted ${deletedMeterReadings.count} meter readings`);
+
       // Verify deletion
       const afterCounts = {
         purchases: await tx.tokenPurchase.count(),
         contributions: await tx.userContribution.count(),
+        meterReadings: await tx.meterReading.count(),
         users: await tx.user.count(),
       };
 
-      console.log(`📊 After reset: ${afterCounts.purchases} purchases, ${afterCounts.contributions} contributions, ${afterCounts.users} users`);
+      console.log(`📊 After reset: ${afterCounts.purchases} purchases, ${afterCounts.contributions} contributions, ${afterCounts.meterReadings} meter readings, ${afterCounts.users} users`);
 
       // Create audit log entry for this critical action
       await createAuditLog({
@@ -117,6 +125,7 @@ export async function POST(request: NextRequest) {
         deletedCounts: {
           purchases: deletedPurchases.count,
           contributions: deletedContributions.count,
+          meterReadings: deletedMeterReadings.count,
         },
         beforeCounts,
         afterCounts,
@@ -129,11 +138,24 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Data reset completed successfully');
 
-    return NextResponse.json({
+    // Return response with cache invalidation headers
+    const response = NextResponse.json({
       message: 'Data reset completed successfully',
       details: result,
-      warning: 'All token purchases and contributions have been permanently deleted. Users and audit logs have been preserved.',
+      warning: 'All token purchases, contributions, and meter readings have been permanently deleted. Users and audit logs have been preserved.',
+      cacheCleared: true,
     });
+
+    // Set headers to invalidate all caches
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Clear-Site-Data', '"cache", "storage"');
+    response.headers.set('X-Cache-Invalidate', 'true');
+    response.headers.set('X-Data-Reset', 'true');
+    response.headers.set('X-Timestamp', Date.now().toString());
+
+    return response;
 
   } catch (error) {
     console.error('❌ Data reset failed:', error);

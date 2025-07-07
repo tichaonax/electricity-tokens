@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Check authentication and permissions
     const permissionCheck = checkPermissions(
       session,
-      { canAddMeterReadings: true },
+      {},
       { requireAuth: true }
     );
     if (!permissionCheck.success) {
@@ -63,70 +63,142 @@ export async function POST(request: NextRequest) {
       errors: [],
     };
 
-    // Check for existing reading on the same date
-    const existingReading = await prisma.meterReading.findFirst({
+    // Step 1: Get the maximum reading on the same date (if any) - GLOBAL across all users
+    const maxReadingOnSameDate = await prisma.meterReading.findFirst({
       where: {
-        userId,
         readingDate: dateObj,
+      },
+      orderBy: {
+        reading: 'desc',
       },
     });
 
-    if (existingReading) {
-      result.valid = false;
-      result.errors.push('A meter reading already exists for this date');
-      return NextResponse.json(result);
-    }
-
-    // Get previous reading for chronological validation
-    const previousReading = await prisma.meterReading.findFirst({
+    // Step 2: Get the most recent reading before this date - GLOBAL across all users
+    const mostRecentBeforeDate = await prisma.meterReading.findFirst({
       where: {
-        userId,
         readingDate: {
           lt: dateObj,
         },
       },
-      orderBy: {
-        readingDate: 'desc',
-      },
+      orderBy: [
+        { readingDate: 'desc' },
+        { reading: 'desc' },
+      ],
     });
 
-    // Basic chronological validation
-    if (previousReading && reading < previousReading.reading) {
-      result.valid = false;
-      result.errors.push(
-        `Reading must be greater than or equal to previous reading (${previousReading.reading.toFixed(2)} on ${previousReading.readingDate.toISOString().split('T')[0]})`
-      );
-      return NextResponse.json(result);
-    }
-
-    // Check future readings
-    const futureReading = await prisma.meterReading.findFirst({
+    // Step 3: Get the earliest reading after this date - GLOBAL across all users
+    const earliestAfterDate = await prisma.meterReading.findFirst({
       where: {
-        userId,
         readingDate: {
           gt: dateObj,
         },
-        reading: {
-          lt: reading,
-        },
       },
-      orderBy: {
-        readingDate: 'asc',
-      },
+      orderBy: [
+        { readingDate: 'asc' },
+        { reading: 'asc' }, // Get the minimum reading on that date
+      ],
     });
 
-    if (futureReading) {
+    // DEBUG: Log what we found
+    console.log('VALIDATION DEBUG:', {
+      reading,
+      readingDate,
+      dateObj: dateObj.toISOString(),
+      maxOnSameDate: maxReadingOnSameDate ? `${maxReadingOnSameDate.reading} on ${maxReadingOnSameDate.readingDate.toISOString().split('T')[0]}` : 'none',
+      mostRecentBefore: mostRecentBeforeDate ? `${mostRecentBeforeDate.reading} on ${mostRecentBeforeDate.readingDate.toISOString().split('T')[0]}` : 'none',
+      earliestAfter: earliestAfterDate ? `${earliestAfterDate.reading} on ${earliestAfterDate.readingDate.toISOString().split('T')[0]}` : 'none',
+      userId: userId
+    });
+    
+    // DEBUG: Check all readings after this date - GLOBAL
+    const allAfterReadings = await prisma.meterReading.findMany({
+      where: {
+        readingDate: {
+          gt: dateObj,
+        },
+      },
+      orderBy: [
+        { readingDate: 'asc' },
+        { reading: 'asc' },
+      ],
+      take: 5
+    });
+    console.log('All readings after date (GLOBAL):', allAfterReadings.map(r => `${r.reading} on ${r.readingDate.toISOString().split('T')[0]}`));
+
+    // Validation Rule 1: Must be >= maximum reading on the same date
+    if (maxReadingOnSameDate && reading < maxReadingOnSameDate.reading) {
       result.valid = false;
       result.errors.push(
-        `Reading cannot be greater than future reading (${futureReading.reading.toFixed(2)} on ${futureReading.readingDate.toISOString().split('T')[0]})`
+        `Reading must be greater than or equal to the highest reading on the same date (${maxReadingOnSameDate.reading.toFixed(2)})`
       );
       return NextResponse.json(result);
     }
 
+    // Validation Rule 2: Must be >= most recent reading before this date
+    if (mostRecentBeforeDate && reading < mostRecentBeforeDate.reading) {
+      result.valid = false;
+      result.errors.push(
+        `Reading must be greater than or equal to the most recent reading (${mostRecentBeforeDate.reading.toFixed(2)} on ${mostRecentBeforeDate.readingDate.toISOString().split('T')[0]})`
+      );
+      return NextResponse.json(result);
+    }
+
+    // Validation Rule 3: Must be <= earliest reading after this date
+    if (earliestAfterDate && reading > earliestAfterDate.reading) {
+      result.valid = false;
+      result.errors.push(
+        `Reading cannot be greater than the next chronological reading (${earliestAfterDate.reading.toFixed(2)} on ${earliestAfterDate.readingDate.toISOString().split('T')[0]}). Meter readings must increase chronologically.`
+      );
+      return NextResponse.json(result);
+    }
+
+
+    // Validate maximum meter reading constraint: 
+    // Reading cannot exceed initial meter reading + total tokens purchased to date
+    try {
+      const firstPurchase = await prisma.tokenPurchase.findFirst({
+        orderBy: { purchaseDate: 'asc' },
+      });
+
+      if (firstPurchase) {
+        // Calculate total tokens purchased to date (up to the meter reading date)
+        const totalTokensPurchased = await prisma.tokenPurchase.aggregate({
+          where: {
+            purchaseDate: { lte: dateObj },
+          },
+          _sum: {
+            totalTokens: true,
+          },
+        });
+
+        const maxAllowedReading = firstPurchase.meterReading + (totalTokensPurchased._sum.totalTokens || 0);
+        
+        if (reading > maxAllowedReading) {
+          result.valid = false;
+          result.errors.push(
+            `Meter reading cannot exceed ${maxAllowedReading.toFixed(2)} kWh (initial reading ${firstPurchase.meterReading.toFixed(2)} + total tokens purchased ${(totalTokensPurchased._sum.totalTokens || 0).toFixed(2)})`
+          );
+          return NextResponse.json(result);
+        }
+      } else {
+        // If no purchases exist, meter readings cannot be created
+        // The constraint requires: reading ≤ initial_meter_reading + total_tokens
+        // Without purchases, there's no valid constraint to check against
+        result.valid = false;
+        result.errors.push(
+          'No token purchases found. Please create a token purchase first to establish the initial meter reading and constraints.'
+        );
+        return NextResponse.json(result);
+      }
+    } catch (maxReadingError) {
+      console.error('Error validating maximum meter reading in UI validation:', maxReadingError);
+      // Don't block the operation if this validation fails - log and continue
+    }
+
     // Historical consumption validation
-    if (previousReading) {
-      const currentConsumption = reading - previousReading.reading;
-      const daysBetween = Math.ceil((dateObj.getTime() - previousReading.readingDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (mostRecentBeforeDate) {
+      const currentConsumption = reading - mostRecentBeforeDate.reading;
+      const daysBetween = Math.ceil((dateObj.getTime() - mostRecentBeforeDate.readingDate.getTime()) / (1000 * 60 * 60 * 24));
       const dailyConsumption = daysBetween > 0 ? currentConsumption / daysBetween : currentConsumption;
 
       // Get historical consumption data for validation
