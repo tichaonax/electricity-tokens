@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -85,7 +84,7 @@ export function ContributionsClient() {
         const data = await response.json();
         setRunningBalance(data.runningBalance || 0);
       }
-    } catch (error) {
+    } catch {
       // console.error removed - silent fail for running balance
       setRunningBalance(0);
     }
@@ -124,10 +123,10 @@ export function ContributionsClient() {
       if (response.ok) {
         const data = await response.json();
         // Check if there are any purchases without contributions
-        const hasAvailable = data.purchases?.some((purchase: any) => !purchase.contribution) || false;
+        const hasAvailable = data.purchases?.some((purchase: { contribution?: unknown }) => !purchase.contribution) || false;
         setHasAvailablePurchases(hasAvailable);
       }
-    } catch (error) {
+    } catch {
       // console.error removed
       setHasAvailablePurchases(false);
     }
@@ -162,45 +161,6 @@ export function ContributionsClient() {
     return latest.id === contribution.id;
   };
 
-  const handleDeleteContribution = async (contribution: Contribution) => {
-    // Check if user can delete this contribution
-    const canDeleteOwn = contribution.user.id === session?.user?.id;
-    const canDeleteAny = checkPermission('canDeleteContributions');
-    
-    if (!canDeleteOwn && !canDeleteAny && !isAdmin) {
-      showError('You do not have permission to delete this contribution');
-      return;
-    }
-
-    // Check if this is the globally latest contribution
-    if (!isLatestContribution(contribution)) {
-      showError('Only the latest contribution in the system may be deleted');
-      return;
-    }
-
-    confirmDelete('contribution', async () => {
-      try {
-        setDeletingId(contribution.id);
-        const response = await fetch(`/api/contributions/${contribution.id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to delete contribution');
-        }
-
-        // Remove the contribution from the list
-        setContributions(prev => prev.filter(c => c.id !== contribution.id));
-        success('Contribution deleted successfully');
-      } catch (error) {
-        // console.error removed
-        showError(error instanceof Error ? error.message : 'Failed to delete contribution');
-      } finally {
-        setDeletingId(null);
-      }
-    });
-  };
 
   if (status === 'loading') {
     return (

@@ -496,7 +496,7 @@ export function PurchaseForm({
         {mode === 'edit' && initialData && (
           <div className="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-              📋 Current Values (what you're changing from)
+              📋 Current Values (what you&apos;re changing from)
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
               <div>

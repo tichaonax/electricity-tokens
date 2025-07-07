@@ -196,6 +196,7 @@ export async function GET() {
     console.log(`🎯 Final maximum: ${maxDailyAmount} kWh on ${maxDailyDate.split('T')[0]}`);
 
     // Calculate averages from actual consumption data
+    console.log('📊 Average Calculations Debug:');
     const consumptionValues = Array.from(dailyConsumption.values());
     const totalConsumption = consumptionValues.reduce(
       (sum, amount) => sum + amount,
@@ -219,8 +220,20 @@ export async function GET() {
         ? last7DaysTotal / last7DaysConsumption.length
         : 0;
 
-    // Current month average (all days in current month with data)
-    const currentMonthAverage = averageDailyConsumption; // Since we're only calculating for current month now
+    // Last 30 days average (should include previous month data)
+    const last30Days = subDays(now, 30);
+    const last30DaysConsumption = Array.from(dailyConsumption.entries())
+      .filter(([date]) => new Date(date) >= last30Days)
+      .map(([, amount]) => amount);
+    const last30DaysAverage =
+      last30DaysConsumption.length > 0
+        ? last30DaysConsumption.reduce((sum, amount) => sum + amount, 0) / last30DaysConsumption.length
+        : averageDailyConsumption; // Fallback to current month if insufficient data
+
+    console.log(`  Overall average: ${averageDailyConsumption} kWh (${consumptionValues.length} days)`);
+    console.log(`  7-day average: ${last7DaysAverage} kWh (${last7DaysConsumption.length} days)`);
+    console.log(`  30-day average: ${last30DaysAverage} kWh (${last30DaysConsumption.length} days)`);
+    console.log(`  Date ranges: 7-day cutoff=${last7Days.toISOString().split('T')[0]}, 30-day cutoff=${last30Days.toISOString().split('T')[0]}`);
 
     // Today's and yesterday's consumption from meter readings
     // FIXED: Use consistent date format matching the consumption map keys
@@ -298,7 +311,7 @@ export async function GET() {
       },
       averageDailyConsumption: Math.round(averageDailyConsumption * 100) / 100,
       last7DaysAverage: Math.round(last7DaysAverage * 100) / 100,
-      last30DaysAverage: Math.round(currentMonthAverage * 100) / 100, // Now shows current month average
+      last30DaysAverage: Math.round(last30DaysAverage * 100) / 100,
       todayConsumption: Math.round(todayConsumption * 100) / 100,
       yesterdayConsumption:
         typeof yesterdayConsumption === 'number'
