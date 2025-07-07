@@ -14,19 +14,22 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  password    String?
-  role        Role     @default(USER)
-  locked      Boolean  @default(false)
-  permissions Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  name                  String
+  password              String?
+  role                  Role     @default(USER)
+  locked                Boolean  @default(false)
+  passwordResetRequired Boolean  @default(false)
+  permissions           Json?
+  themePreference       String?  @default("system")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   // Relations
   contributions     UserContribution[]
   createdPurchases  TokenPurchase[]
+  meterReadings     MeterReading[]
   auditLogs         AuditLog[]
   accounts          Account[]
   sessions          Session[]
@@ -123,6 +126,23 @@ model AuditLog {
   user User @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model MeterReading {
+  id           String   @id @default(cuid())
+  userId       String
+  reading      Float
+  readingDate  DateTime
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Index for efficient querying by user and date
+  @@index([userId, readingDate])
+  @@map("meter_readings")
 }
 
 enum Role {

@@ -114,30 +114,33 @@ export default function UsageReportsPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <nav className="bg-white shadow dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center min-w-0 flex-1">
               <Button
                 variant="ghost"
                 onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-2 sm:mr-4 flex-shrink-0"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Back</span>
               </Button>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+              <div className="flex items-center gap-2 min-w-0">
+                <TrendingUp className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100 truncate">
                   Usage Reports
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-slate-700 dark:text-slate-300">
-                {session.user?.name}
-              </span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                ({session.user?.role})
-              </span>
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+              <div className="text-right min-w-0">
+                <div className="text-sm sm:text-base text-slate-700 dark:text-slate-300 truncate">
+                  {session.user?.name}
+                </div>
+                <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                  ({session.user?.role})
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -157,37 +160,39 @@ export default function UsageReportsPage() {
 
           {/* Date Range Controls */}
           <div className="mb-6 bg-white rounded-lg shadow p-4 dark:bg-slate-800">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Date Range:
                 </label>
-                <input
-                  type="date"
-                  value={dateRange.startDate || ''}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, startDate: e.target.value })
-                  }
-                  className="px-3 py-1 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-                />
-                <span className="text-slate-500">to</span>
-                <input
-                  type="date"
-                  value={dateRange.endDate || ''}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, endDate: e.target.value })
-                  }
-                  className="px-3 py-1 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-                />
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <input
+                    type="date"
+                    value={dateRange.startDate || ''}
+                    onChange={(e) =>
+                      setDateRange({ ...dateRange, startDate: e.target.value })
+                    }
+                    className="w-full sm:w-auto px-3 py-1 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+                  />
+                  <span className="text-slate-500 hidden sm:inline">to</span>
+                  <input
+                    type="date"
+                    value={dateRange.endDate || ''}
+                    onChange={(e) =>
+                      setDateRange({ ...dateRange, endDate: e.target.value })
+                    }
+                    className="w-full sm:w-auto px-3 py-1 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+                  />
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={setCurrentMonth}>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={setCurrentMonth} className="flex-1 sm:flex-none">
                   This Month
                 </Button>
-                <Button variant="outline" size="sm" onClick={setLastThreeMonths}>
+                <Button type="button" variant="outline" size="sm" onClick={setLastThreeMonths} className="flex-1 sm:flex-none">
                   Last 3 Months
                 </Button>
-                <Button variant="outline" size="sm" onClick={clearDateRange}>
+                <Button type="button" variant="outline" size="sm" onClick={clearDateRange} className="flex-1 sm:flex-none">
                   All Time
                 </Button>
               </div>

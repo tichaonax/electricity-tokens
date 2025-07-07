@@ -1,21 +1,31 @@
 'use client';
 
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { signIn, getSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function SignIn() {
+function SignInContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message === 'password-changed') {
+      setSuccess('Password changed successfully. Please sign in with your new password.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       const result = await signIn('credentials', {
@@ -27,7 +37,13 @@ export default function SignIn() {
       if (result?.error) {
         setError('Invalid credentials');
       } else {
-        router.push('/dashboard');
+        // Check if user needs to reset password
+        const session = await getSession();
+        if (session?.user?.passwordResetRequired) {
+          router.push('/auth/change-password');
+        } else {
+          router.push('/dashboard');
+        }
       }
     } catch {
       setError('An error occurred during sign in');
@@ -93,6 +109,10 @@ export default function SignIn() {
             <div className="text-red-600 dark:text-red-400 text-sm text-center">{error}</div>
           )}
 
+          {success && (
+            <div className="text-green-600 dark:text-green-400 text-sm text-center">{success}</div>
+          )}
+
           <div>
             <button
               type="submit"
@@ -105,5 +125,13 @@ export default function SignIn() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div></div>}>
+      <SignInContent />
+    </Suspense>
   );
 }

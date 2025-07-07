@@ -10,7 +10,12 @@ import {
   sanitizeInput,
   checkPermissions,
 } from '@/lib/validation-middleware';
-import { auditUpdate, auditDelete, auditPermissionChange, auditAccountLockChange } from '@/lib/audit';
+import {
+  auditUpdate,
+  auditDelete,
+  auditPermissionChange,
+  auditAccountLockChange,
+} from '@/lib/audit';
 
 export async function GET(
   request: NextRequest,
@@ -21,36 +26,15 @@ export async function GET(
     const session = await getServerSession(authOptions);
 
     // Check authentication
-    const permissionCheck = checkPermissions(
-      session,
-      {},
-      { requireAuth: true }
-    );
-    if (!permissionCheck.success) {
+    if (!session?.user) {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    // Validate route parameters
-    const validation = await validateRequest(
-      request,
-      {
-        params: idParamSchema,
-      },
-      { id }
-    );
-
-    if (!validation.success) {
-      return createValidationErrorResponse(validation);
-    }
-
     // Users can view their own profile, admins can view any profile
-    if (
-      permissionCheck.user!.id !== id &&
-      permissionCheck.user!.role !== 'ADMIN'
-    ) {
+    if (session.user.id !== id && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Forbidden: You can only view your own profile' },
         { status: 403 }
@@ -100,47 +84,35 @@ export async function PUT(
     const session = await getServerSession(authOptions);
 
     // Check authentication
-    const permissionCheck = checkPermissions(
-      session,
-      {},
-      { requireAuth: true }
-    );
-    if (!permissionCheck.success) {
+    if (!session?.user) {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    // Validate request body and parameters
-    const validation = await validateRequest(
-      request,
-      {
-        body: updateUserSchema,
-        params: idParamSchema,
-      },
-      { id }
-    );
-
-    if (!validation.success) {
-      return createValidationErrorResponse(validation);
+    // Parse request body
+    const body = await request.json();
+    
+    // Explicitly reject any attempts to update email address
+    if ('email' in body && body.email !== undefined) {
+      return NextResponse.json(
+        { 
+          message: 'Email addresses cannot be changed. Contact an administrator if you need to use a different email address.' 
+        },
+        { status: 400 }
+      );
     }
-
-    const { body } = validation.data as {
-      body: {
+    
+    const sanitizedData = sanitizeInput(body);
+    const { name, role, locked, permissions, resetPassword } =
+      sanitizedData as {
         name?: string;
         role?: string;
         locked?: boolean;
-        permissions?: any;
+        permissions?: Record<string, boolean>;
+        resetPassword?: boolean;
       };
-    };
-    const sanitizedData = sanitizeInput(body);
-    const { name, role, locked, permissions } = sanitizedData as {
-      name?: string;
-      role?: string;
-      locked?: boolean;
-      permissions?: any;
-    };
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -152,8 +124,8 @@ export async function PUT(
     }
 
     // Permission checks
-    const isOwnProfile = permissionCheck.user!.id === id;
-    const isAdmin = permissionCheck.user!.role === 'ADMIN';
+    const isOwnProfile = session.user.id === id;
+    const isAdmin = session.user.role === 'ADMIN';
 
     if (!isOwnProfile && !isAdmin) {
       return NextResponse.json(
@@ -231,6 +203,21 @@ export async function PUT(
       }
     }
 
+    // Password reset can only be triggered by admin
+    if (resetPassword !== undefined) {
+      if (!isAdmin) {
+        return NextResponse.json(
+          { message: 'Forbidden: Only admins can force password resets' },
+          { status: 403 }
+        );
+      }
+
+      if (resetPassword === true) {
+        updateData.passwordResetRequired = true;
+        updateData.passwordResetAt = new Date();
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: id },
       data: updateData,
@@ -253,13 +240,14 @@ export async function PUT(
     });
 
     // Extract IP and User Agent for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const auditContext = {
-      userId: permissionCheck.user!.id,
+      userId: session.user.id,
       ipAddress,
       userAgent,
     };
@@ -271,35 +259,25 @@ export async function PUT(
         id,
         { permissions: existingUser.permissions },
         { permissions: updatedUser.permissions },
-        { changedBy: permissionCheck.user!.name }
+        { changedBy: session.user.name }
       );
     }
 
     if (locked !== undefined) {
-      await auditAccountLockChange(
-        auditContext,
-        id,
-        Boolean(locked),
-        { 
-          targetUserName: existingUser.name,
-          reason: locked ? 'Account locked by admin' : 'Account unlocked by admin'
-        }
-      );
+      await auditAccountLockChange(auditContext, id, Boolean(locked), {
+        targetUserName: existingUser.name,
+        reason: locked
+          ? 'Account locked by admin'
+          : 'Account unlocked by admin',
+      });
     }
 
     // General audit log for other changes
     if (name !== undefined || role !== undefined) {
-      await auditUpdate(
-        auditContext,
-        'User',
-        id,
-        existingUser,
-        updatedUser,
-        { 
-          targetUserName: existingUser.name,
-          changesType: 'profile_update'
-        }
-      );
+      await auditUpdate(auditContext, 'User', id, existingUser, updatedUser, {
+        targetUserName: existingUser.name,
+        changesType: 'profile_update',
+      });
     }
 
     return NextResponse.json(updatedUser);
@@ -321,29 +299,11 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
 
     // Check authentication and admin permission
-    const permissionCheck = checkPermissions(
-      session,
-      {},
-      { requireAuth: true, requireAdmin: true }
-    );
-    if (!permissionCheck.success) {
+    if (!session?.user || session.user.role !== 'ADMIN') {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Admin access required' },
         { status: 401 }
       );
-    }
-
-    // Validate route parameters
-    const validation = await validateRequest(
-      request,
-      {
-        params: idParamSchema,
-      },
-      { id }
-    );
-
-    if (!validation.success) {
-      return createValidationErrorResponse(validation);
     }
 
     // Check if user exists
@@ -360,7 +320,7 @@ export async function DELETE(
     }
 
     // Prevent admin from deleting themselves
-    if (permissionCheck.user!.id === id) {
+    if (session.user.id === id) {
       return NextResponse.json(
         { message: 'Cannot delete your own account' },
         { status: 400 }
@@ -400,15 +360,16 @@ export async function DELETE(
     });
 
     // Extract IP and User Agent for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const ipAddress =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     // Create audit log entry using centralized utility
     await auditDelete(
       {
-        userId: permissionCheck.user!.id,
+        userId: session.user.id,
         ipAddress,
         userAgent,
       },
@@ -418,7 +379,7 @@ export async function DELETE(
       {
         deletedUserName: existingUser.name,
         deletedUserEmail: existingUser.email,
-        reason: 'Account deleted by admin'
+        reason: 'Account deleted by admin',
       }
     );
 

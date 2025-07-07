@@ -179,16 +179,21 @@ export async function PUT(
     });
 
     // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: 'UPDATE',
-        entityType: 'UserContribution',
-        entityId: id,
-        oldValues: existingContribution,
-        newValues: updatedContribution,
-      },
-    });
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: 'UPDATE',
+          entityType: 'UserContribution',
+          entityId: id,
+          oldValues: existingContribution,
+          newValues: updatedContribution,
+        },
+      });
+    } catch (auditError) {
+      console.error('Failed to create audit log:', auditError);
+      // Don't fail the main operation if audit logging fails
+    }
 
     return NextResponse.json(updatedContribution);
   } catch (error) {

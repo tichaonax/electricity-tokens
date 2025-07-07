@@ -44,7 +44,25 @@ This document provides detailed, visual tutorials for all major features in the 
 - 🔔 **Notifications**: Welcome message and getting started tips
 - 🎯 **Quick Actions**: Buttons for main features
 
-#### Step 4: Profile Setup (Optional but Recommended)
+#### Step 4: Theme Selection (New in v1.4.0!)
+
+1. **Access Theme Settings**:
+   - **Desktop**: Click your profile name (top-right) → Theme preferences
+   - **Mobile**: Open mobile menu → Profile → Theme preferences
+2. **Available Options**:
+   - **Light Mode**: Traditional bright interface, best for daytime use
+   - **Dark Mode**: Eye-friendly dark interface, saves battery on OLED screens
+   - **System**: Automatically follows your device's day/night settings
+3. **Theme Persistence**: Your choice saves automatically across all devices and sessions!
+
+**NEW FEATURE**: Your theme preference is now tied to your user account and persists across:
+
+- Different devices (phone, tablet, laptop)
+- Different browsers
+- After logging out and back in
+- When other users log in (each person keeps their own theme)
+
+#### Step 5: Profile Setup (Optional but Recommended)
 
 1. **Click your name** in the top-right corner
 2. **Select "Profile"**
@@ -579,71 +597,370 @@ Expected Savings: $12.50/month vs emergency purchases
 
 ---
 
-## 📱 Tutorial 8: Mobile Usage Best Practices
+## 🆕 Tutorial 8: New v1.4.0 Features Deep Dive
 
-### Optimizing for Phone and Tablet Use
+### Mobile-First Design and Enhanced Features
 
-#### Step 1: Mobile Installation
+#### Part A: Enhanced Theme System
 
-1. **Add to Home Screen** (see Tutorial 6)
-2. **Enable notifications** for the web app
-3. **Allow location access** (for time zone accuracy)
+**What's New in Theme Management**:
 
-#### Step 2: Mobile-Optimized Workflows
+- **User-specific themes**: Each household member has their own preference
+- **Cross-device synchronization**: Your theme follows you everywhere
+- **Instant switching**: No page reload required
+- **System integration**: Automatic dark/light switching based on device settings
+
+**Step-by-Step Theme Setup**:
+
+1. **Access Your Theme Settings**:
+
+   ```
+   Desktop: Profile Menu → Theme Preferences
+   Mobile: Menu (☰) → Profile → Theme Preferences
+   ```
+
+2. **Choose Your Preference**:
+   - **Light**: Always bright interface
+   - **Dark**: Always dark interface
+   - **System**: Follows your device automatically
+
+3. **Test the Change**:
+   - Theme changes instantly
+   - No need to save or reload
+   - Setting is immediately synced to your account
+
+4. **Verify Persistence**:
+   - Log out and back in → Theme preserved
+   - Switch devices → Same theme applies
+   - Other users log in → They keep their own themes
+
+**Advanced Theme Tips**:
+
+- **Battery Saving**: Dark mode saves ~30% battery on OLED screens
+- **Eye Comfort**: Use dark mode in low-light environments
+- **System Mode**: Perfect for day/night workers - auto-switches with your schedule
+
+#### Part B: Meter Reading System (New Feature)
+
+**What's New**: Individual meter reading tracking separate from purchases
+
+**When to Use**:
+
+- Regular consumption monitoring
+- Before making contributions
+- Monthly usage tracking
+- Audit trail purposes
+
+**Step-by-Step Meter Reading Entry**:
+
+1. **Navigate to Meter Readings**:
+
+   ```
+   Dashboard → "Record Meter Reading" button
+   OR
+   Menu → Meter Readings → "Add New Reading"
+   ```
+
+2. **Fill Out the Form**:
+
+   ```
+   Current Reading: [Your meter display number]
+   Reading Date: [When you took the reading - defaults to now]
+   Notes (optional): [Any special circumstances]
+   ```
+
+3. **Understanding Validation**:
+   - Must be higher than previous readings
+   - System shows your last reading for reference
+   - Warns if the increase seems unusual
+
+4. **Submit and Review**:
+   - Reading is saved with timestamp
+   - Shows in your reading history
+   - Available for audit trail
+
+**Meter Reading Best Practices**:
+
+- Take photos of your meter for reference
+- Record readings weekly for better tracking
+- Note any unusual circumstances (vacation, new appliances)
+- Check the history to spot patterns
+
+#### Part C: Enhanced Audit Trail
+
+**What's New**: See who created or modified every entry
+
+**Information Now Visible**:
+
+- **Creator**: Who originally created each purchase/reading
+- **Last Modified By**: Who made recent changes (if any)
+- **Timestamps**: Precise creation and modification times
+- **Admin Details**: IP addresses and user agents (admin view only)
+
+**How to View Audit Information**:
+
+1. **On Meter Readings Page**:
+
+   ```
+   Each reading shows:
+   "Created by John Doe on Jan 15, 2025 at 10:30 AM"
+   "Last modified by Admin User on Jan 15, 2025 at 2:15 PM"
+   ```
+
+2. **Admin Audit Access**:
+
+   ```
+   Admin users see "View Audit Log" links
+   Detailed modification history
+   IP addresses and browser information
+   ```
+
+3. **Your Personal History**:
+   ```
+   Profile → Activity History
+   Complete record of your actions
+   Timestamps for all your entries
+   ```
+
+**Benefits of Enhanced Audit Trail**:
+
+- **Transparency**: Know who did what and when
+- **Accountability**: Clear responsibility for accuracy
+- **Dispute Resolution**: Detailed history helps resolve questions
+- **Data Integrity**: Track all changes for accuracy
+
+#### Part D: Running Balance Improvements
+
+**What's Enhanced**: More accurate balance calculations using latest meter readings
+
+**New Calculation Logic**:
+
+- Uses the most recent meter reading for each day
+- Accounts for multiple readings on the same date
+- Provides more accurate "Anticipated Next Payment" amounts
+- Better handles chronological meter reading sequences
+
+**Understanding Your Enhanced Balance Display**:
+
+```
+Account Balance: $-15.50 (you owe money)
+Anticipated Next Payment: $-38.25 (based on latest meter reading)
+
+Usage Since Last Contribution:
+- Tokens Consumed: 25.5 kWh
+- Estimated Cost: $38.25
+- Rate (Historical Avg): $1.50/kWh
+```
+
+**What This Means**:
+
+- **More Accurate**: Uses actual latest consumption data
+- **Forward-Looking**: Shows what you'll likely owe next
+- **Real-Time**: Updates as you add meter readings
+- **Transparent**: Shows the calculation components
+
+## 📱 Tutorial 9: Mobile-First Experience (v1.4.0)
+
+### Revolutionary Mobile Design - No More Horizontal Scrolling!
+
+#### What's New in Mobile Design
+
+**Mobile-First Architecture**:
+
+- **Card-based layouts**: Tables automatically become cards on small screens
+- **Touch-optimized**: All buttons sized for finger taps
+- **No horizontal scrolling**: Everything fits your screen width perfectly
+- **Responsive breakpoints**: Adapts from phone to tablet to desktop seamlessly
+
+#### Step 1: Installing the Mobile App
+
+**Progressive Web App (PWA) Installation**:
+
+1. **iPhone/iPad Setup**:
+
+   ```
+   1. Open Safari browser
+   2. Navigate to your app URL
+   3. Tap Share button (square with arrow up)
+   4. Scroll down → "Add to Home Screen"
+   5. Name it "Electricity Tracker" → Add
+   ```
+
+2. **Android Setup**:
+
+   ```
+   1. Open Chrome browser
+   2. Navigate to your app URL
+   3. Look for "Add to Home Screen" notification banner
+   4. OR: Menu (⋮) → "Add to Home Screen"
+   5. Confirm installation
+   ```
+
+3. **Benefits of Installation**:
+   - App icon on home screen
+   - Native app experience
+   - Faster loading
+   - Works offline for viewing
+   - No browser bars taking up space
+
+#### Step 2: Understanding the New Mobile Layout
+
+**Meter Readings Page (Card View)**:
+
+```
+Instead of horizontal scrolling table:
+┌─────────────────────────────────────┐
+│ Meter Reading #123                  │
+│ 1,362.5 kWh                        │
+│ Jan 15, 2025 at 10:30 AM           │
+│ Created by: John Doe                │
+│ Notes: Monthly reading              │
+│ [Edit] [Delete]                     │
+└─────────────────────────────────────┘
+```
+
+**Purchase List (Stacked Information)**:
+
+```
+┌─────────────────────────────────────┐
+│ Purchase #456                       │
+│ 100 kWh for $150.50               │
+│ Jan 20, 2025                       │
+│ Emergency Purchase                  │
+│ Meter: 1,400 kWh                  │
+│ Created by: Jane Smith              │
+│ [View Details] [Contribute]         │
+└─────────────────────────────────────┘
+```
+
+#### Step 3: Mobile-Optimized Workflows
+
+**Quick Meter Reading Entry (Mobile)**:
+
+1. **Open app** from home screen icon
+2. **Tap "Record Reading"** button (large, thumb-friendly)
+3. **Take photo** of meter (use device camera for reference)
+4. **Enter reading** in large input field
+5. **Add notes** if needed (swipe to expand text area)
+6. **Tap "Save Reading"** (full-width button)
 
 **Quick Contribution (Mobile)**:
 
-1. **Open app from home screen**
-2. **Tap notification** about pending contribution
-3. **Use camera** to photo meter reading (for reference)
-4. **Enter reading** in form
-5. **Review calculation**
-6. **Submit**
+1. **Check notifications** for pending contributions
+2. **Tap contribution notification**
+3. **View purchase details** in card format
+4. **Enter current meter reading**
+5. **Review calculation** (clearly displayed)
+6. **Confirm contribution** with large submit button
 
-**Mobile Meter Reading Tips**:
+#### Step 4: Advanced Mobile Features
 
-- **Take a photo** before entering numbers
-- **Double-check digits** (mobile keyboards can be tricky)
-- **Use landscape mode** for better visibility
-- **Zoom if needed** to see form fields clearly
+**Touch Gestures**:
 
-#### Step 3: Touch Interface Optimization
+- **Pull to refresh**: Update data by pulling down on lists
+- **Swipe navigation**: Swipe left/right in appropriate contexts
+- **Pinch zoom**: Enlarge charts and small text
+- **Long press**: Access context menus (admin features)
 
-**Gestures**:
+**Keyboard Optimization**:
 
-- **Tap**: Select/activate
-- **Long press**: Context menus (where available)
-- **Swipe**: Navigate lists
-- **Pinch zoom**: Enlarge charts and text
+- **Numeric keypad**: Automatic for meter readings and amounts
+- **Email keyboard**: For login and profile updates
+- **Optimized layouts**: Form fields stack vertically for easy typing
 
-**Mobile Navigation**:
+**Theme Integration on Mobile**:
 
-- **Hamburger menu** (☰): Main navigation on small screens
-- **Back button**: Returns to previous screen
-- **Breadcrumbs**: Shows where you are
+- **System theme**: Follows your phone's dark/light mode automatically
+- **Battery optimization**: Dark mode uses less power on OLED screens
+- **Readability**: High contrast ratios for outdoor use
 
-#### Step 4: Offline Usage
+#### Step 5: Mobile Performance Tips
 
-**What Works Offline**:
+**Best Practices for Mobile Use**:
 
-- View recent purchases and contributions
-- Access your profile information
-- Read cached reports
-- Navigate between pages
+1. **Installation**:
+   - Always install as PWA for best performance
+   - Don't use in regular browser if possible
+   - Enable notifications for important updates
 
-**What Requires Internet**:
+2. **Data Entry**:
+   - Use landscape mode for complex forms
+   - Take photos of meters before entering numbers
+   - Double-check calculations before submitting
 
-- Submit new data
-- Generate fresh reports
-- User management functions
-- System backups
+3. **Navigation**:
+   - Use the bottom navigation for quick access
+   - Swipe gestures for faster navigation
+   - Bookmark frequently used features
 
-**💡 Mobile Pro Tips**:
+4. **Connectivity**:
+   - App caches recent data for offline viewing
+   - Submit data when you have good connection
+   - Check sync status before relying on data
 
-- Keep the app installed on home screen
-- Enable notifications for important updates
-- Take photos of meter readings for accuracy
+#### Step 6: Troubleshooting Mobile Issues
+
+**Common Mobile Problems & Solutions**:
+
+**"Layout looks broken"**:
+
+- Force refresh: Pull down to refresh
+- Clear browser cache: Settings → Clear Data
+- Try landscape mode
+- Restart the PWA
+
+**"Buttons are too small"**:
+
+- Use zoom: Pinch to enlarge
+- Switch to landscape mode
+- Check browser zoom settings
+- Try accessibility large text
+
+**"Keyboard covers input fields"**:
+
+- Scroll up after keyboard appears
 - Use landscape mode for complex forms
+- Tap outside keyboard area first
+
+**"Theme not saving"**:
+
+- Ensure you're logged in
+- Check internet connection
+- Try logging out and back in
+- Clear browser data
+
+#### Step 7: Mobile-Specific Features
+
+**NEW: Mobile Camera Integration**:
+
+- Take photos of meter readings for reference
+- Images help with accuracy verification
+- Photos stored locally (not uploaded for privacy)
+- Visual reference for dispute resolution
+
+**Touch-Optimized Charts**:
+
+- Pinch to zoom on usage charts
+- Swipe to scroll through time periods
+- Tap data points for details
+- Landscape mode for better chart viewing
+
+**Offline Capabilities**:
+
+- View last 30 days of data offline
+- Access profile and settings
+- Read cached reports
+- Navigate app structure
+- Sync when connection restored
+
+**💡 Mobile Pro Tips for v1.4.0**:
+
+- Install as PWA for native app experience
+- Use dark mode to save battery on OLED screens
+- Take meter photos for accuracy reference
+- Enable system theme for automatic switching
+- Pull to refresh for latest data
+- Use landscape mode for detailed reports
 
 ---
 

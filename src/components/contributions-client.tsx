@@ -3,11 +3,13 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Plus, Users, DollarSign, Zap, TrendingUp, User, Trash2, Edit } from 'lucide-react';
+import { Plus, Users, DollarSign, Zap, TrendingUp, User, Trash2, Edit, ShoppingCart } from 'lucide-react';
+import { NavigationFormButton } from '@/components/ui/navigation-form-button';
+import { navigateToDashboard, navigateToNewContribution } from '@/app/actions/navigation';
+import { editContribution, deleteContribution } from '@/app/actions/contributions';
 
 interface Contribution {
   id: string;
@@ -82,7 +84,7 @@ export function ContributionsClient() {
         const data = await response.json();
         setRunningBalance(data.runningBalance || 0);
       }
-    } catch (error) {
+    } catch {
       // console.error removed - silent fail for running balance
       setRunningBalance(0);
     }
@@ -121,10 +123,10 @@ export function ContributionsClient() {
       if (response.ok) {
         const data = await response.json();
         // Check if there are any purchases without contributions
-        const hasAvailable = data.purchases?.some((purchase: any) => !purchase.contribution) || false;
+        const hasAvailable = data.purchases?.some((purchase: { contribution?: unknown }) => !purchase.contribution) || false;
         setHasAvailablePurchases(hasAvailable);
       }
-    } catch (error) {
+    } catch {
       // console.error removed
       setHasAvailablePurchases(false);
     }
@@ -146,14 +148,6 @@ export function ContributionsClient() {
     );
   };
 
-  const handleContributionClick = (contribution: Contribution) => {
-    // Check if user can edit this contribution
-    const canEdit = session?.user?.role === 'ADMIN' || contribution.user.id === session?.user?.id;
-    
-    if (canEdit) {
-      router.push(`/dashboard/contributions/edit/${contribution.id}`);
-    }
-  };
 
   const isLatestContribution = (contribution: Contribution) => {
     // Find the globally latest contribution in the entire system
@@ -167,45 +161,6 @@ export function ContributionsClient() {
     return latest.id === contribution.id;
   };
 
-  const handleDeleteContribution = async (contribution: Contribution) => {
-    // Check if user can delete this contribution
-    const canDeleteOwn = contribution.user.id === session?.user?.id;
-    const canDeleteAny = checkPermission('canDeleteContributions');
-    
-    if (!canDeleteOwn && !canDeleteAny && !isAdmin) {
-      showError('You do not have permission to delete this contribution');
-      return;
-    }
-
-    // Check if this is the globally latest contribution
-    if (!isLatestContribution(contribution)) {
-      showError('Only the latest contribution in the system may be deleted');
-      return;
-    }
-
-    confirmDelete('contribution', async () => {
-      try {
-        setDeletingId(contribution.id);
-        const response = await fetch(`/api/contributions/${contribution.id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to delete contribution');
-        }
-
-        // Remove the contribution from the list
-        setContributions(prev => prev.filter(c => c.id !== contribution.id));
-        success('Contribution deleted successfully');
-      } catch (error) {
-        // console.error removed
-        showError(error instanceof Error ? error.message : 'Failed to delete contribution');
-      } finally {
-        setDeletingId(null);
-      }
-    });
-  };
 
   if (status === 'loading') {
     return (
@@ -223,29 +178,37 @@ export function ContributionsClient() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <nav className="bg-white shadow dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center min-w-0 flex-1 mr-4">
+              <NavigationFormButton
+                action={navigateToDashboard}
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-2 sm:mr-4 p-0 h-auto font-normal bg-transparent border-none flex-shrink-0"
               >
-                ← Back to Dashboard
-              </button>
-              <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Users className="h-5 w-5 text-green-600" />
-                User Contributions
+                ← Back
+              </NavigationFormButton>
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 truncate">
+                <Users className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <span className="hidden sm:inline">User Contributions</span>
+                <span className="sm:hidden">Contributions</span>
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button
-                onClick={() => router.push('/dashboard/contributions/new')}
-                variant="outline"
-                className="flex items-center gap-2"
-                disabled={!hasAvailablePurchases}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <button
+                onClick={() => router.push('/dashboard/purchases/new')}
+                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 h-10"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">Add Tokens</span>
+                <span className="sm:hidden">Tokens</span>
+              </button>
+              <NavigationFormButton
+                action={navigateToNewContribution}
+                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm text-gray-900 dark:text-gray-100 h-10"
               >
                 <Plus className="h-4 w-4" />
-                New Contribution
-              </Button>
+                <span className="hidden sm:inline">New Contribution</span>
+                <span className="sm:hidden">New</span>
+              </NavigationFormButton>
             </div>
           </div>
         </div>
@@ -289,15 +252,13 @@ export function ContributionsClient() {
                 purchase.
               </p>
               <div className="mt-6">
-                <Button
-                  onClick={() => router.push('/dashboard/contributions/new')}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  disabled={!hasAvailablePurchases}
+                <NavigationFormButton
+                  action={navigateToNewContribution}
+                  className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-gray-900 dark:text-gray-100"
                 >
                   <Plus className="h-4 w-4" />
                   New Contribution
-                </Button>
+                </NavigationFormButton>
                 {!hasAvailablePurchases && (
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                     All purchases already have contributions. No new contributions can be added at this time.
@@ -308,7 +269,7 @@ export function ContributionsClient() {
           ) : (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
                 <div className="bg-white p-6 rounded-lg shadow dark:bg-slate-800">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -438,19 +399,130 @@ export function ContributionsClient() {
                       <div
                         key={contribution.id}
                         id={`contribution-${contribution.id}`}
-                        className={`px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 ${
+                        className={`px-4 sm:px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 ${
                           (session?.user?.role === 'ADMIN' || contribution.user.id === session?.user?.id) 
-                            ? 'cursor-pointer border-l-4 border-l-transparent hover:border-l-blue-500' 
+                            ? 'border-l-4 border-l-transparent hover:border-l-blue-500' 
                             : ''
                         }`}
-                        onClick={() => handleContributionClick(contribution)}
-                        title={
-                          (session?.user?.role === 'ADMIN' || contribution.user.id === session?.user?.id) 
-                            ? 'Click to edit this contribution' 
-                            : ''
-                        }
                       >
-                        <div className="flex items-center justify-between">
+                        {/* Mobile Layout */}
+                        <div className="lg:hidden space-y-3">
+                          {/* Header */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <User className="h-5 w-5 text-slate-400 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                                  {contribution.user.name}
+                                </p>
+                                {session.user?.role === 'ADMIN' && (
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                    {contribution.user.email}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {/* Action Buttons */}
+                            {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                              <div className="flex items-center space-x-1 flex-shrink-0">
+                                <form action={editContribution} className="inline">
+                                  <input type="hidden" name="contributionId" value={contribution.id} />
+                                  <button
+                                    type="submit"
+                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors min-w-[44px] min-h-[44px]"
+                                    title="Edit contribution"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                </form>
+                                <form action={deleteContribution} className="inline">
+                                  <input type="hidden" name="contributionId" value={contribution.id} />
+                                  <button
+                                    type="submit"
+                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                    className={`p-2 rounded-lg transition-colors min-w-[44px] min-h-[44px] ${
+                                      !isLatestContribution(contribution)
+                                        ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
+                                        : deletingId === contribution.id
+                                        ? 'text-slate-400 cursor-wait'
+                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                    }`}
+                                    title={
+                                      !isLatestContribution(contribution)
+                                        ? 'Only the latest contribution in the system can be deleted'
+                                        : deletingId === contribution.id
+                                        ? 'Deleting...'
+                                        : 'Delete contribution'
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </form>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Badges */}
+                          <div className="flex flex-wrap gap-2">
+                            {isLatestContribution(contribution) && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Latest in System
+                              </span>
+                            )}
+                            {contribution.purchase.isEmergency && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                Emergency
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Purchase Info */}
+                          <div className="text-sm text-slate-500 dark:text-slate-400">
+                            Purchase Date: {new Date(contribution.purchase.purchaseDate).toLocaleDateString()}
+                          </div>
+
+                          {/* Consumption */}
+                          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                            <div className="text-center">
+                              <p className="text-lg font-semibold text-blue-700 dark:text-blue-400">
+                                {contribution.tokensConsumed.toLocaleString()} kWh
+                              </p>
+                              <p className="text-xs text-blue-600 dark:text-blue-300">
+                                Consumed (Reading: {contribution.meterReading.toLocaleString()})
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Financial Details */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3 text-center">
+                              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                ${contribution.contributionAmount.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">You Paid</p>
+                              <p className={`text-xs mt-1 ${overpayment >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                {overpayment >= 0 ? '+' : ''}${overpayment.toFixed(2)} net
+                              </p>
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3 text-center">
+                              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                                ${trueCost.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Fair Share</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {efficiency.toFixed(1)}% efficiency
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Rate */}
+                          <div className="text-center text-sm text-slate-600 dark:text-slate-400">
+                            Rate: ${(contribution.purchase.totalPayment / contribution.purchase.totalTokens).toFixed(4)}/kWh
+                          </div>
+                        </div>
+
+                        {/* Desktop Layout */}
+                        <div className="hidden lg:flex items-center justify-between">
                           <div className="flex items-center space-x-4">
                             <div className="flex-shrink-0">
                               <User className="h-6 w-6 text-slate-400" />
@@ -551,34 +623,40 @@ export function ContributionsClient() {
                             </div>
                             {/* Action Buttons */}
                             {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
-                              <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                                <button
-                                  onClick={() => handleContributionClick(contribution)}
-                                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors"
-                                  title="Edit contribution"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteContribution(contribution)}
-                                  disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
-                                  className={`p-2 rounded-lg transition-colors ${
-                                    !isLatestContribution(contribution)
-                                      ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
-                                      : deletingId === contribution.id
-                                      ? 'text-slate-400 cursor-wait'
-                                      : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
-                                  }`}
-                                  title={
-                                    !isLatestContribution(contribution)
-                                      ? 'Only the latest contribution in the system can be deleted'
-                                      : deletingId === contribution.id
-                                      ? 'Deleting...'
-                                      : 'Delete contribution'
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
+                              <div className="flex items-center space-x-2">
+                                <form action={editContribution} className="inline">
+                                  <input type="hidden" name="contributionId" value={contribution.id} />
+                                  <button
+                                    type="submit"
+                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors"
+                                    title="Edit contribution"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                </form>
+                                <form action={deleteContribution} className="inline">
+                                  <input type="hidden" name="contributionId" value={contribution.id} />
+                                  <button
+                                    type="submit"
+                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                    className={`p-2 rounded-lg transition-colors ${
+                                      !isLatestContribution(contribution)
+                                        ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
+                                        : deletingId === contribution.id
+                                        ? 'text-slate-400 cursor-wait'
+                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                    }`}
+                                    title={
+                                      !isLatestContribution(contribution)
+                                        ? 'Only the latest contribution in the system can be deleted'
+                                        : deletingId === contribution.id
+                                        ? 'Deleting...'
+                                        : 'Delete contribution'
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </form>
                               </div>
                             )}
                           </div>

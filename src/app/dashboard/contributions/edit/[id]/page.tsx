@@ -94,7 +94,7 @@ function EditContributionContent() {
       // Set form values
       setValue('contributionAmount', data.contributionAmount);
       // tokensConsumed is calculated and readonly
-    } catch (error) {
+    } catch {
       // console.error removed
       setError('Failed to load contribution data.');
     } finally {
@@ -123,7 +123,7 @@ function EditContributionContent() {
       }
 
       return { isValid: true, errors: [] };
-    } catch (error) {
+    } catch {
       return { 
         isValid: false, 
         errors: [{ message: 'Failed to validate contribution' }] 
@@ -142,7 +142,7 @@ function EditContributionContent() {
       
       if (!validation.isValid) {
         const errors: Record<string, string> = {};
-        validation.errors.forEach((error: any) => {
+        validation.errors.forEach((error: { field?: string; message: string }) => {
           if (error.field) {
             errors[error.field] = error.message;
           } else {
@@ -233,7 +233,7 @@ function EditContributionContent() {
             Access Denied
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-6">
-            You don't have permission to edit this contribution.
+            You don&apos;t have permission to edit this contribution.
           </p>
           <Button onClick={() => router.push('/dashboard/contributions')}>
             Back to Contributions
@@ -293,7 +293,7 @@ function EditContributionContent() {
                       Purchase Date
                     </label>
                     <p className="text-slate-900 dark:text-blue-300 font-medium">
-                      {new Date(contribution.purchase.purchaseDate + 'T00:00:00').toLocaleDateString()}
+                      {new Date(contribution.purchase.purchaseDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div>

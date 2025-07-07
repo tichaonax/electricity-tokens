@@ -10,12 +10,14 @@ export interface BackupMetadata {
     users: number;
     tokenPurchases: number;
     userContributions: number;
+    meterReadings: number;
     auditLogs: number;
   };
   checksums: {
     users: string;
     tokenPurchases: string;
     userContributions: string;
+    meterReadings: string;
     auditLogs: string;
   };
 }
@@ -26,6 +28,7 @@ export interface BackupData {
     users: Record<string, unknown>[];
     tokenPurchases: Record<string, unknown>[];
     userContributions: Record<string, unknown>[];
+    meterReadings: Record<string, unknown>[];
     auditLogs: Record<string, unknown>[];
   };
 }
@@ -39,7 +42,7 @@ export class BackupService {
       console.log('Starting full backup...');
 
       // Fetch all data
-      const [users, tokenPurchases, userContributions, auditLogs] =
+      const [users, tokenPurchases, userContributions, meterReadings, auditLogs] =
         await Promise.all([
           prisma.user.findMany({
             include: {
@@ -65,6 +68,9 @@ export class BackupService {
               },
             },
           }),
+          prisma.meterReading.findMany({
+            orderBy: { readingDate: 'asc' },
+          }),
           prisma.auditLog.findMany({
             include: {
               user: {
@@ -79,6 +85,7 @@ export class BackupService {
         users: await this.calculateChecksum(users),
         tokenPurchases: await this.calculateChecksum(tokenPurchases),
         userContributions: await this.calculateChecksum(userContributions),
+        meterReadings: await this.calculateChecksum(meterReadings),
         auditLogs: await this.calculateChecksum(auditLogs),
       };
 
@@ -91,12 +98,14 @@ export class BackupService {
           users,
           tokenPurchases,
           userContributions,
+          meterReadings,
           auditLogs,
         }).length,
         recordCounts: {
           users: users.length,
           tokenPurchases: tokenPurchases.length,
           userContributions: userContributions.length,
+          meterReadings: meterReadings.length,
           auditLogs: auditLogs.length,
         },
         checksums,
@@ -108,6 +117,7 @@ export class BackupService {
           users,
           tokenPurchases,
           userContributions,
+          meterReadings,
           auditLogs,
         },
       };
@@ -221,6 +231,7 @@ export class BackupService {
           users,
           tokenPurchases,
           userContributions,
+          meterReadings,
           auditLogs,
         }).length,
         recordCounts: {
@@ -238,6 +249,7 @@ export class BackupService {
           users,
           tokenPurchases,
           userContributions,
+          meterReadings,
           auditLogs,
         },
       };
@@ -387,6 +399,10 @@ export class BackupService {
         console.log(
           'User Contributions:',
           backupData.metadata.recordCounts.userContributions
+        );
+        console.log(
+          'Meter Readings:',
+          backupData.metadata.recordCounts.meterReadings
         );
         console.log('Audit Logs:', backupData.metadata.recordCounts.auditLogs);
 

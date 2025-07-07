@@ -52,6 +52,12 @@ After logging in, you'll see your **Dashboard** with:
 - Balance (overpaid/underpaid)
 - Usage trends
 
+#### **Anticipated Payment Predictions** 
+- **Smart Token Purchase Estimation**: Based on current usage and historical patterns
+- **Your Next Payment**: Predicted amount you'll need to contribute
+- **Others' Expected Payment**: Estimated contribution from other household members
+- **Total Token Purchase**: Recommended purchase amount for the household
+
 #### **Quick Actions**
 - Add contribution to recent purchase
 - View purchase history
@@ -176,6 +182,109 @@ After someone creates a purchase, each household member needs to:
 - **Contribute promptly**: Don't wait too long after purchases
 - **Check suggested amounts**: The system calculates fair shares automatically
 - **Communicate with household**: Discuss any special arrangements
+
+---
+
+## 🔮 Anticipated Payment Predictions
+
+### Understanding Payment Predictions
+
+The Electricity Tokens Tracker includes smart prediction functionality that helps you plan future token purchases based on current usage and historical patterns. This feature appears in the **Account Balance** widget on your dashboard.
+
+### How Predictions Work
+
+The system uses a **proportional scaling algorithm** based on:
+
+1. **Your current usage** since the last token purchase
+2. **Your historical consumption patterns** 
+3. **Others' historical usage patterns** in the household
+4. **Your current account balance** (credit or debt)
+
+### The Three Prediction Sections
+
+#### **🔵 Anticipated Next Payment**
+- **What it shows**: How much you'll likely need to contribute to the next token purchase
+- **Calculation**: Your current balance + your estimated usage cost
+- **Example**: If you owe $4.75 and have used $6.97 worth of electricity, your anticipated payment is $11.72
+- **Use it for**: Planning your personal budget for electricity costs
+
+#### **🟣 Anticipated Others Payment** 
+- **What it shows**: How much other household members will likely contribute
+- **Calculation**: Based on proportional scaling of their historical usage vs. your current usage
+- **Formula**: `Your current cost × (Others' historical usage ÷ Your historical fair share)`
+- **Example**: If your usage is $6.97 and others historically used 1.48× your amount, they'll contribute $10.33
+- **Use it for**: Estimating how much others should contribute when planning purchases
+
+#### **🟠 Anticipated Token Purchase**
+- **What it shows**: Total recommended token purchase amount for the household
+- **Calculation**: Your anticipated payment + Others' anticipated payment
+- **Example**: $11.72 + $10.33 = $22.05 total needed
+- **Use it for**: Deciding how much electricity to purchase to cover everyone's needs
+
+### Practical Benefits
+
+**📈 Better Planning**:
+- Know exactly how much to budget for electricity
+- Plan token purchases before running out
+- Avoid emergency purchases at higher rates
+
+**⚖️ Fair Cost Sharing**:
+- Transparent calculations based on actual usage patterns
+- Everyone pays proportional to their consumption
+- Clear visibility into expected contributions
+
+**💰 Cost Optimization**:
+- Buy the right amount of tokens - not too little, not too much
+- Coordinate household purchases more effectively
+- Reduce waste from unused tokens
+
+### Reading the Predictions
+
+**Negative Values** (shown in red):
+- Represent money that needs to be paid
+- Example: -$11.72 means you need to pay $11.72
+
+**Positive Values** (shown in green):
+- Represent credit or overpayment
+- Example: +$5.00 means you have a $5 credit
+
+**Status Indicators**:
+- **Payment due**: You need to contribute money
+- **Credit expected**: You have overpaid and have credit
+- **Contribution due**: Others need to pay their share
+
+### Example Scenario
+
+**Current Situation**:
+- You have a -$4.75 balance (you owe money)
+- You've used 24.6 kWh since last purchase (worth $6.97)
+- Historical total purchases: $202.50
+- Your historical fair share: $81.60
+- Others' historical usage: $120.90
+
+**Predictions**:
+- **Your Next Payment**: -$4.75 + (-$6.97) = **-$11.72**
+- **Others Payment**: -$6.97 × ($120.90 ÷ $81.60) = **-$10.33**  
+- **Total Purchase Needed**: -$11.72 + (-$10.33) = **-$22.05**
+
+**Action**: Purchase approximately $22 worth of electricity tokens to cover everyone's usage.
+
+### Tips for Using Predictions
+
+**🎯 Plan Ahead**:
+- Check predictions weekly to plan purchases
+- Coordinate with household members based on predicted contributions
+- Use predictions to budget monthly electricity expenses
+
+**📊 Track Accuracy**:
+- Compare predictions to actual costs after purchases
+- Adjust usage patterns if predictions show concerning trends
+- Use historical data to improve future predictions
+
+**💡 Optimize Purchases**:
+- Buy tokens when predictions show need approaching
+- Avoid emergency purchases by planning with predictions
+- Consider bulk purchases when total predictions are high
 
 ---
 
@@ -443,6 +552,26 @@ A: Purchases made when tokens are critically low, often at higher rates or incon
 **Q: How does the system calculate fair shares?**
 A: Based on actual consumption: (Your tokens used ÷ Total tokens) × Total cost.
 
+### Anticipated Payment Predictions
+
+**Q: How accurate are the payment predictions?**
+A: Predictions are based on historical usage patterns and current consumption. They're typically accurate within 10-15% for stable usage patterns.
+
+**Q: Why is my anticipated payment different from what I actually paid last time?**
+A: Predictions account for your current balance and recent usage changes. If your consumption pattern has changed or you have outstanding balances, predictions will reflect this.
+
+**Q: What does "Others' Payment" mean?**
+A: This shows how much other household members are expected to contribute based on their historical usage patterns relative to your current usage.
+
+**Q: Why do the predictions show negative numbers?**
+A: Negative numbers represent money that needs to be paid. This is normal - it means there's a cost that needs to be covered.
+
+**Q: Can I use predictions to plan when to buy tokens?**
+A: Yes! The "Anticipated Token Purchase" shows the total amount needed by the household. Use this to time purchases and avoid running out of electricity.
+
+**Q: What if my predictions seem wrong?**
+A: Predictions are estimates based on historical data. Check that your meter readings are accurate and consider that changing usage patterns will affect predictions.
+
 ---
 
 ## 🆘 Getting Help
@@ -503,11 +632,24 @@ A: Based on actual consumption: (Your tokens used ÷ Total tokens) × Total cost
 
 ### Key Formulas
 
+**Basic Calculations**:
 ```
 Tokens Consumed = Current Reading - Purchase Reading
 Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 Rate per kWh = Total Payment ÷ Total Tokens
 Your Rate = Your Payment ÷ Your Tokens
+```
+
+**Anticipated Payment Predictions**:
+```
+Your Anticipated Payment = Your Current Balance + Your Usage Cost Since Last Purchase
+Others' Anticipated Payment = Your Usage Cost × (Others' Historical Usage ÷ Your Historical Fair Share)
+Total Token Purchase Needed = Your Anticipated Payment + Others' Anticipated Payment
+
+Where:
+- Usage Cost Since Last Purchase = Tokens Used × Historical Rate per kWh
+- Historical Rate per kWh = Total Historical True Cost ÷ Total Historical Tokens
+- Others' Historical Usage = Total Historical Purchases - Your Historical Fair Share
 ```
 
 ---

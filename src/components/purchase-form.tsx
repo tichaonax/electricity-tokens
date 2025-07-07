@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Form,
   FormField,
@@ -113,6 +112,16 @@ export function PurchaseForm({
     isLoading: boolean;
     reading?: number;
     date?: string;
+    error?: string;
+  }>({
+    isLoading: false,
+  });
+
+  const [meterReadingSuggestion, setMeterReadingSuggestion] = useState<{
+    isLoading: boolean;
+    reading?: number;
+    date?: string;
+    source?: 'meter_reading' | 'purchase';
     error?: string;
   }>({
     isLoading: false,
@@ -251,6 +260,64 @@ export function PurchaseForm({
     }
   }, [mode]);
 
+  // Fetch meter reading suggestion (prioritize meter readings over purchases)
+  const fetchMeterReadingSuggestion = useCallback(async () => {
+    if (mode !== 'create') return;
+
+    setMeterReadingSuggestion({ isLoading: true });
+
+    try {
+      // First try to get the latest meter reading
+      const meterResponse = await fetch('/api/meter-readings?limit=1');
+      if (meterResponse.ok) {
+        const meterResult = await meterResponse.json();
+        if (meterResult.meterReadings && meterResult.meterReadings.length > 0) {
+          const latestMeterReading = meterResult.meterReadings[0];
+          setMeterReadingSuggestion({
+            isLoading: false,
+            reading: latestMeterReading.reading,
+            date: latestMeterReading.readingDate,
+            source: 'meter_reading',
+          });
+          
+          // Auto-populate the form with the latest meter reading
+          setValue('meterReading', latestMeterReading.reading);
+          return;
+        }
+      }
+
+      // Fallback to last purchase meter reading if no meter readings exist
+      const purchaseResponse = await fetch('/api/purchases?limit=1&sortBy=purchaseDate&sortDirection=desc');
+      if (purchaseResponse.ok) {
+        const purchaseResult = await purchaseResponse.json();
+        if (purchaseResult.purchases && purchaseResult.purchases.length > 0) {
+          const lastPurchase = purchaseResult.purchases[0];
+          setMeterReadingSuggestion({
+            isLoading: false,
+            reading: lastPurchase.meterReading,
+            date: lastPurchase.purchaseDate,
+            source: 'purchase',
+          });
+          
+          // Auto-populate the form with the last purchase meter reading
+          setValue('meterReading', lastPurchase.meterReading);
+          return;
+        }
+      }
+
+      // No data found
+      setMeterReadingSuggestion({
+        isLoading: false,
+        error: 'No previous meter readings or purchases found',
+      });
+    } catch {
+      setMeterReadingSuggestion({
+        isLoading: false,
+        error: 'Error fetching meter reading suggestion',
+      });
+    }
+  }, [mode, setValue]);
+
   // Validate sequential purchase order constraint
   const validateSequentialOrder = useCallback(
     async (date: Date) => {
@@ -360,8 +427,9 @@ export function PurchaseForm({
   useEffect(() => {
     if (mode === 'create') {
       fetchLastMeterReading();
+      fetchMeterReadingSuggestion();
     }
-  }, [mode, fetchLastMeterReading]);
+  }, [mode, fetchLastMeterReading, fetchMeterReadingSuggestion]);
 
   const handleFormSubmit = async (data: PurchaseFormData) => {
     try {
@@ -428,7 +496,7 @@ export function PurchaseForm({
         {mode === 'edit' && initialData && (
           <div className="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
-              📋 Current Values (what you're changing from)
+              📋 Current Values (what you&apos;re changing from)
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
               <div>
@@ -602,15 +670,50 @@ export function PurchaseForm({
               </div>
             )}
 
-            {/* Last Meter Reading Display for Create Mode */}
+            {/* Auto-populated Meter Reading Display for Create Mode */}
+            {mode === 'create' && (
+              <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-md dark:bg-green-950 dark:border-green-800">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
+                  <div className="text-sm text-green-700 dark:text-green-300">
+                    <div className="font-medium mb-1">Auto-populated Meter Reading:</div>
+                    {meterReadingSuggestion.isLoading ? (
+                      <div>Loading latest meter reading...</div>
+                    ) : meterReadingSuggestion.error ? (
+                      <div className="text-amber-600 dark:text-amber-400">
+                        {meterReadingSuggestion.error}
+                      </div>
+                    ) : meterReadingSuggestion.reading ? (
+                      <div>
+                        <div>
+                          Using {meterReadingSuggestion.source === 'meter_reading' ? 'latest meter reading' : 'last purchase meter reading'}: <span className="font-medium">{meterReadingSuggestion.reading.toLocaleString()} kWh</span>
+                        </div>
+                        <div className="text-xs mt-1">
+                          From {meterReadingSuggestion.source === 'meter_reading' ? 'meter reading' : 'purchase'} on: {new Date(meterReadingSuggestion.date!).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          ✨ {meterReadingSuggestion.source === 'meter_reading' 
+                            ? 'Form auto-populated with your latest meter reading' 
+                            : 'Form auto-populated with last purchase meter reading'}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>No previous readings found - you can enter any value</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Last Purchase Context for Create Mode */}
             {mode === 'create' && (
               <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-950 dark:border-blue-800">
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div className="text-sm text-blue-700 dark:text-blue-300">
-                    <div className="font-medium mb-1">Last Purchase Information:</div>
+                    <div className="font-medium mb-1">Last Purchase Context:</div>
                     {lastMeterReading.isLoading ? (
-                      <div>Loading last meter reading...</div>
+                      <div>Loading last purchase information...</div>
                     ) : lastMeterReading.error ? (
                       <div className="text-amber-600 dark:text-amber-400">
                         {lastMeterReading.error}
@@ -618,7 +721,7 @@ export function PurchaseForm({
                     ) : lastMeterReading.reading ? (
                       <div>
                         <div>
-                          Last meter reading: <span className="font-medium">{lastMeterReading.reading.toLocaleString()} kWh</span>
+                          Last purchase meter reading: <span className="font-medium">{lastMeterReading.reading.toLocaleString()} kWh</span>
                         </div>
                         <div className="text-xs mt-1">
                           From purchase on: {new Date(lastMeterReading.date!).toLocaleDateString()}
@@ -789,17 +892,17 @@ export function PurchaseForm({
                 </span>
               )}
             </FormLabel>
-            <DatePicker
-              date={
-                watchedValues.purchaseDate
-                  ? new Date(watchedValues.purchaseDate)
-                  : undefined
+            <Input
+              type="date"
+              {...register('purchaseDate', {
+                setValueAs: (value) => value ? new Date(value) : new Date()
+              })}
+              defaultValue={
+                initialData?.purchaseDate 
+                  ? initialData.purchaseDate.split('T')[0]
+                  : new Date().toISOString().split('T')[0]
               }
-              onDateChange={(date) =>
-                setValue('purchaseDate', date || new Date())
-              }
-              placeholder="Select purchase date"
-              className={errors.purchaseDate ? 'border-red-500' : ''}
+              className={errors.purchaseDate ? 'border-red-500 dark:bg-slate-800 dark:text-slate-100 dark:border-red-600' : 'dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600'}
             />
             <FormDescription>
               Select the date when the tokens were purchased

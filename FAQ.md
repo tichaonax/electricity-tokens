@@ -2,17 +2,18 @@
 
 ## 🔍 Quick Find
 
-**New User Questions** | **Usage Questions** | **Technical Issues** | **Cost & Billing** | **Admin Questions**
----|---|---|---|---
-[Getting Started](#-getting-started) | [Daily Usage](#-daily-usage) | [Login Problems](#-technical-issues) | [Cost Calculation](#-cost--billing) | [User Management](#-admin--management)
-[First Purchase](#-getting-started) | [Meter Readings](#-daily-usage) | [App Not Working](#-technical-issues) | [Fair Share](#-cost--billing) | [Data Export](#-admin--management)
-[Understanding Dashboard](#-getting-started) | [Contributions](#-daily-usage) | [Slow Performance](#-technical-issues) | [Overpayment](#-cost--billing) | [System Backup](#-admin--management)
+| **New User Questions**                       | **Usage Questions**             | **Technical Issues**                   | **Cost & Billing**                  | **Admin Questions**                    |
+| -------------------------------------------- | ------------------------------- | -------------------------------------- | ----------------------------------- | -------------------------------------- |
+| [Getting Started](#-getting-started)         | [Daily Usage](#-daily-usage)    | [Login Problems](#-technical-issues)   | [Cost Calculation](#-cost--billing) | [User Management](#-admin--management) |
+| [First Purchase](#-getting-started)          | [Meter Readings](#-daily-usage) | [App Not Working](#-technical-issues)  | [Fair Share](#-cost--billing)       | [Data Export](#-admin--management)     |
+| [Understanding Dashboard](#-getting-started) | [Contributions](#-daily-usage)  | [Slow Performance](#-technical-issues) | [Overpayment](#-cost--billing)      | [System Backup](#-admin--management)   |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Q: I'm new to this app. What exactly does it do?
+
 **A:** Electricity Tokens Tracker helps households fairly split electricity costs based on actual usage. Here's how it works:
 
 1. Someone buys electricity tokens (kWh) from the utility company
@@ -24,7 +25,9 @@
 **Example**: If you used 25 kWh out of a 100 kWh purchase that cost $150, you pay (25÷100) × $150 = $37.50.
 
 ### Q: Do I need to be tech-savvy to use this?
+
 **A:** Not at all! The app is designed for everyone. You mainly need to:
+
 - Take meter readings (just like reading a car odometer)
 - Enter some numbers in simple forms
 - Check your usage reports occasionally
@@ -32,17 +35,22 @@
 The app guides you through each step and calculates everything automatically.
 
 ### Q: What's a "token" in this system?
+
 **A:** A token represents 1 kilowatt-hour (kWh) of electricity. It's a simple 1:1 relationship:
+
 - **1 token = 1 kWh**
 - If you buy "100 tokens," you bought 100 kWh of electricity
 - Your electricity meter measures kWh, so the numbers match directly
 
 ### Q: How is this different from just splitting the electricity bill evenly?
+
 **A:** **Fair vs. Equal**:
+
 - **Equal split**: Everyone pays the same amount regardless of usage
 - **Fair split (our system)**: Everyone pays based on actual consumption
 
 **Example**:
+
 ```
 3-person household, $150 electricity bill:
 Equal split: $50 each (even if one person used 80% of the electricity)
@@ -50,7 +58,9 @@ Fair split: Person A used 60 kWh = $90, Person B used 25 kWh = $37.50, Person C 
 ```
 
 ### Q: What if I'm the only one who knows how to buy electricity tokens?
+
 **A:** That's common! You can:
+
 1. Create all the purchases in the app
 2. Others just need to contribute (much simpler)
 3. The app tracks who owes what to whom
@@ -63,7 +73,9 @@ Many households have one "electricity manager" who handles purchases while other
 ## ⚡ Daily Usage
 
 ### Q: How often do I need to check my meter reading?
+
 **A:** **Recommended frequency**:
+
 - **After each purchase**: Essential for accurate tracking
 - **Weekly**: Good for monitoring usage patterns
 - **When contributing**: Required for fair cost calculation
@@ -72,13 +84,16 @@ Many households have one "electricity manager" who handles purchases while other
 **Pro tip**: Set a weekly reminder on your phone. It takes 30 seconds but ensures accurate cost sharing.
 
 ### Q: I can't find my electricity meter or don't know how to read it
+
 **A:** **Finding your meter**:
+
 - Usually outside your home/apartment
 - Sometimes in a utility room or basement
 - May be in a shared meter room (apartments)
 - Contact your utility company if you can't locate it
 
 **Reading the meter**:
+
 - Look for a digital display showing kWh
 - Write down ALL the numbers before the decimal
 - Some meters show extra digits - use the main reading
@@ -87,26 +102,32 @@ Many households have one "electricity manager" who handles purchases while other
 **Still confused?** Ask a neighbor, landlord, or utility company for help. Once you know how, it's easy!
 
 ### Q: What if my meter reading seems wrong?
+
 **A:** **Common meter reading issues**:
 
 **Reading looks too high**:
+
 - Double-check you're reading the right meter
 - Ensure you're reading kWh, not other measurements
 - Look for unusual electricity usage (heater left on, etc.)
 - Compare with previous readings for reasonableness
 
 **Reading looks too low**:
+
 - Make sure you're reading all digits
 - Check if the meter reset (rare, but possible)
 - Verify you're reading the current reading, not historical data
 
 **The app says "invalid reading"**:
+
 - Your reading must be higher than the last purchase reading
 - Check that you're reading in chronological order
 - Contact admin if you're certain your reading is correct
 
 ### Q: What happens if I forget to contribute to a purchase?
+
 **A:** **No problem!** You can contribute any time:
+
 1. The app tracks all pending contributions
 2. Your dashboard shows what you owe
 3. You can contribute weeks or months later
@@ -115,7 +136,9 @@ Many households have one "electricity manager" who handles purchases while other
 **However**: Contributing promptly is courteous and helps with household cash flow.
 
 ### Q: Can I contribute more than my fair share?
+
 **A:** **Yes!** You might want to:
+
 - Round up for convenience ($37.63 → $40)
 - Overpay to simplify future transactions
 - Cover someone else who's short on cash
@@ -123,12 +146,15 @@ Many households have one "electricity manager" who handles purchases while other
 The app tracks overpayments and shows your positive balance. Others owe you money until it balances out.
 
 ### Q: What if someone never contributes?
+
 **A:** **The app tracks everything**:
+
 - Admins can see who owes money
 - Balance reports show overdue amounts
 - Audit logs track all activity (or lack thereof)
 
 **Household solutions**:
+
 - Set up friendly reminders
 - Establish house rules about contribution timing
 - Use the app's notification features
@@ -136,9 +162,129 @@ The app tracks overpayments and shows your positive balance. Others owe you mone
 
 ---
 
+## 📱 Mobile & Theme Features
+
+### Q: How do I use the app on my phone or tablet?
+
+**A:** **The app is mobile-first designed!**
+
+**Installation**:
+
+1. **Open your browser** (Chrome, Safari, Firefox) on your mobile device
+2. **Go to the app URL** (provided by your admin)
+3. **Add to home screen**: Look for "Add to Home Screen" option in browser menu
+4. **Use like a native app**: Icon appears on your home screen
+
+**Mobile features**:
+
+- **Card-based layouts**: Everything adapts to your screen size
+- **Touch-friendly**: All buttons and forms work perfectly with touch
+- **No horizontal scrolling**: Everything fits your screen width
+- **Responsive tables**: Tables become cards on small screens
+- **Zoom support**: Pinch to zoom works if you need larger text
+
+**Pro tips**:
+
+- Landscape mode can be helpful for detailed reports
+- The app works offline for viewing (but needs internet for updates)
+- Dark mode saves battery on OLED screens
+
+### Q: Why does my theme keep changing back to light/dark mode?
+
+**A:** **Theme preferences now save automatically!**
+
+**How theme preferences work**:
+
+- **Your choice is saved**: Light, dark, or system theme persists across logins
+- **Per-user settings**: Each household member has their own theme preference
+- **System theme**: Follows your device's day/night settings automatically
+
+**To change your theme**:
+
+1. **Click your profile** (top right corner)
+2. **Select theme preference**: Light, Dark, or System
+3. **Changes save automatically**: No need to click save
+4. **Works across devices**: Your theme follows you when you log in anywhere
+
+**Troubleshooting theme issues**:
+
+- **Clear browser cache** if theme doesn't stick
+- **Check you're logged in** - themes only save for logged-in users
+- **Try different browser** if problems persist
+- **Contact admin** if theme keeps resetting
+
+### Q: The mobile layout looks wrong or things are cut off
+
+**A:** **Mobile layout troubleshooting**:
+
+**Common issues and fixes**:
+
+**Horizontal scrolling**:
+
+- **Clear browser cache**: Old CSS might be cached
+- **Refresh the page**: Use pull-to-refresh on mobile
+- **Try landscape mode**: Some complex pages work better in landscape
+- **Update your browser**: Older browsers might not support responsive design
+
+**Text too small**:
+
+- **Pinch to zoom**: The app supports zooming
+- **Check browser zoom**: May be set too low
+- **Use landscape mode**: More space for text
+- **Accessibility settings**: Your device's large text settings work
+
+**Buttons not working**:
+
+- **Try tapping different areas**: Touch targets might be offset
+- **Wait for page to load**: Don't tap before everything loads
+- **Restart browser**: Close and reopen the browser app
+- **Try different finger**: Sometimes touch sensitivity varies
+
+**Layout looks broken**:
+
+- **Force refresh**: Pull down to refresh on mobile
+- **Clear browser cache**: Instructions vary by browser
+- **Try incognito mode**: Rules out cache issues
+- **Contact admin**: May be a system-wide issue
+
+### Q: Can I install this app like a regular mobile app?
+
+**A:** **Yes! It's a Progressive Web App (PWA)**:
+
+**Installation benefits**:
+
+- **Native app experience**: Looks and feels like a regular app
+- **Home screen icon**: Launch directly from your home screen
+- **No app store required**: Install directly from browser
+- **Automatic updates**: Always get the latest version
+- **Offline viewing**: See your data even without internet (limited functionality)
+
+**How to install**:
+
+**iPhone/iPad**:
+
+1. Open in Safari browser
+2. Tap the share button (square with arrow)
+3. Scroll down and tap "Add to Home Screen"
+4. Choose a name and tap "Add"
+
+**Android**:
+
+1. Open in Chrome browser
+2. Look for "Add to Home Screen" notification
+3. Or tap menu (3 dots) → "Add to Home Screen"
+4. Confirm installation
+
+**Desktop**:
+
+1. Open in Chrome or Edge
+2. Look for install icon in address bar
+3. Click to install as desktop app
+
 ## 🔧 Technical Issues
 
 ### Q: I can't log in - it says "invalid credentials"
+
 **A:** **Step-by-step troubleshooting**:
 
 1. **Check your email and password**:
@@ -162,6 +308,7 @@ The app tracks overpayments and shows your positive balance. Others owe you mone
    - Check if your account is locked
 
 ### Q: The app is running very slowly
+
 **A:** **Quick fixes**:
 
 1. **Browser optimization**:
@@ -184,29 +331,35 @@ The app tracks overpayments and shows your positive balance. Others owe you mone
    - Contact admin if widespread issue
 
 ### Q: I'm getting error messages I don't understand
+
 **A:** **Common error messages and solutions**:
 
 **"Constraint violation"**:
+
 - You're trying to create duplicate data
 - Check if you already contributed to this purchase
 - Ensure meter readings are in correct order
 
 **"Unauthorized"**:
+
 - You need to log in again
 - Your session may have expired
 - Try refreshing the page
 
 **"Forbidden"**:
+
 - You don't have permission for this action
 - Admin features require admin role
 - Contact admin if you should have access
 
 **"Network error"**:
+
 - Check your internet connection
 - Try again in a few minutes
 - Switch between WiFi and mobile data
 
 ### Q: The mobile app isn't working properly
+
 **A:** **Mobile-specific solutions**:
 
 1. **Installation issues**:
@@ -225,6 +378,7 @@ The app tracks overpayments and shows your positive balance. Others owe you mone
    - Some features require internet
 
 ### Q: My data disappeared or looks wrong
+
 **A:** **Data issues require immediate attention**:
 
 1. **Stop entering new data** immediately
@@ -233,6 +387,7 @@ The app tracks overpayments and shows your positive balance. Others owe you mone
 4. **Don't try to "fix" it yourself** - you might make it worse
 
 **Common causes**:
+
 - Browser cache issues (try different browser)
 - Network problems during data entry
 - Account logged into wrong household
@@ -242,6 +397,7 @@ The app tracks overpayments and shows your positive balance. Others owe you mone
 ## 💰 Cost & Billing
 
 ### Q: How exactly is my fair share calculated?
+
 **A:** **The formula is simple and transparent**:
 
 ```
@@ -255,12 +411,14 @@ Your rate: $37.50 ÷ 25 = $1.50 per kWh
 ```
 
 **Why this is fair**:
+
 - Based on actual consumption, not estimates
 - Proportional to real usage
 - Transparent calculation everyone can verify
 - No hidden fees or arbitrary splits
 
 ### Q: Why is my rate per kWh different from others?
+
 **A:** **Several factors affect individual rates**:
 
 1. **Timing of consumption**:
@@ -276,6 +434,7 @@ Your rate: $37.50 ÷ 25 = $1.50 per kWh
    - If you consume during a bulk purchase, you get the better rate
 
 **Example**:
+
 ```
 Purchase A: 50 tokens for $80 (rate: $1.60/kWh) - Emergency
 Purchase B: 200 tokens for $280 (rate: $1.40/kWh) - Bulk
@@ -285,6 +444,7 @@ If you used 25 tokens from Purchase B: Your rate = $1.40/kWh
 ```
 
 ### Q: I think I'm overpaying. How can I check?
+
 **A:** **Use the app's built-in tools**:
 
 1. **Check your balance**: Dashboard shows if you're ahead or behind
@@ -293,17 +453,20 @@ If you used 25 tokens from Purchase B: Your rate = $1.40/kWh
 4. **Audit your contributions**: Review each contribution for accuracy
 
 **Common overpayment causes**:
+
 - Rounding up contributions for convenience
 - Contributing to expensive emergency purchases
 - Meter reading errors (reading too high)
 - Contributing more than calculated fair share
 
 **If you're consistently overpaying**:
+
 - Others in your household owe you money
 - You might be reading your meter incorrectly
 - There might be an issue with the cost calculations
 
 ### Q: What happens if I underpay or don't pay at all?
+
 **A:** **The app tracks everything**:
 
 1. **Immediate effects**:
@@ -323,21 +486,57 @@ If you used 25 tokens from Purchase B: Your rate = $1.40/kWh
 
 **Best practice**: Communicate with your household if you can't pay immediately. Most groups are understanding if you're upfront about timing.
 
+### Q: Who created or modified this meter reading/purchase?
+
+**A:** **Enhanced audit trail shows detailed history!**
+
+**What you can see** (all users):
+
+- **Creator information**: Who originally created each entry
+- **Last modified by**: Who made the most recent changes
+- **Timestamps**: When entries were created and last updated
+- **Your own complete history**: Full audit trail of your activities
+
+**Example audit information**:
+
+```
+Meter Reading #123
+Created by: John Doe on Jan 15, 2025 at 10:30 AM
+Last modified by: Admin User on Jan 15, 2025 at 2:15 PM
+```
+
+**How to view audit information**:
+
+- **Meter readings page**: Shows creator and modifier for each reading
+- **Admin audit access**: Click "View Audit Log" links (admin users only)
+- **Detailed history**: Complete modification history with IP addresses (admin only)
+
+**Why this matters**:
+
+- **Transparency**: Know who made changes and when
+- **Accountability**: Clear responsibility for data accuracy
+- **Dispute resolution**: Audit trail helps resolve questions
+- **Data integrity**: Track all modifications for accuracy
+
 ### Q: Can I see how much everyone else is paying?
+
 **A:** **Privacy vs. transparency balance**:
 
 **What you CAN see**:
+
 - Your own complete payment history
 - Your balance vs. the group
 - Your usage compared to household average
 - Whether you're above or below average in costs
 
 **What you CAN'T see** (regular users):
+
 - Other people's specific payment amounts
 - Individual meter readings
 - Personal contribution details
 
 **What ADMINS can see**:
+
 - All user payment details
 - Complete household financial overview
 - Individual usage patterns
@@ -350,6 +549,7 @@ This protects privacy while maintaining transparency about fair cost sharing.
 ## 👑 Admin & Management
 
 ### Q: How do I become an admin?
+
 **A:** **Admin privileges are granted by**:
 
 1. **Current admin**: Existing admin can promote your account
@@ -357,17 +557,20 @@ This protects privacy while maintaining transparency about fair cost sharing.
 3. **Household agreement**: Your household decides who should be admin
 
 **To request admin access**:
+
 - Contact current admin through the app or in person
 - Explain why you need admin privileges
 - Understand the responsibilities involved
 
 **Admin responsibilities**:
+
 - User account management
 - Data integrity oversight
 - System backup and maintenance
 - Resolving disputes and errors
 
 ### Q: How do I manage users who aren't contributing?
+
 **A:** **Admin tools for user management**:
 
 1. **Identify non-contributors**:
@@ -386,12 +589,14 @@ This protects privacy while maintaining transparency about fair cost sharing.
    - Generate contribution reports
 
 **Best practices**:
+
 - Communicate before taking action
 - Set clear household expectations
 - Use the data to facilitate discussions
 - Consider temporary solutions before permanent ones
 
 ### Q: How do I back up all our data?
+
 **A:** **Built-in backup system**:
 
 1. **Automatic recommendations**:
@@ -416,50 +621,60 @@ This protects privacy while maintaining transparency about fair cost sharing.
    - Consider encryption for sensitive data
 
 ### Q: Someone made an error. How do I fix it?
+
 **A:** **Error correction procedures**:
 
 **For contributions**:
+
 1. **Delete incorrect contribution**: Admin → Contributions → Delete
 2. **User creates new correct contribution**
 3. **Verify the correction in audit logs**
 
 **For purchases**:
+
 1. **More complex** - affects all related contributions
 2. **Check impact analysis**: Shows who will be affected
 3. **Consider editing vs. deleting and recreating**
 4. **Communicate changes to all affected users**
 
 **For user accounts**:
+
 1. **Edit user details**: Admin → Users → Edit
 2. **Role changes**: Promote/demote carefully
 3. **Account unlock**: If user is locked out
 
 **Always**:
+
 - Document what went wrong
 - Explain corrections to affected users
 - Check audit logs to ensure fix worked
 - Learn from errors to prevent recurrence
 
 ### Q: How do I export data for tax purposes or external analysis?
+
 **A:** **Data export options**:
 
 **Export formats**:
+
 - **CSV**: Best for Excel, Google Sheets, accounting software
 - **JSON**: Technical format for developers or advanced analysis
 
 **Export types**:
+
 - **Purchases only**: All token purchases with dates and amounts
 - **Contributions only**: All user contributions and payments
 - **Users**: Account information and roles
 - **Complete export**: Everything including audit logs
 
 **Steps to export**:
+
 1. **Admin → Data Management → Export**
 2. **Select date range** (or "All time")
 3. **Choose format and type**
 4. **Click Export** - file downloads automatically
 
 **Uses for exported data**:
+
 - Import into accounting software
 - Create custom reports in Excel
 - Tax preparation and documentation
@@ -471,67 +686,81 @@ This protects privacy while maintaining transparency about fair cost sharing.
 ## 🔒 Privacy & Security
 
 ### Q: Is my personal usage data private?
+
 **A:** **Privacy protections built into the system**:
 
 **What's private**:
+
 - Your specific meter readings
 - Exact contribution amounts
 - Payment details and history
 - Personal usage patterns
 
 **What's shared**:
+
 - Whether you've contributed to purchases (yes/no)
 - Your participation in household cost sharing
 - General activity (when you last used the system)
 
 **Admin access**:
+
 - Admins can see all financial data for management purposes
 - This is necessary for resolving disputes and maintaining fairness
 - Choose admins you trust with financial information
 
 ### Q: How secure is my login information?
+
 **A:** **Security measures**:
 
 **Password protection**:
+
 - Passwords are encrypted and never stored in plain text
 - Strong password requirements enforced
 - Account lockout after failed login attempts
 
 **Session security**:
+
 - Secure session management with timeouts
 - HTTPS encryption for all data transmission
 - CSRF protection against cross-site attacks
 
 **Data protection**:
+
 - Database encryption at rest
 - Regular security updates
 - Access logging and monitoring
 
 **Best practices for users**:
+
 - Use unique, strong passwords
 - Log out from shared devices
 - Don't share login credentials
 - Report suspicious activity immediately
 
 ### Q: What happens to our data if we stop using the app?
+
 **A:** **Data retention and deletion**:
 
 **While active**:
+
 - All data retained for historical tracking
 - Complete audit trail maintained
 - Backup copies for data recovery
 
 **If household stops using**:
+
 - Export all data before discontinuing
 - Data remains accessible as long as accounts are active
 - Consider downloading final reports for records
 
 **Account deletion**:
+
 - Contact admin to delete accounts
 - Consider data retention requirements (taxes, disputes)
 - Some data may need to be retained for legal/audit purposes
 
 **Migration to other systems**:
+
 - Complete data export available
 - CSV format compatible with most systems
 - Historical data can be preserved independently
@@ -541,6 +770,7 @@ This protects privacy while maintaining transparency about fair cost sharing.
 ## 🆘 Emergency & Support
 
 ### Q: The system is down. What do I do?
+
 **A:** **Emergency troubleshooting steps**:
 
 1. **Check system status**:
@@ -564,6 +794,7 @@ This protects privacy while maintaining transparency about fair cost sharing.
    - Check recent activity for completeness
 
 ### Q: I think there's a billing error. What should I do?
+
 **A:** **Error investigation process**:
 
 1. **Document the issue**:
@@ -592,25 +823,30 @@ This protects privacy while maintaining transparency about fair cost sharing.
    - All changes are logged for transparency
 
 ### Q: I'm locked out of my account. Help!
+
 **A:** **Account lockout recovery**:
 
 **Common causes**:
+
 - Too many failed login attempts
 - Admin locked the account
 - Password expired or changed
 
 **Recovery steps**:
+
 1. **Try password reset**: Use "Forgot Password" link
 2. **Contact admin**: They can unlock your account
 3. **Wait and retry**: Automatic lockouts may be temporary
 4. **Verify email**: Make sure you're using the right email address
 
 **Prevention**:
+
 - Use password managers to avoid typos
 - Update passwords before they expire
 - Communicate with admin before issues arise
 
 ### Q: Who do I contact for help?
+
 **A:** **Support hierarchy**:
 
 1. **Self-help first**:
@@ -634,6 +870,7 @@ This protects privacy while maintaining transparency about fair cost sharing.
    - System unavailability
 
 **Information to provide when seeking help**:
+
 - Your email address (for account lookup)
 - Exact error messages
 - What you were trying to do
@@ -645,6 +882,7 @@ This protects privacy while maintaining transparency about fair cost sharing.
 ## 📊 Quick Reference
 
 ### Essential Formulas
+
 ```
 Fair Share = (Your Tokens ÷ Total Tokens) × Total Cost
 Your Rate = Your Payment ÷ Your Tokens Consumed
@@ -653,17 +891,35 @@ Balance = Total Paid - Fair Share Owed
 ```
 
 ### Common Tasks
-| Task | Time Required | Difficulty |
-|------|---------------|------------|
-| Take meter reading | 30 seconds | Easy |
-| Create purchase | 2 minutes | Easy |
-| Add contribution | 1 minute | Easy |
-| Check balance | 10 seconds | Easy |
-| Review monthly report | 5 minutes | Easy |
-| Export data (admin) | 1 minute | Medium |
-| Fix user error (admin) | 5 minutes | Medium |
+
+| Task                      | Time Required | Difficulty |
+| ------------------------- | ------------- | ---------- |
+| Take meter reading        | 30 seconds    | Easy       |
+| Create purchase           | 2 minutes     | Easy       |
+| Add contribution          | 1 minute      | Easy       |
+| Record meter reading      | 1 minute      | Easy       |
+| Check balance             | 10 seconds    | Easy       |
+| Change theme preference   | 15 seconds    | Easy       |
+| Install mobile app        | 1 minute      | Easy       |
+| Review monthly report     | 5 minutes     | Easy       |
+| View audit trail          | 30 seconds    | Easy       |
+| Export data (admin)       | 1 minute      | Medium     |
+| Fix user error (admin)    | 5 minutes     | Medium     |
+| Review audit logs (admin) | 2 minutes     | Medium     |
+
+### New Features Quick Guide
+
+| Feature                      | How to Access              | Benefit                           |
+| ---------------------------- | -------------------------- | --------------------------------- |
+| **Theme Preferences**        | Profile → Theme            | Personal preference that persists |
+| **Mobile Card Layout**       | Automatic on small screens | Touch-friendly, no scrolling      |
+| **Meter Reading Tracking**   | Dashboard → Meter Readings | Individual consumption monitoring |
+| **Audit Trail Info**         | Visible on all entries     | See who created/modified data     |
+| **PWA Installation**         | Browser menu → Add to Home | Native app experience             |
+| **Enhanced Running Balance** | Dashboard                  | Uses latest meter readings        |
 
 ### Emergency Contacts Checklist
+
 - [ ] Household admin contact info saved
 - [ ] Know how to take meter readings
 - [ ] Understand basic troubleshooting

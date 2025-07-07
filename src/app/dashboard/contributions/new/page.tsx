@@ -1,4 +1,5 @@
 'use client';
+
 import { Suspense } from 'react';
 import { NewContributionClient } from '@/components/new-contribution-client';
 

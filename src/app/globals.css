@@ -320,6 +320,81 @@ body.high-contrast [data-radix-label],
   color: rgb(156 163 175) !important;
 }
 
+/* Fix for date inputs - Allow native browser functionality */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  /* Reset any aggressive overrides that might break native date pickers */
+  background-color: white !important;
+  color: black !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 6px;
+  padding: 8px 12px;
+  /* Keep native appearance for date functionality */
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+  appearance: auto;
+}
+
+/* Dark mode date inputs */
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="time"] {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Ensure date picker button/icon is clickable */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-time-picker-indicator {
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+}
+
+/* Dark mode date picker indicators */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-time-picker-indicator {
+  filter: invert(1);
+}
+
+/* Ensure Popover content is clickable and properly positioned */
+[data-radix-popover-content] {
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Ensure Calendar component inside Popover is interactive */
+[data-radix-popover-content] .rdp {
+  pointer-events: auto !important;
+}
+
+[data-radix-popover-content] .rdp button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Fix any potential click blocking on calendar days */
+.rdp-day {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.rdp-button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
 /* High contrast mode improvements */
 @media (prefers-contrast: high) {
   .dark {

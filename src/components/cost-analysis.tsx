@@ -173,35 +173,43 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
       </div>
 
       {/* Controls */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        <div className="flex gap-2">
+      <div className="mb-6 space-y-4">
+        {/* Analysis Type Buttons */}
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => setAnalysisType('user')}
+            className="flex-1 sm:flex-none"
           >
             <Calculator className="h-4 w-4 mr-1" />
             Cost Breakdown
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => setAnalysisType('recommendations')}
+            className="flex-1 sm:flex-none"
           >
             <Target className="h-4 w-4 mr-1" />
             Recommendations
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => setAnalysisType('optimal')}
+            className="flex-1 sm:flex-none"
           >
             <PieChart className="h-4 w-4 mr-1" />
             Optimal Contributions
           </Button>
         </div>
 
-        <div className="flex gap-2">
+        {/* Date Range Controls */}
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input
             type="date"
             placeholder="Start Date"
@@ -209,7 +217,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             onChange={(e) =>
               setDateRange((prev) => ({ ...prev, startDate: e.target.value }))
             }
-            className="w-40"
+            className="flex-1 sm:max-w-40"
           />
           <Input
             type="date"
@@ -218,9 +226,15 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             onChange={(e) =>
               setDateRange((prev) => ({ ...prev, endDate: e.target.value }))
             }
-            className="w-40"
+            className="flex-1 sm:max-w-40"
           />
-          <Button onClick={fetchCostAnalysis} variant="outline" size="sm">
+          <Button 
+            type="button"
+            onClick={fetchCostAnalysis} 
+            variant="outline" 
+            size="sm"
+            className="flex-1 sm:flex-none"
+          >
             Refresh
           </Button>
         </div>
@@ -450,7 +464,9 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             <PieChart className="h-5 w-5" />
             Optimal vs Actual Contributions
           </h3>
-          <div className="overflow-x-auto">
+          
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-700">
@@ -517,6 +533,71 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {optimalContributions.map((contrib, index) => (
+              <div
+                key={index}
+                className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {new Date(contrib.purchaseDate).toLocaleDateString()}
+                    </div>
+                    <span
+                      className={`inline-block mt-1 px-2 py-1 rounded text-xs ${
+                        contrib.isEmergency
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      }`}
+                    >
+                      {contrib.isEmergency ? 'Emergency' : 'Regular'}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      {contrib.tokensConsumed.toFixed(2)} kWh
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-slate-600 dark:text-slate-400">Actual</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      ${contrib.actualContribution.toFixed(2)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-600 dark:text-slate-400">Optimal</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      ${contrib.totalOptimalContribution.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      Difference
+                    </span>
+                    <span
+                      className={`text-sm font-medium ${
+                        contrib.difference > 0
+                          ? 'text-red-600'
+                          : 'text-green-600'
+                      }`}
+                    >
+                      {contrib.difference > 0 ? '+' : ''}$
+                      {contrib.difference.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

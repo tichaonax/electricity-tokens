@@ -1,12 +1,13 @@
 # ⚡ Electricity Tokens Tracker
 
-A modern, full-featured web application for households to fairly track and share electricity costs based on actual consumption.
+A modern, mobile-first web application for households to fairly track and share electricity costs based on actual consumption with comprehensive audit trails and user-specific preferences.
 
 ## 🎯 Overview
 
 **Core Principle**: 1 Token = 1 kWh (kilowatt-hour) of electricity
 
 This application helps households manage shared electricity costs by:
+
 - Tracking electricity token purchases
 - Recording individual usage through meter readings
 - Calculating fair cost shares based on actual consumption
@@ -15,51 +16,63 @@ This application helps households manage shared electricity costs by:
 ## ✨ Key Features
 
 ### 🎨 **Modern User Experience**
-- **Dark/Light Theme**: Full theme system with user preferences
-- **Responsive Design**: Optimized for desktop, tablet, and mobile
-- **Accessibility**: WCAG compliant with keyboard navigation
-- **Progressive Web App**: Install on mobile devices
+
+- **Persistent Theme Preferences**: User-specific theme settings (light/dark/system) that persist across sessions
+- **Mobile-First Design**: Card-based layouts optimized for touch devices with no horizontal scrolling
+- **Responsive Components**: Adaptive table-to-card layouts for optimal mobile viewing
+- **Progressive Web App**: Install on mobile devices like a native app
+- **Accessibility**: WCAG compliant with keyboard navigation and screen reader support
 
 ### 💰 **Fair Cost Sharing**
+
 - **Proportional Calculations**: Pay based on actual usage
 - **Real-time Validation**: Prevents data entry errors
 - **Balance Tracking**: Monitor overpaid/underpaid status
 - **Transparent Reporting**: Clear cost breakdowns
 
 ### 📊 **Analytics & Reports**
-- **Usage Trends**: Monthly consumption patterns
+
+- **Advanced Meter Reading Tracking**: Individual consumption monitoring with chronological validation
+- **Running Balance Calculations**: Real-time balance updates using latest meter readings
+- **Usage Trends**: Monthly consumption patterns with mobile-optimized charts
 - **Cost Analysis**: Efficiency metrics and optimization tips
-- **Visual Charts**: Interactive graphs with dark mode support
-- **Personal Dashboards**: Individual usage summaries
+- **Visual Charts**: Interactive graphs with theme-aware styling
+- **Personal Dashboards**: Individual usage summaries with anticipated payment calculations
 
 ### 👥 **Admin Management**
+
 - **User Management**: Account creation, roles, and permissions
 - **Security Dashboard**: Audit logs and threat monitoring
 - **Data Management**: Backup, restore, and export tools
 - **System Monitoring**: Health checks and performance metrics
 
 ### 🔒 **Security & Reliability**
-- **Role-based Access**: Admin and user permissions
-- **Audit Logging**: Complete activity tracking
-- **Data Validation**: Comprehensive input validation
-- **Backup & Restore**: Full data recovery capabilities
+
+- **Role-based Access**: Admin and user permissions with granular controls
+- **Enhanced Audit Logging**: Complete activity tracking with IP addresses, user agents, and metadata
+- **Creation/Modification Tracking**: Comprehensive audit trail showing who created or last modified each entry
+- **Data Validation**: Comprehensive input validation with business rule enforcement
+- **Backup & Restore**: Full data recovery capabilities with integrity verification
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - PostgreSQL database
 - npm/yarn package manager
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd electricity-tokens
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -67,27 +80,30 @@ This application helps households manage shared electricity costs by:
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env.local
    # Edit .env.local with your database and auth settings
    ```
 
 4. **Set up the database**
+
    ```bash
    # Interactive setup (recommended for first-time setup)
    npm run db:setup
-   
+
    # Or automated setup
    npm run db:init
-   
+
    # Or manual setup if above fails
    npx prisma generate
    npx prisma db push
    ```
-   
-   **⚠️ Important**: If you get a 500 error on first sign-in, run `npm run db:init` to initialize the database tables. See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for troubleshooting.
+
+   **⚠️ Important**: If you get a 500 error on first sign-in, run `npm run db:init` to initialize the database tables (includes 8 tables for v1.4.0). See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for troubleshooting and upgrade procedures.
 
 5. **Run the development server**
+
    ```bash
    npm run dev
    # or
@@ -100,19 +116,22 @@ This application helps households manage shared electricity costs by:
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **Next.js 14+** - React framework with App Router
-- **Tailwind CSS v4** - Utility-first CSS with dark mode
-- **TypeScript** - Type-safe development
+
+- **Next.js 15** - React framework with App Router and enhanced mobile optimizations
+- **Tailwind CSS** - Utility-first CSS with persistent theme system
+- **TypeScript** - Type-safe development with strict mode
 - **React Hook Form** - Form handling and validation
-- **Zod** - Schema validation
+- **Zod** - Schema validation with business rule enforcement
 
 ### Backend
-- **Next.js API Routes** - Server-side API
-- **Prisma ORM** - Type-safe database operations
-- **PostgreSQL** - Production database
-- **NextAuth.js** - Authentication system
+
+- **Next.js API Routes** - Server-side API with enhanced error handling
+- **Prisma ORM** - Type-safe database operations with audit logging
+- **PostgreSQL** - Production database with optimized indexing
+- **NextAuth.js** - Authentication system with comprehensive audit trail
 
 ### DevOps
+
 - **Vercel** - Deployment platform
 - **GitHub Actions** - CI/CD pipeline
 - **ESLint & Prettier** - Code quality tools
@@ -122,16 +141,21 @@ This application helps households manage shared electricity costs by:
 ### For Household Members
 
 1. **Create Account**: Register with email and password
-2. **Add Purchases**: Record electricity token purchases with meter readings
-3. **Track Usage**: Add contributions based on your meter readings
-4. **Monitor Costs**: View reports to understand your consumption patterns
+2. **Set Theme Preference**: Choose your preferred theme (light/dark/system) - it will persist across sessions
+3. **Add Purchases**: Record electricity token purchases with meter readings
+4. **Record Meter Readings**: Track individual consumption with detailed meter reading entries
+5. **Track Usage**: Add contributions based on your meter readings
+6. **Monitor Costs**: View mobile-optimized reports to understand your consumption patterns
+7. **Review Audit Trail**: See who created or modified entries for transparency
 
 ### For Administrators
 
-1. **User Management**: Create accounts, assign roles, manage permissions
-2. **System Monitoring**: Monitor security, audit logs, and system health
-3. **Data Management**: Create backups, export data, manage system settings
-4. **Analytics**: Access system-wide reports and usage patterns
+1. **User Management**: Create accounts, assign roles, manage permissions and theme preferences
+2. **Meter Reading Oversight**: View, edit, and manage all meter readings with audit information
+3. **Enhanced Audit Access**: Review detailed modification history with IP addresses and user agents
+4. **System Monitoring**: Monitor security, audit logs, and system health
+5. **Data Management**: Create backups, export data, manage system settings
+6. **Analytics**: Access system-wide reports and usage patterns with mobile optimization
 
 ## 📖 Documentation
 
@@ -146,6 +170,7 @@ This application helps households manage shared electricity costs by:
 ## 🔧 Development
 
 ### Project Structure
+
 ```
 src/
 ├── app/              # Next.js app router pages
@@ -159,6 +184,7 @@ src/
 ```
 
 ### Key Commands
+
 ```bash
 # Development
 npm run dev          # Start development server
@@ -199,11 +225,13 @@ npm run test:coverage
 ### Manual Deployment
 
 1. **Build the application**
+
    ```bash
    npm run build
    ```
 
 2. **Set up production database**
+
    ```bash
    npx prisma migrate deploy
    ```
@@ -215,11 +243,13 @@ npm run test:coverage
 
 ## 📊 Application Status
 
-- **Status**: ✅ Production Ready
-- **Version**: 1.0.0
-- **Last Updated**: July 3, 2025
-- **Features**: All core features complete
-- **Documentation**: Comprehensive guides available
+- **Status**: ✅ Production Ready with Enhanced Mobile Support
+- **Version**: 1.4.0
+- **Schema Version**: 1.4.0 (Theme Preferences + Meter Readings + Enhanced Audit Logging)
+- **Last Updated**: July 6, 2025
+- **Features**: All core features complete with mobile-first design
+- **New in v1.4.0**: User theme persistence, comprehensive meter reading tracking, enhanced audit logging, mobile-responsive design
+- **Documentation**: Comprehensive guides available with upgrade procedures
 
 ## 🤝 Contributing
 
@@ -242,4 +272,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for fair electricity cost sharing**
+**Built with ❤️ for fair electricity cost sharing with mobile-first accessibility**
+
+### 🆕 What's New in v1.4.0
+
+- 📱 **Mobile-First Design**: Card-based layouts that work perfectly on phones and tablets
+- 🎨 **Persistent Theme Preferences**: Your theme choice (light/dark/system) saves automatically
+- 📊 **Enhanced Meter Reading System**: Individual consumption tracking with audit trails
+- 🔍 **Comprehensive Audit Logging**: See who created or modified every entry with timestamps
+- ⚡ **Improved Running Balance**: Uses latest meter readings for accurate payment calculations
+- 🛡️ **Enhanced Security**: IP tracking and user agent logging for better audit trails
+- 📋 **Upgrade Support**: Comprehensive migration procedures for existing deployments

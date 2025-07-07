@@ -3,7 +3,9 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { NavigationFormButton } from '@/components/ui/navigation-form-button';
 import { CostAnalysis } from '@/components/cost-analysis';
+import { navigateToDashboard } from '@/app/actions/navigation';
 
 export default function CostAnalysisPage() {
   const { data: session, status } = useSession();
@@ -33,12 +35,12 @@ export default function CostAnalysisPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+              <NavigationFormButton
+                action={navigateToDashboard}
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 p-0 h-auto font-normal bg-transparent border-none"
               >
                 ← Back to Dashboard
-              </button>
+              </NavigationFormButton>
               <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 Cost Analysis & Recommendations
               </h1>

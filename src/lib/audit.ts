@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'LOGIN_FAILED' | 'SESSION_CREATED' | 'SESSION_DESTROYED' | 'PERMISSION_CHANGED' | 'ACCOUNT_LOCKED' | 'ACCOUNT_UNLOCKED';
 
-export type AuditEntityType = 'User' | 'TokenPurchase' | 'UserContribution' | 'Session' | 'Authentication' | 'Permission' | 'SystemConfig';
+export type AuditEntityType = 'User' | 'TokenPurchase' | 'UserContribution' | 'MeterReading' | 'Session' | 'Authentication' | 'Permission' | 'SystemConfig';
 
 export interface AuditLogEntry {
   userId: string;

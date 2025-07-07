@@ -7,7 +7,8 @@ import { DataExport } from '@/components/data-export';
 import { DataImport } from '@/components/data-import';
 import { DataBackup } from '@/components/data-backup';
 import { ArrowLeft, Download, Upload, Shield, HardDrive } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { NavigationFormButton } from '@/components/ui/navigation-form-button';
+import { navigateToDashboard } from '@/app/actions/navigation';
 
 export function DataManagementClient() {
   const { data: session, status } = useSession();
@@ -42,14 +43,13 @@ export function DataManagementClient() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Button
-                variant="ghost"
-                onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+              <NavigationFormButton
+                action={navigateToDashboard}
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 bg-transparent border-none p-2 flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
-              </Button>
+              </NavigationFormButton>
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-blue-600" />
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">

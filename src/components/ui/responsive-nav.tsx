@@ -1,12 +1,13 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { MobileNav } from './mobile-nav';
 import { Badge } from './badge';
 import { ThemeToggleCompact } from './theme-toggle-compact';
 import { User, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { NavigationFormButton } from './navigation-form-button';
+import { navigateToDashboard, navigateToAdmin, navigateToUserManagement, navigateToHelp, navigateToProfile } from '@/app/actions/navigation';
 
 interface ResponsiveNavProps {
   title: string;
@@ -22,7 +23,6 @@ export function ResponsiveNav({
   children,
 }: ResponsiveNavProps) {
   const { data: session } = useSession();
-  const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -59,13 +59,13 @@ export function ResponsiveNav({
             <MobileNav isAdmin={isAdmin} />
 
             {/* Back button (desktop only) */}
-            {showBackButton && backPath && (
-              <button
-                onClick={() => router.push(backPath)}
-                className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+            {showBackButton && backPath === '/dashboard' && (
+              <NavigationFormButton
+                action={navigateToDashboard}
+                className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border-none"
               >
                 ← Back
-              </button>
+              </NavigationFormButton>
             )}
 
             {/* Title */}
@@ -125,50 +125,45 @@ export function ResponsiveNav({
                     </div>
 
                     {/* Navigation links */}
-                    <button
-                      onClick={() => {
-                        router.push('/dashboard');
-                        setShowUserMenu(false);
-                      }}
+                    <NavigationFormButton
+                      action={navigateToDashboard}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
                     >
                       Dashboard
-                    </button>
+                    </NavigationFormButton>
+
+                    <NavigationFormButton
+                      action={navigateToProfile}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                    >
+                      Profile & Settings
+                    </NavigationFormButton>
 
                     {isAdmin && (
                       <>
-                        <button
-                          onClick={() => {
-                            router.push('/dashboard/admin');
-                            setShowUserMenu(false);
-                          }}
+                        <NavigationFormButton
+                          action={navigateToAdmin}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
                         >
                           Admin Panel
-                        </button>
-                        <button
-                          onClick={() => {
-                            router.push('/dashboard/admin/users');
-                            setShowUserMenu(false);
-                          }}
+                        </NavigationFormButton>
+                        <NavigationFormButton
+                          action={navigateToUserManagement}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
                         >
                           User Management
-                        </button>
+                        </NavigationFormButton>
                       </>
                     )}
 
                     {/* Help & FAQ */}
-                    <button
-                      onClick={() => {
-                        router.push('/help');
-                        setShowUserMenu(false);
-                      }}
+                    <NavigationFormButton
+                      action={navigateToHelp}
                       className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
                     >
                       <HelpCircle className="h-4 w-4 mr-2" />
                       Help & FAQ
-                    </button>
+                    </NavigationFormButton>
 
                     {/* Sign out */}
                     <div className="border-t border-gray-100 dark:border-slate-600 mt-1">

@@ -83,44 +83,32 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     // Check authentication
-    const permissionCheck = checkPermissions(
-      session,
-      {},
-      { requireAuth: true }
-    );
-    if (!permissionCheck.success) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Authentication required' },
         { status: 401 }
       );
     }
 
-    // Validate query parameters
-    const validation = await validateRequest(request, {
-      query: dashboardQuerySchema,
-    });
+    // Parse query parameters manually
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId') || undefined;
+    const monthsBackParam = searchParams.get('monthsBack') || '6';
+    const monthsBack = parseInt(monthsBackParam, 10) || 6;
 
-    if (!validation.success) {
-      return createValidationErrorResponse(validation);
+    // Validate monthsBack range
+    if (monthsBack < 1 || monthsBack > 12) {
+      return NextResponse.json(
+        { message: 'monthsBack must be between 1 and 12' },
+        { status: 400 }
+      );
     }
 
-    const { query } = validation.data as {
-      query: {
-        userId?: string;
-        monthsBack: number;
-      };
-    };
-
-    const { userId, monthsBack } = query;
-
     // Determine target user ID
-    const targetUserId = userId || permissionCheck.user!.id;
+    const targetUserId = userId || session.user.id;
 
     // Check permissions
-    if (
-      targetUserId !== permissionCheck.user!.id &&
-      permissionCheck.user!.role !== 'ADMIN'
-    ) {
+    if (targetUserId !== session.user.id && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Access denied: insufficient permissions' },
         { status: 403 }
@@ -156,7 +144,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Calculate personal summary (all time)
+    // Calculate personal summary (all time) - user specific
     const allTimeContributions = await prisma.userContribution.findMany({
       where: { userId: targetUserId },
       include: { purchase: true },
@@ -166,6 +154,15 @@ export async function GET(request: NextRequest) {
       allTimeContributions as Contribution[]
     );
     const lastContribution = allTimeContributions[0];
+
+    // Calculate GLOBAL totals for Quick Stats (all users, all time)
+    const globalContributions = await prisma.userContribution.findMany({
+      include: { purchase: true },
+    });
+
+    const globalSummary = calculateUserTrueCost(
+      globalContributions as Contribution[]
+    );
 
     // Calculate current month metrics
     const currentMonthContributions = contributions.filter(
@@ -316,8 +313,9 @@ export async function GET(request: NextRequest) {
 
     const response: DashboardResponse = {
       personalSummary: {
-        ...personalSummary,
-        contributionCount: allTimeContributions.length,
+        // Use GLOBAL totals for Quick Stats display
+        ...globalSummary,
+        contributionCount: globalContributions.length,
         lastContributionDate: lastContribution?.createdAt.toISOString() || null,
       },
       currentMonth: {

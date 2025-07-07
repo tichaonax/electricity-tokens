@@ -120,29 +120,10 @@ export function calculateUserTrueCost(
   // Find the earliest purchase date globally to determine the first purchase
   const earliestPurchaseDate = sortedContributions[0]?.purchase?.purchaseDate;
 
-  // Calculate running balance using the same logic as the balance fix script
-  let runningBalance = 0;
-
+  // Calculate correct balance: Amount Paid - True Cost
   sortedContributions.forEach((contribution) => {
     const purchase = contribution.purchase;
     if (!purchase) return;
-
-    // Check if this is the first purchase globally
-    const isFirstPurchase =
-      purchase.purchaseDate &&
-      earliestPurchaseDate &&
-      new Date(purchase.purchaseDate).getTime() ===
-        new Date(earliestPurchaseDate).getTime();
-
-    // For the first purchase, no tokens were consumed before it
-    const effectiveTokensConsumed = isFirstPurchase
-      ? 0
-      : contribution.tokensConsumed;
-
-    const fairShare =
-      (effectiveTokensConsumed / purchase.totalTokens) * purchase.totalPayment;
-    const balanceChange = contribution.contributionAmount - fairShare;
-    runningBalance += balanceChange;
 
     const trueCost = calculateProportionalCost(
       contribution.tokensConsumed,
@@ -162,6 +143,9 @@ export function calculateUserTrueCost(
       regularTrueCost += trueCost;
     }
   });
+
+  // Calculate the correct balance: what we paid vs what we should have paid
+  const runningBalance = totalAmountPaid - totalTrueCost;
 
   const averageCostPerKwh =
     totalTokensUsed > 0 ? totalTrueCost / totalTokensUsed : 0;

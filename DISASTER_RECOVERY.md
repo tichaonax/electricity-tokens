@@ -97,7 +97,7 @@
    - Review active connections in database dashboard
    - Consider temporarily scaling down if pool is exhausted
 
-### Database Corruption Recovery
+### Database Corruption Recovery (v1.4.0 Schema)
 
 1. **Stop Application Traffic**
 
@@ -107,21 +107,60 @@
    vercel --prod
    ```
 
-2. **Assess Damage**
+2. **Assess Damage (v1.4.0 Critical Tables)**
 
    ```bash
+   # Check schema integrity
    npx prisma studio
-   # Manual inspection of critical tables
+
+   # Manual inspection of critical v1.4.0 tables
+   psql $DATABASE_URL -c "SELECT COUNT(*) FROM users WHERE theme_preference IS NULL;"
+   psql $DATABASE_URL -c "SELECT COUNT(*) FROM meter_readings WHERE reading IS NULL;"
+   psql $DATABASE_URL -c "SELECT COUNT(*) FROM user_contributions WHERE purchase_id IS NOT NULL;"
+   psql $DATABASE_URL -c "SELECT COUNT(*) FROM audit_logs WHERE timestamp IS NULL;"
+
+   # Verify schema version
+   psql $DATABASE_URL -c "\\d users" | grep theme_preference
+   psql $DATABASE_URL -c "\\dt" | grep meter_readings
    ```
 
-3. **Restore from Backup** (if available)
-   - Use admin backup/restore functionality
-   - Or restore database snapshot from provider
+3. **Restore from v1.4.0 Compatible Backup**
 
-4. **Re-enable Application**
+   ```bash
+   # Use admin backup/restore with schema validation
+   curl -X POST https://your-app.vercel.app/api/admin/restore \
+     -H "Content-Type: application/json" \
+     -d '{"backupFile": "backup-v1.4.0.json", "validateSchema": true}'
+
+   # Or restore database snapshot with migration verification
+   node scripts/verify-migration.js --post-restore
+   ```
+
+4. **Verify v1.4.0 Schema Integrity**
+
+   ```bash
+   # Verify theme preferences are intact
+   psql $DATABASE_URL -c "SELECT COUNT(*) as users_with_themes FROM users WHERE theme_preference IS NOT NULL;"
+
+   # Verify meter readings continuity
+   psql $DATABASE_URL -c "SELECT COUNT(*) as meter_readings_total FROM meter_readings;"
+
+   # Verify audit log completeness
+   psql $DATABASE_URL -c "SELECT COUNT(*) as audit_entries FROM audit_logs WHERE timestamp > NOW() - INTERVAL '30 days';"
+
+   # Verify one-to-one purchase constraints
+   psql $DATABASE_URL -c "SELECT COUNT(*) as unique_contributions FROM user_contributions;"
+   ```
+
+5. **Re-enable Application**
+
    ```bash
    vercel env rm MAINTENANCE_MODE
    vercel --prod
+
+   # Verify v1.4.0 features work
+   curl https://your-app.vercel.app/api/health
+   curl https://your-app.vercel.app/api/user/theme
    ```
 
 ## 🔐 Security Incident Response
@@ -167,31 +206,69 @@
 
 ## 🗄️ Data Recovery Procedures
 
-### Full Data Loss Recovery
+### Full Data Loss Recovery (v1.4.0)
 
-1. **Assess Available Backups**
-   - Check most recent backup timestamps
-   - Verify backup integrity
+1. **Assess Available v1.4.0 Backups**
+   - Check most recent backup timestamps with schema version tags
+   - Verify backup includes all 8 tables: users, accounts, sessions, verification_tokens, token_purchases, user_contributions, audit_logs, meter_readings
+   - Validate theme preferences and meter readings data
 
-2. **Prepare Clean Environment**
+2. **Prepare Clean v1.4.0 Environment**
 
    ```bash
-   # Deploy fresh application instance
-   git checkout main
+   # Deploy fresh application instance with v1.4.0 schema
+   git checkout v1.4.0  # or main if updated
    vercel --prod
+
+   # Verify environment variables for v1.4.0
+   vercel env add DB_SCHEMA_VERSION 1.4.0
+   vercel env add DEFAULT_THEME system
    ```
 
-3. **Restore Database Schema**
+3. **Restore v1.4.0 Database Schema**
 
    ```bash
+   # Reset to clean v1.4.0 schema
    npx prisma db push --force-reset
    npx prisma generate
+
+   # Verify v1.4.0 schema is properly deployed
+   npx prisma studio
+   psql $DATABASE_URL -c "\\d users" | grep theme_preference
+   psql $DATABASE_URL -c "\\dt" | grep meter_readings
    ```
 
-4. **Restore Data from Backup**
-   - Use admin backup restore functionality
-   - Verify data integrity after restore
-   - Test critical application functions
+4. **Restore Data from v1.4.0 Backup**
+
+   ```bash
+   # Use admin backup restore with v1.4.0 validation
+   curl -X POST https://your-app.vercel.app/api/admin/restore \
+     -H "Content-Type: application/json" \
+     -d '{"backupFile": "backup-v1.4.0-full.json", "validateSchema": true, "verifyMeterReadings": true}'
+
+   # Run post-restore verification
+   node scripts/verify-migration.js --verify-v1.4.0
+   ```
+
+5. **Verify v1.4.0 Data Integrity**
+
+   ```bash
+   # Test critical v1.4.0 functions
+   curl https://your-app.vercel.app/api/health
+   curl https://your-app.vercel.app/api/user/theme
+   curl https://your-app.vercel.app/api/meter-readings
+
+   # Verify theme preferences work
+   curl -X PUT https://your-app.vercel.app/api/user/theme \
+     -H "Content-Type: application/json" \
+     -d '{"theme": "dark"}'
+
+   # Verify meter readings functionality
+   curl https://your-app.vercel.app/api/meter-readings/latest
+
+   # Test one-to-one purchase constraint
+   # (attempt to create duplicate contribution should fail)
+   ```
 
 ### Partial Data Recovery
 
@@ -251,26 +328,78 @@ setInterval(healthCheck, 5 * 60 * 1000);
 
 ## 🔄 Backup Strategy
 
+### Schema v1.4.0 Backup Considerations
+
+The v1.4.0 schema includes new critical tables and fields that must be included in all backup procedures:
+
+**New Schema Elements to Backup:**
+
+- **Theme Preferences**: `users.themePreference` field (user experience continuity)
+- **Meter Readings**: Complete `meter_readings` table (consumption tracking history)
+- **Enhanced Audit Logs**: `audit_logs` table with metadata (compliance and security)
+- **One-to-One Purchase Constraints**: Enforced unique relationships in `user_contributions`
+
 ### Backup Schedule
 
 - **Full Backup**: Weekly (Sundays at 2 AM UTC)
+  - Includes all 8 tables: users, accounts, sessions, verification_tokens, token_purchases, user_contributions, audit_logs, meter_readings
 - **Incremental Backup**: Daily (2 AM UTC)
+  - Focuses on transactional data: token_purchases, user_contributions, meter_readings, audit_logs
 - **Critical Data Snapshot**: Before major deployments
+  - Schema validation backup before migrations
+- **Theme Preferences Backup**: Before user management changes
+  - Ensures user experience settings are preserved
 
 ### Backup Verification
 
 ```bash
-# Weekly backup verification
+# Weekly backup verification with v1.4.0 schema
 curl -X POST https://your-app.vercel.app/api/admin/backup/verify \
   -H "Content-Type: application/json" \
   -d @latest-backup.json
+
+# Verify theme preferences are included
+curl -X GET https://your-app.vercel.app/api/admin/backup/validate-schema \
+  -H "Authorization: Bearer [admin-token]"
+
+# Verify meter readings data integrity
+curl -X POST https://your-app.vercel.app/api/admin/backup/verify-meter-readings \
+  -H "Content-Type: application/json" \
+  -d @backup-file.json
 ```
 
 ### Backup Storage
 
-1. **Primary**: Local admin download
-2. **Secondary**: Cloud storage (S3, Google Drive)
-3. **Tertiary**: Offline storage for critical backups
+1. **Primary**: Local admin download with schema version tags
+2. **Secondary**: Cloud storage (S3, Google Drive) with v1.4.0 schema documentation
+3. **Tertiary**: Offline storage for critical backups with migration scripts
+4. **Schema Documentation**: Backup procedures documented with v1.4.0 table structure
+
+### v1.4.0 Migration Backup Protocol
+
+**Before Schema Migration:**
+
+```bash
+# Create pre-migration backup
+curl -X POST https://your-app.vercel.app/api/admin/backup \
+  -H "Content-Type: application/json" \
+  -d '{"type": "full", "tag": "pre-v1.4.0-migration", "includeAuditLogs": true}'
+
+# Verify backup includes all legacy data
+node scripts/verify-migration.js --backup-file=pre-migration-backup.json
+```
+
+**After Schema Migration:**
+
+```bash
+# Create post-migration verification backup
+curl -X POST https://your-app.vercel.app/api/admin/backup \
+  -H "Content-Type: application/json" \
+  -d '{"type": "full", "tag": "post-v1.4.0-migration", "includeThemePreferences": true}'
+
+# Verify new schema elements are captured
+node scripts/verify-migration.js --verify-v1.4.0
+```
 
 ## 🚀 Recovery Testing
 
@@ -374,27 +503,50 @@ curl -X POST https://your-app.vercel.app/api/admin/backup/verify \
 - **curl/Postman**: API testing
 - **Database client**: Direct database access
 
-### Useful Commands
+### Useful Commands (v1.4.0)
 
 ```bash
 # Check application status
 vercel ls
 vercel logs [deployment-url]
 
-# Database operations
+# Database operations with v1.4.0 schema
 npx prisma studio
 npx prisma db push --preview-feature
 npx prisma migrate reset
+npx prisma migrate status
 
-# Environment variables
+# Verify v1.4.0 schema integrity
+psql $DATABASE_URL -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
+psql $DATABASE_URL -c "SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'theme_preference';"
+psql $DATABASE_URL -c "SELECT COUNT(*) FROM meter_readings;"
+
+# Environment variables for v1.4.0
 vercel env ls
 vercel env pull .env.local
+vercel env add DB_SCHEMA_VERSION 1.4.0
+vercel env add DEFAULT_THEME system
 
-# Backup operations
+# v1.4.0 Backup operations
 curl -X GET https://your-app.vercel.app/api/admin/backup
 curl -X POST https://your-app.vercel.app/api/admin/backup \
   -H "Content-Type: application/json" \
-  -d '{"type": "full"}'
+  -d '{"type": "full", "includeThemePreferences": true, "includeMeterReadings": true}'
+
+# v1.4.0 Migration and verification
+node scripts/migrate-to-v1.4.0.js --dry-run
+node scripts/verify-migration.js --verify-v1.4.0
+node scripts/verify-migration.js --backup-file=backup.json
+
+# Theme preference recovery
+curl -X GET https://your-app.vercel.app/api/user/theme
+curl -X PUT https://your-app.vercel.app/api/user/theme \
+  -H "Content-Type: application/json" \
+  -d '{"theme": "system"}'
+
+# Meter readings recovery verification
+curl -X GET https://your-app.vercel.app/api/meter-readings/latest
+curl -X GET https://your-app.vercel.app/api/meter-readings?limit=10
 ```
 
 ---
