@@ -325,12 +325,21 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  • Delete all token purchases
+                  <strong>What will be deleted:</strong>
                   <br />
-                  • Delete all user contributions
+                  • All token purchases and their details
                   <br />
-                  • Preserve user accounts
-                  <br />• Maintain audit logs
+                  • All user contributions and payment records
+                  <br />
+                  • All meter readings and consumption data
+                  <br />
+                  • All purchase-contribution relationships
+                  <br /><br />
+                  <strong>What will be preserved:</strong>
+                  <br />
+                  • User accounts and login credentials
+                  <br />
+                  • System audit logs and activity history
                 </div>
                 <DataResetComponent />
               </CardContent>

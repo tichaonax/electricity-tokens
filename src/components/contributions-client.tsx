@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Plus, Users, DollarSign, Zap, TrendingUp, User, Trash2, Edit } from 'lucide-react';
+import { Plus, Users, DollarSign, Zap, TrendingUp, User, Trash2, Edit, ShoppingCart } from 'lucide-react';
 import { NavigationFormButton } from '@/components/ui/navigation-form-button';
 import { navigateToDashboard, navigateToNewContribution } from '@/app/actions/navigation';
 import { editContribution, deleteContribution } from '@/app/actions/contributions';
@@ -219,7 +219,7 @@ export function ContributionsClient() {
       <nav className="bg-white shadow dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center min-w-0 flex-1">
+            <div className="flex items-center min-w-0 flex-1 mr-4">
               <NavigationFormButton
                 action={navigateToDashboard}
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-2 sm:mr-4 p-0 h-auto font-normal bg-transparent border-none flex-shrink-0"
@@ -232,10 +232,18 @@ export function ContributionsClient() {
                 <span className="sm:hidden">Contributions</span>
               </h1>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <button
+                onClick={() => router.push('/dashboard/purchases/new')}
+                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 h-10"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">Add Tokens</span>
+                <span className="sm:hidden">Tokens</span>
+              </button>
               <NavigationFormButton
                 action={navigateToNewContribution}
-                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm text-gray-900 dark:text-gray-100"
+                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm text-gray-900 dark:text-gray-100 h-10"
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">New Contribution</span>

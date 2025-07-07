@@ -18,6 +18,10 @@ export async function GET() {
     const previousMonthStart = startOfMonth(subMonths(now, 1));
     const previousMonthEnd = endOfMonth(subMonths(now, 1));
 
+    console.log('🗓️ Progressive Consumption Date Ranges:');
+    console.log('Current Month (July):', currentMonthStart.toISOString(), 'to', currentMonthEnd.toISOString());
+    console.log('Previous Month (June):', previousMonthStart.toISOString(), 'to', previousMonthEnd.toISOString());
+
     // Get meter readings to calculate actual consumption for both months
     const allMeterReadings = await prisma.meterReading.findMany({
       where: {
@@ -36,27 +40,41 @@ export async function GET() {
     // Get global contributions for cost calculations
     const currentMonthContributions = await prisma.userContribution.findMany({
       where: {
-        createdAt: {
-          gte: currentMonthStart,
-          lte: currentMonthEnd,
+        purchase: {
+          purchaseDate: {
+            gte: currentMonthStart,
+            lte: currentMonthEnd,
+          },
         },
       },
       select: {
         tokensConsumed: true,
         contributionAmount: true,
+        purchase: {
+          select: {
+            purchaseDate: true,
+          },
+        },
       },
     });
 
     const previousMonthContributions = await prisma.userContribution.findMany({
       where: {
-        createdAt: {
-          gte: previousMonthStart,
-          lte: previousMonthEnd,
+        purchase: {
+          purchaseDate: {
+            gte: previousMonthStart,
+            lte: previousMonthEnd,
+          },
         },
       },
       select: {
         tokensConsumed: true,
         contributionAmount: true,
+        purchase: {
+          select: {
+            purchaseDate: true,
+          },
+        },
       },
     });
 
@@ -113,6 +131,18 @@ export async function GET() {
     }
 
     // Calculate cost totals from contributions (global)
+    console.log('📊 Found contributions:');
+    console.log('Current Month (July) contributions:', currentMonthContributions.length);
+    console.log('Previous Month (June) contributions:', previousMonthContributions.length);
+    
+    if (previousMonthContributions.length > 0) {
+      console.log('June contributions details:', previousMonthContributions.map(c => ({
+        amount: c.contributionAmount,
+        tokens: c.tokensConsumed,
+        purchaseDate: c.purchase.purchaseDate
+      })));
+    }
+
     const currentContributed = currentMonthContributions.reduce(
       (sum, contrib) => sum + contrib.contributionAmount,
       0
@@ -121,6 +151,10 @@ export async function GET() {
       (sum, contrib) => sum + contrib.contributionAmount,
       0
     );
+
+    console.log('💰 Calculated totals:');
+    console.log('Current month contributed:', currentContributed);
+    console.log('Previous month contributed:', previousContributed);
 
     // Calculate cost per kWh trends
     const currentCostPerKwh =

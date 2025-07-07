@@ -480,6 +480,87 @@ Identify why the anticipated payment is -$7.44 instead of a higher amount that p
 
 ---
 
-**Last Updated**: July 6, 2025  
+---
+
+## 🔍 Meter Readings Investigation Plan (July 7, 2025)
+
+### Problem
+The dashboard is showing 10.74 kWh consumption for July 1st, and we need to understand what meter readings data is causing this calculation.
+
+### Analysis Tasks
+
+#### 1. Database Schema Analysis
+- [x] Reviewed Prisma schema to understand MeterReading and UserContribution models
+- [x] Identified that daily consumption is calculated from tokensConsumed field in UserContribution
+- [x] Found that MeterReading has userId, reading, readingDate, notes fields
+- [x] Noted that UserContribution has meterReading, tokensConsumed, and references a purchase
+
+#### 2. Data Investigation Tasks
+- [x] Query all meter readings from June 30 - July 7th timeframe
+- [x] Query all user contributions from June 30 - July 7th timeframe  
+- [x] Analyze the sequence of readings to identify gaps or irregularities
+- [x] Calculate expected daily consumption between readings
+- [x] Identify which specific data points are contributing to the 10.74 kWh for July 1st
+- [x] Check for multiple contributions on July 1st that might be summing to 10.74 kWh
+
+#### 3. Data Analysis
+- [x] Compare actual meter readings vs calculated consumption
+- [x] Identify any data inconsistencies or duplicate entries
+- [x] Determine if the issue is in data entry or calculation logic
+- [x] Document findings with specific meter readings and calculations
+
+#### 4. Reporting
+- [x] Provide detailed report of meter readings sequence
+- [x] Show expected vs actual consumption calculations
+- [x] Recommend next steps for fixing the issue
+
+### Investigation Results
+
+#### Problem Identified
+The dashboard showing "10.74 kWh for July 1st" is **MISLEADING**. The 10.74 kWh is not July 1st consumption - it's the **maximum daily consumption** for the current month (July 2nd).
+
+#### Key Findings
+
+1. **No July 1st Data**: No user contributions or consumption data exists for July 1st, 2025
+2. **Meter Reading Reality**: 
+   - June 30: 250.13 kWh → July 1: 254.92 kWh = **4.79 kWh consumption**
+   - This is the actual July 1st consumption based on meter readings
+3. **Source of 10.74 kWh**: 
+   - Max Daily Consumption API calculates this for **July 2nd**
+   - Combination of direct consumption (4.79 kWh) + distributed multi-day consumption (5.95 kWh)
+   - July 2-5 gap required distribution of 17.86 kWh over 3 days
+
+#### Detailed Consumption Breakdown
+- **July 1st**: 4.79 kWh (actual meter reading difference)
+- **July 2nd**: 10.74 kWh (4.79 direct + 5.95 distributed) - **MAXIMUM**
+- **July 3rd**: 5.95 kWh (distributed from multi-day gap)
+- **July 4th**: 5.95 kWh (distributed from multi-day gap)  
+- **July 6th**: 4.79 kWh
+- **July 7th**: 5.06 kWh
+
+#### API Logic Explanation
+The Max Daily Consumption API distributes consumption across days when there are gaps in meter readings:
+- Reading gap: July 2 (259.71) → July 5 (277.57) = 17.86 kWh over 3 days
+- Daily distribution: 17.86 ÷ 3 = 5.95 kWh per day
+- July 2nd gets both: 4.79 (direct) + 5.95 (distributed) = 10.74 kWh
+
+#### Dashboard Display Issue
+The user interface is showing "July 1st: 10.74 kWh" but this value actually represents:
+- **Maximum daily consumption** (10.74 kWh on July 2nd)
+- **NOT** the July 1st consumption (which is 4.79 kWh)
+
+#### Recommendations
+1. **Fix Dashboard Labels**: Clarify that 10.74 kWh is the maximum daily consumption, not July 1st
+2. **Data Accuracy**: The calculations are mathematically correct
+3. **UI Improvement**: Better labeling to avoid confusion about which date the values represent
+
+### Technical Notes
+- Dashboard API uses UserContribution.tokensConsumed for historical analysis
+- Max Daily Consumption API uses MeterReading table for real-time calculations
+- No data inconsistencies found - the issue is display/interpretation
+
+---
+
+**Last Updated**: July 7, 2025  
 **Status**: ✅ COMPLETE - Production Ready  
-**Next Phase**: Account balance investigation and wrapper component simplification
+**Next Phase**: Meter readings investigation for July 1st consumption issue

@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Form,
   FormField,
@@ -893,17 +892,17 @@ export function PurchaseForm({
                 </span>
               )}
             </FormLabel>
-            <DatePicker
-              date={
-                watchedValues.purchaseDate
-                  ? new Date(watchedValues.purchaseDate)
-                  : undefined
+            <Input
+              type="date"
+              {...register('purchaseDate', {
+                setValueAs: (value) => value ? new Date(value) : new Date()
+              })}
+              defaultValue={
+                initialData?.purchaseDate 
+                  ? initialData.purchaseDate.split('T')[0]
+                  : new Date().toISOString().split('T')[0]
               }
-              onDateChange={(date) =>
-                setValue('purchaseDate', date || new Date())
-              }
-              placeholder="Select purchase date"
-              className={errors.purchaseDate ? 'border-red-500' : ''}
+              className={errors.purchaseDate ? 'border-red-500 dark:bg-slate-800 dark:text-slate-100 dark:border-red-600' : 'dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600'}
             />
             <FormDescription>
               Select the date when the tokens were purchased
