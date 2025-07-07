@@ -26,17 +26,35 @@ This guide provides comprehensive instructions for upgrading existing deployment
 # Check application version in package.json
 cat package.json | grep version
 
-# Check database schema version (if available)
-psql -U username -d electricity_tokens -c "SELECT version FROM schema_info LIMIT 1;"
+# Check Prisma migration status
+npx prisma migrate status
 
-# Or check for existing tables to determine version
+# Check migration history (shows migration names, not version numbers)
+psql -U username -d electricity_tokens -c "SELECT migration_name, finished_at FROM _prisma_migrations ORDER BY finished_at DESC;"
+
+# Check for existing tables to determine schema state
 psql -U username -d electricity_tokens -c "\dt"
 ```
 
-**Version Identification:**
+**Schema State Identification:**
 
-- **v1.0.x - v1.3.x**: Original schema without theme preferences or meter_readings table
-- **v1.4.0**: Enhanced schema with theme preferences, meter readings, and enhanced audit logging
+Since Prisma doesn't store version numbers, identify your schema state by:
+
+- **Tables present**: Check if `meter_readings` table exists
+- **User fields**: Check if users table has `theme_preference` field
+- **Migration names**: Look for migrations like `add_user_theme_preference`
+
+**Current Schema Indicators:**
+
+```bash
+# Check if you have the latest schema (v1.4.0 equivalent)
+psql -U username -d electricity_tokens -c "\d users" | grep theme_preference
+psql -U username -d electricity_tokens -c "SELECT COUNT(*) FROM meter_readings;"
+
+# Your current migrations show you have the latest schema:
+# - 20250706132952_init (initial schema)
+# - 20250706215039_add_user_theme_preference (theme support)
+```
 
 ---
 
@@ -45,8 +63,17 @@ psql -U username -d electricity_tokens -c "\dt"
 ### 1.1 Database Backup
 
 ```bash
-# Create timestamped backup
+# Create timestamped backup using pg_dump (includes all tables including meter_readings)
 BACKUP_DATE=$(date +%Y%m%d_%H%M%S)
+
+# If you get version mismatch errors, use psql instead or install matching pg_dump version
+# Option 1: Direct backup (handles version mismatches better)
+psql -U username -d electricity_tokens -c "COPY (SELECT * FROM meter_readings ORDER BY \"readingDate\") TO STDOUT WITH CSV HEADER" > meter_readings_backup_${BACKUP_DATE}.csv
+
+# Option 2: Use Docker with matching PostgreSQL version
+docker run --rm -e PGPASSWORD=yourpassword postgres:17-alpine pg_dump -h host.docker.internal -U username electricity_tokens > backup_${BACKUP_DATE}.sql
+
+# Option 3: Standard pg_dump (if versions match)
 pg_dump -U username -h hostname electricity_tokens > backup_${BACKUP_DATE}.sql
 
 # Verify backup integrity
@@ -54,6 +81,20 @@ pg_dump -U username -h hostname electricity_tokens --schema-only > schema_${BACK
 
 # Create compressed backup (recommended for large databases)
 pg_dump -U username -h hostname electricity_tokens | gzip > backup_${BACKUP_DATE}.sql.gz
+
+# Verify all tables are included using psql (works with any version)
+psql -U username -d electricity_tokens -c "\dt" | grep meter_readings
+```
+
+**Application-Level Backup (Alternative):**
+
+```bash
+# Use the built-in backup system (via Admin Panel or API)
+# This ensures all data including meter_readings is captured
+curl -X POST http://localhost:3000/api/admin/backup \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -d '{"type": "full"}' > app_backup_${BACKUP_DATE}.json
 ```
 
 ### 1.2 Application Files Backup
@@ -185,8 +226,17 @@ npx prisma migrate deploy --schema=./prisma/schema.prisma
 ### 3.3 Data Migration (if required)
 
 ```bash
+# First create the required backup as shown by the migration script
+pg_dump -U postgres -h localhost electricity_tokens > backups/pre-v1.4.0-migration-$(date +%Y-%m-%dT%H-%M-%S).sql
+
+# Create backups directory if it doesn't exist
+mkdir -p backups
+
 # Run data migration script for v1.4.0
 node scripts/migrate-to-v1.4.0.js
+
+# Or skip backup check (NOT RECOMMENDED for production)
+node scripts/migrate-to-v1.4.0.js --force
 
 # Verify data integrity
 node scripts/verify-migration.js
@@ -195,6 +245,13 @@ node scripts/verify-migration.js
 ### 3.4 Schema Verification
 
 ```bash
+# Verify Prisma migration status
+npx prisma migrate status
+
+# Check if database schema matches Prisma schema
+npx prisma db pull
+npx prisma validate
+
 # Verify all tables exist
 psql -U username -d electricity_tokens -c "\dt"
 
@@ -204,6 +261,7 @@ psql -U username -d electricity_tokens -c "\dt"
 # - audit_logs (with metadata field)
 # - accounts, sessions, verification_tokens
 # - token_purchases, user_contributions
+# - _prisma_migrations (Prisma's migration tracking table)
 
 # Check specific new fields
 psql -U username -d electricity_tokens -c "\d users"
@@ -277,13 +335,23 @@ curl http://localhost:3000/api/health
 ### 5.2 Database Integrity Check
 
 ```bash
-# Verify schema version
+# Verify Prisma migration status
+npx prisma migrate status
+
+# Check database schema is up to date
+npx prisma db pull
+npx prisma validate
+
+# Verify table record counts
 psql -U username -d electricity_tokens -c "SELECT COUNT(*) FROM users;"
 psql -U username -d electricity_tokens -c "SELECT COUNT(*) FROM meter_readings;"
 psql -U username -d electricity_tokens -c "SELECT COUNT(*) FROM audit_logs;"
 
 # Check for new fields
 psql -U username -d electricity_tokens -c "SELECT theme_preference FROM users LIMIT 1;"
+
+# Verify Prisma migration tracking
+psql -U username -d electricity_tokens -c "SELECT migration_name, applied_steps_count FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 5;"
 ```
 
 ### 5.3 Feature Testing
@@ -428,24 +496,74 @@ Create a quick training session covering:
 
 ## 📊 Common Upgrade Issues & Solutions
 
-### Issue: Migration Fails
+### Issue: PostgreSQL Version Mismatch
 
 **Symptoms:**
 
-- `prisma migrate deploy` fails
-- Database schema errors
+- `pg_dump: error: server version: X.X; pg_dump version: Y.Y`
+- "aborting because of server version mismatch" error
+- Cannot create backups using pg_dump
 
 **Solutions:**
 
 ```bash
-# Reset migration state
+# Option 1: Install matching PostgreSQL client tools
+brew install postgresql@17  # Match your server version
+export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
+
+# Option 2: Use Docker with matching version
+docker run --rm -e PGPASSWORD=yourpassword postgres:17-alpine pg_dump -h host.docker.internal -U postgres electricity_tokens > backup.sql
+
+# Option 3: Use psql for table-specific backups (version independent)
+psql -U postgres -d electricity_tokens -c "\dt" | grep meter_readings
+psql -U postgres -d electricity_tokens -c "SELECT COUNT(*) FROM meter_readings;"
+psql -U postgres -d electricity_tokens -c "SELECT * FROM meter_readings ORDER BY \"readingDate\" DESC LIMIT 5;"
+
+# Option 4: Use application backup system instead
+# Access Admin Panel → Data Management → Create Backup
+```
+
+### Issue: Migration Fails - P3005 Database Not Empty
+
+**Symptoms:**
+
+- `prisma migrate deploy` fails with P3005 error
+- "The database schema is not empty" message
+- Database has tables but no migration history
+
+**Solutions:**
+
+```bash
+# Option 1: Baseline existing production database (RECOMMENDED)
+# This marks all existing migrations as applied without running them
+npx prisma migrate resolve --applied "20250706132952_init"
+npx prisma migrate resolve --applied "20250706215039_add_user_theme_preference"
+npx prisma migrate deploy
+
+# Option 2: Initialize migration baseline
+npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > baseline.sql
+# Review baseline.sql, then apply future migrations normally
+
+# Option 3: Reset and start fresh (WARNING: DELETES ALL DATA)
 npx prisma migrate reset --force
+npx prisma migrate deploy
 
-# Apply migrations one by one
-npx prisma migrate deploy --preview-feature
+# Verify final state
+npx prisma migrate status
+```
 
-# Manual schema fix if needed
-psql -U username -d electricity_tokens < manual-schema-fixes.sql
+**For Production Deployment:**
+
+```bash
+# First check what migrations exist
+npx prisma migrate status
+
+# If database exists but no migration history, baseline it
+npx prisma migrate resolve --applied "20250706132952_init"
+npx prisma migrate resolve --applied "20250706215039_add_user_theme_preference"
+
+# Then deploy any new migrations
+npx prisma migrate deploy
 ```
 
 ### Issue: Theme Preferences Not Working
@@ -481,6 +599,41 @@ psql -U username -d electricity_tokens -c "ALTER TABLE users ADD COLUMN theme_pr
 - Verify Tailwind CSS build includes mobile classes
 - Check viewport meta tag in HTML
 - Test in different mobile browsers
+
+### Issue: Next.js 15 Build Errors
+
+**Symptoms:**
+
+- useSearchParams() missing suspense boundary error
+- Viewport metadata warnings
+- Build fails during prerendering
+
+**Solutions:**
+
+```bash
+# Fix useSearchParams with Suspense boundary
+# Wrap components using useSearchParams in <Suspense>
+# Move viewport from metadata to separate viewport export
+
+# Example fix:
+import { Suspense } from 'react';
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ComponentUsingSearchParams />
+    </Suspense>
+  );
+}
+
+# For viewport metadata, create separate export:
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+```
 
 ### Issue: Audit Logs Missing Data
 
@@ -521,11 +674,18 @@ psql -U username -d electricity_tokens -c "ALTER TABLE users ADD COLUMN theme_pr
 # Monitor database size
 psql -U username -d electricity_tokens -c "SELECT pg_size_pretty(pg_database_size('electricity_tokens'));"
 
+# Check Prisma migration status
+npx prisma migrate status
+
 # Monitor application memory
 ps aux | grep node
 
 # Check disk space
 df -h
+
+# Verify database health
+npx prisma db pull
+npx prisma validate
 ```
 
 ---
@@ -611,9 +771,9 @@ vercel logs [deployment-url]
 
 ---
 
-**Upgrade Date**: ******\_\_\_******  
-**Performed By**: ******\_\_\_******  
-**Version Before**: ******\_\_\_******  
+**Upgrade Date**: **\*\***\_\_\_**\*\***  
+**Performed By**: **\*\***\_\_\_**\*\***  
+**Version Before**: **\*\***\_\_\_**\*\***  
 **Version After**: 1.4.0  
 **Rollback Plan Tested**: ☐ Yes ☐ No  
 **Users Notified**: ☐ Yes ☐ No

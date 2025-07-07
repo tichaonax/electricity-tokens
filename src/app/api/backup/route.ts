@@ -59,6 +59,15 @@ interface BackupContribution {
   };
 }
 
+interface BackupMeterReading {
+  id: string;
+  reading: number;
+  readingDate: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface BackupData {
   metadata: {
     timestamp: string;
@@ -69,6 +78,7 @@ interface BackupData {
   users?: BackupUser[];
   tokenPurchases?: BackupPurchase[];
   userContributions?: BackupContribution[];
+  meterReadings?: BackupMeterReading[];
   auditLogs?: Record<string, unknown>[];
 }
 
@@ -221,6 +231,26 @@ export async function GET(request: NextRequest) {
         tokenPurchases.filter((p) => p.contribution).length;
     }
 
+    // Backup meter readings
+    if (type === 'full' || type === 'purchase-data') {
+      const meterReadings = await prisma.meterReading.findMany({
+        orderBy: {
+          readingDate: 'asc',
+        },
+      });
+
+      backupData.meterReadings = meterReadings.map((reading) => ({
+        id: reading.id,
+        reading: reading.reading,
+        readingDate: reading.readingDate.toISOString(),
+        notes: reading.notes || undefined,
+        createdAt: reading.createdAt.toISOString(),
+        updatedAt: reading.updatedAt.toISOString(),
+      }));
+
+      backupData.metadata.recordCounts.meterReadings = meterReadings.length;
+    }
+
     // Backup audit logs (optional)
     if (
       includeAuditLogs &&
@@ -314,6 +344,7 @@ export async function POST(request: NextRequest) {
         users: 0,
         tokenPurchases: 0,
         userContributions: 0,
+        meterReadings: 0,
         auditLogs: 0,
       },
       errors: [] as string[],
@@ -477,6 +508,35 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             results.errors.push(
               `Failed to restore purchase-contribution pair ${purchase.id}: ${error}`
+            );
+          }
+        }
+      }
+
+      // Restore meter readings
+      if (backupData.meterReadings) {
+        for (const reading of backupData.meterReadings) {
+          try {
+            await tx.meterReading.upsert({
+              where: { id: reading.id },
+              update: {
+                reading: reading.reading,
+                readingDate: new Date(reading.readingDate),
+                notes: reading.notes,
+              },
+              create: {
+                id: reading.id,
+                reading: reading.reading,
+                readingDate: new Date(reading.readingDate),
+                notes: reading.notes,
+                createdAt: new Date(reading.createdAt),
+                updatedAt: new Date(reading.updatedAt),
+              },
+            });
+            results.restored.meterReadings++;
+          } catch (error) {
+            results.errors.push(
+              `Failed to restore meter reading ${reading.id}: ${error}`
             );
           }
         }

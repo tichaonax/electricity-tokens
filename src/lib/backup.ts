@@ -42,43 +42,48 @@ export class BackupService {
       console.log('Starting full backup...');
 
       // Fetch all data
-      const [users, tokenPurchases, userContributions, meterReadings, auditLogs] =
-        await Promise.all([
-          prisma.user.findMany({
-            include: {
-              accounts: true,
-              sessions: true,
+      const [
+        users,
+        tokenPurchases,
+        userContributions,
+        meterReadings,
+        auditLogs,
+      ] = await Promise.all([
+        prisma.user.findMany({
+          include: {
+            accounts: true,
+            sessions: true,
+          },
+        }),
+        prisma.tokenPurchase.findMany({
+          include: {
+            creator: {
+              select: { id: true, email: true, name: true },
             },
-          }),
-          prisma.tokenPurchase.findMany({
-            include: {
-              creator: {
-                select: { id: true, email: true, name: true },
-              },
-              contribution: true,
+            contribution: true,
+          },
+        }),
+        prisma.userContribution.findMany({
+          include: {
+            user: {
+              select: { id: true, email: true, name: true },
             },
-          }),
-          prisma.userContribution.findMany({
-            include: {
-              user: {
-                select: { id: true, email: true, name: true },
-              },
-              purchase: {
-                select: { id: true, totalTokens: true, purchaseDate: true },
-              },
+            purchase: {
+              select: { id: true, totalTokens: true, purchaseDate: true },
             },
-          }),
-          prisma.meterReading.findMany({
-            orderBy: { readingDate: 'asc' },
-          }),
-          prisma.auditLog.findMany({
-            include: {
-              user: {
-                select: { id: true, email: true, name: true },
-              },
+          },
+        }),
+        prisma.meterReading.findMany({
+          orderBy: { readingDate: 'asc' },
+        }),
+        prisma.auditLog.findMany({
+          include: {
+            user: {
+              select: { id: true, email: true, name: true },
             },
-          }),
-        ]);
+          },
+        }),
+      ]);
 
       // Calculate checksums for integrity verification
       const checksums = {
@@ -158,67 +163,82 @@ export class BackupService {
       );
 
       // Fetch data modified since the specified date
-      const [users, tokenPurchases, userContributions, auditLogs] =
-        await Promise.all([
-          prisma.user.findMany({
-            where: {
-              OR: [
-                { updatedAt: { gte: sinceDate } },
-                { createdAt: { gte: sinceDate } },
-              ],
+      const [
+        users,
+        tokenPurchases,
+        userContributions,
+        meterReadings,
+        auditLogs,
+      ] = await Promise.all([
+        prisma.user.findMany({
+          where: {
+            OR: [
+              { updatedAt: { gte: sinceDate } },
+              { createdAt: { gte: sinceDate } },
+            ],
+          },
+          include: {
+            accounts: true,
+            sessions: true,
+          },
+        }),
+        prisma.tokenPurchase.findMany({
+          where: {
+            OR: [
+              { updatedAt: { gte: sinceDate } },
+              { createdAt: { gte: sinceDate } },
+            ],
+          },
+          include: {
+            creator: {
+              select: { id: true, email: true, name: true },
             },
-            include: {
-              accounts: true,
-              sessions: true,
+            contribution: true,
+          },
+        }),
+        prisma.userContribution.findMany({
+          where: {
+            OR: [
+              { updatedAt: { gte: sinceDate } },
+              { createdAt: { gte: sinceDate } },
+            ],
+          },
+          include: {
+            user: {
+              select: { id: true, email: true, name: true },
             },
-          }),
-          prisma.tokenPurchase.findMany({
-            where: {
-              OR: [
-                { updatedAt: { gte: sinceDate } },
-                { createdAt: { gte: sinceDate } },
-              ],
+            purchase: {
+              select: { id: true, totalTokens: true, purchaseDate: true },
             },
-            include: {
-              creator: {
-                select: { id: true, email: true, name: true },
-              },
-              contribution: true,
+          },
+        }),
+        prisma.meterReading.findMany({
+          where: {
+            OR: [
+              { updatedAt: { gte: sinceDate } },
+              { createdAt: { gte: sinceDate } },
+            ],
+          },
+          orderBy: { readingDate: 'asc' },
+        }),
+        prisma.auditLog.findMany({
+          where: {
+            timestamp: { gte: sinceDate },
+          },
+          include: {
+            user: {
+              select: { id: true, email: true, name: true },
             },
-          }),
-          prisma.userContribution.findMany({
-            where: {
-              OR: [
-                { updatedAt: { gte: sinceDate } },
-                { createdAt: { gte: sinceDate } },
-              ],
-            },
-            include: {
-              user: {
-                select: { id: true, email: true, name: true },
-              },
-              purchase: {
-                select: { id: true, totalTokens: true, purchaseDate: true },
-              },
-            },
-          }),
-          prisma.auditLog.findMany({
-            where: {
-              timestamp: { gte: sinceDate },
-            },
-            include: {
-              user: {
-                select: { id: true, email: true, name: true },
-              },
-            },
-          }),
-        ]);
+          },
+        }),
+      ]);
 
       // Calculate checksums
       const checksums = {
         users: await this.calculateChecksum(users),
         tokenPurchases: await this.calculateChecksum(tokenPurchases),
         userContributions: await this.calculateChecksum(userContributions),
+        meterReadings: await this.calculateChecksum(meterReadings),
         auditLogs: await this.calculateChecksum(auditLogs),
       };
 
@@ -238,6 +258,7 @@ export class BackupService {
           users: users.length,
           tokenPurchases: tokenPurchases.length,
           userContributions: userContributions.length,
+          meterReadings: meterReadings.length,
           auditLogs: auditLogs.length,
         },
         checksums,
@@ -295,6 +316,7 @@ export class BackupService {
         users: backupData.data.users.length,
         tokenPurchases: backupData.data.tokenPurchases.length,
         userContributions: backupData.data.userContributions.length,
+        meterReadings: backupData.data.meterReadings.length,
         auditLogs: backupData.data.auditLogs.length,
       };
 
@@ -328,6 +350,7 @@ export class BackupService {
         users: ['id', 'email', 'name'],
         tokenPurchases: ['id', 'totalTokens', 'totalPayment', 'meterReading'],
         userContributions: ['id', 'purchaseId', 'userId', 'contributionAmount'],
+        meterReadings: ['id', 'reading', 'readingDate'],
         auditLogs: ['id', 'userId', 'action', 'timestamp'],
       };
 
