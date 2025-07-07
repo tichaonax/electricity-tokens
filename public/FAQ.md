@@ -162,6 +162,125 @@ The app tracks overpayments and shows your positive balance. Others owe you mone
 
 ---
 
+## 📱 Mobile & Theme Features
+
+### Q: How do I use the app on my phone or tablet?
+
+**A:** **The app is mobile-first designed!**
+
+**Installation**:
+
+1. **Open your browser** (Chrome, Safari, Firefox) on your mobile device
+2. **Go to the app URL** (provided by your admin)
+3. **Add to home screen**: Look for "Add to Home Screen" option in browser menu
+4. **Use like a native app**: Icon appears on your home screen
+
+**Mobile features**:
+
+- **Card-based layouts**: Everything adapts to your screen size
+- **Touch-friendly**: All buttons and forms work perfectly with touch
+- **No horizontal scrolling**: Everything fits your screen width
+- **Responsive tables**: Tables become cards on small screens
+- **Zoom support**: Pinch to zoom works if you need larger text
+
+**Pro tips**:
+
+- Landscape mode can be helpful for detailed reports
+- The app works offline for viewing (but needs internet for updates)
+- Dark mode saves battery on OLED screens
+
+### Q: Why does my theme keep changing back to light/dark mode?
+
+**A:** **Theme preferences now save automatically!**
+
+**How theme preferences work**:
+
+- **Your choice is saved**: Light, dark, or system theme persists across logins
+- **Per-user settings**: Each household member has their own theme preference
+- **System theme**: Follows your device's day/night settings automatically
+
+**To change your theme**:
+
+1. **Click your profile** (top right corner)
+2. **Select theme preference**: Light, Dark, or System
+3. **Changes save automatically**: No need to click save
+4. **Works across devices**: Your theme follows you when you log in anywhere
+
+**Troubleshooting theme issues**:
+
+- **Clear browser cache** if theme doesn't stick
+- **Check you're logged in** - themes only save for logged-in users
+- **Try different browser** if problems persist
+- **Contact admin** if theme keeps resetting
+
+### Q: The mobile layout looks wrong or things are cut off
+
+**A:** **Mobile layout troubleshooting**:
+
+**Common issues and fixes**:
+
+**Horizontal scrolling**:
+
+- **Clear browser cache**: Old CSS might be cached
+- **Refresh the page**: Use pull-to-refresh on mobile
+- **Try landscape mode**: Some complex pages work better in landscape
+- **Update your browser**: Older browsers might not support responsive design
+
+**Text too small**:
+
+- **Pinch to zoom**: The app supports zooming
+- **Check browser zoom**: May be set too low
+- **Use landscape mode**: More space for text
+- **Accessibility settings**: Your device's large text settings work
+
+**Buttons not working**:
+
+- **Try tapping different areas**: Touch targets might be offset
+- **Wait for page to load**: Don't tap before everything loads
+- **Restart browser**: Close and reopen the browser app
+- **Try different finger**: Sometimes touch sensitivity varies
+
+**Layout looks broken**:
+
+- **Force refresh**: Pull down to refresh on mobile
+- **Clear browser cache**: Instructions vary by browser
+- **Try incognito mode**: Rules out cache issues
+- **Contact admin**: May be a system-wide issue
+
+### Q: Can I install this app like a regular mobile app?
+
+**A:** **Yes! It's a Progressive Web App (PWA)**:
+
+**Installation benefits**:
+
+- **Native app experience**: Looks and feels like a regular app
+- **Home screen icon**: Launch directly from your home screen
+- **No app store required**: Install directly from browser
+- **Automatic updates**: Always get the latest version
+- **Offline viewing**: See your data even without internet (limited functionality)
+
+**How to install**:
+
+**iPhone/iPad**:
+
+1. Open in Safari browser
+2. Tap the share button (square with arrow)
+3. Scroll down and tap "Add to Home Screen"
+4. Choose a name and tap "Add"
+
+**Android**:
+
+1. Open in Chrome browser
+2. Look for "Add to Home Screen" notification
+3. Or tap menu (3 dots) → "Add to Home Screen"
+4. Confirm installation
+
+**Desktop**:
+
+1. Open in Chrome or Edge
+2. Look for install icon in address bar
+3. Click to install as desktop app
+
 ## 🔧 Technical Issues
 
 ### Q: I can't log in - it says "invalid credentials"
@@ -366,6 +485,38 @@ If you used 25 tokens from Purchase B: Your rate = $1.40/kWh
    - No automatic penalties, but everything is recorded
 
 **Best practice**: Communicate with your household if you can't pay immediately. Most groups are understanding if you're upfront about timing.
+
+### Q: Who created or modified this meter reading/purchase?
+
+**A:** **Enhanced audit trail shows detailed history!**
+
+**What you can see** (all users):
+
+- **Creator information**: Who originally created each entry
+- **Last modified by**: Who made the most recent changes
+- **Timestamps**: When entries were created and last updated
+- **Your own complete history**: Full audit trail of your activities
+
+**Example audit information**:
+
+```
+Meter Reading #123
+Created by: John Doe on Jan 15, 2025 at 10:30 AM
+Last modified by: Admin User on Jan 15, 2025 at 2:15 PM
+```
+
+**How to view audit information**:
+
+- **Meter readings page**: Shows creator and modifier for each reading
+- **Admin audit access**: Click "View Audit Log" links (admin users only)
+- **Detailed history**: Complete modification history with IP addresses (admin only)
+
+**Why this matters**:
+
+- **Transparency**: Know who made changes and when
+- **Accountability**: Clear responsibility for data accuracy
+- **Dispute resolution**: Audit trail helps resolve questions
+- **Data integrity**: Track all modifications for accuracy
 
 ### Q: Can I see how much everyone else is paying?
 
@@ -741,15 +892,31 @@ Balance = Total Paid - Fair Share Owed
 
 ### Common Tasks
 
-| Task                   | Time Required | Difficulty |
-| ---------------------- | ------------- | ---------- |
-| Take meter reading     | 30 seconds    | Easy       |
-| Create purchase        | 2 minutes     | Easy       |
-| Add contribution       | 1 minute      | Easy       |
-| Check balance          | 10 seconds    | Easy       |
-| Review monthly report  | 5 minutes     | Easy       |
-| Export data (admin)    | 1 minute      | Medium     |
-| Fix user error (admin) | 5 minutes     | Medium     |
+| Task                      | Time Required | Difficulty |
+| ------------------------- | ------------- | ---------- |
+| Take meter reading        | 30 seconds    | Easy       |
+| Create purchase           | 2 minutes     | Easy       |
+| Add contribution          | 1 minute      | Easy       |
+| Record meter reading      | 1 minute      | Easy       |
+| Check balance             | 10 seconds    | Easy       |
+| Change theme preference   | 15 seconds    | Easy       |
+| Install mobile app        | 1 minute      | Easy       |
+| Review monthly report     | 5 minutes     | Easy       |
+| View audit trail          | 30 seconds    | Easy       |
+| Export data (admin)       | 1 minute      | Medium     |
+| Fix user error (admin)    | 5 minutes     | Medium     |
+| Review audit logs (admin) | 2 minutes     | Medium     |
+
+### New Features Quick Guide
+
+| Feature                      | How to Access              | Benefit                           |
+| ---------------------------- | -------------------------- | --------------------------------- |
+| **Theme Preferences**        | Profile → Theme            | Personal preference that persists |
+| **Mobile Card Layout**       | Automatic on small screens | Touch-friendly, no scrolling      |
+| **Meter Reading Tracking**   | Dashboard → Meter Readings | Individual consumption monitoring |
+| **Audit Trail Info**         | Visible on all entries     | See who created/modified data     |
+| **PWA Installation**         | Browser menu → Add to Home | Native app experience             |
+| **Enhanced Running Balance** | Dashboard                  | Uses latest meter readings        |
 
 ### Emergency Contacts Checklist
 

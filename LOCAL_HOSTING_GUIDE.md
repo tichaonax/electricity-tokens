@@ -216,6 +216,13 @@ npm install
 
    # Production Settings
    NODE_ENV="production"
+
+   # Schema Version
+   DB_SCHEMA_VERSION="1.4.0"
+
+   # Theme Configuration (Optional)
+   DEFAULT_THEME="system"
+   THEME_STORAGE_ENABLED="true"
    ```
 
    **Example with sample values**:
@@ -249,9 +256,11 @@ npx prisma db push --accept-data-loss
 
 - No error messages
 - "Database initialization completed successfully" message
-- All 7 tables created (users, accounts, sessions, verification_tokens, token_purchases, user_contributions, audit_logs)
+- All 8 tables created (users, accounts, sessions, verification_tokens, token_purchases, user_contributions, meter_readings, audit_logs)
+- Schema version 1.4.0 applied with latest features
 
 **⚠️ Important**: If you get a 500 error when trying to sign in, it means the database setup didn't complete properly. See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for troubleshooting.
+
 - Database tables created
 
 ---
@@ -504,9 +513,12 @@ To start the application automatically when Windows boots:
 
 - ⚡ **Track electricity purchases** (when you buy tokens)
 - 📊 **Add your usage** (your meter reading and fair share)
+- 📏 **Record meter readings** (individual consumption tracking)
 - 📈 **View reports** (your consumption and costs)
 - 💰 **See your balance** (whether you owe money or are owed)
-- 🌙 **Choose theme** (light, dark, or automatic)
+- 🌙 **Choose theme** (light, dark, or automatic - saves your preference)
+- 📱 **Mobile-friendly** (works perfectly on phones and tablets)
+- 🔍 **Audit trail** (see who created or modified entries)
 
 ### Need Help?
 
@@ -817,20 +829,27 @@ Test access from:
 - [ ] **User accounts created** for all household members
 - [ ] **Purchase form works** - can add new token purchases
 - [ ] **Contribution form works** - users can add their usage
+- [ ] **Meter readings form works** - can record individual readings
 - [ ] **Reports display correctly** with sample data
 - [ ] **Dark/light theme switching** works on all devices
-- [ ] **Mobile navigation** works properly
+- [ ] **Theme preferences persist** across user sessions
+- [ ] **Mobile navigation** works properly (no horizontal scrolling)
+- [ ] **Card layouts** display correctly on mobile devices
 - [ ] **Data calculations** are accurate (fair share, balances)
+- [ ] **Running balance** uses latest meter readings correctly
+- [ ] **Audit information** shows who created/modified entries
 
 ### 11.4 Admin Functions Verification
 
 - [ ] **Admin Panel accessible** with full features
 - [ ] **User management works** (create, edit, lock users)
+- [ ] **Meter readings management** works (view all, edit, delete)
 - [ ] **Backup creation works** and files are saved
 - [ ] **Data export works** (CSV, JSON, PDF)
-- [ ] **Audit logs visible** and tracking activity
+- [ ] **Audit logs visible** and tracking activity with metadata
 - [ ] **System reports generated** successfully
 - [ ] **Security dashboard** shows system status
+- [ ] **Admin audit access** shows detailed modification history
 
 ### 11.5 Data & Security Verification
 
@@ -912,7 +931,9 @@ Congratulations! You now have a **professional-grade electricity cost tracking s
 - ✅ **Mobile-friendly access** for all household members
 - ✅ **Secure and reliable** with backup and restore capabilities
 - ✅ **Fair cost sharing** based on actual consumption
-- ✅ **Modern interface** with dark mode and responsive design
+- ✅ **Modern interface** with theme preferences and mobile-first design
+- ✅ **Comprehensive tracking** with meter readings and audit trails
+- ✅ **User-specific settings** that persist across sessions
 
 ### Ongoing Benefits
 
@@ -929,6 +950,7 @@ Congratulations! You now have a **professional-grade electricity cost tracking s
 
 **Need help?** Refer to the troubleshooting section or contact the original developer through the GitHub repository: [https://github.com/tichaonax/electricity-tokens](https://github.com/tichaonax/electricity-tokens)
 
-**Last Updated**: July 3, 2025  
-**Guide Version**: 1.0  
-**Application Version**: 1.0 (Production Ready)
+**Last Updated**: July 6, 2025  
+**Guide Version**: 1.4.0  
+**Application Version**: 1.4.0 (Production Ready with Enhanced Mobile Support)  
+**Schema Version**: 1.4.0 (Theme Preferences + Meter Readings + Enhanced Audit Logging)

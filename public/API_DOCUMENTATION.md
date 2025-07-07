@@ -32,6 +32,9 @@ Authorization: Bearer <session-token>
   name: string;
   role: 'USER' | 'ADMIN';
   locked: boolean;
+  passwordResetRequired: boolean;
+  permissions: object | null;
+  themePreference: 'light' | 'dark' | 'system';
   createdAt: DateTime;
   updatedAt: DateTime;
 }
@@ -58,13 +61,43 @@ Authorization: Bearer <session-token>
 ```typescript
 {
   id: string;
-  purchaseId: string;
+  purchaseId: string; // unique - one contribution per purchase
   userId: string;
   contributionAmount: number;
   meterReading: number;
   tokensConsumed: number;
   createdAt: DateTime;
   updatedAt: DateTime;
+}
+```
+
+### MeterReading
+
+```typescript
+{
+  id: string;
+  userId: string;
+  reading: number;
+  readingDate: DateTime;
+  notes: string | null;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
+```
+
+### AuditLog
+
+```typescript
+{
+  id: string;
+  userId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  oldValues: object | null;
+  newValues: object | null;
+  metadata: object | null;
+  timestamp: DateTime;
 }
 ```
 
@@ -448,7 +481,154 @@ Update user details (Admin only).
   "name": "John Updated",
   "email": "john.updated@example.com",
   "role": "ADMIN",
-  "locked": false
+  "locked": false,
+  "passwordResetRequired": false,
+  "permissions": {
+    "canCreateMeterReading": true,
+    "canViewAuditLogs": false
+  }
+}
+```
+
+### User Theme Management
+
+#### GET /api/user/theme
+
+Get current user's theme preference.
+
+**Response:**
+
+```json
+{
+  "theme": "dark"
+}
+```
+
+#### PUT /api/user/theme
+
+Update current user's theme preference.
+
+**Request Body:**
+
+```json
+{
+  "theme": "dark"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Theme preference updated successfully"
+}
+```
+
+### Meter Reading Management
+
+#### GET /api/meter-readings
+
+Get paginated list of meter readings with audit information.
+
+**Query Parameters:**
+
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `startDate`: Filter by date range
+- `endDate`: Filter by date range
+
+**Response:**
+
+```json
+{
+  "meterReadings": [
+    {
+      "id": "reading_id",
+      "userId": "user_id",
+      "reading": 1362.5,
+      "readingDate": "2024-01-15T10:00:00Z",
+      "notes": "Monthly reading",
+      "createdAt": "2024-01-15T10:05:00Z",
+      "updatedAt": "2024-01-15T10:05:00Z",
+      "user": {
+        "id": "user_id",
+        "name": "John Doe",
+        "email": "john@example.com"
+      },
+      "latestUpdateAudit": {
+        "id": "audit_id",
+        "action": "UPDATE",
+        "timestamp": "2024-01-15T12:00:00Z",
+        "user": {
+          "id": "modifier_id",
+          "name": "Admin User",
+          "email": "admin@example.com"
+        }
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "pages": 3
+  }
+}
+```
+
+#### POST /api/meter-readings
+
+Create a new meter reading.
+
+**Request Body:**
+
+```json
+{
+  "reading": 1362.5,
+  "readingDate": "2024-01-15T10:00:00Z",
+  "notes": "Monthly reading"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Meter reading created successfully",
+  "meterReading": {
+    "id": "reading_id",
+    "userId": "user_id",
+    "reading": 1362.5,
+    "readingDate": "2024-01-15T10:00:00Z",
+    "notes": "Monthly reading",
+    "createdAt": "2024-01-15T10:05:00Z"
+  }
+}
+```
+
+#### PUT /api/meter-readings/[id]
+
+Update an existing meter reading.
+
+**Request Body:**
+
+```json
+{
+  "reading": 1365.0,
+  "readingDate": "2024-01-15T10:00:00Z",
+  "notes": "Corrected reading"
+}
+```
+
+#### DELETE /api/meter-readings/[id]
+
+Delete a meter reading.
+
+**Response:**
+
+```json
+{
+  "message": "Meter reading deleted successfully"
 }
 ```
 
@@ -655,6 +835,31 @@ Get personalized dashboard data for current user.
 }
 ```
 
+#### GET /api/dashboard/running-balance
+
+Get comprehensive running balance data with anticipated payments.
+
+**Response:**
+
+```json
+{
+  "contributionBalance": -15.5,
+  "totalContributed": 450.0,
+  "totalConsumed": 465.5,
+  "totalFairShareCost": 465.5,
+  "averageDaily": 15.2,
+  "status": "warning",
+  "lastWeekConsumption": 106.4,
+  "lastWeekContributed": 0.0,
+  "consumptionTrend": "increasing",
+  "trendPercentage": 12.5,
+  "tokensConsumedSinceLastContribution": 25.5,
+  "estimatedCostSinceLastContribution": 38.25,
+  "anticipatedPayment": -38.25,
+  "historicalCostPerKwh": 1.5
+}
+```
+
 #### GET /api/contribution-progress
 
 Get contribution progress for current user.
@@ -717,6 +922,7 @@ Get system audit logs (Admin only).
 - `userId`: Filter by user
 - `action`: Filter by action type
 - `entityType`: Filter by entity type
+- `entityId`: Filter by specific entity ID
 - `startDate`: Start date filter
 - `endDate`: End date filter
 
@@ -729,15 +935,43 @@ Get system audit logs (Admin only).
       "id": "audit_id",
       "userId": "user_id",
       "action": "CREATE",
-      "entityType": "TokenPurchase",
-      "entityId": "purchase_id",
+      "entityType": "MeterReading",
+      "entityId": "reading_id",
       "oldValues": null,
       "newValues": {
-        "totalTokens": 100,
-        "totalPayment": 150.0
+        "reading": 1362.5,
+        "readingDate": "2024-01-15T10:00:00Z",
+        "notes": "Monthly reading"
       },
       "timestamp": "2024-01-15T10:00:00Z",
+      "metadata": {
+        "ipAddress": "192.168.1.100",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      },
       "user": {
+        "id": "user_id",
+        "name": "John Doe",
+        "email": "john@example.com"
+      }
+    },
+    {
+      "id": "audit_id_2",
+      "userId": "user_id",
+      "action": "LOGIN",
+      "entityType": "User",
+      "entityId": "user_id",
+      "oldValues": null,
+      "newValues": {
+        "email": "john@example.com",
+        "loginMethod": "credentials"
+      },
+      "timestamp": "2024-01-15T09:30:00Z",
+      "metadata": {
+        "ipAddress": "192.168.1.100",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      },
+      "user": {
+        "id": "user_id",
         "name": "John Doe",
         "email": "john@example.com"
       }
@@ -932,6 +1166,9 @@ Import data from uploaded files (Admin only).
 - `CONSTRAINT_VIOLATION` - Business rule violation
 - `CHRONOLOGICAL_ERROR` - Date/sequence validation failed
 - `INSUFFICIENT_TOKENS` - Not enough tokens for operation
+- `THEME_VALIDATION_ERROR` - Invalid theme preference value
+- `METER_READING_ERROR` - Meter reading validation failed
+- `AUDIT_LOG_ERROR` - Audit logging operation failed
 
 ## Rate Limiting
 
