@@ -537,6 +537,12 @@ export class BackupService {
           backupData.metadata.recordCounts.meterReadings
         );
         console.log('Audit Logs:', backupData.metadata.recordCounts.auditLogs);
+        console.log('Accounts:', backupData.metadata.recordCounts.accounts);
+        console.log('Sessions:', backupData.metadata.recordCounts.sessions);
+        console.log(
+          'Verification Tokens:',
+          backupData.metadata.recordCounts.verificationTokens
+        );
 
         return {
           success: true,
