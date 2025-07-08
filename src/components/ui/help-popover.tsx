@@ -27,7 +27,7 @@ export function HelpPopover({
   items,
   trigger,
   side = 'right',
-  className
+  className,
 }: HelpPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -44,9 +44,7 @@ export function HelpPopover({
   return (
     <div className="relative inline-block">
       {trigger ? (
-        <div onClick={() => setIsOpen(!isOpen)}>
-          {trigger}
-        </div>
+        <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
       ) : (
         defaultTrigger
       )}
@@ -58,12 +56,16 @@ export function HelpPopover({
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Popover */}
           <div
             className={cn(
-              'absolute z-50 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg',
-              side === 'left' ? 'right-0' : 'left-0',
+              'absolute z-50 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg',
+              // Mobile-first: center horizontally
+              'left-1/2 transform -translate-x-1/2',
+              // Desktop: position based on side
+              'sm:left-auto sm:right-auto sm:transform-none',
+              side === 'left' ? 'sm:right-0' : 'sm:left-0',
               'top-full mt-2',
               className
             )}
@@ -114,20 +116,22 @@ export function HelpPopover({
 }
 
 // Quick help for form fields
-export function FieldHelp({ 
-  content, 
-  className 
-}: { 
-  content: string; 
-  className?: string; 
+export function FieldHelp({
+  content,
+  className,
+}: {
+  content: string;
+  className?: string;
 }) {
   return (
     <HelpPopover
       title="Field Help"
-      items={[{
-        title: "Information",
-        description: content
-      }]}
+      items={[
+        {
+          title: 'Information',
+          description: content,
+        },
+      ]}
       className={className}
     />
   );
@@ -140,7 +144,7 @@ export function FeatureTour({
   onClose,
   onNext,
   onPrev,
-  currentStep = 0
+  currentStep = 0,
 }: {
   steps: Array<{
     target: string;
@@ -163,7 +167,7 @@ export function FeatureTour({
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/50 z-50" />
-      
+
       {/* Tour highlight */}
       <div className="fixed inset-0 z-50 pointer-events-none">
         {/* This would need to be positioned based on the target element */}
@@ -180,10 +184,10 @@ export function FeatureTour({
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
+
             <h3 className="font-medium text-slate-900">{step.title}</h3>
             <p className="text-sm text-slate-600">{step.description}</p>
-            
+
             <div className="flex justify-between">
               <Button
                 variant="outline"
@@ -193,10 +197,7 @@ export function FeatureTour({
               >
                 Previous
               </Button>
-              <Button
-                size="sm"
-                onClick={isLast ? onClose : onNext}
-              >
+              <Button size="sm" onClick={isLast ? onClose : onNext}>
                 {isLast ? 'Finish' : 'Next'}
               </Button>
             </div>
