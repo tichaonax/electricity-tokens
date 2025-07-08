@@ -104,15 +104,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Determine target user ID
-    const targetUserId = userId || session.user.id;
+    // Check permissions for global dashboard access
+    const userPermissions = session.user.permissions as Record<string, unknown> | null;
+    const canViewAllDashboards = 
+      session.user.role === 'ADMIN' || 
+      userPermissions?.canViewDashboards === true;
 
-    // Check permissions
-    if (targetUserId !== session.user.id && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { message: 'Access denied: insufficient permissions' },
-        { status: 403 }
-      );
+    // Determine target user ID based on permissions
+    let targetUserId = session.user.id; // Default to current user
+    
+    if (userId) {
+      // If specific user requested, check global permissions
+      if (!canViewAllDashboards) {
+        return NextResponse.json(
+          { message: 'Insufficient permissions to view other users\' dashboards' },
+          { status: 403 }
+        );
+      }
+      targetUserId = userId;
     }
 
     // Calculate date ranges

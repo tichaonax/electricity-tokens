@@ -34,6 +34,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface Purchase {
   id: string;
@@ -87,6 +88,7 @@ export function PurchaseHistoryTable({
   const router = useRouter();
   const { success, error: showError } = useToast();
   const confirmDelete = useDeleteConfirmation();
+  const { checkPermission } = usePermissions();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +133,9 @@ export function PurchaseHistoryTable({
         ...(filters.isEmergency !== undefined && {
           isEmergency: filters.isEmergency.toString(),
         }),
+        ...(filters.searchTerm && {
+          search: filters.searchTerm,
+        }),
         sortBy: sortField,
         sortDirection,
       });
@@ -142,21 +147,12 @@ export function PurchaseHistoryTable({
 
       const data = await response.json();
 
-      // Filter by search term on client side (for creator name search)
-      let filteredPurchases = data.purchases;
-      if (filters.searchTerm) {
-        filteredPurchases = data.purchases.filter((purchase: Purchase) =>
-          purchase.creator.name
-            .toLowerCase()
-            .includes(filters.searchTerm.toLowerCase())
-        );
-      }
-
-      setPurchases(filteredPurchases);
+      // Search is now handled server-side
+      setPurchases(data.purchases);
       setPagination(data.pagination);
 
       // Check if there are any purchases that can accept contributions (sequential constraint)
-      const hasContributable = filteredPurchases.some(
+      const hasContributable = data.purchases.some(
         (purchase: Purchase) => purchase.canContribute
       );
       setHasContributablePurchases(hasContributable);
@@ -213,6 +209,13 @@ export function PurchaseHistoryTable({
   };
 
   const handleEdit = (purchase: Purchase) => {
+    // Check if user has permission to edit purchases
+    const canEdit = isAdmin || checkPermission('canEditPurchases');
+    if (!canEdit) {
+      showError('You do not have permission to edit purchases.');
+      return;
+    }
+
     // Check if purchase has a contribution - if so, it cannot be edited (unless admin)
     if (purchase.contribution && !isAdmin) {
       showError(
@@ -230,6 +233,13 @@ export function PurchaseHistoryTable({
   };
 
   const handleDelete = (purchase: Purchase) => {
+    // Check if user has permission to delete purchases
+    const canDelete = isAdmin || checkPermission('canDeletePurchases');
+    if (!canDelete) {
+      showError('You do not have permission to delete purchases.');
+      return;
+    }
+
     // Check if purchase has a contribution - if so, it cannot be deleted (unless admin)
     if (purchase.contribution && !isAdmin) {
       showError(
@@ -264,7 +274,7 @@ export function PurchaseHistoryTable({
 
   const handleViewContribution = (contributionId: string) => {
     // Navigate to contributions page with specific contribution ID to show details
-    router.push(`/dashboard/contributions/edit/${contributionId}`);
+    router.push(`/dashboard/contributions/edit/${contributionId}?from=purchases`);
   };
 
   const handleAddContribution = (purchaseId?: string) => {
@@ -571,7 +581,7 @@ export function PurchaseHistoryTable({
                       </div>
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {contribution.tokensConsumed.toLocaleString()} kWh by{' '}
+                      {contribution.tokensConsumed.toFixed(2)} kWh by{' '}
                       {contribution.user.name} • Meter:{' '}
                       {row.meterReading.toLocaleString()} kWh
                     </div>
@@ -636,51 +646,64 @@ export function PurchaseHistoryTable({
             key: 'actions',
             label: 'Actions',
             mobileHide: true,
+            className: 'w-24 min-w-24',
             render: (value, row) => {
-              // Only show actions if user is admin or creator of the purchase
-              if (!isAdmin && row.creator.id !== userId) {
+              // Show actions based on permissions instead of ownership
+              const canEdit = isAdmin || checkPermission('canEditPurchases');
+              const canDelete = isAdmin || checkPermission('canDeletePurchases');
+              
+              if (!canEdit && !canDelete) {
                 return null;
               }
 
               return (
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEdit(row);
-                    }}
-                    disabled={!!row.contribution && !isAdmin}
-                    title={
-                      row.contribution && !isAdmin
-                        ? 'Cannot edit: Purchase has a contribution'
-                        : isAdmin && row.contribution
-                        ? 'Edit purchase (Admin override)'
-                        : 'Edit purchase'
-                    }
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(row);
-                    }}
-                    disabled={!!row.contribution && !isAdmin}
-                    title={
-                      row.contribution && !isAdmin
-                        ? 'Cannot delete: Purchase has a contribution'
-                        : isAdmin && row.contribution
-                        ? 'Cannot delete: Has contribution (delete contribution first)'
-                        : 'Delete purchase'
-                    }
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="flex items-center gap-1 min-w-fit">
+                  {canEdit && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(row);
+                      }}
+                      disabled={!!row.contribution && !isAdmin && !checkPermission('canEditPurchases')}
+                      title={
+                        row.contribution && !isAdmin && !checkPermission('canEditPurchases')
+                          ? 'Cannot edit: Purchase has a contribution'
+                          : isAdmin && row.contribution
+                          ? 'Edit purchase (Admin override)'
+                          : checkPermission('canEditPurchases') && row.contribution
+                          ? 'Edit purchase (with permission)'
+                          : 'Edit purchase'
+                      }
+                      className="p-2 min-w-8 h-8"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(row);
+                      }}
+                      disabled={!!row.contribution && !isAdmin && !checkPermission('canDeletePurchases')}
+                      title={
+                        row.contribution && !isAdmin && !checkPermission('canDeletePurchases')
+                          ? 'Cannot delete: Purchase has a contribution'
+                          : isAdmin && row.contribution
+                          ? 'Cannot delete: Has contribution (delete contribution first)'
+                          : checkPermission('canDeletePurchases') && row.contribution
+                          ? 'Delete purchase (with permission)'
+                          : 'Delete purchase'
+                      }
+                      className="text-red-600 hover:text-red-700 p-2 min-w-8 h-8"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               );
             },
@@ -721,27 +744,31 @@ export function PurchaseHistoryTable({
                   Add Contribution
                 </TouchButton>
               )}
-              {/* Only show edit/delete if user is admin or creator */}
-              {(isAdmin || purchase.creator.id === userId) && (
+              {/* Show edit/delete based on permissions */}
+              {(checkPermission('canEditPurchases') || checkPermission('canDeletePurchases')) && (
                 <>
-                  <TouchButton
-                    onClick={() => handleEdit(purchase)}
-                    variant="secondary"
-                    size="sm"
-                    disabled={!!purchase.contribution && !isAdmin}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit {purchase.contribution && !isAdmin ? '(Locked)' : isAdmin && purchase.contribution ? '(Admin)' : ''}
-                  </TouchButton>
-                  <TouchButton
-                    onClick={() => handleDelete(purchase)}
-                    variant="danger"
-                    size="sm"
-                    disabled={!!purchase.contribution && !isAdmin}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete {purchase.contribution && !isAdmin ? '(Locked)' : isAdmin && purchase.contribution ? '(Admin)' : ''}
-                  </TouchButton>
+                  {checkPermission('canEditPurchases') && (
+                    <TouchButton
+                      onClick={() => handleEdit(purchase)}
+                      variant="secondary"
+                      size="sm"
+                      disabled={!!purchase.contribution && !isAdmin && !checkPermission('canEditPurchases')}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit {purchase.contribution && !isAdmin && !checkPermission('canEditPurchases') ? '(Locked)' : isAdmin && purchase.contribution ? '(Admin)' : checkPermission('canEditPurchases') && purchase.contribution ? '(Permitted)' : ''}
+                    </TouchButton>
+                  )}
+                  {checkPermission('canDeletePurchases') && (
+                    <TouchButton
+                      onClick={() => handleDelete(purchase)}
+                      variant="danger"
+                      size="sm"
+                      disabled={!!purchase.contribution && !isAdmin && !checkPermission('canDeletePurchases')}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete {purchase.contribution && !isAdmin && !checkPermission('canDeletePurchases') ? '(Locked)' : isAdmin && purchase.contribution ? '(Admin)' : checkPermission('canDeletePurchases') && purchase.contribution ? '(Permitted)' : ''}
+                    </TouchButton>
+                  )}
                 </>
               )}
             </MobileActions>
@@ -918,7 +945,7 @@ export function PurchaseHistoryTable({
                           </span>
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          {purchase.contribution.tokensConsumed.toLocaleString()}{' '}
+                          {purchase.contribution.tokensConsumed.toFixed(2)}{' '}
                           kWh by {purchase.contribution.user.name} • Meter:{' '}
                           {purchase.meterReading.toLocaleString()} kWh
                         </div>

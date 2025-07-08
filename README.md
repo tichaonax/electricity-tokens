@@ -129,7 +129,7 @@ This application helps households manage shared electricity costs by:
 
 - **Next.js API Routes** - Server-side API with enhanced error handling
 - **Prisma ORM** - Type-safe database operations with audit logging
-- **PostgreSQL** - Production database with optimized indexing
+- **PostgreSQL** - Production database with performance indexes for query optimization
 - **NextAuth.js** - Authentication system with comprehensive audit trail
 
 ### DevOps
@@ -155,9 +155,10 @@ This application helps households manage shared electricity costs by:
 1. **User Management**: Create accounts, assign roles, manage permissions and theme preferences
 2. **Meter Reading Oversight**: View, edit, and manage all meter readings with audit information
 3. **Enhanced Audit Access**: Review detailed modification history with IP addresses and user agents
-4. **System Monitoring**: Monitor security, audit logs, and system health
-5. **Data Management**: Create backups, export data, manage system settings
-6. **Analytics**: Access system-wide reports and usage patterns with mobile optimization
+4. **Database Performance**: Monitor and optimize database performance with automated index management
+5. **System Monitoring**: Monitor security, audit logs, and system health
+6. **Data Management**: Create backups, export data, manage system settings
+7. **Analytics**: Access system-wide reports and usage patterns with mobile optimization
 
 ## 📖 Documentation
 
@@ -165,6 +166,7 @@ This application helps households manage shared electricity costs by:
 - **[Feature Tutorials](FEATURE_TUTORIALS.md)** - Step-by-step tutorials
 - **[API Documentation](API_DOCUMENTATION.md)** - API reference
 - **[Database Schema](DATABASE_SCHEMA.md)** - Database structure
+- **[Database Performance Indexes](DATABASE_PERFORMANCE_INDEXES.md)** - Performance optimization details
 - **[Deployment Guide](DEPLOYMENT.md)** - Production deployment
 - **[Security Guide](SECURITY.md)** - Security considerations
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions

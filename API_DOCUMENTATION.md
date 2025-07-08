@@ -1130,6 +1130,73 @@ System health check endpoint.
 }
 ```
 
+#### GET /api/admin/database-performance
+
+Get database performance information and index status (Admin only).
+
+**Response:**
+
+```json
+{
+  "indexes": [
+    {
+      "name": "TokenPurchase_purchaseDate_idx",
+      "exists": true,
+      "description": "Optimizes purchase date sorting",
+      "tableName": "TokenPurchase",
+      "estimatedImpact": "high"
+    },
+    {
+      "name": "TokenPurchase_creator_name_idx",
+      "exists": false,
+      "description": "Improves creator name search performance",
+      "tableName": "TokenPurchase",
+      "estimatedImpact": "medium"
+    }
+  ],
+  "stats": {
+    "totalQueries": 1250,
+    "avgQueryTime": 15.2,
+    "slowQueries": 25,
+    "indexHitRatio": 95.0,
+    "lastOptimized": "2024-01-15T14:30:00Z"
+  }
+}
+```
+
+#### POST /api/admin/database-performance/optimize
+
+Run database optimization by creating missing indexes (Admin only).
+
+**⚠️ Warning**: This operation may temporarily affect database performance and should be run during low-traffic periods.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "indexesCreated": 3,
+  "results": [
+    {
+      "name": "TokenPurchase_purchaseDate_idx",
+      "status": "success",
+      "message": "Index created successfully"
+    },
+    {
+      "name": "TokenPurchase_creator_name_idx",
+      "status": "success",
+      "message": "Index created successfully"
+    },
+    {
+      "name": "TokenPurchase_contribution_null_idx",
+      "status": "success",
+      "message": "Index created successfully"
+    }
+  ],
+  "message": "Database optimization completed. 3 indexes processed."
+}
+```
+
 #### GET /api/audit
 
 Get system audit logs (Admin only).

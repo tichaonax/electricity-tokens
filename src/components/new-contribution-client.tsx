@@ -79,7 +79,7 @@ export function NewContributionClient() {
             <div className="flex items-center">
               <NavigationFormButton
                 action={navigateToDashboard}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 bg-transparent border-none p-2"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent"
               >
                 ← Back to Dashboard
               </NavigationFormButton>

@@ -117,6 +117,7 @@ export default function EfficiencyReportsPage() {
         title="Efficiency Metrics" 
         backPath="/dashboard" 
         showBackButton={true}
+        backText="Back to Dashboard"
       />
       
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

@@ -105,6 +105,7 @@ The main dashboard includes several core sections that require special permissio
 - 💾 **Data Management**: Export, import, backup & restore
 - 🔒 **Security Dashboard**: System monitoring and threat detection
 - 📊 **System Reports**: Performance and usage analytics
+- 🗄️ **Database Performance**: Monitor and optimize database indexes
 
 ---
 
@@ -588,6 +589,93 @@ Fair Share = (Your Tokens ÷ Total Tokens) × Total Payment
 - **Full Backup**: Before major system changes, monthly archives
 - **Purchase Data**: Daily operational backups
 - **Users Only**: Before user management changes
+
+---
+
+## 🗄️ Database Performance Management (Admin Only)
+
+### Overview
+
+The Database Performance tool helps administrators monitor and optimize the application's database performance by managing indexes that improve query speed.
+
+### Accessing Database Performance
+
+1. **Navigate to Admin Panel**
+   - Go to Dashboard → Admin Panel
+   - Click on "Database Performance" card
+
+2. **Dashboard Features**
+   - **Performance Stats**: View current database metrics
+   - **Index Status**: See which performance indexes exist
+   - **Quick Actions**: Check status and run optimization
+
+### Using the Database Performance Tool
+
+#### Checking Database Status
+
+1. **Click "Check Status"** to refresh the current database performance information
+2. **Review Index Status**:
+   - ✅ **EXISTS**: Index is present and optimizing queries
+   - ⚠️ **MISSING**: Index should be created for better performance
+   - **Impact Level**: High/Medium/Low performance improvement expected
+
+#### Running Database Optimization
+
+1. **Click "Run Optimization"** to create missing indexes
+2. **Confirmation Dialog**: 
+   - ⚠️ **Warning**: Operation may temporarily affect performance
+   - **Recommendation**: Run during low-traffic periods or outside business hours
+   - **Options**: Click "OK" to proceed or "Cancel" to abort
+
+3. **Results**:
+   - Success message shows how many indexes were created
+   - Index status automatically refreshes
+   - Activity is logged in audit trail
+
+### Database Indexes Managed
+
+The tool manages these performance-critical indexes:
+
+- **Purchase Date Index**: Optimizes sorting by purchase date (High impact)
+- **Creator Name Index**: Improves creator name search performance (Medium impact)
+- **Emergency Flag Index**: Optimizes emergency purchase filtering (Low impact)
+- **Date Range Index**: Composite index for complex date queries (High impact)
+- **Contribution Null Index**: Optimizes sequential contribution logic (Medium impact)
+- **Tokens Payment Index**: Improves token and payment sorting (Low impact)
+
+### Best Practices
+
+**When to Run Optimization**:
+- After system updates or upgrades
+- When experiencing slow query performance
+- During scheduled maintenance windows
+- After significant data growth
+
+**Safety Considerations**:
+- Always run during low-traffic periods
+- Monitor system performance after optimization
+- Keep regular database backups
+- Test in staging environment first if possible
+
+**Monitoring**:
+- Check performance stats regularly
+- Review audit logs for optimization history
+- Monitor query response times
+- Watch for slow query alerts
+
+### Troubleshooting
+
+**If optimization fails**:
+1. Check database connection
+2. Verify admin permissions
+3. Review audit logs for error details
+4. Contact system administrator if issues persist
+
+**Performance not improving**:
+1. Allow time for database to utilize new indexes
+2. Check if queries are actually using the indexes
+3. Consider additional optimization strategies
+4. Review overall system performance
 
 ---
 

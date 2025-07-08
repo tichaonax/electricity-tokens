@@ -74,9 +74,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permissions for global contribution access
+    const userPermissions = permissionCheck.user!.permissions as Record<string, unknown> | null;
     const canViewAllContributions = 
       permissionCheck.user!.role === 'ADMIN' || 
-      (permissionCheck.user!.permissions as any)?.canViewUserContributions === true;
+      userPermissions?.canViewUserContributions === true;
 
     // Non-admin users without global permission can only see their own contributions
     if (!canViewAllContributions) {

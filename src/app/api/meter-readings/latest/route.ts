@@ -16,9 +16,30 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the latest meter reading from all users
-    const latestReading = await prisma.meterReading.findFirst({
+    // First, find the most recent date
+    const mostRecentDate = await prisma.meterReading.findFirst({
       orderBy: {
         readingDate: 'desc'
+      },
+      select: {
+        readingDate: true
+      }
+    });
+
+    if (!mostRecentDate) {
+      return NextResponse.json({
+        reading: null,
+        message: 'No meter readings available'
+      });
+    }
+
+    // Then find the maximum reading value for that date
+    const latestReading = await prisma.meterReading.findFirst({
+      where: {
+        readingDate: mostRecentDate.readingDate
+      },
+      orderBy: {
+        reading: 'desc'
       },
       select: {
         id: true,

@@ -44,9 +44,14 @@ export function ProgressiveConsumptionWidget() {
   const fetchConsumptionData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/dashboard/progressive-consumption');
+      const response = await fetch(`/api/dashboard/progressive-consumption?_t=${Date.now()}`);
       if (response.ok) {
         const result = await response.json();
+        console.log('🎨 Progressive Consumption Widget received data:');
+        console.log('  Current Month:', result.currentMonth?.consumed, 'kWh');
+        console.log('  Previous Month:', result.previousMonth?.consumed, 'kWh');
+        console.log('  Trend:', result.trendPercentage, '%');
+        console.log('  Full data:', result);
         setData(result);
       }
     } catch (error) {
@@ -133,7 +138,7 @@ export function ProgressiveConsumptionWidget() {
               {data.currentMonth.period}
             </span>
             <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {data.currentMonth.consumed.toLocaleString()} kWh
+              {data.currentMonth.consumed.toFixed(2)} kWh
             </span>
           </div>
 

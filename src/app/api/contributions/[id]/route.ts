@@ -56,13 +56,15 @@ export async function GET(
       );
     }
 
-    // Check permissions - users can only see their own contributions
-    if (
-      contribution.userId !== session.user.id &&
-      session.user.role !== 'ADMIN'
-    ) {
+    // Check permissions for global contribution access
+    const userPermissions = getUserPermissions(session.user);
+    const canViewContributions = 
+      session.user.role === 'ADMIN' || 
+      hasPermission(userPermissions, 'canViewUserContributions');
+
+    if (!canViewContributions) {
       return NextResponse.json(
-        { message: 'Forbidden: You can only view your own contributions' },
+        { message: 'Insufficient permissions to view contributions' },
         { status: 403 }
       );
     }

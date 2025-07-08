@@ -68,7 +68,7 @@ export default function NewPurchasePage() {
             <div className="flex items-center">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-slate-300 dark:border-slate-600 px-3 py-1 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 ← Back to Dashboard
               </button>

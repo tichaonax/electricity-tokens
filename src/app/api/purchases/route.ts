@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
         before?: string;
         sortBy?: 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'creator';
         sortDirection?: 'asc' | 'desc';
+        search?: string;
       };
     };
     const {
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
       before,
       sortBy = 'purchaseDate',
       sortDirection = 'desc',
+      search,
     } = query || {};
 
     const skip = (page - 1) * limit;
@@ -84,6 +86,16 @@ export async function GET(request: NextRequest) {
       // Find purchases before a specific date (for previous purchase lookup)
       where.purchaseDate = {
         lt: new Date(before),
+      };
+    }
+
+    // Add search filter for creator name
+    if (search && search.trim()) {
+      where.creator = {
+        name: {
+          contains: search.trim(),
+          mode: 'insensitive', // Case-insensitive search
+        },
       };
     }
 

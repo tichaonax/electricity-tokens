@@ -35,13 +35,13 @@ export default function CostAnalysisPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <NavigationFormButton
-                action={navigateToDashboard}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 p-0 h-auto font-normal bg-transparent border-none"
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-6 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent text-sm"
               >
                 ← Back to Dashboard
-              </NavigationFormButton>
-              <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+              </button>
+              <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                 Cost Analysis & Recommendations
               </h1>
             </div>

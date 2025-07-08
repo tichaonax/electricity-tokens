@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { HelpPopover } from '@/components/ui/help-popover';
-import { Users, Shield, Settings, FileText, Activity, Trash2, Gauge } from 'lucide-react';
+import { Users, Shield, Settings, FileText, Activity, Trash2, Gauge, Database } from 'lucide-react';
 import { DataResetComponent } from '@/components/admin/data-reset';
 
 export default function AdminPanel() {
@@ -45,13 +45,8 @@ export default function AdminPanel() {
         title="Admin Panel"
         backPath="/dashboard"
         showBackButton={true}
+        backText="Back to Dashboard"
       >
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="hidden md:inline-flex bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-        >
-          Back to Dashboard
-        </button>
       </ResponsiveNav>
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
@@ -222,6 +217,34 @@ export default function AdminPanel() {
                   <br />
                   • System maintenance
                   <br />• Data management
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Database Performance Card */}
+            <Card
+              className="hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+              onClick={() => router.push('/dashboard/admin/database-performance')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle className="text-lg font-medium">
+                    Database Performance
+                  </CardTitle>
+                  <CardDescription>
+                    Optimize database performance and indexes
+                  </CardDescription>
+                </div>
+                <Database className="h-8 w-8 text-amber-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  • Run database optimizations
+                  <br />
+                  • Create performance indexes
+                  <br />
+                  • Monitor query performance
+                  <br />• Database health checks
                 </div>
               </CardContent>
             </Card>

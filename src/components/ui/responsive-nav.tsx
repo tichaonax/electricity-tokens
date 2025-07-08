@@ -13,6 +13,7 @@ interface ResponsiveNavProps {
   title: string;
   backPath?: string;
   showBackButton?: boolean;
+  backText?: string;
   children?: React.ReactNode;
 }
 
@@ -20,6 +21,7 @@ export function ResponsiveNav({
   title,
   backPath,
   showBackButton = false,
+  backText,
   children,
 }: ResponsiveNavProps) {
   const { data: session } = useSession();
@@ -59,18 +61,18 @@ export function ResponsiveNav({
             <MobileNav isAdmin={isAdmin} />
 
             {/* Back button (desktop only) */}
-            {showBackButton && backPath === '/dashboard' && (
+            {showBackButton && backPath && (
               <NavigationFormButton
-                action={navigateToDashboard}
-                className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border-none"
+                action={backPath === '/dashboard' ? navigateToDashboard : navigateToAdmin}
+                className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border border-gray-300 dark:border-gray-600"
               >
-                ← Back
+                ← {backText || 'Back'}
               </NavigationFormButton>
             )}
 
             {/* Title */}
             <div className="flex items-center">
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden">
                 {title}
               </h1>
             </div>

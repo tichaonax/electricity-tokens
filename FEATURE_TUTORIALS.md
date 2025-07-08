@@ -444,6 +444,13 @@ Expected Savings: $12.50/month vs emergency purchases
 3. **Verify integrity**: Always test backups
 4. **Schedule regular backups**
 
+**Database Performance Management**:
+
+1. **Navigate to Admin → Database Performance**
+2. **Check Status**: Review current index status and performance metrics
+3. **Run Optimization**: Create missing indexes during maintenance windows
+4. **Monitor Results**: Track performance improvements and audit trail
+
 **💡 Admin Best Practices**:
 
 - Review audit logs weekly

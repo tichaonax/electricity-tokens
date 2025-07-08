@@ -307,6 +307,7 @@ export default function EditUser() {
         title={`Edit ${user.name}`}
         backPath="/dashboard/admin/users"
         showBackButton={true}
+        backText="Back to Users"
       />
 
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -327,18 +328,6 @@ export default function EditUser() {
             </Alert>
           )}
 
-          {/* Top Back Button */}
-          <div className="mb-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/dashboard/admin/users')}
-              className="flex items-center"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Users
-            </Button>
-          </div>
 
           <div className="space-y-6">
             {/* User Info Card */}
@@ -840,14 +829,6 @@ export default function EditUser() {
 
                   {/* Form Actions */}
                   <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => router.push('/dashboard/admin/users')}
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back to Users
-                    </Button>
 
                     <div className="flex space-x-2">
                       <Button

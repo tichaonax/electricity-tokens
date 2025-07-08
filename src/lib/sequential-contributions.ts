@@ -1,5 +1,14 @@
 import { prisma } from '@/lib/prisma';
 
+// Simple in-memory cache for sequential contribution results (5 second TTL)
+interface CacheEntry {
+  data: SequentialContributionResult;
+  timestamp: number;
+}
+
+let sequentialCache: CacheEntry | null = null;
+const CACHE_TTL = 5000; // 5 seconds
+
 export interface SequentialContributionResult {
   nextAvailablePurchase: {
     id: string;
@@ -18,33 +27,50 @@ export interface SequentialContributionResult {
  */
 export async function findOldestPurchaseWithoutContribution(): Promise<SequentialContributionResult> {
   try {
-    // Find all purchases without contributions, ordered by date (oldest first)
-    const purchasesWithoutContributions = await prisma.tokenPurchase.findMany({
-      where: {
-        contribution: null, // No contribution exists for this purchase
-      },
-      select: {
-        id: true,
-        purchaseDate: true,
-        totalTokens: true,
-        totalPayment: true,
-        isEmergency: true,
-      },
-      orderBy: {
-        purchaseDate: 'asc', // Oldest first
-      },
-    });
+    // Check cache first
+    if (sequentialCache && Date.now() - sequentialCache.timestamp < CACHE_TTL) {
+      return sequentialCache.data;
+    }
 
-    const nextAvailablePurchase =
-      purchasesWithoutContributions.length > 0
-        ? purchasesWithoutContributions[0]
-        : null;
+    // Use Promise.all to get both the oldest purchase and count in parallel
+    const [nextAvailablePurchase, totalPurchasesWithoutContributions] = await Promise.all([
+      // Get only the oldest purchase without contribution (limit 1 for efficiency)
+      prisma.tokenPurchase.findFirst({
+        where: {
+          contribution: null, // No contribution exists for this purchase
+        },
+        select: {
+          id: true,
+          purchaseDate: true,
+          totalTokens: true,
+          totalPayment: true,
+          isEmergency: true,
+        },
+        orderBy: {
+          purchaseDate: 'asc', // Oldest first
+        },
+      }),
+      // Get count of purchases without contributions
+      prisma.tokenPurchase.count({
+        where: {
+          contribution: null,
+        },
+      }),
+    ]);
 
-    return {
+    const result = {
       nextAvailablePurchase,
-      totalPurchasesWithoutContributions: purchasesWithoutContributions.length,
-      allPurchasesHaveContributions: purchasesWithoutContributions.length === 0,
+      totalPurchasesWithoutContributions,
+      allPurchasesHaveContributions: totalPurchasesWithoutContributions === 0,
     };
+
+    // Cache the result
+    sequentialCache = {
+      data: result,
+      timestamp: Date.now(),
+    };
+
+    return result;
   } catch (error) {
     console.error('Error finding oldest purchase without contribution:', error);
     return {
@@ -170,4 +196,12 @@ export async function getContributionProgress(): Promise<{
       progressPercentage: 100,
     };
   }
+}
+
+/**
+ * Invalidates the sequential contribution cache
+ * Call this after creating/updating/deleting purchases or contributions
+ */
+export function invalidateSequentialCache(): void {
+  sequentialCache = null;
 }
