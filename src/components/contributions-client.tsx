@@ -182,9 +182,9 @@ export function ContributionsClient() {
             <div className="flex items-center min-w-0 flex-1 mr-4">
               <NavigationFormButton
                 action={navigateToDashboard}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-2 sm:mr-4 p-0 h-auto font-normal bg-transparent border-none flex-shrink-0"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 sm:mr-6 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent flex-shrink-0 text-sm whitespace-nowrap"
               >
-                ← Back
+                ← Back to Dashboard
               </NavigationFormButton>
               <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 truncate">
                 <Users className="h-5 w-5 text-green-600 flex-shrink-0" />
@@ -222,13 +222,25 @@ export function ContributionsClient() {
             </div>
           )}
 
-          {/* Info message when no purchases are available for contribution */}
-          {!hasAvailablePurchases && !isLoading && (
+          {/* Info message when no purchases are available for contribution AND no existing contributions */}
+          {!hasAvailablePurchases && !isLoading && contributions.length === 0 && (
             <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
               <div className="flex items-center">
                 <User className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
                 <p className="text-sm text-blue-700 dark:text-blue-300">
                   All token purchases have matching contributions. New contributions can only be added when there are purchases without contributions.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Message when there are existing contributions but no available purchases for new ones */}
+          {!hasAvailablePurchases && !isLoading && contributions.length > 0 && (
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md">
+              <div className="flex items-center">
+                <User className="h-4 w-4 text-amber-600 dark:text-amber-400 mr-2" />
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  All purchases have contributions. New contributions can only be added when there are purchases without contributions.
                 </p>
               </div>
             </div>
@@ -423,41 +435,46 @@ export function ContributionsClient() {
                               </div>
                             </div>
                             {/* Action Buttons */}
-                            {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                            {((isAdmin || checkPermission('canEditContributions')) || 
+                              (isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions'))) && (
                               <div className="flex items-center space-x-1 flex-shrink-0">
-                                <form action={editContribution} className="inline">
-                                  <input type="hidden" name="contributionId" value={contribution.id} />
-                                  <button
-                                    type="submit"
-                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors min-w-[44px] min-h-[44px]"
-                                    title="Edit contribution"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </button>
-                                </form>
-                                <form action={deleteContribution} className="inline">
-                                  <input type="hidden" name="contributionId" value={contribution.id} />
-                                  <button
-                                    type="submit"
-                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
-                                    className={`p-2 rounded-lg transition-colors min-w-[44px] min-h-[44px] ${
-                                      !isLatestContribution(contribution)
-                                        ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
-                                        : deletingId === contribution.id
-                                        ? 'text-slate-400 cursor-wait'
-                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
-                                    }`}
-                                    title={
-                                      !isLatestContribution(contribution)
-                                        ? 'Only the latest contribution in the system can be deleted'
-                                        : deletingId === contribution.id
-                                        ? 'Deleting...'
-                                        : 'Delete contribution'
-                                    }
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                </form>
+                                {(isAdmin || checkPermission('canEditContributions')) && (
+                                  <form action={editContribution} className="inline">
+                                    <input type="hidden" name="contributionId" value={contribution.id} />
+                                    <button
+                                      type="submit"
+                                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors min-w-[44px] min-h-[44px]"
+                                      title="Edit contribution"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                  </form>
+                                )}
+                                {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                                  <form action={deleteContribution} className="inline">
+                                    <input type="hidden" name="contributionId" value={contribution.id} />
+                                    <button
+                                      type="submit"
+                                      disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                      className={`p-2 rounded-lg transition-colors min-w-[44px] min-h-[44px] ${
+                                        !isLatestContribution(contribution)
+                                          ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
+                                          : deletingId === contribution.id
+                                          ? 'text-slate-400 cursor-wait'
+                                          : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                      }`}
+                                      title={
+                                        !isLatestContribution(contribution)
+                                          ? 'Only the latest contribution in the system can be deleted'
+                                          : deletingId === contribution.id
+                                          ? 'Deleting...'
+                                          : 'Delete contribution'
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </form>
+                                )}
                               </div>
                             )}
                           </div>
@@ -485,7 +502,7 @@ export function ContributionsClient() {
                           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                             <div className="text-center">
                               <p className="text-lg font-semibold text-blue-700 dark:text-blue-400">
-                                {contribution.tokensConsumed.toLocaleString()} kWh
+                                {contribution.tokensConsumed.toFixed(2)} kWh
                               </p>
                               <p className="text-xs text-blue-600 dark:text-blue-300">
                                 Consumed (Reading: {contribution.meterReading.toLocaleString()})
@@ -551,7 +568,7 @@ export function ContributionsClient() {
                                   ).toLocaleDateString()}
                                 </span>
                                 <span className="font-medium text-blue-600 dark:text-blue-400">
-                                  {contribution.tokensConsumed.toLocaleString()}{' '}
+                                  {contribution.tokensConsumed.toFixed(2)}{' '}
                                   kWh consumed
                                 </span>
                                 <span>
@@ -589,7 +606,7 @@ export function ContributionsClient() {
                                     ${trueCost.toFixed(2)}
                                   </p>
                                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    ({contribution.tokensConsumed.toLocaleString()} kWh)
+                                    ({contribution.tokensConsumed.toFixed(2)} kWh)
                                   </p>
                                 </div>
                                 <div className="text-center">
@@ -622,41 +639,46 @@ export function ContributionsClient() {
                               </div>
                             </div>
                             {/* Action Buttons */}
-                            {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                            {((isAdmin || checkPermission('canEditContributions')) || 
+                              (isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions'))) && (
                               <div className="flex items-center space-x-2">
-                                <form action={editContribution} className="inline">
-                                  <input type="hidden" name="contributionId" value={contribution.id} />
-                                  <button
-                                    type="submit"
-                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors"
-                                    title="Edit contribution"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </button>
-                                </form>
-                                <form action={deleteContribution} className="inline">
-                                  <input type="hidden" name="contributionId" value={contribution.id} />
-                                  <button
-                                    type="submit"
-                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
-                                    className={`p-2 rounded-lg transition-colors ${
-                                      !isLatestContribution(contribution)
-                                        ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
-                                        : deletingId === contribution.id
-                                        ? 'text-slate-400 cursor-wait'
-                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
-                                    }`}
-                                    title={
-                                      !isLatestContribution(contribution)
-                                        ? 'Only the latest contribution in the system can be deleted'
-                                        : deletingId === contribution.id
-                                        ? 'Deleting...'
-                                        : 'Delete contribution'
-                                    }
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                </form>
+                                {(isAdmin || checkPermission('canEditContributions')) && (
+                                  <form action={editContribution} className="inline">
+                                    <input type="hidden" name="contributionId" value={contribution.id} />
+                                    <button
+                                      type="submit"
+                                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors"
+                                      title="Edit contribution"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                  </form>
+                                )}
+                                {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                                  <form action={deleteContribution} className="inline">
+                                    <input type="hidden" name="contributionId" value={contribution.id} />
+                                    <button
+                                      type="submit"
+                                      disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                      className={`p-2 rounded-lg transition-colors ${
+                                        !isLatestContribution(contribution)
+                                          ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
+                                          : deletingId === contribution.id
+                                          ? 'text-slate-400 cursor-wait'
+                                          : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                      }`}
+                                      title={
+                                        !isLatestContribution(contribution)
+                                          ? 'Only the latest contribution in the system can be deleted'
+                                          : deletingId === contribution.id
+                                          ? 'Deleting...'
+                                          : 'Delete contribution'
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </form>
+                                )}
                               </div>
                             )}
                           </div>

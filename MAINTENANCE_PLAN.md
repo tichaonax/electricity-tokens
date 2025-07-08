@@ -382,6 +382,7 @@ What other approaches were considered?
 - [ ] Index usage analysis
 - [ ] Slow query review and optimization
 - [ ] Connection statistics review
+- [ ] Database performance tool status check (v1.4.0+)
 - [ ] Audit log review for security anomalies (v1.4.0+)
 - [ ] Theme preference synchronization check (v1.4.0+)
 
@@ -389,6 +390,7 @@ What other approaches were considered?
 
 - [ ] Database statistics update
 - [ ] Index maintenance and rebuilding
+- [ ] Run database performance optimization (v1.4.0+)
 - [ ] Storage usage analysis and cleanup
 - [ ] Audit log archival and compression (v1.4.0+)
 - [ ] Meter readings data integrity verification (v1.4.0+)
@@ -421,6 +423,13 @@ What other approaches were considered?
 - **Weekly Pattern Analysis**: Identify unusual consumption patterns or data anomalies
 - **Monthly Cleanup**: Archive detailed meter readings older than 2 years
 - **Quarterly Optimization**: Review and optimize meter reading queries for performance
+
+**Database Performance Tool Management**:
+
+- **Weekly Status Check**: Review database performance metrics and index status
+- **Monthly Optimization**: Run database optimization during maintenance windows
+- **Quarterly Analysis**: Analyze performance improvements and index effectiveness
+- **Annual Review**: Evaluate and update database optimization strategy
 
 #### **Performance Monitoring Metrics**
 

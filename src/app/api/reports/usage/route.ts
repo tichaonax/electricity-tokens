@@ -21,11 +21,29 @@ export async function GET(request: NextRequest) {
     console.log('Usage reports API called');
     const session = await getServerSession(authOptions);
 
-    // Check authentication
-    if (!session?.user) {
+    // Check authentication and permissions
+    const permissionCheck = checkPermissions(
+      session,
+      {},
+      { requireAuth: true }
+    );
+    if (!permissionCheck.success) {
       return NextResponse.json(
-        { message: 'Authentication required' },
+        { message: permissionCheck.error },
         { status: 401 }
+      );
+    }
+
+    // Check canViewUsageReports permission for global data access
+    const userPermissions = permissionCheck.user!.permissions as Record<string, unknown> | null;
+    const canViewReports = 
+      permissionCheck.user!.role === 'ADMIN' || 
+      userPermissions?.canViewUsageReports === true;
+
+    if (!canViewReports) {
+      return NextResponse.json(
+        { message: 'Insufficient permissions to view usage reports' },
+        { status: 403 }
       );
     }
 

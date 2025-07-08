@@ -45,14 +45,14 @@ export function DataManagementClient() {
             <div className="flex items-center">
               <NavigationFormButton
                 action={navigateToDashboard}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 bg-transparent border-none p-2 flex items-center"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
               </NavigationFormButton>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-8">
                 <Shield className="h-5 w-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                   Data Management
                 </h1>
               </div>

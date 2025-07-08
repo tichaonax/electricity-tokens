@@ -125,14 +125,8 @@ export default function NewUserPage() {
         title="Add New User"
         backPath="/dashboard/admin/users"
         showBackButton={true}
+        backText="Back to Users"
       >
-        <Button
-          variant="outline"
-          onClick={() => router.push('/dashboard/admin/users')}
-          className="hidden md:inline-flex"
-        >
-          Back to Users
-        </Button>
       </ResponsiveNav>
 
       <main className="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

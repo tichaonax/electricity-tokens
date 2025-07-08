@@ -34,6 +34,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check canViewFinancialReports permission for global data access
+    const userPermissions = permissionCheck.user!.permissions as Record<string, unknown> | null;
+    const canViewFinancialReports = 
+      permissionCheck.user!.role === 'ADMIN' || 
+      userPermissions?.canViewFinancialReports === true;
+
+    if (!canViewFinancialReports) {
+      return NextResponse.json(
+        { message: 'Insufficient permissions to view financial reports' },
+        { status: 403 }
+      );
+    }
+
     // Validate query parameters
     const validation = await validateRequest(request, {
       query: financialReportQuerySchema,

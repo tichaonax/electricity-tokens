@@ -138,6 +138,7 @@ export default function HelpPage() {
         title="Help & FAQ"
         backPath="/dashboard"
         showBackButton={true}
+        backText="Back to Dashboard"
       />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

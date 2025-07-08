@@ -4,24 +4,13 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { HelpPopover } from '@/components/ui/help-popover';
 import { ContributionProgress } from '@/components/contribution-progress';
-import { NavigationFormButton } from '@/components/ui/navigation-form-button';
 import { ProgressiveConsumptionWidget } from '@/components/ui/progressive-consumption-widget';
 import { RunningBalanceWidget } from '@/components/ui/running-balance-widget';
 import { MaxDailyConsumptionWidget } from '@/components/ui/max-daily-consumption-widget';
-import { 
-  navigateToNewPurchase, 
-  navigateToContributions, 
-  navigateToCostAnalysis,
-  navigateToPersonalDashboard,
-  navigateToDataManagement,
-  navigateToUsageReports,
-  navigateToFinancialReports,
-  navigateToEfficiencyReports,
-  navigateToAdmin
-} from '@/app/actions/navigation';
 
 interface QuickStats {
   totalTokensUsed: number;
@@ -33,6 +22,7 @@ export function DashboardClient() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { checkPermission, isAdmin } = usePermissions();
+  const { navigateAndSaveScroll } = useScrollRestoration('dashboard');
   const [quickStats, setQuickStats] = useState<QuickStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -116,19 +106,79 @@ export function DashboardClient() {
           <ContributionProgress />
 
           {/* Dashboard Widgets */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <ProgressiveConsumptionWidget />
-            <RunningBalanceWidget />
-            <MaxDailyConsumptionWidget />
-          </div>
+          {(() => {
+            // Check which widgets the user has permission to view
+            const canViewProgressive = checkPermission('canViewProgressiveTokenConsumption');
+            const canViewBalance = checkPermission('canViewAccountBalance');
+            const canViewMaxDaily = checkPermission('canViewMaximumDailyConsumption');
+            
+            const visibleWidgets = [
+              canViewProgressive && 'progressive',
+              canViewBalance && 'balance',
+              canViewMaxDaily && 'maxDaily'
+            ].filter(Boolean);
+            
+            const visibleCount = visibleWidgets.length;
+            
+            // Return appropriate layout based on number of visible widgets
+            if (visibleCount === 0) {
+              return null; // No widgets to show
+            }
+            
+            if (visibleCount === 1) {
+              // Single widget - full width
+              return (
+                <div className="flex flex-col gap-6">
+                  <div className="w-full">
+                    {canViewProgressive && <ProgressiveConsumptionWidget />}
+                    {canViewBalance && <RunningBalanceWidget />}
+                    {canViewMaxDaily && <MaxDailyConsumptionWidget />}
+                  </div>
+                </div>
+              );
+            }
+            
+            if (visibleCount === 2) {
+              // Two widgets - left and right justified on desktop
+              return (
+                <div className="flex flex-col lg:flex-row gap-6">
+                  <div className="flex-1 lg:pr-3">
+                    {canViewProgressive && <ProgressiveConsumptionWidget />}
+                    {!canViewProgressive && canViewBalance && <RunningBalanceWidget />}
+                    {!canViewProgressive && !canViewBalance && canViewMaxDaily && <MaxDailyConsumptionWidget />}
+                  </div>
+                  <div className="flex-1 lg:pl-3">
+                    {canViewProgressive && canViewBalance && <RunningBalanceWidget />}
+                    {canViewProgressive && !canViewBalance && canViewMaxDaily && <MaxDailyConsumptionWidget />}
+                    {!canViewProgressive && canViewBalance && canViewMaxDaily && <MaxDailyConsumptionWidget />}
+                  </div>
+                </div>
+              );
+            }
+            
+            // Three widgets - evenly spaced
+            return (
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="flex-1 lg:pr-2">
+                  <ProgressiveConsumptionWidget />
+                </div>
+                <div className="flex-1 lg:px-2">
+                  <RunningBalanceWidget />
+                </div>
+                <div className="flex-1 lg:pl-2">
+                  <MaxDailyConsumptionWidget />
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Quick Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Token Purchases Card - Only show if user can view purchase history */}
             {checkPermission('canViewPurchaseHistory') && (
-              <a
-                href="/dashboard/purchases/history"
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/purchases/history')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
                 title="View and manage all electricity token purchases with advanced filtering and sorting"
               >
               <div className="p-5">
@@ -169,14 +219,14 @@ export function DashboardClient() {
                   </span>
                 </div>
               </div>
-              </a>
+              </button>
             )}
 
             {/* New Purchase Card - Only show if user can access new purchase */}
             {checkPermission('canAccessNewPurchase') && (
-              <NavigationFormButton
-                action={navigateToNewPurchase}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/purchases/new')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -216,14 +266,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
 
             {/* User Contributions Card - Only show if user can view user contributions */}
             {checkPermission('canViewUserContributions') && (
-              <NavigationFormButton
-                action={navigateToContributions}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/contributions')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -263,14 +313,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
 
             {/* Meter Readings Card - Only show if user can add meter readings */}
             {checkPermission('canAddMeterReadings') && (
-              <a
-                href="/dashboard/meter-readings"
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/meter-readings')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -310,14 +360,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </a>
+              </button>
             )}
 
             {/* Cost Analysis Card */}
             {checkPermission('canViewCostAnalysis') && (
-              <NavigationFormButton
-                action={navigateToCostAnalysis}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/cost-analysis')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -357,14 +407,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
 
             {/* Personal Dashboard Card */}
             {checkPermission('canViewPersonalDashboard') && (
-              <NavigationFormButton
-                action={navigateToPersonalDashboard}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/personal')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -404,14 +454,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
 
             {/* Data Management Card */}
             {checkPermission('canExportData') && (
-              <NavigationFormButton
-                action={navigateToDataManagement}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/data-management')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -451,14 +501,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
 
             {/* Usage Reports Card */}
             {checkPermission('canViewUsageReports') && (
-              <NavigationFormButton
-                action={navigateToUsageReports}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/reports/usage')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -498,14 +548,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
 
             {/* Financial Reports Card */}
             {checkPermission('canViewFinancialReports') && (
-              <NavigationFormButton
-                action={navigateToFinancialReports}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/reports/financial')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -545,14 +595,14 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
 
             {/* Efficiency Metrics Card */}
             {checkPermission('canViewEfficiencyReports') && (
-              <NavigationFormButton
-                action={navigateToEfficiencyReports}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
+              <button
+                onClick={() => navigateAndSaveScroll('/dashboard/reports/efficiency')}
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
               >
                 <div className="p-5">
                   <div className="flex items-center">
@@ -592,7 +642,7 @@ export function DashboardClient() {
                     </span>
                   </div>
                 </div>
-              </NavigationFormButton>
+              </button>
             )}
           </div>
 
@@ -635,9 +685,9 @@ export function DashboardClient() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {/* Admin Panel Card - Only visible to admins */}
               {isAdmin && (
-                <NavigationFormButton
-                  action={navigateToAdmin}
-                  className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200 dark:border-red-800 block text-left"
+                <button
+                  onClick={() => navigateAndSaveScroll('/dashboard/admin')}
+                  className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200 dark:border-red-800 block text-left w-full"
                 >
                   <div className="p-5">
                     <div className="flex items-center">
@@ -677,7 +727,7 @@ export function DashboardClient() {
                       </span>
                     </div>
                   </div>
-                </NavigationFormButton>
+                </button>
               )}
             </div>
 

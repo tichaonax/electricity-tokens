@@ -34,6 +34,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check canViewEfficiencyReports permission for global data access
+    const userPermissions = permissionCheck.user!.permissions as Record<string, unknown> | null;
+    const canViewEfficiencyReports = 
+      permissionCheck.user!.role === 'ADMIN' || 
+      userPermissions?.canViewEfficiencyReports === true;
+
+    if (!canViewEfficiencyReports) {
+      return NextResponse.json(
+        { message: 'Insufficient permissions to view efficiency reports' },
+        { status: 403 }
+      );
+    }
+
     // Validate query parameters
     const validation = await validateRequest(request, {
       query: efficiencyReportQuerySchema,

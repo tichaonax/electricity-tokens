@@ -151,6 +151,7 @@ export const purchaseQuerySchema = z
       .enum(['purchaseDate', 'totalTokens', 'totalPayment', 'creator'])
       .optional(),
     sortDirection: z.enum(['asc', 'desc']).optional(),
+    search: z.string().max(100, 'Search term cannot exceed 100 characters').optional(),
   })
   .refine(
     (data) => {

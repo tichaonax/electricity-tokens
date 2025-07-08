@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Get meter readings first, then audit logs to avoid N+1 queries
     const [meterReadings, total] = await Promise.all([
       prisma.meterReading.findMany({
         where,
@@ -99,34 +100,41 @@ export async function GET(request: NextRequest) {
       prisma.meterReading.count({ where }),
     ]);
 
-    // Get audit information for each meter reading
-    const meterReadingsWithAudit = await Promise.all(
-      meterReadings.map(async (reading) => {
-        // Get the most recent UPDATE audit log for this meter reading
-        const latestUpdateAudit = await prisma.auditLog.findFirst({
-          where: {
-            entityType: 'MeterReading',
-            entityId: reading.id,
-            action: 'UPDATE',
+    // Get the reading IDs and fetch audit logs for them in one query
+    const readingIds = meterReadings.map(reading => reading.id);
+    const relevantAuditLogs = readingIds.length > 0 ? await prisma.auditLog.findMany({
+      where: {
+        entityType: 'MeterReading',
+        entityId: {
+          in: readingIds
+        },
+        action: 'UPDATE',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-          orderBy: { timestamp: 'desc' },
-        });
+        },
+      },
+      orderBy: { timestamp: 'desc' },
+    }) : [];
 
-        return {
-          ...reading,
-          latestUpdateAudit,
-        };
-      })
-    );
+    // Create a map of audit logs by entityId for fast lookup
+    const auditLogMap = new Map();
+    relevantAuditLogs.forEach(log => {
+      if (!auditLogMap.has(log.entityId)) {
+        auditLogMap.set(log.entityId, log);
+      }
+    });
+
+    // Combine meter readings with their audit logs
+    const meterReadingsWithAudit = meterReadings.map(reading => ({
+      ...reading,
+      latestUpdateAudit: auditLogMap.get(reading.id) || null,
+    }));
 
 
     return NextResponse.json({

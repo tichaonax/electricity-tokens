@@ -54,7 +54,7 @@ export function ResponsiveTable({
   return (
     <div className={className}>
       {/* Desktop table view */}
-      <div className="hidden md:block overflow-hidden">
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>

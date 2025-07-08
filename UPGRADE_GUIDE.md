@@ -213,6 +213,27 @@ npx prisma migrate deploy
 npx prisma migrate status
 ```
 
+### 3.3 Database Performance Optimization
+
+**New in v1.4.0+**: Performance indexes for improved query speed
+
+```bash
+# The following indexes are automatically created by migration:
+# - TokenPurchase_purchaseDate_idx: Optimizes purchase date sorting
+# - TokenPurchase_creator_name_idx: Improves creator name search
+# - TokenPurchase_isEmergency_idx: Optimizes emergency purchase filtering
+# - TokenPurchase_date_range_idx: Composite index for date range queries
+# - TokenPurchase_tokens_payment_idx: Optimizes token/payment sorting
+
+# Verify indexes were created successfully
+psql -U username -d electricity_tokens -c "SELECT indexname, tablename FROM pg_indexes WHERE tablename = 'token_purchases' AND indexname LIKE 'TokenPurchase_%';"
+
+# Performance optimization can also be run via the admin dashboard:
+# Admin Panel → Database Performance → Run Optimization
+```
+
+### 3.4 Manual Schema Update (Advanced Users)
+
 **Option B: Manual Schema Update (Advanced Users)**
 
 ```bash
@@ -223,7 +244,7 @@ npx prisma db push
 npx prisma migrate deploy --schema=./prisma/schema.prisma
 ```
 
-### 3.3 Data Migration (if required)
+### 3.5 Data Migration (if required)
 
 ```bash
 # First create the required backup as shown by the migration script
@@ -660,7 +681,9 @@ export const viewport: Viewport = {
 
 - Mobile performance improvements
 - Better responsive design
-- Optimized database queries
+- Optimized database queries with new performance indexes
+- Faster purchase history loading and filtering
+- Improved search performance for creator-based queries
 
 **Resource Usage:**
 
@@ -703,6 +726,8 @@ npx prisma validate
 - [ ] Running balance calculations are accurate
 - [ ] Reports generate correctly with new data
 - [ ] Admin functions work properly
+- [ ] Database performance optimization tool is accessible
+- [ ] Performance indexes are created and functioning
 - [ ] Backup and restore capabilities are functional
 
 ### Performance Benchmarks:

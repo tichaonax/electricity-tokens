@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,7 +46,17 @@ function EditContributionContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const contributionId = params.id as string;
+  const fromPage = searchParams.get('from');
+  
+  // Helper function to determine back navigation path
+  const getBackPath = () => {
+    if (fromPage === 'purchases') {
+      return '/dashboard/purchases/history';
+    }
+    return '/dashboard/contributions';
+  };
 
   const [contribution, setContribution] = useState<ContributionData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -168,8 +178,8 @@ function EditContributionContent() {
         throw new Error(errorData.message || 'Failed to update contribution');
       }
 
-      // Success - redirect back to contributions
-      router.push('/dashboard/contributions');
+      // Success - redirect back to source page
+      router.push(getBackPath());
     } catch (error) {
       // console.error removed
       setError(error instanceof Error ? error.message : 'Failed to update contribution');
@@ -194,8 +204,28 @@ function EditContributionContent() {
     return (watchedValues.contributionAmount || 0) - calculateTrueCost();
   };
 
-  // Permission check
-  const canEdit = session?.user?.role === 'ADMIN' || contribution?.user.id === session?.user?.id;
+  // Permission checks
+  const isAdmin = session?.user?.role === 'ADMIN';
+  const isOwner = contribution?.user.id === session?.user?.id;
+  const userPermissions = session?.user?.permissions as Record<string, unknown> | null;
+  
+  // Debug logging to see user permissions
+  console.log('🔐 Permission Debug:');
+  console.log('  User role:', session?.user?.role);
+  console.log('  Is owner:', isOwner);
+  console.log('  User permissions:', userPermissions);
+  console.log('  canViewUserContributions:', userPermissions?.canViewUserContributions);
+  console.log('  canEditContributions:', userPermissions?.canEditContributions);
+  
+  const canView = isAdmin || 
+    userPermissions?.canViewUserContributions === true;
+  
+  const canEdit = isAdmin || 
+    isOwner || 
+    userPermissions?.canEditContributions === true;
+
+  console.log('  Final canView:', canView);
+  console.log('  Final canEdit:', canEdit);
 
   if (status === 'loading' || loading) {
     return (
@@ -216,15 +246,18 @@ function EditContributionContent() {
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
             Contribution Not Found
           </h2>
-          <Button onClick={() => router.push('/dashboard/contributions')}>
-            Back to Contributions
+          <Button 
+            onClick={() => router.push(getBackPath())}
+            className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+          >
+            {fromPage === 'purchases' ? 'Back to Purchase History' : 'Back to Contributions'}
           </Button>
         </div>
       </div>
     );
   }
 
-  if (!canEdit) {
+  if (!canView) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -233,10 +266,13 @@ function EditContributionContent() {
             Access Denied
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-6">
-            You don&apos;t have permission to edit this contribution.
+            You don&apos;t have permission to view this contribution.
           </p>
-          <Button onClick={() => router.push('/dashboard/contributions')}>
-            Back to Contributions
+          <Button 
+            onClick={() => router.push(getBackPath())}
+            className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+          >
+            {fromPage === 'purchases' ? 'Back to Purchase History' : 'Back to Contributions'}
           </Button>
         </div>
       </div>
@@ -250,13 +286,17 @@ function EditContributionContent() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <button
-                onClick={() => router.push('/dashboard/contributions')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+                onClick={() => router.push(getBackPath())}
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {fromPage === 'purchases' ? 'Back to Purchase History' : 'Back to Contributions'}
               </button>
               <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                Edit Contribution
+                {fromPage === 'purchases' 
+                  ? 'Purchase History'
+                  : (canEdit ? 'Edit Contribution' : 'View Contribution')
+                }
               </h1>
             </div>
           </div>
@@ -353,24 +393,38 @@ function EditContributionContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                   <Zap className="h-5 w-5" />
-                  Edit Contribution
+                  {fromPage === 'purchases' 
+                    ? (canEdit ? 'Edit Token Usage' : 'Token Usage Details')
+                    : (canEdit ? 'Edit Contribution' : 'Contribution Details')
+                  }
                 </CardTitle>
                 <CardDescription className="text-slate-600 dark:text-slate-400">
-                  Update your contribution amount (tokens consumed is calculated automatically)
+                  {fromPage === 'purchases' 
+                    ? (canEdit 
+                        ? 'Update payment amount for this token usage (consumption is calculated automatically)'
+                        : 'View token usage and payment details (read-only access)'
+                      )
+                    : (canEdit 
+                        ? 'Update your contribution amount (tokens consumed is calculated automatically)'
+                        : 'View contribution details (read-only access)'
+                      )
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-white mb-1">
-                      Contribution Amount ($) *
+                      Contribution Amount ($) {canEdit ? '*' : ''}
                     </label>
                     <Input
                       type="number"
                       step="0.01"
                       placeholder="0.00"
                       {...register('contributionAmount', { valueAsNumber: true })}
-                      className={`${errors.contributionAmount || validationErrors.contributionAmount ? 'border-red-300 dark:border-red-600' : ''} dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600`}
+                      readOnly={!canEdit}
+                      disabled={!canEdit}
+                      className={`${errors.contributionAmount || validationErrors.contributionAmount ? 'border-red-300 dark:border-red-600' : ''} ${!canEdit ? 'bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-not-allowed' : 'dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600'}`}
                     />
                     {errors.contributionAmount && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.contributionAmount.message}</p>
@@ -387,7 +441,7 @@ function EditContributionContent() {
                     <div className="relative">
                       <Input
                         type="number"
-                        value={contribution.tokensConsumed}
+                        value={contribution.tokensConsumed.toFixed(2)}
                         readOnly
                         disabled
                         className="bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-not-allowed"
@@ -402,31 +456,43 @@ function EditContributionContent() {
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => router.push('/dashboard/contributions')}
-                      className="flex-1 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={submitting}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
-                    >
-                      {submitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Update Contribution
-                        </>
-                      )}
-                    </Button>
+                    {canEdit ? (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => router.push(getBackPath())}
+                          className="flex-1 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={submitting}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                        >
+                          {submitting ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Update Contribution
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={() => router.push(getBackPath())}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                      >
+                        {fromPage === 'purchases' ? 'Back to Purchase History' : 'Back to Contributions'}
+                      </Button>
+                    )}
                   </div>
                 </form>
               </CardContent>

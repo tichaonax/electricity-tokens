@@ -213,7 +213,7 @@ export default function UserProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <ResponsiveNav title="User Profile" backPath="/dashboard" showBackButton />
+      <ResponsiveNav title="User Profile" backPath="/dashboard" showBackButton backText="Back to Dashboard" />
 
       <main className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">

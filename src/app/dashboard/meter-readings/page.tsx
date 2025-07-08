@@ -59,6 +59,12 @@ export default function MeterReadingsPage() {
   const [meterReadings, setMeterReadings] = useState<MeterReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newReading, setNewReading] = useState<NewMeterReading>({
@@ -81,16 +87,21 @@ export default function MeterReadingsPage() {
     }
   }, [status]);
 
-  const fetchMeterReadings = async () => {
+  const fetchMeterReadings = async (page = 1) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/meter-readings');
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+      });
+      const response = await fetch(`/api/meter-readings?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch meter readings');
       }
       const data = await response.json();
       setMeterReadings(data.meterReadings || []);
+      setPagination(data.pagination);
     } catch (error) {
       console.error('Error fetching meter readings:', error);
       setError('Failed to load meter readings');
@@ -187,7 +198,7 @@ export default function MeterReadingsPage() {
       setValidationResult(null);
       setShowAddForm(false);
       setEditingId(null);
-      await fetchMeterReadings();
+      await fetchMeterReadings(1); // Reset to page 1 after adding/editing
     } catch (error) {
       console.error('Error saving meter reading:', error);
       setError(error instanceof Error ? error.message : 'Failed to save meter reading');
@@ -220,7 +231,7 @@ export default function MeterReadingsPage() {
         throw new Error(errorData.message || 'Failed to delete meter reading');
       }
 
-      await fetchMeterReadings();
+      await fetchMeterReadings(pagination.page);
     } catch (error) {
       console.error('Error deleting meter reading:', error);
       setError(error instanceof Error ? error.message : 'Failed to delete meter reading');
@@ -233,6 +244,12 @@ export default function MeterReadingsPage() {
     setShowAddForm(false);
     setEditingId(null);
     setError(null);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      fetchMeterReadings(newPage);
+    }
   };
 
   if (status === 'loading' || loading) {
@@ -271,15 +288,13 @@ export default function MeterReadingsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Button
-                type="button"
-                variant="ghost"
+              <button
                 onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
-              </Button>
+              </button>
               <div className="flex items-center gap-2">
                 <Gauge className="h-5 w-5 text-blue-600" />
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -765,6 +780,58 @@ export default function MeterReadingsPage() {
               </>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                Showing page {pagination.page} of {pagination.totalPages} ({pagination.total} total readings)
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(1)}
+                  disabled={pagination.page === 1}
+                  className="hidden sm:inline-flex"
+                >
+                  First
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                >
+                  Previous
+                </Button>
+                <span className="px-3 py-1 text-sm bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-md text-blue-900 dark:text-blue-100">
+                  {pagination.page}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                >
+                  Next
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.totalPages)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="hidden sm:inline-flex"
+                >
+                  Last
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Help Section */}
           <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6 dark:bg-blue-950 dark:border-blue-800">

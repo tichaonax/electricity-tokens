@@ -270,7 +270,7 @@ export function RunningBalanceWidget() {
                 Tokens Consumed
               </span>
               <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
-                {data.tokensConsumedSinceLastContribution.toFixed(1)} kWh
+                {data.tokensConsumedSinceLastContribution.toFixed(2)} kWh
               </span>
             </div>
             <div className="flex justify-between items-center">

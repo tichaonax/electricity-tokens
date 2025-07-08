@@ -139,14 +139,13 @@ export default function EditPurchasePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Button
-                variant="ghost"
+              <button
                 onClick={() => router.push('/dashboard/purchases/history')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to History
-              </Button>
+              </button>
               <div className="flex items-center gap-2">
                 <Edit className="h-5 w-5 text-blue-600" />
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
