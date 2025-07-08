@@ -22,6 +22,13 @@ export interface UserPermissions {
   canViewPersonalDashboard: boolean;
   canViewCostAnalysis: boolean;
   canViewAccountBalance: boolean;
+  canViewProgressiveTokenConsumption: boolean;
+  canViewMaximumDailyConsumption: boolean;
+
+  // Dashboard Access Control
+  canViewPurchaseHistory: boolean;
+  canAccessNewPurchase: boolean;
+  canViewUserContributions: boolean;
 
   // Data Management
   canExportData: boolean;
@@ -43,15 +50,22 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   // Meter Reading Management - No access by default
   canAddMeterReadings: false,
 
-  // Reports Access - Basic access
-  canViewUsageReports: true,
-  canViewFinancialReports: true,
-  canViewEfficiencyReports: false,
+  // Reports Access - Special permissions (not included by default)
+  canViewUsageReports: false, // Usage reports - special permission
+  canViewFinancialReports: false, // Financial reports - special permission
+  canViewEfficiencyReports: false, // Efficiency reports - special permission
 
   // Personal Dashboard - Limited access for regular users
   canViewPersonalDashboard: true,
-  canViewCostAnalysis: true,
+  canViewCostAnalysis: false, // Cost analysis - special permission
   canViewAccountBalance: false, // Account balance restricted by default
+  canViewProgressiveTokenConsumption: false, // Progressive consumption widget restricted by default
+  canViewMaximumDailyConsumption: false, // Maximum daily consumption widget restricted by default
+
+  // Dashboard Access Control - Special permissions (not included by default)
+  canViewPurchaseHistory: false, // Purchase history access - special permission
+  canAccessNewPurchase: false, // New purchase creation - special permission
+  canViewUserContributions: false, // User contributions view - special permission
 
   // Data Management - No access by default
   canExportData: false,
@@ -73,6 +87,11 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canViewPersonalDashboard: true,
   canViewCostAnalysis: true,
   canViewAccountBalance: true,
+  canViewProgressiveTokenConsumption: true,
+  canViewMaximumDailyConsumption: true,
+  canViewPurchaseHistory: true,
+  canAccessNewPurchase: true,
+  canViewUserContributions: true,
   canExportData: true,
   canImportData: true,
 };
@@ -86,12 +105,17 @@ export const READ_ONLY_PERMISSIONS: UserPermissions = {
   canEditContributions: false,
   canDeleteContributions: false,
   canAddMeterReadings: false,
-  canViewUsageReports: true,
-  canViewFinancialReports: true,
-  canViewEfficiencyReports: false,
+  canViewUsageReports: false, // Special permission - not included in read-only
+  canViewFinancialReports: false, // Special permission - not included in read-only
+  canViewEfficiencyReports: false, // Special permission - not included in read-only
   canViewPersonalDashboard: true,
-  canViewCostAnalysis: true,
+  canViewCostAnalysis: false, // Special permission - not included in read-only
   canViewAccountBalance: false, // Restricted access to balance
+  canViewProgressiveTokenConsumption: false, // Restricted access to progressive consumption
+  canViewMaximumDailyConsumption: false, // Restricted access to maximum daily consumption
+  canViewPurchaseHistory: false, // Special permission - not included in read-only
+  canAccessNewPurchase: false, // Special permission - not included in read-only
+  canViewUserContributions: false, // Special permission - not included in read-only
   canExportData: false,
   canImportData: false,
 };
@@ -105,12 +129,17 @@ export const CONTRIBUTOR_ONLY_PERMISSIONS: UserPermissions = {
   canEditContributions: true,
   canDeleteContributions: false,
   canAddMeterReadings: false,
-  canViewUsageReports: false,
-  canViewFinancialReports: false,
-  canViewEfficiencyReports: false,
+  canViewUsageReports: false, // Special permission - not included for contributors
+  canViewFinancialReports: false, // Special permission - not included for contributors
+  canViewEfficiencyReports: false, // Special permission - not included for contributors
   canViewPersonalDashboard: true,
-  canViewCostAnalysis: false,
+  canViewCostAnalysis: false, // Special permission - not included for contributors
   canViewAccountBalance: false, // No balance access for contributors
+  canViewProgressiveTokenConsumption: false, // No progressive consumption access for contributors
+  canViewMaximumDailyConsumption: false, // No maximum daily consumption access for contributors
+  canViewPurchaseHistory: false, // Special permission - not included for contributors
+  canAccessNewPurchase: false, // Special permission - not included for contributors
+  canViewUserContributions: true, // Allow contributions view for contributors (special grant)
   canExportData: false,
   canImportData: false,
 };

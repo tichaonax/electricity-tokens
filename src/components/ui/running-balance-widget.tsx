@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Wallet, AlertTriangle } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface BalanceData {
   contributionBalance: number;
@@ -27,6 +28,12 @@ interface BalanceData {
 export function RunningBalanceWidget() {
   const [data, setData] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { checkPermission } = usePermissions();
+
+  // Check if user has permission to view account balance
+  if (!checkPermission('canViewAccountBalance')) {
+    return null; // Don't render the widget if user doesn't have permission
+  }
 
   useEffect(() => {
     fetchBalanceData();

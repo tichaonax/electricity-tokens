@@ -37,6 +37,7 @@ import {
 
 interface UserEditFormData {
   name: string;
+  email: string;
   role: 'ADMIN' | 'USER';
   locked: boolean;
   permissions: UserPermissions;
@@ -74,6 +75,7 @@ export default function EditUser() {
 
   const [formData, setFormData] = useState<UserEditFormData>({
     name: '',
+    email: '',
     role: 'USER',
     locked: false,
     permissions: {
@@ -88,6 +90,12 @@ export default function EditUser() {
       canViewEfficiencyReports: false,
       canViewPersonalDashboard: true,
       canViewCostAnalysis: false,
+      canViewAccountBalance: false,
+      canViewProgressiveTokenConsumption: false,
+      canViewMaximumDailyConsumption: false,
+      canViewPurchaseHistory: false,
+      canAccessNewPurchase: false,
+      canViewUserContributions: false,
       canExportData: false,
       canImportData: false,
       canAddMeterReadings: false,
@@ -122,6 +130,7 @@ export default function EditUser() {
       );
       setFormData({
         name: userData.name,
+        email: userData.email,
         role: userData.role,
         locked: userData.locked,
         permissions,
@@ -147,11 +156,33 @@ export default function EditUser() {
       setError(null);
       setSuccess(null);
 
+      // Validate required fields
+      if (!formData.name.trim()) {
+        setError('Name is required');
+        setSaving(false);
+        return;
+      }
+
+      if (!formData.email.trim()) {
+        setError('Email address is required');
+        setSaving(false);
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        setError('Please enter a valid email address');
+        setSaving(false);
+        return;
+      }
+
       const response = await fetch(`/api/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
           role: formData.role,
           locked: formData.locked,
           permissions: formData.permissions,
@@ -296,6 +327,19 @@ export default function EditUser() {
             </Alert>
           )}
 
+          {/* Top Back Button */}
+          <div className="mb-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/dashboard/admin/users')}
+              className="flex items-center"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Users
+            </Button>
+          </div>
+
           <div className="space-y-6">
             {/* User Info Card */}
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -424,6 +468,28 @@ export default function EditUser() {
                         }
                         className="w-full"
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="email"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        Email Address
+                      </label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) =>
+                          updateFormField('email', e.target.value)
+                        }
+                        className="w-full"
+                        required
+                      />
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Only administrators can change email addresses. Email must be unique.
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -640,28 +706,55 @@ export default function EditUser() {
                           ))}
                         </div>
 
-                        {/* Reports Access */}
+
+                        {/* Special Permissions */}
                         <div className="space-y-3">
                           <h5 className="font-medium text-gray-900 dark:text-gray-100">
-                            Reports Access
+                            Special Permissions
                           </h5>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                            These permissions control access to main dashboard features and require explicit admin approval.
+                          </p>
                           {[
                             {
+                              name: 'canViewPurchaseHistory',
+                              label: 'View Purchase History',
+                              description: 'Access to purchase history with filters'
+                            },
+                            {
+                              name: 'canAccessNewPurchase',
+                              label: 'Access New Purchase',
+                              description: 'Create new token purchases'
+                            },
+                            {
+                              name: 'canViewUserContributions',
+                              label: 'View User Contributions',
+                              description: 'Track usage and manage contributions'
+                            },
+                            {
                               name: 'canViewUsageReports',
-                              label: 'Usage Reports',
+                              label: 'View Usage Reports',
+                              description: 'Access usage analytics and reports'
                             },
                             {
                               name: 'canViewFinancialReports',
-                              label: 'Financial Reports',
+                              label: 'View Financial Reports',
+                              description: 'View financial summaries and reports'
                             },
                             {
                               name: 'canViewEfficiencyReports',
-                              label: 'Efficiency Reports',
+                              label: 'View Efficiency Reports',
+                              description: 'Access efficiency analysis reports'
+                            },
+                            {
+                              name: 'canViewCostAnalysis',
+                              label: 'View Cost Analysis',
+                              description: 'Access cost analysis features and insights'
                             },
                           ].map((permission) => (
                             <div
                               key={permission.name}
-                              className="flex items-center space-x-3"
+                              className="flex items-start space-x-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800"
                             >
                               <Switch
                                 checked={
@@ -675,10 +768,16 @@ export default function EditUser() {
                                     checked
                                   )
                                 }
+                                className="mt-1"
                               />
-                              <label className="text-sm text-gray-700 dark:text-gray-300">
-                                {permission.label}
-                              </label>
+                              <div className="flex-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  {permission.label}
+                                </label>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                  {permission.description}
+                                </p>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -694,8 +793,16 @@ export default function EditUser() {
                               label: 'Personal Dashboard',
                             },
                             {
-                              name: 'canViewCostAnalysis',
-                              label: 'Cost Analysis',
+                              name: 'canViewAccountBalance',
+                              label: 'View Account Balance',
+                            },
+                            {
+                              name: 'canViewProgressiveTokenConsumption',
+                              label: 'View Progressive Token Consumption',
+                            },
+                            {
+                              name: 'canViewMaximumDailyConsumption',
+                              label: 'View Maximum Daily Consumption',
                             },
                             { name: 'canExportData', label: 'Export Data' },
                             { name: 'canImportData', label: 'Import Data' },
@@ -743,6 +850,19 @@ export default function EditUser() {
                     </Button>
 
                     <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to discard all changes?')) {
+                            router.push('/dashboard/admin/users');
+                          }
+                        }}
+                        disabled={saving}
+                        className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+                      >
+                        Cancel
+                      </Button>
                       <Button
                         type="button"
                         variant="outline"

@@ -52,7 +52,9 @@ This application helps households manage shared electricity costs by:
 - **Enhanced Audit Logging**: Complete activity tracking with IP addresses, user agents, and metadata
 - **Creation/Modification Tracking**: Comprehensive audit trail showing who created or last modified each entry
 - **Data Validation**: Comprehensive input validation with business rule enforcement
-- **Backup & Restore**: Full data recovery capabilities with integrity verification
+- **One-to-One Data Constraints**: Database-enforced relationship between purchases and contributions
+- **Permission System**: Granular permissions with restricted default access to sensitive features
+- **Backup & Restore**: Full data recovery capabilities with constraint validation and automatic balance fixing
 
 ## 🚀 Getting Started
 
@@ -243,13 +245,13 @@ npm run test:coverage
 
 ## 📊 Application Status
 
-- **Status**: ✅ Production Ready with Enhanced Mobile Support
+- **Status**: ✅ Production Ready with Enhanced Security & Data Integrity
 - **Version**: 1.4.0
-- **Schema Version**: 1.4.0 (Theme Preferences + Meter Readings + Enhanced Audit Logging)
-- **Last Updated**: July 6, 2025
-- **Features**: All core features complete with mobile-first design
-- **New in v1.4.0**: User theme persistence, comprehensive meter reading tracking, enhanced audit logging, mobile-responsive design
-- **Documentation**: Comprehensive guides available with upgrade procedures
+- **Schema Version**: 1.4.0 (One-to-One Constraints + Enhanced Audit Logging + Permission System)
+- **Last Updated**: July 8, 2025
+- **Features**: All core features complete with mobile-first design and robust security
+- **New in v1.4.0**: Database constraints, permission system, audit log metadata, backup improvements
+- **Documentation**: Comprehensive guides available with latest changes documented
 
 ## 🤝 Contributing
 
@@ -279,7 +281,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📱 **Mobile-First Design**: Card-based layouts that work perfectly on phones and tablets
 - 🎨 **Persistent Theme Preferences**: Your theme choice (light/dark/system) saves automatically
 - 📊 **Enhanced Meter Reading System**: Individual consumption tracking with audit trails
-- 🔍 **Comprehensive Audit Logging**: See who created or modified every entry with timestamps
+- 🔍 **Comprehensive Audit Logging**: See who created or modified every entry with timestamps and metadata
 - ⚡ **Improved Running Balance**: Uses latest meter readings for accurate payment calculations
-- 🛡️ **Enhanced Security**: IP tracking and user agent logging for better audit trails
+- 🛡️ **Enhanced Security**: IP tracking, user agent logging, and granular permission system
+- 🔗 **Database Constraints**: One-to-one purchase-contribution relationship enforced at database level
+- 🔐 **Permission System**: Restricted default access with admin-controlled feature permissions
+- 💾 **Improved Backup System**: Simplified API with constraint validation and automatic balance fixing
 - 📋 **Upgrade Support**: Comprehensive migration procedures for existing deployments

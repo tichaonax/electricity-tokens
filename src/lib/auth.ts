@@ -84,6 +84,17 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Update last login timestamp
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() }
+          });
+        } catch (error) {
+          console.error('Failed to update last login timestamp:', error);
+          // Don't throw - allow auth to proceed
+        }
+
         // Log successful login
         try {
           await auditAuthentication(

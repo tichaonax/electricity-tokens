@@ -53,9 +53,25 @@ After logging in, you'll see your **Dashboard** with:
 - Total tokens consumed this month
 - Amount contributed vs. expected
 - Balance (overpaid/underpaid) - _Requires permission from admin_
+- Progressive Token Consumption Widget - _Requires permission from admin_
+- Maximum Daily Consumption Widget - _Requires permission from admin_
 - Usage trends
 
-> **Note**: The account balance information is now restricted by default for regular users. If you don't see the balance badge on your dashboard, ask an administrator to grant you the "View Account Balance" permission.
+> **Note**: The account balance information, progressive token consumption widget, and maximum daily consumption widget are now restricted by default for regular users. If you don't see these features on your dashboard, ask an administrator to grant you the respective permissions.
+
+#### **Dashboard Features (Special Permissions Required)**
+
+The main dashboard includes several core sections that require special permissions:
+
+- **Purchase History** - _Special Permission Required_ - View and manage all electricity token purchases with advanced filtering and sorting
+- **New Purchase** - _Special Permission Required_ - Create new token purchases 
+- **User Contributions** - _Special Permission Required_ - Track usage and manage your contributions to purchases
+- **Usage Reports** - _Special Permission Required_ - Access usage analytics and trend reports
+- **Financial Reports** - _Special Permission Required_ - View financial summaries and balance analysis
+- **Efficiency Reports** - _Special Permission Required_ - Access efficiency analysis and optimization reports
+- **Cost Analysis** - _Special Permission Required_ - Access cost analysis features and insights
+
+> **Important**: These are special dashboard permissions that are not granted to regular users by default. Most users will see a "Limited Dashboard Access" notice explaining how to request these permissions. Contact your administrator to request access to these core features if needed for your role.
 
 #### **Anticipated Payment Predictions**
 
@@ -76,9 +92,9 @@ After logging in, you'll see your **Dashboard** with:
 **For Regular Users:**
 
 - 🏠 **Dashboard**: Main overview
-- 💰 **Purchase Form**: Create new token purchases
-- 📝 **Contribute**: Add your meter readings and payments
-- 📊 **Reports**: View usage and cost analytics
+- 💰 **Purchase Form**: Create new token purchases _(Special Permission Required)_
+- 📝 **Contribute**: Add your meter readings and payments _(Special Permission Required)_
+- 📊 **Reports**: View usage and cost analytics _(Special Permission Required)_
 - 👤 **Profile**: Manage your account
 
 **For Admin Users (Additional):**
@@ -187,6 +203,18 @@ After someone creates a purchase, each household member needs to:
    - Click "Submit Contribution"
    - Payment details will be logged
    - Original purchaser will be notified
+
+### Important Contribution Rules
+
+**One-to-One Relationship**: Each token purchase must have exactly one user contribution. This ensures:
+- Clear accountability for each purchase
+- Accurate cost tracking and fair share calculations
+- Data integrity and consistent financial reporting
+
+**Constraint Enforcement**: The system prevents:
+- Multiple contributions to the same purchase
+- Orphaned contributions without corresponding purchases
+- Deletion of purchases that have linked contributions
 
 ### Contribution Tips
 

@@ -35,6 +35,7 @@ Authorization: Bearer <session-token>
   passwordResetRequired: boolean;
   permissions: object | null;
   themePreference: 'light' | 'dark' | 'system';
+  lastLoginAt: DateTime | null; // New field for tracking last login
   createdAt: DateTime;
   updatedAt: DateTime;
 }
@@ -61,7 +62,7 @@ Authorization: Bearer <session-token>
 ```typescript
 {
   id: string;
-  purchaseId: string; // unique - one contribution per purchase
+  purchaseId: string; // UNIQUE - enforces one-to-one relationship with purchase
   userId: string;
   contributionAmount: number;
   meterReading: number;
@@ -70,6 +71,13 @@ Authorization: Bearer <session-token>
   updatedAt: DateTime;
 }
 ```
+
+**Important Constraints:**
+- Each TokenPurchase must have exactly one UserContribution
+- Each UserContribution belongs to exactly one TokenPurchase  
+- The `purchaseId` field is unique to enforce this one-to-one relationship
+- Deletion of TokenPurchase is restricted if UserContribution exists
+- Deletion of UserContribution cascades when User is deleted
 
 ### MeterReading
 
@@ -96,7 +104,7 @@ Authorization: Bearer <session-token>
   entityId: string;
   oldValues: object | null;
   newValues: object | null;
-  metadata: object | null;
+  metadata: object | null; // New field for storing IP address, user agent, etc.
   timestamp: DateTime;
 }
 ```
@@ -127,17 +135,29 @@ User permissions are stored as a JSON object in the `permissions` field of the U
 
 - `canAddMeterReadings`: Can record new meter readings
 
-#### Reports Access
+#### Reports Access (Special Permissions)
 
-- `canViewUsageReports`: Can access usage analytics and reports
-- `canViewFinancialReports`: Can view financial summaries and reports
-- `canViewEfficiencyReports`: Can access efficiency analysis reports
+- `canViewUsageReports`: Can access usage analytics and reports _(Special Permission)_
+- `canViewFinancialReports`: Can view financial summaries and reports _(Special Permission)_
+- `canViewEfficiencyReports`: Can access efficiency analysis reports _(Special Permission)_
+
+> **Note**: Reports access permissions are now special permissions that must be explicitly granted by administrators.
 
 #### Personal Dashboard
 
 - `canViewPersonalDashboard`: Can access the personal dashboard
-- `canViewCostAnalysis`: Can view cost analysis features
 - `canViewAccountBalance`: Can view account balance information _(New)_
+- `canViewProgressiveTokenConsumption`: Can view progressive token consumption widget _(New)_
+- `canViewMaximumDailyConsumption`: Can view maximum daily consumption widget _(New)_
+
+#### Dashboard Access Control (Special Permissions)
+
+- `canViewPurchaseHistory`: Can view purchase history and filtering tools _(Special Permission)_
+- `canAccessNewPurchase`: Can access new purchase creation form _(Special Permission)_
+- `canViewUserContributions`: Can view user contributions interface _(Special Permission)_
+- `canViewCostAnalysis`: Can view cost analysis features _(Special Permission)_
+
+> **Note**: These are special permissions that control access to core dashboard features. They are not included in default user permissions and must be explicitly granted by administrators.
 
 #### Data Management
 
@@ -157,12 +177,17 @@ User permissions are stored as a JSON object in the `permissions` field of the U
   "canEditContributions": true,
   "canDeleteContributions": false,
   "canAddMeterReadings": false,
-  "canViewUsageReports": true,
-  "canViewFinancialReports": true,
+  "canViewUsageReports": false,
+  "canViewFinancialReports": false,
   "canViewEfficiencyReports": false,
   "canViewPersonalDashboard": true,
-  "canViewCostAnalysis": true,
+  "canViewCostAnalysis": false,
   "canViewAccountBalance": false,
+  "canViewProgressiveTokenConsumption": false,
+  "canViewMaximumDailyConsumption": false,
+  "canViewPurchaseHistory": false,
+  "canAccessNewPurchase": false,
+  "canViewUserContributions": false,
   "canExportData": false,
   "canImportData": false
 }
@@ -183,12 +208,17 @@ Administrators automatically receive all permissions set to `true`.
   "canEditContributions": false,
   "canDeleteContributions": false,
   "canAddMeterReadings": false,
-  "canViewUsageReports": true,
-  "canViewFinancialReports": true,
+  "canViewUsageReports": false,
+  "canViewFinancialReports": false,
   "canViewEfficiencyReports": false,
   "canViewPersonalDashboard": true,
-  "canViewCostAnalysis": true,
+  "canViewCostAnalysis": false,
   "canViewAccountBalance": false,
+  "canViewProgressiveTokenConsumption": false,
+  "canViewMaximumDailyConsumption": false,
+  "canViewPurchaseHistory": false,
+  "canAccessNewPurchase": false,
+  "canViewUserContributions": false,
   "canExportData": false,
   "canImportData": false
 }
@@ -763,6 +793,32 @@ Delete a meter reading.
 }
 ```
 
+#### GET /api/meter-readings/latest
+
+Get the latest global meter reading from all users.
+
+**Response:**
+
+```json
+{
+  "reading": 1425.7,
+  "readingDate": "2024-01-20T15:30:00Z",
+  "userName": "John Doe",
+  "message": "Latest global meter reading"
+}
+```
+
+**Response (No readings available):**
+
+```json
+{
+  "reading": null,
+  "readingDate": null,
+  "userName": null,
+  "message": "No meter readings available"
+}
+```
+
 ### Reporting Endpoints
 
 #### GET /api/reports/usage
@@ -1151,56 +1207,91 @@ Get system audit logs (Admin only).
 
 ### Backup and Recovery (Admin Only)
 
-#### GET /api/admin/backup
+#### GET /api/backup
 
-Get backup recommendations and create backups.
+Create and download system backups.
 
 **Query Parameters:**
 
-- `type`: 'full' | 'incremental'
-- `since`: Date for incremental backup
+- `type`: 'full' | 'users' | 'purchase-data' (default: 'full')
+- `includeAuditLogs`: 'true' | 'false' (default: 'false') - Whether to include audit logs in backup
 
 **Response:**
 
-```json
-{
-  "recommendation": "Weekly backups recommended",
-  "frequency": "weekly",
-  "reasoning": "Moderate activity detected",
-  "nextBackupDate": "2024-01-27T10:00:00Z"
-}
-```
-
-#### POST /api/admin/backup
-
-Create a new backup.
-
-**Request Body:**
+Downloads a JSON file containing the backup data with the following structure:
 
 ```json
 {
-  "type": "full"
-}
-```
-
-**Response:**
-
-```json
-{
-  "message": "Backup created successfully",
-  "backup": {
-    "id": "backup_123456",
+  "metadata": {
+    "timestamp": "2024-01-20T10:00:00Z",
+    "version": "1.0",
     "type": "full",
-    "size": 2048576,
     "recordCounts": {
       "users": 15,
       "tokenPurchases": 45,
       "userContributions": 30,
-      "auditLogs": 150
+      "meterReadings": 120,
+      "auditLogs": 150,
+      "accounts": 5,
+      "sessions": 10,
+      "verificationTokens": 2
     }
+  },
+  "users": [...],
+  "tokenPurchases": [...],
+  "userContributions": [...],
+  "meterReadings": [...],
+  "auditLogs": [...], // Only included if includeAuditLogs=true
+  "accounts": [...], // Only in full backups
+  "sessions": [...], // Only in full backups
+  "verificationTokens": [...] // Only in full backups
+}
+```
+
+**Backup Types:**
+- `full`: All data including authentication tables
+- `users`: User data only
+- `purchase-data`: Purchases, contributions, and meter readings
+
+**Security Notes:**
+- Audit logs are excluded by default due to potentially sensitive information
+- Authentication data (accounts, sessions, tokens) only included in full backups
+- All backups require admin privileges
+
+#### POST /api/backup
+
+Restore from backup data.
+
+**Request Body:**
+
+Complete backup JSON object as created by GET /api/backup
+
+**Response:**
+
+```json
+{
+  "message": "Backup restored successfully. Restored tables: users (15), tokenPurchases (45), userContributions (30)",
+  "results": {
+    "restored": {
+      "users": 15,
+      "tokenPurchases": 45,
+      "userContributions": 30,
+      "meterReadings": 120,
+      "auditLogs": 150,
+      "accounts": 5,
+      "sessions": 10,
+      "verificationTokens": 2
+    },
+    "errors": []
   }
 }
 ```
+
+**Restore Features:**
+- Automatic constraint validation before restore
+- Atomic transaction processing
+- Automatic balance recalculation after restore
+- Detailed error reporting
 
 #### POST /api/admin/backup/verify
 

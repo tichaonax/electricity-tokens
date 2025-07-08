@@ -28,6 +28,7 @@ interface BackupUser {
   passwordResetRequired: boolean;
   permissions?: Record<string, unknown> | null;
   themePreference?: string | null;
+  lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -181,6 +182,7 @@ export async function GET(request: NextRequest) {
           passwordResetRequired: true,
           permissions: true,
           themePreference: true,
+          lastLoginAt: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -189,6 +191,7 @@ export async function GET(request: NextRequest) {
         ...user,
         permissions:
           (user.permissions as Record<string, unknown> | null) || null,
+        lastLoginAt: user.lastLoginAt?.toISOString() || null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       }));
@@ -493,6 +496,7 @@ export async function POST(request: NextRequest) {
                 passwordResetRequired: user.passwordResetRequired,
                 permissions: user.permissions || null,
                 themePreference: user.themePreference,
+                lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
               },
               create: {
                 id: user.id,
@@ -504,6 +508,7 @@ export async function POST(request: NextRequest) {
                 passwordResetRequired: user.passwordResetRequired,
                 permissions: user.permissions || null,
                 themePreference: user.themePreference,
+                lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
                 createdAt: new Date(user.createdAt),
                 updatedAt: new Date(user.updatedAt),
               },

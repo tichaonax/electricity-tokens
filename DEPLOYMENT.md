@@ -128,10 +128,12 @@ npm run db:init
 **Schema Version**: This deployment uses Database Schema v1.4.0 which includes:
 
 - User theme preferences
-- Enhanced audit logging with metadata
+- Enhanced audit logging with metadata field for IP tracking
 - Meter readings table for consumption tracking
 - Mobile-responsive design optimizations
-- One-to-one purchase-contribution constraints
+- **One-to-one purchase-contribution constraints** (enforced at database level)
+- Last login tracking for users
+- Account balance permission system with restricted default access
 
 See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for detailed troubleshooting.
 
@@ -166,8 +168,11 @@ After deployment, create your first admin user:
 - [ ] Theme persistence across user sessions
 - [ ] Meter readings interface functional
 - [ ] Mobile responsive design working on various devices
-- [ ] Audit trail showing creation/modification info
+- [ ] Audit trail showing creation/modification info with metadata
 - [ ] Running balance calculations using latest meter readings
+- [ ] Permission system with restricted dashboard access (test with regular user)
+- [ ] One-to-one purchase-contribution constraint enforcement
+- [ ] Backup system with audit log inclusion option
 
 **Mobile Experience:**
 
@@ -304,10 +309,11 @@ The application includes built-in backup and recovery capabilities:
 
 **Built-in Backup System:**
 
-- Admin backup API: `/api/admin/backup`
-- Backup verification: `/api/admin/backup/verify`
-- Restore functionality: `/api/admin/backup/restore`
-- Automated backup recommendations based on system activity
+- Backup API: `/api/backup` (GET to download, POST to restore)
+- Backup types: `full`, `users`, `purchase-data`
+- Optional audit log inclusion: `includeAuditLogs=true` parameter
+- Automatic constraint validation during backup and restore
+- Automatic balance recalculation after restore
 
 **Schema v1.4.0 Backup Considerations:**
 
