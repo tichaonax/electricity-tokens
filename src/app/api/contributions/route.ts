@@ -73,8 +73,13 @@ export async function GET(request: NextRequest) {
       where.userId = userId;
     }
 
-    // Non-admin users can only see their own contributions
-    if (permissionCheck.user!.role !== 'ADMIN') {
+    // Check permissions for global contribution access
+    const canViewAllContributions = 
+      permissionCheck.user!.role === 'ADMIN' || 
+      (permissionCheck.user!.permissions as any)?.canViewUserContributions === true;
+
+    // Non-admin users without global permission can only see their own contributions
+    if (!canViewAllContributions) {
       where.userId = permissionCheck.user!.id;
     }
 

@@ -263,8 +263,8 @@ export function PurchaseHistoryTable({
   };
 
   const handleViewContribution = (contributionId: string) => {
-    // Navigate to contributions page and potentially highlight the specific contribution
-    router.push(`/dashboard/contributions#contribution-${contributionId}`);
+    // Navigate to contributions page with specific contribution ID to show details
+    router.push(`/dashboard/contributions/edit/${contributionId}`);
   };
 
   const handleAddContribution = (purchaseId?: string) => {

@@ -222,13 +222,25 @@ export function ContributionsClient() {
             </div>
           )}
 
-          {/* Info message when no purchases are available for contribution */}
-          {!hasAvailablePurchases && !isLoading && (
+          {/* Info message when no purchases are available for contribution AND no existing contributions */}
+          {!hasAvailablePurchases && !isLoading && contributions.length === 0 && (
             <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
               <div className="flex items-center">
                 <User className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
                 <p className="text-sm text-blue-700 dark:text-blue-300">
                   All token purchases have matching contributions. New contributions can only be added when there are purchases without contributions.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Message when there are existing contributions but no available purchases for new ones */}
+          {!hasAvailablePurchases && !isLoading && contributions.length > 0 && (
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md">
+              <div className="flex items-center">
+                <User className="h-4 w-4 text-amber-600 dark:text-amber-400 mr-2" />
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  All purchases have contributions. New contributions can only be added when there are purchases without contributions.
                 </p>
               </div>
             </div>

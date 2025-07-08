@@ -620,6 +620,18 @@ export async function POST(request: NextRequest) {
       if (backupData.meterReadings) {
         for (const reading of backupData.meterReadings) {
           try {
+            // Verify user exists before creating meter reading
+            const userExists = await tx.user.findUnique({
+              where: { id: reading.userId },
+            });
+
+            if (!userExists) {
+              results.errors.push(
+                `Cannot restore meter reading ${reading.id}: user ${reading.userId} not found`
+              );
+              continue;
+            }
+
             await tx.meterReading.upsert({
               where: { id: reading.id },
               update: {
