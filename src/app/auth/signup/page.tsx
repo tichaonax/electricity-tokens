@@ -1,7 +1,43 @@
+'use client';
+
 import Link from 'next/link';
 import { signupUser } from '@/app/actions/auth';
+import { useEffect } from 'react';
 
 export default function SignUp() {
+  // Dark mode detection and application
+  useEffect(() => {
+    const applyTheme = () => {
+      const savedTheme = localStorage.getItem('theme');
+      const root = document.documentElement;
+      
+      // Remove existing theme classes
+      root.classList.remove('light', 'dark');
+      
+      if (savedTheme === 'dark') {
+        root.classList.add('dark');
+      } else if (savedTheme === 'system' || !savedTheme) {
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (systemDark) {
+          root.classList.add('dark');
+        }
+      }
+    };
+
+    applyTheme();
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'system' || !savedTheme) {
+        applyTheme();
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">

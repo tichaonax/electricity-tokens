@@ -50,6 +50,7 @@ export async function GET(
         role: true,
         locked: true,
         permissions: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -94,20 +95,11 @@ export async function PUT(
     // Parse request body
     const body = await request.json();
     
-    // Explicitly reject any attempts to update email address
-    if ('email' in body && body.email !== undefined) {
-      return NextResponse.json(
-        { 
-          message: 'Email addresses cannot be changed. Contact an administrator if you need to use a different email address.' 
-        },
-        { status: 400 }
-      );
-    }
-    
     const sanitizedData = sanitizeInput(body);
-    const { name, role, locked, permissions, resetPassword } =
+    const { name, email, role, locked, permissions, resetPassword } =
       sanitizedData as {
         name?: string;
+        email?: string;
         role?: string;
         locked?: boolean;
         permissions?: Record<string, boolean>;
@@ -139,7 +131,62 @@ export async function PUT(
 
     // Name can be updated by user or admin
     if (name !== undefined) {
-      updateData.name = name.trim();
+      const trimmedName = name.trim();
+      
+      // Validate name is not empty
+      if (!trimmedName) {
+        return NextResponse.json(
+          { message: 'Name cannot be empty' },
+          { status: 400 }
+        );
+      }
+      
+      updateData.name = trimmedName;
+    }
+
+    // Email can only be updated by admin
+    if (email !== undefined) {
+      if (!isAdmin) {
+        return NextResponse.json(
+          { message: 'Forbidden: Only admins can change email addresses' },
+          { status: 403 }
+        );
+      }
+
+      const trimmedEmail = email.trim().toLowerCase();
+      
+      // Validate email is not empty
+      if (!trimmedEmail) {
+        return NextResponse.json(
+          { message: 'Email address cannot be empty' },
+          { status: 400 }
+        );
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        return NextResponse.json(
+          { message: 'Invalid email address format' },
+          { status: 400 }
+        );
+      }
+
+      // Check if email is already in use by another user
+      if (trimmedEmail !== existingUser.email) {
+        const existingEmailUser = await prisma.user.findUnique({
+          where: { email: trimmedEmail },
+        });
+
+        if (existingEmailUser) {
+          return NextResponse.json(
+            { message: 'Email address is already in use by another user' },
+            { status: 409 }
+          );
+        }
+      }
+
+      updateData.email = trimmedEmail;
     }
 
     // Role can only be updated by admin
@@ -228,6 +275,7 @@ export async function PUT(
         role: true,
         locked: true,
         permissions: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -273,18 +321,43 @@ export async function PUT(
     }
 
     // General audit log for other changes
-    if (name !== undefined || role !== undefined) {
+    if (name !== undefined || role !== undefined || email !== undefined) {
       await auditUpdate(auditContext, 'User', id, existingUser, updatedUser, {
         targetUserName: existingUser.name,
         changesType: 'profile_update',
+        emailChanged: email !== undefined,
       });
     }
 
     return NextResponse.json(updatedUser);
   } catch (error) {
     console.error('Error updating user:', error);
+    console.error('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      updateData,
+      userId: id,
+    });
+    
+    // Handle specific Prisma errors
+    if (error instanceof Error) {
+      if (error.message.includes('Unique constraint')) {
+        return NextResponse.json(
+          { message: 'Email address is already in use' },
+          { status: 409 }
+        );
+      }
+      if (error.message.includes('Record to update not found')) {
+        return NextResponse.json(
+          { message: 'User not found' },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: 'Internal server error', error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

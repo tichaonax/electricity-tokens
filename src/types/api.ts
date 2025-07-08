@@ -34,6 +34,13 @@ export interface AuditWhereInput {
 }
 
 export interface UpdateData {
+  name?: string;
+  email?: string;
+  role?: string;
+  locked?: boolean;
+  permissions?: Record<string, boolean>;
+  passwordResetRequired?: boolean;
+  passwordResetAt?: Date;
   [key: string]: unknown;
 }
 

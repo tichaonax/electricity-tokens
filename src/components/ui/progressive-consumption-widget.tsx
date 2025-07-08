@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface ConsumptionData {
   currentMonth: {
@@ -29,6 +30,12 @@ interface ConsumptionData {
 export function ProgressiveConsumptionWidget() {
   const [data, setData] = useState<ConsumptionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { checkPermission } = usePermissions();
+
+  // Check if user has permission to view progressive token consumption
+  if (!checkPermission('canViewProgressiveTokenConsumption')) {
+    return null; // Don't render the widget if user doesn't have permission
+  }
 
   useEffect(() => {
     fetchConsumptionData();

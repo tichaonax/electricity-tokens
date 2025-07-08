@@ -40,6 +40,7 @@ export default function UserProfile() {
 
   // Profile form state
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
 
   // Password form state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -70,6 +71,7 @@ export default function UserProfile() {
       const data = await response.json();
       setProfile(data);
       setName(data.name || '');
+      setEmail(data.email || '');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile');
     } finally {
@@ -84,12 +86,40 @@ export default function UserProfile() {
     setSuccess('');
 
     try {
+      // Validate required fields
+      if (!name.trim()) {
+        setError('Name is required');
+        setUpdating(false);
+        return;
+      }
+
+      // Validate email for admins
+      if (session?.user?.role === 'ADMIN') {
+        if (!email.trim()) {
+          setError('Email address is required');
+          setUpdating(false);
+          return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+          setError('Please enter a valid email address');
+          setUpdating(false);
+          return;
+        }
+      }
+
+      const updateData: { name: string; email?: string } = { name: name.trim() };
+      
+      // Only include email if user is admin
+      if (session?.user?.role === 'ADMIN') {
+        updateData.email = email.trim();
+      }
+
       const response = await fetch(`/api/users/${session?.user?.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          body: { name },
-        }),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -99,16 +129,19 @@ export default function UserProfile() {
 
       const updatedUser = await response.json();
       setProfile(updatedUser);
+      setEmail(updatedUser.email || '');
       setSuccess('Profile updated successfully');
 
-      // Update the session to reflect the new name
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
-          name: updatedUser.name,
-        },
-      });
+      // Update the session to reflect the new name and email
+      const sessionUpdate: { name: string; email?: string } = {
+        name: updatedUser.name,
+      };
+      
+      if (session?.user?.role === 'ADMIN' && updatedUser.email) {
+        sessionUpdate.email = updatedUser.email;
+      }
+      
+      await update(sessionUpdate);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
@@ -248,10 +281,13 @@ export default function UserProfile() {
                     </label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {profile.lastLoginAt
-                        ? new Date(profile.lastLoginAt).toLocaleDateString('en-US', {
+                        ? new Date(profile.lastLoginAt).toLocaleString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true,
                           })
                         : 'Never'}
                     </p>
@@ -277,15 +313,37 @@ export default function UserProfile() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label 
+                        htmlFor="email"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Email Address
                       </label>
-                      <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100">
-                        {profile?.email}
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Email addresses cannot be changed. Contact an administrator if you need to use a different email.
-                      </p>
+                      {session?.user?.role === 'ADMIN' ? (
+                        <>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Your email address"
+                            className="w-full"
+                            required
+                          />
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            As an administrator, you can change your email address. Email must be unique.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100">
+                            {profile?.email}
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Only administrators can change email addresses. Regular users cannot modify their email.
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     <Button

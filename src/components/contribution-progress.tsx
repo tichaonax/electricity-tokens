@@ -12,8 +12,10 @@ import {
   Calendar,
   ArrowRight,
   Zap,
+  BarChart3,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface ContributionProgressData {
   totalPurchases: number;
@@ -25,6 +27,13 @@ interface ContributionProgressData {
     isEmergency: boolean;
   } | null;
   progressPercentage: number;
+}
+
+interface LatestMeterReading {
+  reading: number | null;
+  readingDate: string | null;
+  userName: string | null;
+  message: string;
 }
 
 interface ContributionProgressProps {
@@ -39,12 +48,19 @@ export function ContributionProgress({
   const [progress, setProgress] = useState<ContributionProgressData | null>(
     null
   );
+  const [latestReading, setLatestReading] = useState<LatestMeterReading | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { checkPermission } = usePermissions();
 
   useEffect(() => {
     fetchProgress();
+    if (checkPermission('canAddMeterReadings')) {
+      fetchLatestMeterReading();
+    }
   }, []);
 
   const fetchProgress = async () => {
@@ -65,6 +81,19 @@ export function ContributionProgress({
     }
   };
 
+  const fetchLatestMeterReading = async () => {
+    try {
+      const response = await fetch('/api/meter-readings/latest');
+      if (response.ok) {
+        const data = await response.json();
+        setLatestReading(data);
+      }
+    } catch (err) {
+      // Silently fail for latest meter reading - it's not critical
+      console.error('Failed to fetch latest meter reading:', err);
+    }
+  };
+
   const handleContributeNext = () => {
     if (progress?.nextPurchaseToContribute) {
       router.push(
@@ -75,6 +104,10 @@ export function ContributionProgress({
 
   const handleViewHistory = () => {
     router.push('/dashboard/purchases/history');
+  };
+
+  const handleMeterReadings = () => {
+    router.push('/dashboard/meter-readings');
   };
 
   if (loading) {
@@ -123,7 +156,7 @@ export function ContributionProgress({
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              Contribution Progress
+              Usage Tracking & Contributions
             </span>
             <span className="text-sm text-slate-600 dark:text-slate-400">
               {progress.purchasesWithContributions}/{progress.totalPurchases}
@@ -149,7 +182,7 @@ export function ContributionProgress({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-blue-600" />
-          Contribution Progress
+          Usage Tracking & Contributions
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -236,23 +269,51 @@ export function ContributionProgress({
 
         {/* Actions */}
         {showActions && (
-          <div className="flex gap-2 pt-2">
-            {hasNextPurchase && (
+          <div className="space-y-2 pt-2">
+            {/* Button Row */}
+            <div className="flex gap-2">
+              {hasNextPurchase && (
+                <Button
+                  onClick={handleContributeNext}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                >
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Contribute Next
+                </Button>
+              )}
               <Button
-                onClick={handleContributeNext}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                variant="outline"
+                onClick={handleViewHistory}
+                className={hasNextPurchase && !checkPermission('canAddMeterReadings') ? 'flex-1' : ''}
               >
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Contribute Next
+                View History
               </Button>
+              {checkPermission('canAddMeterReadings') && (
+                <Button
+                  variant="outline"
+                  onClick={handleMeterReadings}
+                  className={hasNextPurchase ? '' : 'flex-1'}
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Meter Readings
+                </Button>
+              )}
+            </div>
+            
+            {/* Latest Reading Panel - Full Width */}
+            {checkPermission('canAddMeterReadings') && latestReading && latestReading.reading && (
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 w-full">
+                <div className="text-xs text-blue-600 dark:text-blue-300 mb-1">
+                  Latest Global Reading
+                </div>
+                <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                  {latestReading.reading.toLocaleString()} kWh
+                </div>
+                <div className="text-xs text-blue-500 dark:text-blue-400">
+                  by {latestReading.userName} • {new Date(latestReading.readingDate!).toLocaleDateString()}
+                </div>
+              </div>
             )}
-            <Button
-              variant="outline"
-              onClick={handleViewHistory}
-              className={hasNextPurchase ? '' : 'flex-1'}
-            >
-              View History
-            </Button>
           </div>
         )}
       </CardContent>

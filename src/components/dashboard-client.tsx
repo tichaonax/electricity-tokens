@@ -124,12 +124,13 @@ export function DashboardClient() {
 
           {/* Quick Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {/* Token Purchases Card - Show to all users */}
-            <a
-              href="/dashboard/purchases/history"
-              className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block"
-              title="View and manage all electricity token purchases with advanced filtering and sorting"
-            >
+            {/* Token Purchases Card - Only show if user can view purchase history */}
+            {checkPermission('canViewPurchaseHistory') && (
+              <a
+                href="/dashboard/purchases/history"
+                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block"
+                title="View and manage all electricity token purchases with advanced filtering and sorting"
+              >
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -168,10 +169,11 @@ export function DashboardClient() {
                   </span>
                 </div>
               </div>
-            </a>
+              </a>
+            )}
 
-            {/* New Purchase Card - Only show if user can add purchases */}
-            {checkPermission('canAddPurchases') && (
+            {/* New Purchase Card - Only show if user can access new purchase */}
+            {checkPermission('canAccessNewPurchase') && (
               <NavigationFormButton
                 action={navigateToNewPurchase}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
@@ -217,8 +219,8 @@ export function DashboardClient() {
               </NavigationFormButton>
             )}
 
-            {/* User Contributions Card - Only show if user can add contributions */}
-            {checkPermission('canAddContributions') && (
+            {/* User Contributions Card - Only show if user can view user contributions */}
+            {checkPermission('canViewUserContributions') && (
               <NavigationFormButton
                 action={navigateToContributions}
                 className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left"
@@ -593,6 +595,37 @@ export function DashboardClient() {
               </NavigationFormButton>
             )}
           </div>
+
+          {/* Limited Access Notice */}
+          {!checkPermission('canViewPurchaseHistory') && 
+           !checkPermission('canAccessNewPurchase') && 
+           !checkPermission('canViewUserContributions') &&
+           !checkPermission('canViewUsageReports') &&
+           !checkPermission('canViewFinancialReports') &&
+           !checkPermission('canViewEfficiencyReports') &&
+           !checkPermission('canViewCostAnalysis') && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Limited Dashboard Access
+                  </h3>
+                  <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                    <p>
+                      You have basic access to the electricity tokens tracker. To access core features like 
+                      Purchase History, New Purchase creation, User Contributions, Reports, or Cost Analysis, 
+                      please contact an administrator to request the appropriate special permissions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Main Features Section */}
           <div>

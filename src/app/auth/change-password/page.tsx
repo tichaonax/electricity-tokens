@@ -26,6 +26,40 @@ export default function ChangePassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Dark mode detection and application
+  useEffect(() => {
+    const applyTheme = () => {
+      const savedTheme = localStorage.getItem('theme');
+      const root = document.documentElement;
+      
+      // Remove existing theme classes
+      root.classList.remove('light', 'dark');
+      
+      if (savedTheme === 'dark') {
+        root.classList.add('dark');
+      } else if (savedTheme === 'system' || !savedTheme) {
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (systemDark) {
+          root.classList.add('dark');
+        }
+      }
+    };
+
+    applyTheme();
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'system' || !savedTheme) {
+        applyTheme();
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');

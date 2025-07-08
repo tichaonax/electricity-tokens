@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Calendar, TrendingUp, Award, AlertCircle } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface DailyConsumptionData {
   maxDailyConsumption: {
@@ -26,6 +27,12 @@ interface DailyConsumptionData {
 export function MaxDailyConsumptionWidget() {
   const [data, setData] = useState<DailyConsumptionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { checkPermission } = usePermissions();
+
+  // Check if user has permission to view maximum daily consumption
+  if (!checkPermission('canViewMaximumDailyConsumption')) {
+    return null; // Don't render the widget if user doesn't have permission
+  }
 
   useEffect(() => {
     fetchMaxConsumptionData();

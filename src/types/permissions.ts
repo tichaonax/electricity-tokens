@@ -4,24 +4,32 @@ export interface UserPermissions {
   canAddPurchases: boolean;
   canEditPurchases: boolean;
   canDeletePurchases: boolean;
-  
+
   // Contribution Management
   canAddContributions: boolean;
   canEditContributions: boolean;
   canDeleteContributions: boolean;
-  
+
   // Meter Reading Management
   canAddMeterReadings: boolean;
-  
+
   // Reports Access
   canViewUsageReports: boolean;
   canViewFinancialReports: boolean;
   canViewEfficiencyReports: boolean;
-  
+
   // Personal Dashboard
   canViewPersonalDashboard: boolean;
   canViewCostAnalysis: boolean;
-  
+  canViewAccountBalance: boolean;
+  canViewProgressiveTokenConsumption: boolean;
+  canViewMaximumDailyConsumption: boolean;
+
+  // Dashboard Access Control
+  canViewPurchaseHistory: boolean;
+  canAccessNewPurchase: boolean;
+  canViewUserContributions: boolean;
+
   // Data Management
   canExportData: boolean;
   canImportData: boolean;
@@ -33,24 +41,32 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   canAddPurchases: true,
   canEditPurchases: false,
   canDeletePurchases: false,
-  
+
   // Contribution Management - Full access
   canAddContributions: true,
   canEditContributions: true,
   canDeleteContributions: false,
-  
+
   // Meter Reading Management - No access by default
   canAddMeterReadings: false,
-  
-  // Reports Access - Basic access
-  canViewUsageReports: true,
-  canViewFinancialReports: true,
-  canViewEfficiencyReports: false,
-  
-  // Personal Dashboard - Full access
+
+  // Reports Access - Special permissions (not included by default)
+  canViewUsageReports: false, // Usage reports - special permission
+  canViewFinancialReports: false, // Financial reports - special permission
+  canViewEfficiencyReports: false, // Efficiency reports - special permission
+
+  // Personal Dashboard - Limited access for regular users
   canViewPersonalDashboard: true,
-  canViewCostAnalysis: true,
-  
+  canViewCostAnalysis: false, // Cost analysis - special permission
+  canViewAccountBalance: false, // Account balance restricted by default
+  canViewProgressiveTokenConsumption: false, // Progressive consumption widget restricted by default
+  canViewMaximumDailyConsumption: false, // Maximum daily consumption widget restricted by default
+
+  // Dashboard Access Control - Special permissions (not included by default)
+  canViewPurchaseHistory: false, // Purchase history access - special permission
+  canAccessNewPurchase: false, // New purchase creation - special permission
+  canViewUserContributions: false, // User contributions view - special permission
+
   // Data Management - No access by default
   canExportData: false,
   canImportData: false,
@@ -70,6 +86,12 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canViewEfficiencyReports: true,
   canViewPersonalDashboard: true,
   canViewCostAnalysis: true,
+  canViewAccountBalance: true,
+  canViewProgressiveTokenConsumption: true,
+  canViewMaximumDailyConsumption: true,
+  canViewPurchaseHistory: true,
+  canAccessNewPurchase: true,
+  canViewUserContributions: true,
   canExportData: true,
   canImportData: true,
 };
@@ -83,11 +105,17 @@ export const READ_ONLY_PERMISSIONS: UserPermissions = {
   canEditContributions: false,
   canDeleteContributions: false,
   canAddMeterReadings: false,
-  canViewUsageReports: true,
-  canViewFinancialReports: true,
-  canViewEfficiencyReports: false,
+  canViewUsageReports: false, // Special permission - not included in read-only
+  canViewFinancialReports: false, // Special permission - not included in read-only
+  canViewEfficiencyReports: false, // Special permission - not included in read-only
   canViewPersonalDashboard: true,
-  canViewCostAnalysis: true,
+  canViewCostAnalysis: false, // Special permission - not included in read-only
+  canViewAccountBalance: false, // Restricted access to balance
+  canViewProgressiveTokenConsumption: false, // Restricted access to progressive consumption
+  canViewMaximumDailyConsumption: false, // Restricted access to maximum daily consumption
+  canViewPurchaseHistory: false, // Special permission - not included in read-only
+  canAccessNewPurchase: false, // Special permission - not included in read-only
+  canViewUserContributions: false, // Special permission - not included in read-only
   canExportData: false,
   canImportData: false,
 };
@@ -101,17 +129,25 @@ export const CONTRIBUTOR_ONLY_PERMISSIONS: UserPermissions = {
   canEditContributions: true,
   canDeleteContributions: false,
   canAddMeterReadings: false,
-  canViewUsageReports: false,
-  canViewFinancialReports: false,
-  canViewEfficiencyReports: false,
+  canViewUsageReports: false, // Special permission - not included for contributors
+  canViewFinancialReports: false, // Special permission - not included for contributors
+  canViewEfficiencyReports: false, // Special permission - not included for contributors
   canViewPersonalDashboard: true,
-  canViewCostAnalysis: false,
+  canViewCostAnalysis: false, // Special permission - not included for contributors
+  canViewAccountBalance: false, // No balance access for contributors
+  canViewProgressiveTokenConsumption: false, // No progressive consumption access for contributors
+  canViewMaximumDailyConsumption: false, // No maximum daily consumption access for contributors
+  canViewPurchaseHistory: false, // Special permission - not included for contributors
+  canAccessNewPurchase: false, // Special permission - not included for contributors
+  canViewUserContributions: true, // Allow contributions view for contributors (special grant)
   canExportData: false,
   canImportData: false,
 };
 
 // Helper function to merge permissions with defaults
-export function mergeWithDefaultPermissions(userPermissions?: Partial<UserPermissions>): UserPermissions {
+export function mergeWithDefaultPermissions(
+  userPermissions?: Partial<UserPermissions>
+): UserPermissions {
   return {
     ...DEFAULT_USER_PERMISSIONS,
     ...userPermissions,
@@ -119,7 +155,10 @@ export function mergeWithDefaultPermissions(userPermissions?: Partial<UserPermis
 }
 
 // Helper function to check if user has specific permission
-export function hasPermission(userPermissions: UserPermissions | null | undefined, permission: keyof UserPermissions): boolean {
+export function hasPermission(
+  userPermissions: UserPermissions | null | undefined,
+  permission: keyof UserPermissions
+): boolean {
   if (!userPermissions) return false;
   return userPermissions[permission] === true;
 }
@@ -127,7 +166,7 @@ export function hasPermission(userPermissions: UserPermissions | null | undefine
 // Permission groups for easy admin selection
 export const PERMISSION_PRESETS = {
   'full-access': ADMIN_PERMISSIONS,
-  'default': DEFAULT_USER_PERMISSIONS,
+  default: DEFAULT_USER_PERMISSIONS,
   'read-only': READ_ONLY_PERMISSIONS,
   'contributor-only': CONTRIBUTOR_ONLY_PERMISSIONS,
 } as const;

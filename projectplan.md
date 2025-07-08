@@ -20,11 +20,13 @@
 ### 🔐 **Authentication & Security** ✅ COMPLETE
 - [x] **NextAuth.js Integration**: Secure authentication system
 - [x] **User Registration**: Account creation with validation
-- [x] **Login/Logout**: Session management
-- [x] **Role-Based Access**: Admin and User roles
+- [x] **Login/Logout**: Session management with last login tracking
+- [x] **Role-Based Access**: Admin and User roles with granular permissions
 - [x] **Account Locking**: Admin can lock/unlock accounts
 - [x] **Security Middleware**: Request validation and permissions
-- [x] **Audit Logging**: Complete activity tracking
+- [x] **Audit Logging**: Complete activity tracking with metadata (IP, user agent)
+- [x] **Permission System**: Granular permissions with restricted defaults
+- [x] **Account Balance Permissions**: Restricted financial information access
 
 ### 📊 **Core Purchase Management** ✅ COMPLETE
 - [x] **Purchase Creation**: Add new electricity token purchases
@@ -37,8 +39,10 @@
 - [x] **Fair Share Calculation**: Automatic proportional cost calculation
 - [x] **Contribution Management**: Users can add their usage contributions
 - [x] **Balance Tracking**: Overpaid/underpaid status tracking
-- [x] **One-to-One Constraint**: Each purchase has exactly one contribution
+- [x] **One-to-One Constraint**: Each purchase has exactly one contribution (database enforced)
 - [x] **Real-time Validation**: Contribution amount and meter reading validation
+- [x] **Data Integrity**: Constraint prevents orphaned contributions or multiple contributions per purchase
+- [x] **Cascade Deletion**: Audit logs properly cascade when users are deleted
 
 ### 📈 **Reports & Analytics** ✅ COMPLETE
 - [x] **Usage Reports**: Monthly consumption trends
@@ -57,12 +61,14 @@
 - [x] **Data Reset**: Emergency data cleanup tools
 
 ### 💾 **Backup & Restore** ✅ COMPLETE
-- [x] **Full Database Backup**: Complete data export
-- [x] **Selective Backup**: Users-only or purchase-data backups
-- [x] **Audit Log Backup**: Optional audit trail inclusion
-- [x] **Data Restore**: Upload and restore from JSON backups
-- [x] **Constraint Validation**: Ensures data integrity during restore
-- [x] **Admin-Only Access**: Restricted to administrators
+- [x] **Full Database Backup**: Complete data export with all tables
+- [x] **Selective Backup**: Users-only or purchase-data specific backups
+- [x] **Audit Log Backup**: Optional audit trail inclusion (excludes by default for security)
+- [x] **Data Restore**: Upload and restore from JSON backups with validation
+- [x] **Constraint Validation**: Automatic validation of purchase-contribution relationships
+- [x] **Balance Recalculation**: Automatic balance fix after successful restore
+- [x] **Admin-Only Access**: Restricted to administrators via API endpoint
+- [x] **Updated API**: Simplified `/api/backup` endpoint for backup and restore
 
 ### 📱 **Mobile & Accessibility** ✅ COMPLETE
 - [x] **Responsive Design**: Mobile-first design approach
@@ -78,6 +84,9 @@
 - [x] **Data Validation**: Zod schema validation
 - [x] **Transaction Support**: Atomic operations for data integrity
 - [x] **Migration System**: Database schema versioning
+- [x] **Database Constraints**: One-to-one purchase-contribution relationship enforced
+- [x] **Audit Log Metadata**: Enhanced audit logging with IP tracking and metadata
+- [x] **Last Login Tracking**: User session monitoring and security
 
 ## 🎯 Current Application State
 
@@ -561,6 +570,32 @@ The user interface is showing "July 1st: 10.74 kWh" but this value actually repr
 
 ---
 
-**Last Updated**: July 7, 2025  
-**Status**: ✅ COMPLETE - Production Ready  
-**Next Phase**: Meter readings investigation for July 1st consumption issue
+## 🔄 Recent Updates (July 8, 2025)
+
+### Database Schema Enhancements ✅ COMPLETE
+- [x] **Enhanced Audit Logging**: Added metadata field to audit logs for IP tracking and user agent storage
+- [x] **Cascade Deletion**: Implemented proper cascade deletion for audit logs when users are deleted
+- [x] **Last Login Tracking**: Added lastLoginAt field to user model for security monitoring
+
+### Permission System Overhaul ✅ COMPLETE
+- [x] **Restricted Default Access**: Account balance visibility now requires explicit permission
+- [x] **Dashboard Feature Permissions**: Core dashboard features require special permissions
+- [x] **Granular Control**: Fine-grained permission system for different user roles
+
+### Backup System Improvements ✅ COMPLETE
+- [x] **API Simplification**: Consolidated backup endpoints to `/api/backup`
+- [x] **Security Enhancement**: Audit logs excluded by default, optional inclusion via parameter
+- [x] **Constraint Validation**: Automatic validation of database constraints during backup/restore
+- [x] **Balance Recalculation**: Automatic balance fixing after restore operations
+
+### Documentation Updates ✅ COMPLETE
+- [x] **API Documentation**: Updated with latest backup API and permission changes
+- [x] **User Manual**: Added constraint documentation and permission explanations  
+- [x] **Deployment Guide**: Updated post-deployment checklist with new features
+- [x] **Project Plan**: Updated status and recent changes
+
+---
+
+**Last Updated**: July 8, 2025  
+**Status**: ✅ COMPLETE - Production Ready with Enhanced Security  
+**Schema Version**: v1.4.0 with one-to-one constraints and enhanced audit logging

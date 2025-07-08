@@ -28,6 +28,7 @@ interface BackupUser {
   passwordResetRequired: boolean;
   permissions?: Record<string, unknown> | null;
   themePreference?: string | null;
+  lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -181,13 +182,16 @@ export async function GET(request: NextRequest) {
           passwordResetRequired: true,
           permissions: true,
           themePreference: true,
+          lastLoginAt: true,
           createdAt: true,
           updatedAt: true,
         },
       });
       backupData.users = users.map((user) => ({
         ...user,
-        permissions: user.permissions || undefined,
+        permissions:
+          (user.permissions as Record<string, unknown> | null) || null,
+        lastLoginAt: user.lastLoginAt?.toISOString() || null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       }));
@@ -492,6 +496,7 @@ export async function POST(request: NextRequest) {
                 passwordResetRequired: user.passwordResetRequired,
                 permissions: user.permissions || null,
                 themePreference: user.themePreference,
+                lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
               },
               create: {
                 id: user.id,
@@ -503,6 +508,7 @@ export async function POST(request: NextRequest) {
                 passwordResetRequired: user.passwordResetRequired,
                 permissions: user.permissions || null,
                 themePreference: user.themePreference,
+                lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
                 createdAt: new Date(user.createdAt),
                 updatedAt: new Date(user.updatedAt),
               },
@@ -739,6 +745,51 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+
+      // Restore audit logs
+      if (backupData.auditLogs) {
+        for (const auditLog of backupData.auditLogs) {
+          try {
+            const auditUser = await tx.user.findUnique({
+              where: { email: auditLog.user.email },
+            });
+
+            if (!auditUser) {
+              results.errors.push(
+                `Audit log user not found: ${auditLog.user.email}`
+              );
+              continue;
+            }
+
+            await tx.auditLog.upsert({
+              where: { id: auditLog.id },
+              update: {
+                action: auditLog.action,
+                entityType: auditLog.entityType,
+                entityId: auditLog.entityId,
+                oldValues: auditLog.oldValues,
+                newValues: auditLog.newValues,
+                timestamp: new Date(auditLog.timestamp),
+              },
+              create: {
+                id: auditLog.id,
+                userId: auditUser.id,
+                action: auditLog.action,
+                entityType: auditLog.entityType,
+                entityId: auditLog.entityId,
+                oldValues: auditLog.oldValues,
+                newValues: auditLog.newValues,
+                timestamp: new Date(auditLog.timestamp),
+              },
+            });
+            results.restored.auditLogs++;
+          } catch (error) {
+            results.errors.push(
+              `Failed to restore audit log ${auditLog.id}: ${error}`
+            );
+          }
+        }
+      }
     });
 
     // Automatically run balance fix after successful restore
@@ -754,8 +805,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const tablesRestored = Object.entries(results.restored)
+      .filter(([, count]) => count > 0)
+      .map(([table, count]) => `${table} (${count})`)
+      .join(', ');
+
     return NextResponse.json({
-      message: 'Backup restored successfully',
+      message: `Backup restored successfully. Restored tables: ${tablesRestored}`,
       results,
     });
   } catch (error) {
