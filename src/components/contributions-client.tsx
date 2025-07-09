@@ -180,12 +180,14 @@ export function ContributionsClient() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center min-w-0 flex-1 mr-4">
-              <NavigationFormButton
-                action={navigateToDashboard}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 sm:mr-6 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent flex-shrink-0 text-sm whitespace-nowrap"
-              >
-                ← Back to Dashboard
-              </NavigationFormButton>
+              <div className="flex-shrink-0 [&>form]:!w-auto">
+                <NavigationFormButton
+                  action={navigateToDashboard}
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 sm:mr-6 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent text-sm whitespace-nowrap !w-auto h-10"
+                >
+                  ← Back to Dashboard
+                </NavigationFormButton>
+              </div>
               <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 truncate">
                 <Users className="h-5 w-5 text-green-600 flex-shrink-0" />
                 <span className="hidden sm:inline">User Contributions</span>
@@ -195,7 +197,7 @@ export function ContributionsClient() {
             <div className="flex items-center space-x-2 flex-shrink-0">
               <button
                 onClick={() => router.push('/dashboard/purchases/new')}
-                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 h-10"
+                className="flex items-center gap-1 sm:gap-2 border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 h-10 whitespace-nowrap"
               >
                 <ShoppingCart className="h-4 w-4" />
                 <span className="hidden sm:inline">Add Tokens</span>
