@@ -199,15 +199,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert readingDate to Date object (start of day in UTC)
-    const dateObj = new Date(readingDate + 'T00:00:00.000Z');
+    // Convert readingDate to Date object with current time
+    const currentDate = new Date();
+    const [year, month, day] = readingDate.split('-');
+    const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), currentDate.getHours(), currentDate.getMinutes(), currentDate.getSeconds(), currentDate.getMilliseconds());
 
     // Comprehensive chronological validation
     
     // Step 1: Get the maximum reading on the same date (if any) - GLOBAL across all users
+    const startOfDay = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 0, 0, 0, 0);
+    const endOfDay = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 23, 59, 59, 999);
+    
     const maxReadingOnSameDate = await prisma.meterReading.findFirst({
       where: {
-        readingDate: dateObj,
+        readingDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
       orderBy: {
         reading: 'desc',
@@ -218,7 +226,7 @@ export async function POST(request: NextRequest) {
     const mostRecentBeforeDate = await prisma.meterReading.findFirst({
       where: {
         readingDate: {
-          lt: dateObj,
+          lt: startOfDay,
         },
       },
       orderBy: [
@@ -231,7 +239,7 @@ export async function POST(request: NextRequest) {
     const earliestAfterDate = await prisma.meterReading.findFirst({
       where: {
         readingDate: {
-          gt: dateObj,
+          gt: endOfDay,
         },
       },
       orderBy: [

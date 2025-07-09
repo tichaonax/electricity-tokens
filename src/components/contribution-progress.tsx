@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatDateTime } from '@/lib/utils';
 
 interface ContributionProgressData {
   totalPurchases: number;
@@ -310,7 +311,7 @@ export function ContributionProgress({
                   {latestReading.reading.toLocaleString()} kWh
                 </div>
                 <div className="text-xs text-blue-500 dark:text-blue-400">
-                  by {latestReading.userName} • {new Date(latestReading.readingDate!).toLocaleDateString()}
+                  by {latestReading.userName} • {formatDateTime(new Date(latestReading.readingDate!))}
                 </div>
               </div>
             )}

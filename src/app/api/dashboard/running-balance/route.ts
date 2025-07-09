@@ -45,13 +45,13 @@ export async function GET() {
 
     console.log('Running balance API - Global contribution balance:', contributionBalance);
 
-    // Get recent consumption for trend analysis
+    // Get recent consumption for trend analysis - use purchase date (meter reading date) instead of contribution created date
     const recentContributions = contributions.filter(
-      contrib => contrib.createdAt >= sevenDaysAgo
+      contrib => contrib.purchase.purchaseDate >= sevenDaysAgo
     );
 
     const previousWeekContributions = contributions.filter(
-      contrib => contrib.createdAt >= fourteenDaysAgo && contrib.createdAt < sevenDaysAgo
+      contrib => contrib.purchase.purchaseDate >= fourteenDaysAgo && contrib.purchase.purchaseDate < sevenDaysAgo
     );
 
     // Use global totals from the cost breakdown
@@ -59,18 +59,58 @@ export async function GET() {
     const totalConsumed = globalCostBreakdown.totalTokensUsed;
     const totalTrueCost = globalCostBreakdown.totalTrueCost;
 
-    // Calculate consumption trends  
-    const lastWeekConsumption = recentContributions.reduce((sum, contrib) => sum + contrib.tokensConsumed, 0);
-    const previousWeekConsumption = previousWeekContributions.reduce((sum, contrib) => sum + contrib.tokensConsumed, 0);
+    // Calculate actual consumption from meter readings (last 7 days)
+    const lastWeekMeterReadings = await prisma.meterReading.findMany({
+      where: {
+        readingDate: {
+          gte: sevenDaysAgo,
+        },
+      },
+      orderBy: {
+        readingDate: 'asc',
+      },
+    });
+
+    const previousWeekMeterReadings = await prisma.meterReading.findMany({
+      where: {
+        readingDate: {
+          gte: fourteenDaysAgo,
+          lt: sevenDaysAgo,
+        },
+      },
+      orderBy: {
+        readingDate: 'asc',
+      },
+    });
+
+    // Calculate consumption as difference between first and last readings
+    const lastWeekConsumption = lastWeekMeterReadings.length > 1 
+      ? lastWeekMeterReadings[lastWeekMeterReadings.length - 1].reading - lastWeekMeterReadings[0].reading
+      : 0;
+    
+    const previousWeekConsumption = previousWeekMeterReadings.length > 1
+      ? previousWeekMeterReadings[previousWeekMeterReadings.length - 1].reading - previousWeekMeterReadings[0].reading
+      : 0;
+    
     const lastWeekContributed = recentContributions.reduce((sum, contrib) => sum + contrib.contributionAmount, 0);
     // const previousWeekContributed = previousWeekContributions.reduce((sum, contrib) => sum + contrib.contributionAmount, 0);
 
-    // Calculate average daily consumption (last 30 days)
+    // Calculate average daily consumption (last 30 days) from meter readings
     const thirtyDaysAgo = subDays(now, 30);
-    const last30DaysContributions = contributions.filter(
-      contrib => contrib.createdAt >= thirtyDaysAgo
-    );
-    const last30DaysConsumption = last30DaysContributions.reduce((sum, contrib) => sum + contrib.tokensConsumed, 0);
+    const last30DaysMeterReadings = await prisma.meterReading.findMany({
+      where: {
+        readingDate: {
+          gte: thirtyDaysAgo,
+        },
+      },
+      orderBy: {
+        readingDate: 'asc',
+      },
+    });
+    
+    const last30DaysConsumption = last30DaysMeterReadings.length > 1
+      ? last30DaysMeterReadings[last30DaysMeterReadings.length - 1].reading - last30DaysMeterReadings[0].reading
+      : 0;
     const averageDaily = last30DaysConsumption / 30;
 
     // Calculate consumption trend
