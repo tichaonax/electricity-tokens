@@ -293,11 +293,12 @@ export default function MeterReadingsPage() {
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Dashboard</span>
               </button>
               <div className="flex items-center gap-2">
                 <Gauge className="h-5 w-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                   Meter Readings
                 </h1>
               </div>

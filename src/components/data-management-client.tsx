@@ -48,16 +48,27 @@ export function DataManagementClient() {
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Dashboard</span>
               </NavigationFormButton>
-              <div className="flex items-center gap-2 ml-8">
-                <Shield className="h-5 w-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                  Data Management
-                </h1>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 ml-8">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                    Data Management
+                  </h1>
+                </div>
+                <div className="flex items-center space-x-2 sm:hidden">
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
+                    {session.user?.name}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    ({session.user?.role})
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="hidden sm:flex items-center space-x-4">
               <span className="text-slate-700 dark:text-slate-300">
                 {session.user?.name}
               </span>

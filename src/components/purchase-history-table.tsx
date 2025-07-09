@@ -338,50 +338,116 @@ export function PurchaseHistoryTable({
   return (
     <div className="w-full bg-white rounded-lg shadow-lg dark:bg-slate-900">
       {/* Header with filters toggle */}
-      <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+      <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col gap-1 sm:gap-2 mb-2 sm:mb-4">
+          <div className="flex justify-between items-center w-full">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
               Purchase History
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              {pagination.total} total purchases
+            <div className="flex gap-2">
+              {/* Desktop: Add Contribution button - only show if there are purchases without contributions */}
               {hasContributablePurchases && (
-                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                  {purchases.filter((p) => !p.contribution).length} need
-                  contribution
-                  {purchases.filter((p) => !p.contribution).length !== 1
-                    ? 's'
-                    : ''}
-                </span>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleAddContribution()}
+                  className="hidden sm:block bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white h-9"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Contribution
+                </Button>
               )}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {/* Add Contribution button - only show if there are purchases without contributions */}
-            {hasContributablePurchases && (
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => handleAddContribution()}
-                className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                onClick={() => router.push('/dashboard/purchases/new')}
+                className="bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:hover:bg-green-700 dark:text-white h-9"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Contribution
+                Add Token
               </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-            <Button variant="outline" size="sm" onClick={fetchPurchases}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            </div>
+          </div>
+          <div>
+            {/* Desktop: Show full text with badge */}
+            <div className="hidden sm:block">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {pagination.total} total purchases
+                {hasContributablePurchases && (
+                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                    {purchases.filter((p) => !p.contribution).length} need
+                    contribution
+                    {purchases.filter((p) => !p.contribution).length !== 1
+                      ? 's'
+                      : ''}
+                  </span>
+                )}
+              </p>
+            </div>
+            {/* Mobile: Show text with inline buttons when contributions needed */}
+            <div className="sm:hidden">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {pagination.total} total purchases
+              </p>
+              {hasContributablePurchases && (
+                <div className="flex items-center justify-between mt-1 w-full">
+                  <span className="text-xs font-medium text-yellow-800 dark:text-yellow-200 flex-1">
+                    {purchases.filter((p) => !p.contribution).length} need contribution
+                    {purchases.filter((p) => !p.contribution).length !== 1 ? 's' : ''}
+                  </span>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleAddContribution()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white h-9"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Contribution
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            {/* Desktop: All buttons in a row */}
+            <div className="hidden sm:flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+              </Button>
+              <Button variant="outline" size="sm" onClick={fetchPurchases}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            
+            {/* Mobile: Only show Filters and Refresh (Add Contribution and Add Token are now inline with message) */}
+            <div className="sm:hidden">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex-1"
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={fetchPurchases}
+                  className="flex-1"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 

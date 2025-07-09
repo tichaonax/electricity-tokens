@@ -97,11 +97,12 @@ export default function EditPurchasePage() {
                   className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to History
+                  <span className="hidden sm:inline">Back to History</span>
+                  <span className="sm:hidden">History</span>
                 </Button>
                 <div className="flex items-center gap-2">
                   <Edit className="h-5 w-5 text-blue-600" />
-                  <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                     Edit Purchase
                   </h1>
                 </div>
@@ -111,7 +112,7 @@ export default function EditPurchasePage() {
         </nav>
 
         <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
+          <div className="px-2 sm:px-4 py-6 sm:px-0">
             <div className="bg-white rounded-lg shadow-lg dark:bg-slate-900 p-6">
               <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-400">
                 <h3 className="text-lg font-medium mb-2">
@@ -144,16 +145,17 @@ export default function EditPurchasePage() {
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to History
+                <span className="hidden sm:inline">Back to History</span>
+                <span className="sm:hidden">History</span>
               </button>
               <div className="flex items-center gap-2">
                 <Edit className="h-5 w-5 text-blue-600" />
-                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                   Edit Purchase
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="hidden sm:flex items-center space-x-4">
               <span className="text-slate-700 dark:text-slate-300">
                 {session.user?.name}
               </span>
@@ -166,7 +168,7 @@ export default function EditPurchasePage() {
       </nav>
 
       <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <div className="px-2 sm:px-4 py-6 sm:px-0">
           <div className="bg-white rounded-lg shadow-lg dark:bg-slate-900 p-6">
             <div className="mb-6">
               <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">

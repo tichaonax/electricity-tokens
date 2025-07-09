@@ -36,6 +36,7 @@ export default function PurchaseHistoryPage() {
         backPath="/dashboard"
         showBackButton={true}
         backText="Back to Dashboard"
+        mobileBackText="Dashboard"
       />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

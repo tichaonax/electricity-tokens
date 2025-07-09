@@ -16,6 +16,7 @@ interface QuickStats {
   totalTokensUsed: number;
   totalAmountPaid: number;
   averageCostPerKwh: number;
+  accountBalance: number;
 }
 
 export function DashboardClient() {
@@ -736,7 +737,7 @@ export function DashboardClient() {
               <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
                 Quick Stats
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
@@ -760,13 +761,51 @@ export function DashboardClient() {
                       <div className="ml-5 w-0 flex-1">
                         <dl>
                           <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                            Total Tokens
+                            Total Tokens Consumed
                           </dt>
                           <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                             {loadingStats
                               ? '...'
                               : quickStats?.totalTokensUsed.toLocaleString() ||
                                 '0'}
+                          </dd>
+                        </dl>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                  <div className="p-5">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                          <svg
+                            className="w-5 h-5 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-5 w-0 flex-1">
+                        <dl>
+                          <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                            Average Cost/Token
+                          </dt>
+                          <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                            {loadingStats
+                              ? '...'
+                              : quickStats
+                                ? `$${quickStats.averageCostPerKwh.toFixed(4)}`
+                                : '$0.0000'}
                           </dd>
                         </dl>
                       </div>
@@ -816,7 +855,11 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                        <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                          quickStats?.accountBalance && quickStats.accountBalance >= 0 
+                            ? 'bg-green-500' 
+                            : 'bg-red-500'
+                        }`}>
                           <svg
                             className="w-5 h-5 text-white"
                             fill="none"
@@ -827,7 +870,7 @@ export function DashboardClient() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                              d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"
                             />
                           </svg>
                         </div>
@@ -835,14 +878,18 @@ export function DashboardClient() {
                       <div className="ml-5 w-0 flex-1">
                         <dl>
                           <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                            Average Cost/Token
+                            Account Balance
                           </dt>
-                          <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                          <dd className={`text-lg font-medium ${
+                            quickStats?.accountBalance && quickStats.accountBalance >= 0 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
                             {loadingStats
                               ? '...'
                               : quickStats
-                                ? `$${quickStats.averageCostPerKwh.toFixed(4)}`
-                                : '$0.0000'}
+                                ? `$${quickStats.accountBalance.toFixed(2)}`
+                                : '$0.00'}
                           </dd>
                         </dl>
                       </div>

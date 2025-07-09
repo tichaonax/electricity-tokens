@@ -271,8 +271,53 @@ export function ContributionProgress({
         {/* Actions */}
         {showActions && (
           <div className="space-y-2 pt-2">
-            {/* Button Row */}
-            <div className="flex gap-2">
+            {/* Top Row - View History and Meter Readings (Mobile Only) */}
+            <div className="flex gap-2 sm:hidden">
+              {checkPermission('canViewPurchaseHistory') && (
+                <Button
+                  variant="outline"
+                  onClick={handleViewHistory}
+                  className="flex-1"
+                >
+                  View History
+                </Button>
+              )}
+              {checkPermission('canAddMeterReadings') && (
+                <Button
+                  variant="outline"
+                  onClick={handleMeterReadings}
+                  className="flex-1"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Meter Readings
+                </Button>
+              )}
+            </div>
+            
+            {/* Bottom Row - Contribute Next (mobile below, desktop inline) */}
+            {hasNextPurchase && (
+              <div className="block sm:hidden">
+                <Button
+                  onClick={handleContributeNext}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+                >
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Contribute Next
+                </Button>
+              </div>
+            )}
+            
+            {/* Desktop Row - All buttons together */}
+            <div className="hidden sm:flex gap-2">
+              {checkPermission('canViewPurchaseHistory') && (
+                <Button
+                  variant="outline"
+                  onClick={handleViewHistory}
+                  className="flex-1"
+                >
+                  View History
+                </Button>
+              )}
               {hasNextPurchase && (
                 <Button
                   onClick={handleContributeNext}
@@ -282,18 +327,11 @@ export function ContributionProgress({
                   Contribute Next
                 </Button>
               )}
-              <Button
-                variant="outline"
-                onClick={handleViewHistory}
-                className={hasNextPurchase && !checkPermission('canAddMeterReadings') ? 'flex-1' : ''}
-              >
-                View History
-              </Button>
               {checkPermission('canAddMeterReadings') && (
                 <Button
                   variant="outline"
                   onClick={handleMeterReadings}
-                  className={hasNextPurchase ? '' : 'flex-1'}
+                  className="flex-1"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Meter Readings

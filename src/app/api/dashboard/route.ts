@@ -25,6 +25,52 @@ const dashboardQuerySchema = z.object({
     .default('6'),
 });
 
+async function calculateAccountBalance(contributions: any[]): Promise<number> {
+  try {
+    if (contributions.length === 0) {
+      return 0;
+    }
+
+    // Get the earliest purchase date to determine what counts as "first purchase"
+    const earliestPurchase = await prisma.tokenPurchase.findFirst({
+      orderBy: { purchaseDate: 'asc' },
+    });
+
+    // Sort contributions by purchase date
+    const sortedContributions = contributions.sort(
+      (a, b) => new Date(a.purchase.purchaseDate).getTime() - new Date(b.purchase.purchaseDate).getTime()
+    );
+
+    let runningBalance = 0;
+
+    for (let i = 0; i < sortedContributions.length; i++) {
+      const contribution = sortedContributions[i];
+
+      // Check if this is the first purchase globally
+      const isFirstPurchase =
+        earliestPurchase &&
+        contribution.purchase.purchaseDate.getTime() ===
+          earliestPurchase.purchaseDate.getTime();
+
+      // For the first purchase, no tokens were consumed before it
+      const effectiveTokensConsumed = isFirstPurchase
+        ? 0
+        : contribution.tokensConsumed;
+
+      const fairShare =
+        (effectiveTokensConsumed / contribution.purchase.totalTokens) *
+        contribution.purchase.totalPayment;
+      const balanceChange = contribution.contributionAmount - fairShare;
+      runningBalance += balanceChange;
+    }
+
+    return runningBalance;
+  } catch (error) {
+    console.error('Error calculating account balance:', error);
+    return 0;
+  }
+}
+
 interface MonthlyData {
   month: string;
   year: number;
@@ -56,6 +102,7 @@ interface DashboardResponse {
     emergencyPremium: number;
     contributionCount: number;
     lastContributionDate: string | null;
+    accountBalance: number;
   };
   currentMonth: {
     tokensUsed: number;
@@ -172,6 +219,9 @@ export async function GET(request: NextRequest) {
     const globalSummary = calculateUserTrueCost(
       globalContributions as Contribution[]
     );
+
+    // Calculate global account balance
+    const globalAccountBalance = await calculateAccountBalance(globalContributions);
 
     // Calculate current month metrics
     const currentMonthContributions = contributions.filter(
@@ -326,6 +376,7 @@ export async function GET(request: NextRequest) {
         ...globalSummary,
         contributionCount: globalContributions.length,
         lastContributionDate: lastContribution?.createdAt.toISOString() || null,
+        accountBalance: globalAccountBalance,
       },
       currentMonth: {
         tokensUsed: currentMonthMetrics.totalTokensUsed,
