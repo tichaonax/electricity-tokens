@@ -74,15 +74,43 @@ class SimpleServiceInstaller {
   async createService() {
     console.log('📦 Creating Windows service...');
 
-    // Create the service using sc create
-    const binPath = `"${this.nodeExe}" "${this.scriptPath}"`;
-    const createCommand = `sc create "${this.serviceName}" binPath= "${binPath}" DisplayName= "${this.serviceName}" Description= "${this.serviceDescription}" start= auto`;
-
     try {
-      execSync(createCommand, { stdio: 'pipe' });
+      // Create the service using sc create with proper escaping
+      const binPath = `${this.nodeExe} ${this.scriptPath}`;
+
+      console.log(`🔧 Creating service with binary path: ${binPath}`);
+
+      // Use array format for better command handling
+      const createArgs = [
+        'create',
+        this.serviceName,
+        `binPath=${binPath}`,
+        `DisplayName=${this.serviceName}`,
+        `Description=${this.serviceDescription}`,
+        'start=auto',
+      ];
+
+      console.log(`🔧 Running: sc ${createArgs.join(' ')}`);
+
+      execSync(`sc ${createArgs.join(' ')}`, { stdio: 'inherit' });
       console.log('✅ Service created successfully!');
     } catch (err) {
-      throw new Error(`Failed to create service: ${err.message}`);
+      console.error('❌ Service creation failed. Trying alternative method...');
+
+      // Try alternative method with different quoting
+      try {
+        const altCommand = `sc create ${this.serviceName} binPath= "${this.nodeExe} ${this.scriptPath}" start= auto`;
+        console.log(`🔧 Trying alternative: ${altCommand}`);
+        execSync(altCommand, { stdio: 'inherit' });
+        console.log('✅ Service created successfully with alternative method!');
+      } catch (altErr) {
+        throw new Error(`Failed to create service with both methods: 
+Primary error: ${err.message}
+Alternative error: ${altErr.message}
+
+Manual command to try:
+sc create "${this.serviceName}" binPath= "${this.nodeExe} ${this.scriptPath}" start= auto`);
+      }
     }
   }
 

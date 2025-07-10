@@ -25,6 +25,8 @@
     "service:validate": "node scripts/windows-service/validate-environment.js",
     "service:install": "node scripts/windows-service/install-service.js",
     "service:install-simple": "node scripts/windows-service/install-service-simple.js",
+    "service:install-manual": "node scripts/windows-service/install-manual.js",
+    "service:debug": "node scripts/windows-service/debug-install.js",
     "service:uninstall": "node scripts/windows-service/uninstall-service.js",
     "service:status": "node scripts/windows-service/service-status.js",
     "service:start": "sc start \"ElectricityTokensTracker\"",
