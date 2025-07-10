@@ -80,19 +80,25 @@ async function debugInstall() {
   console.log(`- Description: "${serviceDesc}"`);
   console.log('');
 
-  const createCommand = `sc create "${serviceName}" binPath= "${nodeExe} ${scriptPath}" start= auto`;
-  console.log('Full command:');
-  console.log(createCommand);
+  const psCommand = `sc.exe create "${serviceName}" binPath= "${nodeExe} ${scriptPath}" start= auto`;
+  const cmdCommand = `sc create "${serviceName}" binPath= "${nodeExe} ${scriptPath}" start= auto`;
+
+  console.log('Commands to create service:');
   console.log('');
 
   // Test the command (dry run info)
   console.log('🚀 Ready to create service!');
-  console.log(
-    'To create the service manually, run this command in PowerShell as Administrator:'
-  );
   console.log('');
+
+  console.log('For PowerShell (Run as Administrator):');
   console.log('```');
-  console.log(createCommand);
+  console.log(psCommand);
+  console.log('```');
+  console.log('');
+
+  console.log('For Command Prompt (Run as Administrator):');
+  console.log('```');
+  console.log(cmdCommand);
   console.log('```');
   console.log('');
 
