@@ -80,8 +80,8 @@ async function debugInstall() {
   console.log(`- Description: "${serviceDesc}"`);
   console.log('');
 
-  const psCommand = `sc.exe create "${serviceName}" binPath= "${nodeExe} ${scriptPath}" start= auto`;
-  const cmdCommand = `sc create "${serviceName}" binPath= "${nodeExe} ${scriptPath}" start= auto`;
+  const psCommand = `sc.exe create "${serviceName}" binPath= "\\"${nodeExe}\\" \\"${scriptPath}\\"" DisplayName= "${serviceName}" start= auto`;
+  const cmdCommand = `sc create "${serviceName}" binPath= "\\"${nodeExe}\\" \\"${scriptPath}\\"" DisplayName= "${serviceName}" start= auto`;
 
   console.log('Commands to create service:');
   console.log('');
