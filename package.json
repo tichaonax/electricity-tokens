@@ -29,8 +29,8 @@
     "service:debug": "node scripts/windows-service/debug-install.js",
     "service:uninstall": "node scripts/windows-service/uninstall-service.js",
     "service:status": "node scripts/windows-service/service-status.js",
-    "service:start": "sc.exe . start \"ElectricityTokensTracker\"",
-    "service:stop": "sc.exe . stop \"ElectricityTokensTracker\""
+    "service:start": "sc.exe start \"ElectricityTokensTracker\"",
+    "service:stop": "sc.exe stop \"ElectricityTokensTracker\""
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
