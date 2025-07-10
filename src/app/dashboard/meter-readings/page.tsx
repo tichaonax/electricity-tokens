@@ -3,7 +3,17 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, Plus, Gauge, Calendar, AlertTriangle, CheckCircle, Edit, Trash2, ExternalLink } from 'lucide-react';
+import {
+  ArrowLeft,
+  Plus,
+  Gauge,
+  Calendar,
+  AlertTriangle,
+  CheckCircle,
+  Edit,
+  Trash2,
+  ExternalLink,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -72,7 +82,8 @@ export default function MeterReadingsPage() {
     readingDate: '',
     notes: '',
   });
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
   const [validating, setValidating] = useState(false);
 
   useEffect(() => {
@@ -81,34 +92,37 @@ export default function MeterReadingsPage() {
     }
   }, [status, router]);
 
+  const fetchMeterReadings = useCallback(
+    async (page = 1) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: pagination.limit.toString(),
+        });
+        const response = await fetch(`/api/meter-readings?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch meter readings');
+        }
+        const data = await response.json();
+        setMeterReadings(data.meterReadings || []);
+        setPagination(data.pagination);
+      } catch (error) {
+        console.error('Error fetching meter readings:', error);
+        setError('Failed to load meter readings');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pagination.limit]
+  );
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchMeterReadings();
     }
-  }, [status]);
-
-  const fetchMeterReadings = async (page = 1) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: pagination.limit.toString(),
-      });
-      const response = await fetch(`/api/meter-readings?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch meter readings');
-      }
-      const data = await response.json();
-      setMeterReadings(data.meterReadings || []);
-      setPagination(data.pagination);
-    } catch (error) {
-      console.error('Error fetching meter readings:', error);
-      setError('Failed to load meter readings');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [status, fetchMeterReadings]);
 
   const validateReading = useCallback(async () => {
     if (!newReading.reading || !newReading.readingDate) {
@@ -156,7 +170,7 @@ export default function MeterReadingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newReading.reading || !newReading.readingDate) {
       setError('Reading and date are required');
       return;
@@ -171,15 +185,16 @@ export default function MeterReadingsPage() {
     try {
       setError(null);
       const method = editingId ? 'PUT' : 'POST';
-      const url = editingId ? `/api/meter-readings/${editingId}` : '/api/meter-readings';
-      
+      const url = editingId
+        ? `/api/meter-readings/${editingId}`
+        : '/api/meter-readings';
+
       const requestBody = {
         reading: parseFloat(newReading.reading),
         readingDate: newReading.readingDate,
         notes: newReading.notes || undefined,
       };
-      
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -201,7 +216,9 @@ export default function MeterReadingsPage() {
       await fetchMeterReadings(1); // Reset to page 1 after adding/editing
     } catch (error) {
       console.error('Error saving meter reading:', error);
-      setError(error instanceof Error ? error.message : 'Failed to save meter reading');
+      setError(
+        error instanceof Error ? error.message : 'Failed to save meter reading'
+      );
     }
   };
 
@@ -234,7 +251,11 @@ export default function MeterReadingsPage() {
       await fetchMeterReadings(pagination.page);
     } catch (error) {
       console.error('Error deleting meter reading:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete meter reading');
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete meter reading'
+      );
     }
   };
 
@@ -272,7 +293,7 @@ export default function MeterReadingsPage() {
             Access Denied
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mb-6">
-            You don't have permission to access meter readings.
+            You don&apos;t have permission to access meter readings.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Back to Dashboard
@@ -303,7 +324,7 @@ export default function MeterReadingsPage() {
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="hidden sm:flex items-center space-x-4">
               <span className="text-slate-700 dark:text-slate-300">
                 {session.user?.name}
               </span>
@@ -324,7 +345,8 @@ export default function MeterReadingsPage() {
                 Daily Meter Readings
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
-                Track all electricity meter readings for accurate consumption monitoring across all users.
+                Track all electricity meter readings for accurate consumption
+                monitoring across all users.
               </p>
             </div>
             {!showAddForm && (
@@ -362,7 +384,12 @@ export default function MeterReadingsPage() {
                       step="0.01"
                       min="0"
                       value={newReading.reading}
-                      onChange={(e) => setNewReading({ ...newReading, reading: e.target.value })}
+                      onChange={(e) =>
+                        setNewReading({
+                          ...newReading,
+                          reading: e.target.value,
+                        })
+                      }
                       placeholder="Enter meter reading"
                       required
                     />
@@ -374,7 +401,12 @@ export default function MeterReadingsPage() {
                     <Input
                       type="date"
                       value={newReading.readingDate}
-                      onChange={(e) => setNewReading({ ...newReading, readingDate: e.target.value })}
+                      onChange={(e) =>
+                        setNewReading({
+                          ...newReading,
+                          readingDate: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -385,7 +417,9 @@ export default function MeterReadingsPage() {
                   </label>
                   <Textarea
                     value={newReading.notes}
-                    onChange={(e) => setNewReading({ ...newReading, notes: e.target.value })}
+                    onChange={(e) =>
+                      setNewReading({ ...newReading, notes: e.target.value })
+                    }
                     placeholder="Any additional notes about this reading..."
                     rows={3}
                   />
@@ -430,9 +464,11 @@ export default function MeterReadingsPage() {
                               Validation Warnings
                             </h4>
                             <ul className="text-sm text-yellow-700 dark:text-yellow-400 space-y-1">
-                              {validationResult.warnings.map((warning, index) => (
-                                <li key={index}>• {warning}</li>
-                              ))}
+                              {validationResult.warnings.map(
+                                (warning, index) => (
+                                  <li key={index}>• {warning}</li>
+                                )
+                              )}
                             </ul>
                           </div>
                         </div>
@@ -450,16 +486,38 @@ export default function MeterReadingsPage() {
                             </h4>
                             <div className="grid grid-cols-2 gap-4 text-sm text-blue-700 dark:text-blue-400">
                               <div>
-                                <span className="font-medium">Daily consumption:</span> {validationResult.statistics.dailyConsumption.toFixed(2)} kWh
+                                <span className="font-medium">
+                                  Daily consumption:
+                                </span>{' '}
+                                {validationResult.statistics.dailyConsumption.toFixed(
+                                  2
+                                )}{' '}
+                                kWh
                               </div>
                               <div>
-                                <span className="font-medium">Period:</span> {validationResult.statistics.daysBetween} day{validationResult.statistics.daysBetween !== 1 ? 's' : ''}
+                                <span className="font-medium">Period:</span>{' '}
+                                {validationResult.statistics.daysBetween} day
+                                {validationResult.statistics.daysBetween !== 1
+                                  ? 's'
+                                  : ''}
                               </div>
                               <div>
-                                <span className="font-medium">Your average:</span> {validationResult.statistics.historicalAverage.toFixed(2)} kWh/day
+                                <span className="font-medium">
+                                  Your average:
+                                </span>{' '}
+                                {validationResult.statistics.historicalAverage.toFixed(
+                                  2
+                                )}{' '}
+                                kWh/day
                               </div>
                               <div>
-                                <span className="font-medium">Your maximum:</span> {validationResult.statistics.historicalMax.toFixed(2)} kWh/day
+                                <span className="font-medium">
+                                  Your maximum:
+                                </span>{' '}
+                                {validationResult.statistics.historicalMax.toFixed(
+                                  2
+                                )}{' '}
+                                kWh/day
                               </div>
                             </div>
                           </div>
@@ -468,22 +526,23 @@ export default function MeterReadingsPage() {
                     )}
 
                     {/* Success message */}
-                    {validationResult.valid && validationResult.warnings.length === 0 && (
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950 dark:border-green-800">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                          <span className="text-sm font-medium text-green-800 dark:text-green-300">
-                            Reading validation successful
-                          </span>
+                    {validationResult.valid &&
+                      validationResult.warnings.length === 0 && (
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950 dark:border-green-800">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                            <span className="text-sm font-medium text-green-800 dark:text-green-300">
+                              Reading validation successful
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 )}
 
                 <div className="flex gap-2">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     variant="outline"
                     disabled={validationResult && !validationResult.valid}
                   >
@@ -506,10 +565,14 @@ export default function MeterReadingsPage() {
                   No meter readings yet
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  Start tracking your electricity usage by adding your first meter reading.
+                  Start tracking your electricity usage by adding your first
+                  meter reading.
                 </p>
                 {!showAddForm && (
-                  <Button variant="outline" onClick={() => setShowAddForm(true)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddForm(true)}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Reading
                   </Button>
@@ -545,17 +608,21 @@ export default function MeterReadingsPage() {
                     <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                       {meterReadings.map((reading, index) => {
                         const previousReading = meterReadings[index + 1];
-                        const consumption = previousReading 
-                          ? reading.reading - previousReading.reading 
+                        const consumption = previousReading
+                          ? reading.reading - previousReading.reading
                           : null;
-                        
+
                         return (
                           <tr key={reading.id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <Calendar className="h-4 w-4 text-slate-400 mr-2" />
                                 <span className="text-sm text-slate-900 dark:text-slate-100">
-                                  {new Date(reading.readingDate).toISOString().split('T')[0]}
+                                  {
+                                    new Date(reading.readingDate)
+                                      .toISOString()
+                                      .split('T')[0]
+                                  }
                                 </span>
                               </div>
                             </td>
@@ -575,10 +642,15 @@ export default function MeterReadingsPage() {
                                   ) : (
                                     <AlertTriangle className="h-4 w-4 text-red-600 mr-2" />
                                   )}
-                                  <span className={`text-sm font-medium ${
-                                    consumption >= 0 ? 'text-green-600' : 'text-red-600'
-                                  }`}>
-                                    {consumption >= 0 ? '+' : ''}{consumption.toFixed(2)} kWh
+                                  <span
+                                    className={`text-sm font-medium ${
+                                      consumption >= 0
+                                        ? 'text-green-600'
+                                        : 'text-red-600'
+                                    }`}
+                                  >
+                                    {consumption >= 0 ? '+' : ''}
+                                    {consumption.toFixed(2)} kWh
                                   </span>
                                 </div>
                               ) : (
@@ -598,33 +670,56 @@ export default function MeterReadingsPage() {
                                   {reading.user?.name || 'Unknown'}
                                 </div>
                                 <div className="text-slate-500 dark:text-slate-400 text-xs">
-                                  Created: {new Date(reading.createdAt).toLocaleDateString()} {new Date(reading.createdAt).toLocaleTimeString()}
+                                  Created:{' '}
+                                  {new Date(
+                                    reading.createdAt
+                                  ).toLocaleDateString()}{' '}
+                                  {new Date(
+                                    reading.createdAt
+                                  ).toLocaleTimeString()}
                                   {reading.latestUpdateAudit ? (
                                     <div className="text-amber-600 dark:text-amber-400">
-                                      Updated: {new Date(reading.latestUpdateAudit.timestamp).toLocaleDateString()} {new Date(reading.latestUpdateAudit.timestamp).toLocaleTimeString()}
+                                      Updated:{' '}
+                                      {new Date(
+                                        reading.latestUpdateAudit.timestamp
+                                      ).toLocaleDateString()}{' '}
+                                      {new Date(
+                                        reading.latestUpdateAudit.timestamp
+                                      ).toLocaleTimeString()}
                                       <br />
                                       by {reading.latestUpdateAudit.user.name}
                                     </div>
-                                  ) : reading.updatedAt && reading.updatedAt !== reading.createdAt ? (
+                                  ) : reading.updatedAt &&
+                                    reading.updatedAt !== reading.createdAt ? (
                                     <div className="text-amber-600 dark:text-amber-400">
-                                      Updated: {new Date(reading.updatedAt).toLocaleDateString()} {new Date(reading.updatedAt).toLocaleTimeString()}
+                                      Updated:{' '}
+                                      {new Date(
+                                        reading.updatedAt
+                                      ).toLocaleDateString()}{' '}
+                                      {new Date(
+                                        reading.updatedAt
+                                      ).toLocaleTimeString()}
                                       <br />
                                       (Legacy update - no audit info)
                                     </div>
                                   ) : null}
-                                  {session?.user?.role === 'ADMIN' && (reading.latestUpdateAudit || (reading.updatedAt && reading.updatedAt !== reading.createdAt)) && (
-                                    <div className="mt-1">
-                                      <a
-                                        href={`/dashboard/admin/audit-logs?entityType=MeterReading&entityId=${reading.id}`}
-                                        className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
-                                        <ExternalLink className="h-3 w-3 mr-1" />
-                                        View Audit Log
-                                      </a>
-                                    </div>
-                                  )}
+                                  {session?.user?.role === 'ADMIN' &&
+                                    (reading.latestUpdateAudit ||
+                                      (reading.updatedAt &&
+                                        reading.updatedAt !==
+                                          reading.createdAt)) && (
+                                      <div className="mt-1">
+                                        <a
+                                          href={`/dashboard/admin/audit-logs?entityType=MeterReading&entityId=${reading.id}`}
+                                          className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          <ExternalLink className="h-3 w-3 mr-1" />
+                                          View Audit Log
+                                        </a>
+                                      </div>
+                                    )}
                                 </div>
                               </div>
                             </td>
@@ -661,10 +756,10 @@ export default function MeterReadingsPage() {
                   <div className="divide-y divide-slate-200 dark:divide-slate-700">
                     {meterReadings.map((reading, index) => {
                       const previousReading = meterReadings[index + 1];
-                      const consumption = previousReading 
-                        ? reading.reading - previousReading.reading 
+                      const consumption = previousReading
+                        ? reading.reading - previousReading.reading
                         : null;
-                      
+
                       return (
                         <div key={reading.id} className="p-4">
                           {/* Date and Reading */}
@@ -673,7 +768,11 @@ export default function MeterReadingsPage() {
                               <div className="flex items-center mb-1">
                                 <Calendar className="h-4 w-4 text-slate-400 mr-2" />
                                 <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  {new Date(reading.readingDate).toISOString().split('T')[0]}
+                                  {
+                                    new Date(reading.readingDate)
+                                      .toISOString()
+                                      .split('T')[0]
+                                  }
                                 </span>
                               </div>
                               <div className="flex items-center">
@@ -683,7 +782,7 @@ export default function MeterReadingsPage() {
                                 </span>
                               </div>
                             </div>
-                            
+
                             {/* Actions */}
                             <div className="flex gap-2">
                               <Button
@@ -717,10 +816,15 @@ export default function MeterReadingsPage() {
                               <span className="text-sm text-slate-600 dark:text-slate-400 mr-2">
                                 Consumption:
                               </span>
-                              <span className={`text-sm font-medium ${
-                                consumption >= 0 ? 'text-green-600' : 'text-red-600'
-                              }`}>
-                                {consumption >= 0 ? '+' : ''}{consumption.toFixed(2)} kWh
+                              <span
+                                className={`text-sm font-medium ${
+                                  consumption >= 0
+                                    ? 'text-green-600'
+                                    : 'text-red-600'
+                                }`}
+                              >
+                                {consumption >= 0 ? '+' : ''}
+                                {consumption.toFixed(2)} kWh
                               </span>
                             </div>
                           )}
@@ -737,41 +841,63 @@ export default function MeterReadingsPage() {
                           {/* Creator/Modifier Info */}
                           <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
                             <div>
-                              <span className="font-medium">Created by:</span> {reading.user?.name || 'Unknown'}
+                              <span className="font-medium">Created by:</span>{' '}
+                              {reading.user?.name || 'Unknown'}
                             </div>
                             <div>
-                              {new Date(reading.createdAt).toLocaleDateString()} {new Date(reading.createdAt).toLocaleTimeString()}
+                              {new Date(reading.createdAt).toLocaleDateString()}{' '}
+                              {new Date(reading.createdAt).toLocaleTimeString()}
                             </div>
-                            
+
                             {reading.latestUpdateAudit ? (
                               <div className="text-amber-600 dark:text-amber-400">
                                 <div>
-                                  <span className="font-medium">Updated by:</span> {reading.latestUpdateAudit.user.name}
+                                  <span className="font-medium">
+                                    Updated by:
+                                  </span>{' '}
+                                  {reading.latestUpdateAudit.user.name}
                                 </div>
                                 <div>
-                                  {new Date(reading.latestUpdateAudit.timestamp).toLocaleDateString()} {new Date(reading.latestUpdateAudit.timestamp).toLocaleTimeString()}
+                                  {new Date(
+                                    reading.latestUpdateAudit.timestamp
+                                  ).toLocaleDateString()}{' '}
+                                  {new Date(
+                                    reading.latestUpdateAudit.timestamp
+                                  ).toLocaleTimeString()}
                                 </div>
                               </div>
-                            ) : reading.updatedAt && reading.updatedAt !== reading.createdAt ? (
+                            ) : reading.updatedAt &&
+                              reading.updatedAt !== reading.createdAt ? (
                               <div className="text-amber-600 dark:text-amber-400">
-                                <div>Updated: {new Date(reading.updatedAt).toLocaleDateString()} {new Date(reading.updatedAt).toLocaleTimeString()}</div>
+                                <div>
+                                  Updated:{' '}
+                                  {new Date(
+                                    reading.updatedAt
+                                  ).toLocaleDateString()}{' '}
+                                  {new Date(
+                                    reading.updatedAt
+                                  ).toLocaleTimeString()}
+                                </div>
                                 <div>(Legacy update - no audit info)</div>
                               </div>
                             ) : null}
-                            
-                            {session?.user?.role === 'ADMIN' && (reading.latestUpdateAudit || (reading.updatedAt && reading.updatedAt !== reading.createdAt)) && (
-                              <div className="mt-2">
-                                <a
-                                  href={`/dashboard/admin/audit-logs?entityType=MeterReading&entityId=${reading.id}`}
-                                  className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  View Audit Log
-                                </a>
-                              </div>
-                            )}
+
+                            {session?.user?.role === 'ADMIN' &&
+                              (reading.latestUpdateAudit ||
+                                (reading.updatedAt &&
+                                  reading.updatedAt !== reading.createdAt)) && (
+                                <div className="mt-2">
+                                  <a
+                                    href={`/dashboard/admin/audit-logs?entityType=MeterReading&entityId=${reading.id}`}
+                                    className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                    View Audit Log
+                                  </a>
+                                </div>
+                              )}
                           </div>
                         </div>
                       );
@@ -786,7 +912,8 @@ export default function MeterReadingsPage() {
           {pagination.totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-slate-600 dark:text-slate-400">
-                Showing page {pagination.page} of {pagination.totalPages} ({pagination.total} total readings)
+                Showing page {pagination.page} of {pagination.totalPages} (
+                {pagination.total} total readings)
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -845,8 +972,12 @@ export default function MeterReadingsPage() {
                   Recording Guidelines
                 </h4>
                 <ul className="space-y-1 text-blue-700 dark:text-blue-300">
-                  <li>• Record readings at the same time each day for consistency</li>
-                  <li>• Ensure readings are in chronological order (newer ≥ older)</li>
+                  <li>
+                    • Record readings at the same time each day for consistency
+                  </li>
+                  <li>
+                    • Ensure readings are in chronological order (newer ≥ older)
+                  </li>
                   <li>• Double-check the numbers to avoid data entry errors</li>
                   <li>• Add notes for any unusual circumstances</li>
                 </ul>
