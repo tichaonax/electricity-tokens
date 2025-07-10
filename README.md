@@ -245,6 +245,47 @@ npm run test:coverage
    npm start
    ```
 
+### Windows Service Deployment
+
+For production Windows servers, you can run the application as a Windows service for automatic startup and crash recovery:
+
+#### Prerequisites
+
+- Windows 10/11 or Windows Server 2016+
+- Administrator privileges
+- Properly configured environment variables
+
+#### Quick Start
+
+```bash
+# Validate environment (run as Administrator)
+npm run service:validate
+
+# Install and start service (run as Administrator)
+npm run service:install
+
+# Check service status
+npm run service:status
+```
+
+#### Service Management
+
+```bash
+npm run service:start      # Start the service
+npm run service:stop       # Stop the service
+npm run service:status     # Check service status
+npm run service:uninstall  # Remove the service
+```
+
+#### Features
+
+- **Auto-start**: Starts automatically on system boot
+- **Crash Recovery**: Automatic restart on application failures
+- **Logging**: Integrated with Windows Event Log
+- **Production Ready**: Ensures production build before starting
+
+📖 **Detailed Documentation**: See `scripts/windows-service/README.md` for complete setup guide and troubleshooting.
+
 ## 📊 Application Status
 
 - **Status**: ✅ Production Ready with Enhanced Security & Data Integrity
