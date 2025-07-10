@@ -1,9 +1,13 @@
-const { execSync } = require('child_process');
+const Service = require('node-windows').Service;
 const config = require('./config');
 
 class ServiceStatus {
   constructor() {
     this.serviceName = config.name;
+    this.service = new Service({
+      name: config.name,
+      script: config.script,
+    });
   }
 
   async checkStatus() {
@@ -11,54 +15,37 @@ class ServiceStatus {
     console.log('='.repeat(50));
 
     try {
-      const result = execSync(`sc query "${this.serviceName}"`, {
-        encoding: 'utf8',
-      });
+      if (this.service.exists) {
+        console.log('✅ Service is installed');
 
-      if (result.includes('SERVICE_NAME')) {
-        console.log('✅ Service is registered');
+        // node-windows doesn't provide direct status check
+        // We'll check if the process is running by looking at the daemon
+        const daemonPath = require('path').join(config.appRoot, 'daemon');
+        const fs = require('fs');
 
-        if (result.includes('RUNNING')) {
-          console.log('✅ Service is RUNNING');
-          this.showServiceDetails(result);
+        if (fs.existsSync(daemonPath)) {
+          console.log('✅ Service daemon files exist');
           this.showApplicationAccess();
-        } else if (result.includes('STOPPED')) {
-          console.log('⚠️  Service is STOPPED');
-          this.showServiceDetails(result);
-          this.showStartInstructions();
         } else {
-          console.log('⚠️  Service is in transitional state');
-          this.showServiceDetails(result);
+          console.log('⚠️  Service may not be properly installed');
+          this.showInstallInstructions();
         }
-      }
-    } catch (err) {
-      if (
-        err.message.includes('does not exist') ||
-        err.message.includes('OpenService FAILED')
-      ) {
+      } else {
         console.log('❌ Service is NOT installed');
         this.showInstallInstructions();
-      } else {
-        console.error('❌ Error checking service status:', err.message);
       }
+    } catch (err) {
+      console.error('❌ Error checking service status:', err.message);
     }
   }
 
-  showServiceDetails(result) {
+  showServiceDetails() {
     console.log('\n📋 Service Details:');
     console.log('-'.repeat(20));
-
-    // Extract key information from sc query output
-    const lines = result.split('\n');
-    lines.forEach((line) => {
-      if (
-        line.includes('STATE') ||
-        line.includes('WIN32_EXIT_CODE') ||
-        line.includes('SERVICE_EXIT_CODE')
-      ) {
-        console.log(`  ${line.trim()}`);
-      }
-    });
+    console.log(`  Service Name: ${this.serviceName}`);
+    console.log(`  Script: ${config.script}`);
+    console.log(`  Working Directory: ${config.appRoot}`);
+    console.log(`  Installed: ${this.service.exists ? 'Yes' : 'No'}`);
   }
 
   showApplicationAccess() {
@@ -73,14 +60,11 @@ class ServiceStatus {
     console.log('\n🚀 To start the service:');
     console.log('-'.repeat(25));
     console.log('  npm run service:start');
-    console.log('  OR');
-    console.log(`  sc start "${this.serviceName}"`);
   }
 
   showInstallInstructions() {
     console.log('\n📦 To install the service:');
     console.log('-'.repeat(27));
-    console.log('  npm run service:validate  (check prerequisites)');
     console.log('  npm run service:install   (install and start)');
   }
 

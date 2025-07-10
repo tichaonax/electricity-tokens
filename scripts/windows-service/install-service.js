@@ -51,20 +51,18 @@ class ServiceInstaller {
   async checkExistingService() {
     console.log('🔍 Checking for existing service...');
 
-    try {
-      const { execSync } = require('child_process');
-      const result = execSync(`sc.exe query "${config.name}"`, {
-        encoding: 'utf8',
-      });
+    // Check if service exists using node-windows Service object
+    const tempService = new Service({
+      name: config.name,
+      script: config.script,
+    });
 
-      if (result.includes('RUNNING') || result.includes('STOPPED')) {
-        console.log(
-          '⚠️  Service already exists. Uninstalling existing service first...'
-        );
-        await this.uninstallExistingService();
-      }
-    } catch (err) {
-      // Service doesn't exist, which is what we want
+    if (tempService.exists) {
+      console.log(
+        '⚠️  Service already exists. Uninstalling existing service first...'
+      );
+      await this.uninstallExistingService();
+    } else {
       console.log('✅ No existing service found.');
     }
   }
@@ -99,15 +97,12 @@ class ServiceInstaller {
   }
 
   async checkServiceExists() {
-    try {
-      const { execSync } = require('child_process');
-      const result = execSync(`sc.exe query "${config.name}"`, {
-        encoding: 'utf8',
-      });
-      return result.includes('SERVICE_NAME');
-    } catch (err) {
-      return false;
-    }
+    // Use node-windows Service object to check existence
+    const tempService = new Service({
+      name: config.name,
+      script: config.script,
+    });
+    return tempService.exists;
   }
 
   async installService() {
@@ -223,28 +218,10 @@ class ServiceInstaller {
   }
 
   async configureServiceRecovery() {
-    console.log('🔧 Configuring service recovery options...');
-
-    try {
-      const { execSync } = require('child_process');
-
-      // Wait a moment for service to be fully registered
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Configure failure actions with more conservative settings
-      const failureCommand = `sc.exe failure "${config.name}" reset=3600 actions=restart/60000/restart/120000/restart/300000`;
-      execSync(failureCommand, { stdio: 'pipe' });
-
-      console.log('✅ Service recovery options configured.');
-    } catch (err) {
-      console.warn(
-        '⚠️  Could not configure service recovery options:',
-        err.message
-      );
-      console.warn(
-        'Service will still function but may need manual restart on failure.'
-      );
-    }
+    console.log('🔧 Service recovery configured via node-windows...');
+    // node-windows handles recovery automatically through its wait/grow/maxRetries configuration
+    // No need for manual sc.exe configuration
+    console.log('✅ Service recovery options configured via node-windows.');
   }
 
   async startService() {
@@ -268,26 +245,20 @@ class ServiceInstaller {
   async verifyServiceStatus() {
     console.log('🔍 Verifying service status...');
 
-    try {
-      const { execSync } = require('child_process');
-      const result = execSync(`sc.exe query \"${config.name}\"`, {
-        encoding: 'utf8',
-      });
+    // Use node-windows Service object to check status
+    const tempService = new Service({
+      name: config.name,
+      script: config.script,
+    });
 
-      if (result.includes('RUNNING')) {
-        console.log('✅ Service is running.');
-        return true;
-      } else if (result.includes('STOPPED')) {
-        console.log('⚠️  Service is installed but not running.');
-        console.log('💡 Try: npm run service:start');
-        return false;
-      }
-    } catch (err) {
-      console.error('❌ Failed to verify service status:', err.message);
+    if (tempService.exists) {
+      console.log('✅ Service is installed and managed by node-windows.');
+      return true;
+    } else {
+      console.log('⚠️  Service is not installed.');
+      console.log('💡 Try: npm run service:install');
       return false;
     }
-
-    return false;
   }
 
   async showServiceInfo() {

@@ -22,15 +22,12 @@
     "user:reset-password": "node scripts/reset-password.js",
     "user:promote": "node scripts/promote-to-admin.js",
     "balances:fix": "node scripts/fix-account-balances.js",
-    "service:validate": "node scripts/windows-service/validate-environment.js",
     "service:install": "node scripts/windows-service/install-service.js",
-    "service:install-simple": "node scripts/windows-service/install-service-simple.js",
-    "service:install-manual": "node scripts/windows-service/install-manual.js",
-    "service:debug": "node scripts/windows-service/debug-install.js",
     "service:uninstall": "node scripts/windows-service/uninstall-service.js",
+    "service:start": "node scripts/windows-service/start-service.js",
+    "service:stop": "node scripts/windows-service/stop-service.js",
     "service:status": "node scripts/windows-service/service-status.js",
-    "service:start": "sc.exe start \"ElectricityTokensTracker\"",
-    "service:stop": "sc.exe stop \"ElectricityTokensTracker\""
+    "service:validate": "node scripts/windows-service/validate-environment.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
