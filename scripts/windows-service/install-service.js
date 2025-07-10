@@ -53,7 +53,7 @@ class ServiceInstaller {
 
     try {
       const { execSync } = require('child_process');
-      const result = execSync(`sc query "${config.name}"`, {
+      const result = execSync(`sc.exe query "${config.name}"`, {
         encoding: 'utf8',
       });
 
@@ -101,7 +101,7 @@ class ServiceInstaller {
   async checkServiceExists() {
     try {
       const { execSync } = require('child_process');
-      const result = execSync(`sc query "${config.name}"`, {
+      const result = execSync(`sc.exe query "${config.name}"`, {
         encoding: 'utf8',
       });
       return result.includes('SERVICE_NAME');
@@ -226,7 +226,7 @@ class ServiceInstaller {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Configure failure actions with more conservative settings
-      const failureCommand = `sc failure "${config.name}" reset=3600 actions=restart/60000/restart/120000/restart/300000`;
+      const failureCommand = `sc.exe failure "${config.name}" reset=3600 actions=restart/60000/restart/120000/restart/300000`;
       execSync(failureCommand, { stdio: 'pipe' });
 
       console.log('✅ Service recovery options configured.');
@@ -264,7 +264,7 @@ class ServiceInstaller {
 
     try {
       const { execSync } = require('child_process');
-      const result = execSync(`sc query \"${config.name}\"`, {
+      const result = execSync(`sc.exe query \"${config.name}\"`, {
         encoding: 'utf8',
       });
 

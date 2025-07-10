@@ -149,6 +149,9 @@ class ElectricityTokensService {
             'ERROR'
           );
           process.exit(1); // Exit with error code to trigger service restart
+        } else {
+          // Graceful shutdown
+          process.exit(0);
         }
       });
 
@@ -158,10 +161,33 @@ class ElectricityTokensService {
       });
 
       this.log('Application started successfully.');
+
+      // Keep the service process alive
+      this.keepAlive();
     } catch (err) {
       this.log(`Failed to start service: ${err.message}`, 'ERROR');
       process.exit(1);
     }
+  }
+
+  keepAlive() {
+    // Keep the service process alive by preventing it from exiting
+    // This maintains the service in a running state
+    setInterval(() => {
+      // Periodically check if the application is still running
+      if (this.appProcess && !this.appProcess.killed) {
+        // Application is running, service stays alive
+      } else if (!this.isShuttingDown) {
+        this.log(
+          'Application process not found, service will restart application',
+          'WARN'
+        );
+        // The application will be restarted by the service exit handler
+        process.exit(1);
+      }
+    }, 30000); // Check every 30 seconds
+
+    this.log('Service keep-alive mechanism started');
   }
 
   async gracefulShutdown(signal) {
