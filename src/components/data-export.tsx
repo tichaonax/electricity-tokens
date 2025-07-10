@@ -260,7 +260,7 @@ export function DataExport({ userRole }: DataExportProps) {
 
       {/* Date Range Filter */}
       <div>
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-2">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Date Range (Optional)
           </label>

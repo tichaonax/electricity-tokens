@@ -381,13 +381,20 @@ export function PurchaseForm({
   // Additional validation for meter reading vs tokens purchased
   useEffect(() => {
     if (watchedValues.meterReading && watchedValues.totalTokens && contextInfo.previousPurchase) {
-      const expectedMaximum = contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens;
+      // For latest purchase (no nextPurchase), include current purchase tokens in maximum
+      const expectedMaximum = contextInfo.nextPurchase 
+        ? contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens
+        : contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens + watchedValues.totalTokens;
       
       if (watchedValues.meterReading > expectedMaximum) {
+        const errorMessage = contextInfo.nextPurchase
+          ? `Meter reading (${watchedValues.meterReading.toLocaleString()}) cannot exceed maximum of ${expectedMaximum.toLocaleString()} kWh. Please increase tokens purchased to at least ${(watchedValues.meterReading - contextInfo.previousPurchase.meterReading).toLocaleString()} kWh or reduce the meter reading.`
+          : `Meter reading (${watchedValues.meterReading.toLocaleString()}) cannot exceed maximum of ${expectedMaximum.toLocaleString()} kWh (prev reading: ${contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: ${contextInfo.previousPurchase.totalTokens.toLocaleString()} + current tokens: ${watchedValues.totalTokens.toLocaleString()}).`;
+        
         setMeterReadingValidation(prev => ({
           ...prev,
           isValid: false,
-          error: `Meter reading (${watchedValues.meterReading.toLocaleString()}) cannot exceed maximum of ${expectedMaximum.toLocaleString()} kWh. Please increase tokens purchased to at least ${(watchedValues.meterReading - contextInfo.previousPurchase.meterReading).toLocaleString()} kWh or reduce the meter reading.`,
+          error: errorMessage,
           expectedMaximum,
         }));
       } else {
@@ -403,6 +410,7 @@ export function PurchaseForm({
     watchedValues.meterReading,
     watchedValues.totalTokens,
     contextInfo.previousPurchase,
+    contextInfo.nextPurchase,
   ]);
 
   // Watch for changes in purchase date for sequential validation
@@ -422,6 +430,15 @@ export function PurchaseForm({
       fetchContextInfo();
     }
   }, [mode, fetchContextInfo]);
+
+  // Set initial values when initialData is available
+  useEffect(() => {
+    if (initialData && mode === 'edit') {
+      if (initialData.purchaseDate) {
+        setValue('purchaseDate', new Date(initialData.purchaseDate + 'T00:00:00'));
+      }
+    }
+  }, [initialData, mode, setValue]);
 
   // Fetch last meter reading on mount for create mode
   useEffect(() => {
@@ -767,10 +784,23 @@ export function PurchaseForm({
                           <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
                             <div className="font-medium">Maximum Allowed Reading:</div>
                             <div>
-                              {(contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens).toLocaleString()} kWh 
-                              <span className="text-xs ml-1">
-                                (prev reading: {contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: {contextInfo.previousPurchase.totalTokens.toLocaleString()})
-                              </span>
+                              {contextInfo.nextPurchase ? (
+                                // Not the latest purchase - use previous reading + previous tokens
+                                <>
+                                  {(contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens).toLocaleString()} kWh 
+                                  <span className="text-xs ml-1">
+                                    (prev reading: {contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: {contextInfo.previousPurchase.totalTokens.toLocaleString()})
+                                  </span>
+                                </>
+                              ) : (
+                                // Latest purchase - include current purchase tokens
+                                <>
+                                  {(contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens + watchedValues.totalTokens).toLocaleString()} kWh 
+                                  <span className="text-xs ml-1">
+                                    (prev reading: {contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: {contextInfo.previousPurchase.totalTokens.toLocaleString()} + token purchase: {watchedValues.totalTokens.toLocaleString()})
+                                  </span>
+                                </>
+                              )}
                             </div>
                             <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                               📏 Meter reading cannot exceed this value
@@ -803,7 +833,10 @@ export function PurchaseForm({
                 max={
                   contextInfo.nextPurchase?.meterReading || 
                   (watchedValues.totalTokens && contextInfo.previousPurchase ? 
-                    contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens : 
+                    (contextInfo.nextPurchase 
+                      ? contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens
+                      : contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens + watchedValues.totalTokens
+                    ) : 
                     1000000)
                 }
                 placeholder={

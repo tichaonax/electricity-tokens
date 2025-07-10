@@ -391,7 +391,8 @@ export function ContributionForm({
         0,
         watchedValues.meterReading - previousMeterReading
       );
-      setValue('tokensConsumed', tokensConsumed);
+      // Round to 2 decimal places to avoid floating point precision issues
+      setValue('tokensConsumed', Math.round(tokensConsumed * 100) / 100);
     }
   }, [watchedValues.meterReading, previousMeterReading, setValue]);
 
@@ -995,7 +996,7 @@ export function ContributionForm({
                   step="0.01"
                   min="0"
                   max="100000"
-                  value={watchedValues.tokensConsumed || 0}
+                  value={watchedValues.tokensConsumed ? watchedValues.tokensConsumed.toFixed(2) : '0.00'}
                   readOnly
                   disabled={userHasContributed}
                   className="bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-not-allowed"
@@ -1015,7 +1016,7 @@ export function ContributionForm({
                 {Math.max(
                   0,
                   (watchedValues.meterReading || 0) - previousMeterReading
-                )}{' '}
+                ).toFixed(2)}{' '}
                 kWh
               </FormDescription>
               {errors.tokensConsumed && (

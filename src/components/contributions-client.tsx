@@ -161,6 +161,41 @@ export function ContributionsClient() {
     return latest.id === contribution.id;
   };
 
+  const handleDeleteContribution = async (contribution: Contribution) => {
+    console.log('Delete button clicked for contribution:', contribution.id);
+    
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this contribution?\n\nThis action cannot be undone and will permanently remove:\n- Contribution amount: $${contribution.contributionAmount.toFixed(2)}\n- Tokens consumed: ${contribution.tokensConsumed.toFixed(2)} kWh\n- By: ${contribution.user.name}`
+    );
+
+    console.log('Confirmation result:', confirmDelete);
+
+    if (!confirmDelete) {
+      console.log('User cancelled deletion');
+      return;
+    }
+
+    try {
+      console.log('Starting deletion process...');
+      setDeletingId(contribution.id);
+      
+      const formData = new FormData();
+      formData.append('contributionId', contribution.id);
+      
+      console.log('Calling deleteContribution server action...');
+      await deleteContribution(formData);
+      
+      console.log('Deletion successful, refreshing page...');
+      // Refresh the page on successful deletion
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting contribution:', error);
+      alert(`Failed to delete contribution: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
 
   if (status === 'loading') {
     return (
@@ -453,29 +488,31 @@ export function ContributionsClient() {
                                   </form>
                                 )}
                                 {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
-                                  <form action={deleteContribution} className="inline">
-                                    <input type="hidden" name="contributionId" value={contribution.id} />
-                                    <button
-                                      type="submit"
-                                      disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
-                                      className={`p-2 rounded-lg transition-colors min-w-[44px] min-h-[44px] ${
-                                        !isLatestContribution(contribution)
-                                          ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
-                                          : deletingId === contribution.id
-                                          ? 'text-slate-400 cursor-wait'
-                                          : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
-                                      }`}
-                                      title={
-                                        !isLatestContribution(contribution)
-                                          ? 'Only the latest contribution in the system can be deleted'
-                                          : deletingId === contribution.id
-                                          ? 'Deleting...'
-                                          : 'Delete contribution'
-                                      }
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </button>
-                                  </form>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleDeleteContribution(contribution);
+                                    }}
+                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                    className={`p-2 rounded-lg transition-colors min-w-[44px] min-h-[44px] ${
+                                      !isLatestContribution(contribution)
+                                        ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
+                                        : deletingId === contribution.id
+                                        ? 'text-slate-400 cursor-wait'
+                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                    }`}
+                                    title={
+                                      !isLatestContribution(contribution)
+                                        ? 'Only the latest contribution in the system can be deleted'
+                                        : deletingId === contribution.id
+                                        ? 'Deleting...'
+                                        : 'Delete contribution'
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
                                 )}
                               </div>
                             )}
@@ -657,29 +694,31 @@ export function ContributionsClient() {
                                   </form>
                                 )}
                                 {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
-                                  <form action={deleteContribution} className="inline">
-                                    <input type="hidden" name="contributionId" value={contribution.id} />
-                                    <button
-                                      type="submit"
-                                      disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
-                                      className={`p-2 rounded-lg transition-colors ${
-                                        !isLatestContribution(contribution)
-                                          ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
-                                          : deletingId === contribution.id
-                                          ? 'text-slate-400 cursor-wait'
-                                          : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
-                                      }`}
-                                      title={
-                                        !isLatestContribution(contribution)
-                                          ? 'Only the latest contribution in the system can be deleted'
-                                          : deletingId === contribution.id
-                                          ? 'Deleting...'
-                                          : 'Delete contribution'
-                                      }
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </button>
-                                  </form>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleDeleteContribution(contribution);
+                                    }}
+                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                    className={`p-2 rounded-lg transition-colors ${
+                                      !isLatestContribution(contribution)
+                                        ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
+                                        : deletingId === contribution.id
+                                        ? 'text-slate-400 cursor-wait'
+                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                    }`}
+                                    title={
+                                      !isLatestContribution(contribution)
+                                        ? 'Only the latest contribution in the system can be deleted'
+                                        : deletingId === contribution.id
+                                        ? 'Deleting...'
+                                        : 'Delete contribution'
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
                                 )}
                               </div>
                             )}

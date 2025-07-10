@@ -56,7 +56,7 @@ export function NewContributionClient() {
         throw new Error(errorData.message || 'Failed to create contribution');
       }
 
-      const result = await response.json();
+      await response.json();
       // console.log removed
 
       // Redirect to contributions list after successful creation
@@ -79,16 +79,18 @@ export function NewContributionClient() {
             <div className="flex items-center">
               <NavigationFormButton
                 action={navigateToDashboard}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent"
+                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent"
               >
-                ← Back to Dashboard
+                <span className="hidden sm:inline">← Back to Dashboard</span>
+                <span className="sm:hidden">← Dashboard</span>
               </NavigationFormButton>
-              <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+              <div className="w-8"></div>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                 New Contribution
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex flex-col items-end">
+              <div className="hidden sm:flex flex-col items-end">
                 <span className="text-slate-700 dark:text-slate-300">
                   {session.user?.name}
                 </span>

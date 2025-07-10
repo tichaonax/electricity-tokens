@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Save, AlertTriangle, DollarSign, Zap, Calendar } from 'lucide-react';
+import { ArrowLeft, Save, AlertTriangle, DollarSign, Zap, Calendar, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -61,8 +61,10 @@ function EditContributionContent() {
   const [contribution, setContribution] = useState<ContributionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [canDelete, setCanDelete] = useState(false);
 
   const {
     register,
@@ -104,11 +106,64 @@ function EditContributionContent() {
       // Set form values
       setValue('contributionAmount', data.contributionAmount);
       // tokensConsumed is calculated and readonly
+
+      // Check if this contribution can be deleted (only if it's attached to the most recent purchase)
+      if (session?.user?.role === 'ADMIN') {
+        checkIfCanDelete(data.purchase.id);
+      }
     } catch {
       // console.error removed
       setError('Failed to load contribution data.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkIfCanDelete = async (purchaseId: string) => {
+    try {
+      // Check if this is the latest contribution in the system
+      const response = await fetch(`/api/contributions`);
+      if (response.ok) {
+        const contributions = await response.json();
+        const latestContribution = contributions.contributions?.[0]; // First item should be latest
+        
+        // Only allow deletion if this is the latest contribution
+        const isLatestContribution = latestContribution?.id === contributionId;
+        setCanDelete(isLatestContribution);
+      }
+    } catch {
+      setCanDelete(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!contribution || !isAdmin) return;
+    
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this contribution?\n\nThis action cannot be undone and will permanently remove:\n- Contribution amount: $${contribution.contributionAmount.toFixed(2)}\n- Tokens consumed: ${contribution.tokensConsumed.toFixed(2)} kWh\n- By: ${contribution.user.name}`
+    );
+    
+    if (!confirmDelete) return;
+    
+    try {
+      setDeleting(true);
+      setError(null);
+      
+      const response = await fetch(`/api/contributions/${contributionId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete contribution');
+      }
+      
+      // Success - redirect back to source page
+      router.push(getBackPath());
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete contribution');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -294,7 +349,7 @@ function EditContributionContent() {
               </button>
               <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 {fromPage === 'purchases' 
-                  ? 'Purchase History'
+                  ? 'Edit Contribution'
                   : (canEdit ? 'Edit Contribution' : 'View Contribution')
                 }
               </h1>
@@ -466,6 +521,27 @@ function EditContributionContent() {
                         >
                           Cancel
                         </Button>
+                        {isAdmin && canDelete && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+                          >
+                            {deleting ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </>
+                            )}
+                          </Button>
+                        )}
                         <Button
                           type="submit"
                           disabled={submitting}

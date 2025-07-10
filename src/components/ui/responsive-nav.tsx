@@ -14,6 +14,7 @@ interface ResponsiveNavProps {
   backPath?: string;
   showBackButton?: boolean;
   backText?: string;
+  mobileBackText?: string;
   children?: React.ReactNode;
 }
 
@@ -22,6 +23,7 @@ export function ResponsiveNav({
   backPath,
   showBackButton = false,
   backText,
+  mobileBackText,
   children,
 }: ResponsiveNavProps) {
   const { data: session } = useSession();
@@ -60,13 +62,14 @@ export function ResponsiveNav({
             {/* Mobile navigation */}
             <MobileNav isAdmin={isAdmin} />
 
-            {/* Back button (desktop only) */}
+            {/* Back button */}
             {showBackButton && backPath && (
               <NavigationFormButton
                 action={backPath === '/dashboard' ? navigateToDashboard : navigateToAdmin}
-                className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border border-gray-300 dark:border-gray-600"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border border-gray-300 dark:border-gray-600"
               >
-                ← {backText || 'Back'}
+                <span className="hidden sm:inline">← {backText || 'Back'}</span>
+                <span className="sm:hidden">← {mobileBackText || backText || 'Back'}</span>
               </NavigationFormButton>
             )}
 
