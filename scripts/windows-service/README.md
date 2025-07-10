@@ -64,6 +64,9 @@ npm install
 ```bash
 # Open PowerShell or Command Prompt as Administrator
 npm run service:install
+
+# If the above fails, try the simple installer:
+npm run service:install-simple
 ```
 
 The installation process will:
@@ -195,6 +198,25 @@ The service will automatically rebuild the application if needed.
 ## 🚨 Troubleshooting
 
 ### Common Issues
+
+#### Service Installation Hangs
+
+1. **Try the simple installer**:
+
+   ```bash
+   npm run service:install-simple
+   ```
+
+2. **Check if node-windows is properly installed**:
+
+   ```bash
+   npm install node-windows --save
+   ```
+
+3. **Manual service creation**:
+   ```bash
+   sc create "ElectricityTokensTracker" binPath= "\"C:\path\to\node.exe\" \"C:\path\to\service-wrapper.js\"" start= auto
+   ```
 
 #### Service Won't Start
 

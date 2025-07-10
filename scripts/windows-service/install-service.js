@@ -98,10 +98,25 @@ class ServiceInstaller {
     }
   }
 
+  async checkServiceExists() {
+    try {
+      const { execSync } = require('child_process');
+      const result = execSync(`sc query "${config.name}"`, {
+        encoding: 'utf8',
+      });
+      return result.includes('SERVICE_NAME');
+    } catch (err) {
+      return false;
+    }
+  }
+
   async installService() {
     console.log('📦 Installing service...');
 
     return new Promise((resolve, reject) => {
+      let installTimeout;
+      let installCompleted = false;
+
       // Create service instance
       this.service = new Service({
         name: config.name,
@@ -113,28 +128,91 @@ class ServiceInstaller {
         allowServiceLogon: true,
       });
 
+      // Set up timeout (30 seconds)
+      installTimeout = setTimeout(() => {
+        if (!installCompleted) {
+          console.log(
+            '⚠️  Installation timeout. Checking if service was created...'
+          );
+          this.checkServiceExists()
+            .then((exists) => {
+              if (exists) {
+                console.log(
+                  '✅ Service appears to be installed (detected via timeout check)'
+                );
+                installCompleted = true;
+                resolve();
+              } else {
+                reject(
+                  new Error(
+                    'Service installation timed out and service was not created'
+                  )
+                );
+              }
+            })
+            .catch((err) => {
+              reject(
+                new Error(
+                  `Installation timeout and verification failed: ${err.message}`
+                )
+              );
+            });
+        }
+      }, 30000);
+
       // Set up event handlers
       this.service.on('install', () => {
-        console.log('✅ Service installed successfully!');
-        console.log(`   Service Name: ${config.name}`);
-        console.log(`   Description: ${config.description}`);
-        console.log(`   Script: ${config.script}`);
-        console.log(`   Working Directory: ${config.appRoot}`);
-        resolve();
+        if (!installCompleted) {
+          console.log('✅ Service installed successfully!');
+          console.log(`   Service Name: ${config.name}`);
+          console.log(`   Description: ${config.description}`);
+          console.log(`   Script: ${config.script}`);
+          console.log(`   Working Directory: ${config.appRoot}`);
+          installCompleted = true;
+          clearTimeout(installTimeout);
+          resolve();
+        }
       });
 
       this.service.on('error', (err) => {
-        console.error('❌ Service installation failed:', err);
-        reject(err);
+        if (!installCompleted) {
+          console.error('❌ Service installation failed:', err);
+          installCompleted = true;
+          clearTimeout(installTimeout);
+          reject(err);
+        }
       });
 
       this.service.on('invalidinstallation', (err) => {
-        console.error('❌ Invalid installation:', err);
-        reject(err);
+        if (!installCompleted) {
+          console.error('❌ Invalid installation:', err);
+          installCompleted = true;
+          clearTimeout(installTimeout);
+          reject(err);
+        }
+      });
+
+      this.service.on('alreadyinstalled', () => {
+        if (!installCompleted) {
+          console.log('✅ Service already installed.');
+          installCompleted = true;
+          clearTimeout(installTimeout);
+          resolve();
+        }
       });
 
       // Install the service
-      this.service.install();
+      try {
+        console.log('🔄 Starting service installation...');
+        this.service.install();
+      } catch (err) {
+        if (!installCompleted) {
+          console.error('❌ Failed to start installation:', err);
+          installCompleted = true;
+          clearTimeout(installTimeout);
+          reject(err);
+        }
+      }
     });
   }
 
