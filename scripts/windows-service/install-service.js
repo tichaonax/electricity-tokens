@@ -51,58 +51,19 @@ class ServiceInstaller {
   async checkExistingService() {
     console.log('🔍 Checking for existing service...');
 
-    // Check if service exists using Windows Service Control Manager
-    try {
-      const { execSync } = require('child_process');
-      const result = execSync(`sc query "${config.name}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+    // Check if service exists using node-windows Service object only
+    const tempService = new Service({
+      name: config.name,
+      script: config.script,
+    });
 
-      if (result.includes('SERVICE_NAME')) {
-        console.log(
-          '⚠️  Service already exists in Windows SCM. Uninstalling existing service first...'
-        );
-
-        // Stop service if running
-        try {
-          execSync(`sc stop "${config.name}"`, { stdio: 'pipe' });
-          console.log('🛑 Stopped existing service.');
-          // Wait for service to stop
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-        } catch (err) {
-          console.log('ℹ️  Service was not running.');
-        }
-
-        // Delete service
-        try {
-          execSync(`sc delete "${config.name}"`, { stdio: 'pipe' });
-          console.log('🗑️  Deleted existing service from Windows SCM.');
-          // Wait for deletion to complete
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        } catch (err) {
-          console.warn('⚠️  Could not delete existing service:', err.message);
-        }
-
-        // Also try node-windows uninstall
-        await this.uninstallExistingService();
-      } else {
-        console.log('✅ No existing service found in Windows SCM.');
-      }
-    } catch (err) {
-      // Service doesn't exist in SCM, check node-windows
-      console.log('✅ No existing service found in Windows SCM.');
-
-      // Also check node-windows service object
-      const tempService = new Service({
-        name: config.name,
-        script: config.script,
-      });
-
-      if (tempService.exists) {
-        console.log('⚠️  Found node-windows service files. Cleaning up...');
-        await this.uninstallExistingService();
-      }
+    if (tempService.exists) {
+      console.log(
+        '⚠️  Service already exists. Uninstalling existing service first...'
+      );
+      await this.uninstallExistingService();
+    } else {
+      console.log('✅ No existing service found.');
     }
   }
 
@@ -284,34 +245,36 @@ class ServiceInstaller {
   async verifyServiceStatus() {
     console.log('🔍 Verifying service status...');
 
-    // Check Windows Service Control Manager first
-    try {
-      const { execSync } = require('child_process');
-      const result = execSync(`sc query "${config.name}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+    // Use node-windows Service object to check installation
+    const tempService = new Service({
+      name: config.name,
+      script: config.script,
+    });
 
-      if (result.includes('SERVICE_NAME')) {
-        if (result.includes('RUNNING')) {
-          console.log('✅ Service is installed and running in Windows SCM.');
-          return true;
-        } else if (result.includes('STOPPED')) {
-          console.log('✅ Service is installed but stopped in Windows SCM.');
-          console.log('💡 Try: npm run service:start');
-          return true;
-        } else {
-          console.log('✅ Service is installed in Windows SCM.');
-          return true;
-        }
+    if (tempService.exists) {
+      console.log('✅ Service is installed and managed by node-windows.');
+
+      // Check if daemon directory exists (indicates successful installation)
+      const fs = require('fs');
+      const daemonPath = require('path').join(
+        require('path').dirname(config.script),
+        'daemon'
+      );
+
+      if (fs.existsSync(daemonPath)) {
+        console.log('✅ Service daemon files are present.');
+      } else {
+        console.log(
+          'ℹ️  Service is registered but daemon files may still be creating.'
+        );
       }
-    } catch (err) {
-      console.log('❌ Service not found in Windows Service Control Manager.');
+
+      return true;
+    } else {
+      console.log('⚠️  Service is not installed.');
       console.log('💡 Try: npm run service:install');
       return false;
     }
-
-    return false;
   }
 
   async showServiceInfo() {

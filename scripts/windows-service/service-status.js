@@ -15,45 +15,34 @@ class ServiceStatus {
     console.log('='.repeat(50));
 
     try {
-      // Check Windows Service Control Manager first
-      const { execSync } = require('child_process');
-
-      try {
-        const result = execSync(`sc query "${this.serviceName}"`, {
-          encoding: 'utf8',
-          stdio: 'pipe',
-        });
-
-        if (result.includes('SERVICE_NAME')) {
-          console.log('✅ Service is installed in Windows SCM');
-
-          if (result.includes('RUNNING')) {
-            console.log('✅ Service is currently running');
-            this.showApplicationAccess();
-          } else if (result.includes('STOPPED')) {
-            console.log('⚠️  Service is stopped');
-            this.showStartInstructions();
-          } else {
-            console.log('⚠️  Service status unknown');
-            console.log('Raw status:', result);
-          }
-
-          this.showServiceDetails();
-          return;
-        }
-      } catch (scError) {
-        console.log('❌ Service not found in Windows Service Control Manager');
-      }
-
-      // Fallback: check node-windows service object
+      // Check node-windows service object
       if (this.service.exists) {
-        console.log(
-          '⚠️  node-windows reports service exists, but not in Windows SCM'
-        );
-        console.log(
-          'This usually means the service installation is incomplete.'
-        );
-        this.showInstallInstructions();
+        console.log('✅ Service is installed via node-windows');
+
+        // Check if daemon directory exists (indicates successful installation)
+        const fs = require('fs');
+        const serviceScriptDir = require('path').dirname(config.script);
+        const daemonPath = require('path').join(serviceScriptDir, 'daemon');
+
+        if (fs.existsSync(daemonPath)) {
+          console.log('✅ Service daemon files are present');
+          this.showApplicationAccess();
+        } else {
+          // Try alternative daemon location (app root)
+          const altDaemonPath = require('path').join(config.appRoot, 'daemon');
+          if (fs.existsSync(altDaemonPath)) {
+            console.log('✅ Service daemon files are present (in app root)');
+            this.showApplicationAccess();
+          } else {
+            console.log('⚠️  Service is registered but daemon files not found');
+            console.log(
+              'This may indicate the service is still installing or has an issue.'
+            );
+            this.showInstallInstructions();
+          }
+        }
+
+        this.showServiceDetails();
       } else {
         console.log('❌ Service is NOT installed');
         this.showInstallInstructions();
