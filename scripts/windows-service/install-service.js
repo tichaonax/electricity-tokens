@@ -117,7 +117,7 @@ class ServiceInstaller {
       let installTimeout;
       let installCompleted = false;
 
-      // Create service instance
+      // Create service instance with node-windows restart configuration
       this.service = new Service({
         name: config.name,
         description: config.description,
@@ -126,6 +126,12 @@ class ServiceInstaller {
         env: config.env,
         workingDirectory: config.appRoot,
         allowServiceLogon: true,
+        // node-windows restart configuration
+        wait: 2, // Wait 2 seconds before first restart
+        grow: 0.25, // Increase wait time by 25% each restart
+        maxRetries: 5, // Maximum number of restart attempts
+        maxRestarts: 3, // Maximum restarts within 60 seconds
+        abortOnError: false, // Continue trying to restart on errors
       });
 
       // Set up timeout (30 seconds)
