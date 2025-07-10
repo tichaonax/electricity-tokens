@@ -15,21 +15,45 @@ class ServiceStatus {
     console.log('='.repeat(50));
 
     try {
-      if (this.service.exists) {
-        console.log('✅ Service is installed');
+      // Check Windows Service Control Manager first
+      const { execSync } = require('child_process');
 
-        // node-windows doesn't provide direct status check
-        // We'll check if the process is running by looking at the daemon
-        const daemonPath = require('path').join(config.appRoot, 'daemon');
-        const fs = require('fs');
+      try {
+        const result = execSync(`sc query "${this.serviceName}"`, {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        });
 
-        if (fs.existsSync(daemonPath)) {
-          console.log('✅ Service daemon files exist');
-          this.showApplicationAccess();
-        } else {
-          console.log('⚠️  Service may not be properly installed');
-          this.showInstallInstructions();
+        if (result.includes('SERVICE_NAME')) {
+          console.log('✅ Service is installed in Windows SCM');
+
+          if (result.includes('RUNNING')) {
+            console.log('✅ Service is currently running');
+            this.showApplicationAccess();
+          } else if (result.includes('STOPPED')) {
+            console.log('⚠️  Service is stopped');
+            this.showStartInstructions();
+          } else {
+            console.log('⚠️  Service status unknown');
+            console.log('Raw status:', result);
+          }
+
+          this.showServiceDetails();
+          return;
         }
+      } catch (scError) {
+        console.log('❌ Service not found in Windows Service Control Manager');
+      }
+
+      // Fallback: check node-windows service object
+      if (this.service.exists) {
+        console.log(
+          '⚠️  node-windows reports service exists, but not in Windows SCM'
+        );
+        console.log(
+          'This usually means the service installation is incomplete.'
+        );
+        this.showInstallInstructions();
       } else {
         console.log('❌ Service is NOT installed');
         this.showInstallInstructions();
