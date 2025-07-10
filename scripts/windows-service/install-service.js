@@ -144,15 +144,21 @@ class ServiceInstaller {
     try {
       const { execSync } = require('child_process');
 
-      // Configure failure actions
-      const failureCommand = `sc failure "${config.name}" reset=3600 actions=restart/60000/restart/60000/restart/300000`;
-      execSync(failureCommand);
+      // Wait a moment for service to be fully registered
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Configure failure actions with more conservative settings
+      const failureCommand = `sc failure "${config.name}" reset=3600 actions=restart/60000/restart/120000/restart/300000`;
+      execSync(failureCommand, { stdio: 'pipe' });
 
       console.log('✅ Service recovery options configured.');
     } catch (err) {
       console.warn(
         '⚠️  Could not configure service recovery options:',
         err.message
+      );
+      console.warn(
+        'Service will still function but may need manual restart on failure.'
       );
     }
   }
@@ -173,6 +179,31 @@ class ServiceInstaller {
 
       this.service.start();
     });
+  }
+
+  async verifyServiceStatus() {
+    console.log('🔍 Verifying service status...');
+
+    try {
+      const { execSync } = require('child_process');
+      const result = execSync(`sc query \"${config.name}\"`, {
+        encoding: 'utf8',
+      });
+
+      if (result.includes('RUNNING')) {
+        console.log('✅ Service is running.');
+        return true;
+      } else if (result.includes('STOPPED')) {
+        console.log('⚠️  Service is installed but not running.');
+        console.log('💡 Try: npm run service:start');
+        return false;
+      }
+    } catch (err) {
+      console.error('❌ Failed to verify service status:', err.message);
+      return false;
+    }
+
+    return false;
   }
 
   async showServiceInfo() {
@@ -218,6 +249,7 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     await installer.startService();
+    await installer.verifyServiceStatus();
     await installer.showServiceInfo();
 
     console.log('\n🎉 Installation completed successfully!');
