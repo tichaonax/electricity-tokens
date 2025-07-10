@@ -112,13 +112,21 @@ class ServiceInstaller {
       let installTimeout;
       let installCompleted = false;
 
+      // Filter out undefined environment variables
+      const cleanEnv = {};
+      Object.entries(config.env).forEach(([key, value]) => {
+        if (key !== undefined && key !== 'undefined' && value !== undefined) {
+          cleanEnv[key] = String(value);
+        }
+      });
+
       // Create service instance with node-windows restart configuration
       this.service = new Service({
         name: config.name,
         description: config.description,
         script: config.script,
-        nodeOptions: config.nodeOptions,
-        env: config.env,
+        nodeOptions: config.nodeOptions || [],
+        env: cleanEnv,
         workingDirectory: config.appRoot,
         allowServiceLogon: true,
         // node-windows restart configuration
