@@ -8,6 +8,10 @@ class ElectricityTokensService {
     this.isShuttingDown = false;
     this.appRoot = path.resolve(__dirname, '../..');
     this.logFile = path.join(this.appRoot, 'logs', 'service.log');
+    this.restartAttempts = 0;
+    this.maxRestartAttempts = 3;
+    this.lastFailureTime = null;
+    this.portConflictDetected = false;
 
     // Ensure logs directory exists
     this.ensureLogsDirectory();
@@ -111,7 +115,26 @@ class ElectricityTokensService {
 
   async startApplication() {
     try {
-      // Ensure we have a production build
+      this.log('Service starting - responding to Windows immediately...');
+
+      // Start background initialization immediately
+      this.initializeApplicationInBackground();
+
+      // Keep the service process alive
+      this.keepAlive();
+
+      this.log('Service responded to Windows successfully.');
+    } catch (err) {
+      this.log(`Failed to start service: ${err.message}`, 'ERROR');
+      process.exit(1);
+    }
+  }
+
+  async initializeApplicationInBackground() {
+    try {
+      this.log('Background initialization started...');
+
+      // Ensure we have a production build (this can take time)
       await this.ensureProductionBuild();
 
       this.log('Starting Electricity Tokens Tracker application...');
@@ -133,7 +156,20 @@ class ElectricityTokensService {
       });
 
       this.appProcess.stderr.on('data', (data) => {
-        this.log(`App Error: ${data.toString().trim()}`, 'ERROR');
+        const errorMsg = data.toString().trim();
+        this.log(`App Error: ${errorMsg}`, 'ERROR');
+
+        // Detect port conflicts
+        if (
+          errorMsg.includes('EADDRINUSE') ||
+          errorMsg.includes('address already in use')
+        ) {
+          this.portConflictDetected = true;
+          this.log(
+            'Port conflict detected - another instance may be running',
+            'ERROR'
+          );
+        }
       });
 
       // Handle application exit
@@ -144,30 +180,101 @@ class ElectricityTokensService {
         );
 
         if (!this.isShuttingDown) {
-          this.log(
-            'Application crashed unexpectedly. Service will be restarted by Windows Service Manager.',
-            'ERROR'
-          );
-          process.exit(1); // Exit with error code to trigger service restart
-        } else {
-          // Graceful shutdown
-          process.exit(0);
+          this.handleApplicationFailure(code);
         }
       });
 
       this.appProcess.on('error', (err) => {
         this.log(`Failed to start application: ${err.message}`, 'ERROR');
-        process.exit(1);
+        this.handleApplicationFailure(1, err.message);
       });
 
-      this.log('Application started successfully.');
+      // Wait for application to be ready
+      await this.waitForApplicationReady();
 
-      // Keep the service process alive
-      this.keepAlive();
+      this.log('Application started successfully.');
     } catch (err) {
-      this.log(`Failed to start service: ${err.message}`, 'ERROR');
-      process.exit(1);
+      this.log(`Background initialization failed: ${err.message}`, 'ERROR');
+      this.handleApplicationFailure(1, err.message);
     }
+  }
+
+  handleApplicationFailure(exitCode, errorMessage = '') {
+    const now = Date.now();
+
+    // Reset restart attempts if enough time has passed since last failure
+    if (this.lastFailureTime && now - this.lastFailureTime > 300000) {
+      // 5 minutes
+      this.restartAttempts = 0;
+      this.portConflictDetected = false;
+    }
+
+    this.lastFailureTime = now;
+    this.restartAttempts++;
+
+    if (this.portConflictDetected) {
+      this.log(
+        'Port conflict detected - will not attempt restart to avoid loop',
+        'ERROR'
+      );
+      this.log(
+        'Please stop other instances and restart the service manually',
+        'ERROR'
+      );
+      return;
+    }
+
+    if (this.restartAttempts > this.maxRestartAttempts) {
+      this.log(
+        `Maximum restart attempts (${this.maxRestartAttempts}) exceeded. Stopping restart attempts.`,
+        'ERROR'
+      );
+      this.log(
+        'Service will continue running but application will not be restarted automatically',
+        'ERROR'
+      );
+      return;
+    }
+
+    const delay = Math.min(30000, 5000 * this.restartAttempts); // Max 30 second delay
+    this.log(
+      `Application failure #${this.restartAttempts}. Retrying in ${delay / 1000} seconds...`,
+      'WARN'
+    );
+
+    setTimeout(() => {
+      if (!this.isShuttingDown) {
+        this.log(`Restart attempt #${this.restartAttempts}...`, 'INFO');
+        this.initializeApplicationInBackground();
+      }
+    }, delay);
+  }
+
+  async waitForApplicationReady() {
+    return new Promise((resolve) => {
+      if (!this.appProcess) {
+        resolve();
+        return;
+      }
+
+      // Wait up to 30 seconds for the application to output something
+      const timeout = setTimeout(() => {
+        this.log('Application startup timeout - assuming ready', 'WARN');
+        resolve();
+      }, 30000);
+
+      const onData = () => {
+        clearTimeout(timeout);
+        this.appProcess.stdout.off('data', onData);
+        this.log('Application appears to be ready');
+        // Reset restart attempts on successful start
+        this.restartAttempts = 0;
+        this.portConflictDetected = false;
+        resolve();
+      };
+
+      this.appProcess.stdout.once('data', onData);
+    });
   }
 
   keepAlive() {
@@ -177,15 +284,28 @@ class ElectricityTokensService {
       // Periodically check if the application is still running
       if (this.appProcess && !this.appProcess.killed) {
         // Application is running, service stays alive
-      } else if (!this.isShuttingDown) {
+        // Only log every 10 minutes to reduce log spam
+        if (Date.now() % 600000 < 60000) {
+          this.log(
+            'Service health check: Application running normally',
+            'INFO'
+          );
+        }
+      } else if (
+        !this.isShuttingDown &&
+        !this.portConflictDetected &&
+        this.restartAttempts < this.maxRestartAttempts
+      ) {
         this.log(
-          'Application process not found, service will restart application',
+          'Application process not found, attempting restart...',
           'WARN'
         );
-        // The application will be restarted by the service exit handler
-        process.exit(1);
+        this.handleApplicationFailure(
+          0,
+          'Process not found during health check'
+        );
       }
-    }, 30000); // Check every 30 seconds
+    }, 60000); // Check every 60 seconds
 
     this.log('Service keep-alive mechanism started');
   }
@@ -231,7 +351,11 @@ async function main() {
   service.log(`Node.js version: ${process.version}`);
   service.log(`Working directory: ${service.appRoot}`);
   service.log(`Process ID: ${process.pid}`);
+  service.log(
+    'Service will respond to Windows immediately and initialize in background'
+  );
 
+  // This now returns quickly, allowing Windows service to start properly
   await service.startApplication();
 }
 
