@@ -76,12 +76,13 @@ class SimpleServiceInstaller {
 
     try {
       // Create the service using sc create with proper escaping
-      const binPath = `${this.nodeExe} ${this.scriptPath}`;
-
-      console.log(`🔧 Creating service with binary path: ${binPath}`);
+      console.log(`🔧 Creating service...`);
+      console.log(`   Node.js: ${this.nodeExe}`);
+      console.log(`   Script: ${this.scriptPath}`);
 
       // Use sc.exe to avoid PowerShell alias conflicts
-      const createCommand = `sc.exe create ${this.serviceName} binPath= "${binPath}" DisplayName= "${this.serviceName}" Description= "${this.serviceDescription}" start= auto`;
+      // Format: sc.exe create "ServiceName" binPath= "\"node.exe\" \"script.js\"" DisplayName= "Display Name" start= auto
+      const createCommand = `sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`;
 
       console.log(`🔧 Running: ${createCommand}`);
 
@@ -92,7 +93,7 @@ class SimpleServiceInstaller {
 
       // Try alternative method with different quoting
       try {
-        const altCommand = `sc.exe create ${this.serviceName} binPath= "${this.nodeExe} ${this.scriptPath}" start= auto`;
+        const altCommand = `sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`;
         console.log(`🔧 Trying alternative: ${altCommand}`);
         execSync(altCommand, { stdio: 'inherit' });
         console.log('✅ Service created successfully with alternative method!');
@@ -101,8 +102,11 @@ class SimpleServiceInstaller {
 Primary error: ${err.message}
 Alternative error: ${altErr.message}
 
-Manual command to try:
-sc create "${this.serviceName}" binPath= "${this.nodeExe} ${this.scriptPath}" start= auto`);
+Manual command to try (PowerShell):
+sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto
+
+Manual command to try (Command Prompt):
+sc create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`);
       }
     }
   }
