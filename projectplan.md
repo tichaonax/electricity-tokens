@@ -1,97 +1,72 @@
-# Navigation Buttons Analysis for Scroll-Aware Navigation
+# Windows Service Migration Plan
 
-## Goal
-Find all navigation buttons in the dashboard component that navigate to other pages and identify which ones need to be updated to use scroll-aware navigation (navigateAndSaveScroll) instead of regular navigation actions.
+## Overview
 
-## Analysis of Current Navigation Structure
+Migrate from sc.exe command-based Windows service implementation to node-windows package approach for simpler, more robust service management.
 
-### Dashboard Component (`/src/components/dashboard-client.tsx`)
+## Todo Items
 
-The dashboard already imports and uses `useScrollRestoration` hook:
-- Line 7: `import { useScrollRestoration } from '@/hooks/useScrollRestoration';`
-- Line 37: `const { navigateAndSaveScroll } = useScrollRestoration('dashboard');`
+- [x] Analyze current Windows service implementation using sc.exe
+- [x] Research existing node-windows usage in codebase
+- [x] Remove sc.exe based service files
+- [x] Implement new node-windows service approach
+- [x] Update package.json dependencies
+- [x] Update documentation to reflect new service architecture
+- [x] Test the new service implementation
 
-### Navigation Elements Found
+## Implementation Strategy
 
-#### 1. NavigationFormButton Components (Server Actions)
-These use server actions from `/src/app/actions/navigation.ts` and need to be updated:
+1. Replace manual sc.exe commands with node-windows Service class
+2. Create service installer/uninstaller scripts using node-windows
+3. Remove redundant files and update documentation
+4. Ensure service auto-restart and monitoring capabilities
+5. Maintain backward compatibility where possible
 
-**Line 239-281**: New Purchase Card
-- Currently uses: `navigateToNewPurchase` server action
-- Target: `/dashboard/purchases/new`
-- **Needs Update**: Yes - should use scroll-aware navigation
+## Expected Changes
 
-**Line 286-328**: User Contributions Card  
-- Currently uses: `navigateToContributions` server action
-- Target: `/dashboard/contributions`
-- **Needs Update**: Yes - should use scroll-aware navigation
+- Remove sc.exe command scripts
+- Add node-windows dependency
+- Create simplified service management scripts
+- Update all related documentation
 
-**Line 380-422**: Cost Analysis Card
-- Currently uses: `navigateToCostAnalysis` server action
-- Target: `/dashboard/cost-analysis`
-- **Needs Update**: Yes - should use scroll-aware navigation
+## Review Summary
 
-**Line 427-469**: Personal Dashboard Card
-- Currently uses: `navigateToPersonalDashboard` server action
-- Target: `/dashboard/personal`
-- **Needs Update**: Yes - should use scroll-aware navigation
+### Changes Made
 
-**Line 474-516**: Data Management Card
-- Currently uses: `navigateToDataManagement` server action
-- Target: `/dashboard/data-management`
-- **Needs Update**: Yes - should use scroll-aware navigation
+1. **Removed redundant files**: Deleted debug-install.js, install-manual.js, and install-service-simple.js that contained sc.exe commands
+2. **Updated install-service.js**: Replaced all sc.exe usage with pure node-windows Service API calls:
+   - `checkExistingService()` now uses `Service.exists` instead of sc.exe query
+   - `checkServiceExists()` uses node-windows API
+   - `configureServiceRecovery()` simplified since node-windows handles this automatically
+   - `verifyServiceStatus()` uses Service object instead of sc.exe query
+3. **Updated package.json**: Added `service:validate` script, cleaned up service commands
+4. **Updated README.md**:
+   - Removed sc.exe manual command examples
+   - Updated troubleshooting section to focus on node-windows approach
+   - Added validation script to available commands
+   - Updated file structure documentation
+   - Added version history showing migration to pure node-windows
+5. **Tested validation**: Confirmed environment validation script works correctly
 
-**Line 521-563**: Usage Reports Card
-- Currently uses: `navigateToUsageReports` server action
-- Target: `/dashboard/reports/usage`
-- **Needs Update**: Yes - should use scroll-aware navigation
+### Architecture Benefits
 
-**Line 568-610**: Financial Reports Card
-- Currently uses: `navigateToFinancialReports` server action
-- Target: `/dashboard/reports/financial`
-- **Needs Update**: Yes - should use scroll-aware navigation
+- **Simplified**: No more manual sc.exe command construction
+- **Robust**: node-windows handles service lifecycle, restarts, and error handling automatically
+- **Intelligent restarts**: Built-in exponential backoff and retry limits
+- **Better logging**: Integrated with Windows Event Log
+- **Cross-compatibility**: Works consistently across Windows versions
+- **Error handling**: Proper event-driven error handling vs command-line parsing
 
-**Line 615-657**: Efficiency Metrics Card
-- Currently uses: `navigateToEfficiencyReports` server action
-- Target: `/dashboard/reports/efficiency`
-- **Needs Update**: Yes - should use scroll-aware navigation
+### Service Features Retained/Enhanced
 
-**Line 700-742**: Admin Panel Card
-- Currently uses: `navigateToAdmin` server action
-- Target: `/dashboard/admin`
-- **Needs Update**: Yes - should use scroll-aware navigation
+- ✅ Auto-start on boot
+- ✅ Crash recovery with intelligent restart policies
+- ✅ Windows Event Log integration
+- ✅ Production build automation
+- ✅ Environment variable management
+- ✅ Graceful shutdown handling
+- ✅ Administrative privilege validation
+- ✅ Service status monitoring
+- ✅ Easy install/uninstall process
 
-#### 2. Regular Anchor Links
-These use regular HTML anchor tags and should be converted to use scroll-aware navigation:
-
-**Line 191-234**: Purchase History Card
-- Currently uses: `<a href="/dashboard/purchases/history">`
-- Target: `/dashboard/purchases/history`
-- **Needs Update**: Yes - should use scroll-aware navigation
-
-**Line 333-375**: Meter Readings Card
-- Currently uses: `<a href="/dashboard/meter-readings">`
-- Target: `/dashboard/meter-readings`
-- **Needs Update**: Yes - should use scroll-aware navigation
-
-## Todo List
-
-- [ ] Update NavigationFormButton components to support scroll-aware navigation
-- [ ] Convert Purchase History anchor link to use scroll-aware navigation
-- [ ] Convert Meter Readings anchor link to use scroll-aware navigation
-- [ ] Update all NavigationFormButton instances in dashboard to use scroll-aware navigation
-- [ ] Test all navigation buttons to ensure scroll position is preserved
-
-## Navigation Buttons Summary
-
-**Total navigation buttons found**: 11
-**NavigationFormButton components**: 9
-**Regular anchor links**: 2
-
-All of these navigation buttons take users away from the dashboard and would benefit from scroll position saving, as users may want to return to the same position when navigating back.
-
-## Implementation Approach
-
-1. **For NavigationFormButton components**: Update the component to accept an optional `useScrollAware` prop and `navigateAndSaveScroll` function
-2. **For regular anchor links**: Convert to use button elements with click handlers that call `navigateAndSaveScroll`
-3. **Maintain existing styling**: Ensure all visual styling remains the same after conversion
+The migration is complete and the service implementation now uses the recommended node-windows approach exclusively.

@@ -95,24 +95,17 @@ npm run service:status
 | `npm run service:start`     | Start the service             |
 | `npm run service:stop`      | Stop the service              |
 | `npm run service:status`    | Check service status          |
+| `npm run service:validate`  | Validate environment setup    |
 
 ### Manual Windows Commands
 
-You can also use Windows Service Control (sc) commands directly:
+Services created with node-windows are standard Windows services and can be managed through:
 
-```cmd
-# Check status
-sc query "ElectricityTokensTracker"
+- **Windows Services Management Console**: `services.msc`
+- **NET commands**: `NET START` / `NET STOP`
+- **PowerShell**: `Get-Service`, `Start-Service`, `Stop-Service`
 
-# Start service
-sc start "ElectricityTokensTracker"
-
-# Stop service
-sc stop "ElectricityTokensTracker"
-
-# Delete service (after stopping)
-sc delete "ElectricityTokensTracker"
-```
+However, it's recommended to use the npm scripts as they provide better error handling and logging.
 
 ## 📊 Monitoring and Logs
 
@@ -199,12 +192,12 @@ The service will automatically rebuild the application if needed.
 
 ### Common Issues
 
-#### Service Installation Hangs
+#### Service Installation Issues
 
-1. **Try the simple installer**:
+1. **Validate environment first**:
 
    ```bash
-   npm run service:install-simple
+   npm run service:validate
    ```
 
 2. **Check if node-windows is properly installed**:
@@ -213,10 +206,9 @@ The service will automatically rebuild the application if needed.
    npm install node-windows --save
    ```
 
-3. **Manual service creation**:
-   ```bash
-   sc create "ElectricityTokensTracker" binPath= "\"C:\path\to\node.exe\" \"C:\path\to\service-wrapper.js\"" start= auto
-   ```
+3. **Ensure administrator privileges**: Service installation requires admin rights
+
+4. **Check Windows Event Viewer**: Look for service installation errors
 
 #### Service Won't Start
 
@@ -276,11 +268,15 @@ type logs\service.log | findstr /C:"WARN"
 
 ```
 scripts/windows-service/
-├── config.js              # Service configuration
-├── service-wrapper.js     # Main service runner
-├── install-service.js     # Installation script
-├── uninstall-service.js   # Uninstallation script
-└── README.md              # This documentation
+├── config.js                  # Service configuration
+├── service-wrapper.js         # Main service runner
+├── install-service.js         # Installation script (node-windows)
+├── uninstall-service.js       # Uninstallation script (node-windows)
+├── start-service.js           # Service start script (node-windows)
+├── stop-service.js            # Service stop script (node-windows)
+├── service-status.js          # Service status checker (node-windows)
+├── validate-environment.js    # Environment validation
+└── README.md                  # This documentation
 ```
 
 ## 🔒 Security Considerations
@@ -308,11 +304,13 @@ scripts/windows-service/
 ### Best Practices
 
 1. **Dedicated Server**: Use dedicated Windows Server
-2. **Service Account**: Create dedicated service account
+2. **Service Account**: Create dedicated service account (node-windows supports custom user accounts)
 3. **Monitoring**: Set up monitoring and alerting
 4. **Backups**: Regular database and configuration backups
 5. **Updates**: Plan for application updates
 6. **SSL/TLS**: Configure HTTPS with proper certificates
+7. **Auto-restart**: node-windows provides intelligent restart policies
+8. **Event Logging**: Integrated with Windows Event Log
 
 ### Deployment Checklist
 
@@ -339,6 +337,12 @@ If you encounter issues:
 
 ## 🔄 Version History
 
+- **v2.0.0**: Pure node-windows implementation
+  - Removed sc.exe command dependencies
+  - Simplified service installation process
+  - Better error handling and logging
+  - Intelligent restart policies via node-windows
+  - Enhanced monitoring and validation
 - **v1.0.0**: Initial Windows service support
   - Basic service installation and management
   - Crash recovery and auto-restart
