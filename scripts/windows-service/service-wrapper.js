@@ -111,15 +111,18 @@ class ElectricityTokensService {
 
   async startApplication() {
     try {
+      this.log('Starting Electricity Tokens Tracker service...');
+
       // Ensure we have a production build
       await this.ensureProductionBuild();
 
-      this.log('Starting Electricity Tokens Tracker application...');
+      this.log('Starting Next.js application...');
 
       // Start the Next.js production server
+      // node-windows will handle restarts, monitoring, etc.
       this.appProcess = spawn('npm', ['start'], {
         cwd: this.appRoot,
-        stdio: 'pipe',
+        stdio: 'inherit', // Let output go directly to console/logs
         shell: true,
         env: {
           ...process.env,
@@ -127,97 +130,50 @@ class ElectricityTokensService {
         },
       });
 
-      // Handle application output
-      this.appProcess.stdout.on('data', (data) => {
-        this.log(`App: ${data.toString().trim()}`);
-      });
-
-      this.appProcess.stderr.on('data', (data) => {
-        this.log(`App Error: ${data.toString().trim()}`, 'ERROR');
-      });
-
       // Handle application exit
       this.appProcess.on('close', (code, signal) => {
         this.log(
           `Application exited with code ${code}, signal ${signal}`,
-          'WARN'
+          code === 0 ? 'INFO' : 'ERROR'
         );
 
         if (!this.isShuttingDown) {
-          this.log(
-            'Application crashed unexpectedly. Service will be restarted by Windows Service Manager.',
-            'ERROR'
-          );
-          process.exit(1); // Exit with error code to trigger service restart
-        } else {
-          // Graceful shutdown
-          process.exit(0);
+          // Let node-windows handle the restart
+          process.exit(code || 1);
         }
       });
 
       this.appProcess.on('error', (err) => {
         this.log(`Failed to start application: ${err.message}`, 'ERROR');
-        process.exit(1);
+        if (!this.isShuttingDown) {
+          process.exit(1);
+        }
       });
 
-      this.log('Application started successfully.');
-
-      // Keep the service process alive
-      this.keepAlive();
+      this.log(
+        'Next.js application process started. node-windows will monitor and restart if needed.'
+      );
     } catch (err) {
       this.log(`Failed to start service: ${err.message}`, 'ERROR');
       process.exit(1);
     }
   }
 
-  keepAlive() {
-    // Keep the service process alive by preventing it from exiting
-    // This maintains the service in a running state
-    setInterval(() => {
-      // Periodically check if the application is still running
-      if (this.appProcess && !this.appProcess.killed) {
-        // Application is running, service stays alive
-      } else if (!this.isShuttingDown) {
-        this.log(
-          'Application process not found, service will restart application',
-          'WARN'
-        );
-        // The application will be restarted by the service exit handler
-        process.exit(1);
-      }
-    }, 30000); // Check every 30 seconds
-
-    this.log('Service keep-alive mechanism started');
-  }
-
   async gracefulShutdown(signal) {
     if (this.isShuttingDown) return;
 
     this.isShuttingDown = true;
-    this.log(`Received ${signal}. Initiating graceful shutdown...`);
+    this.log(`Received ${signal}. Shutting down...`);
 
     if (this.appProcess) {
-      this.log('Stopping application...');
-
-      // Send SIGTERM to the application
+      this.log('Stopping Next.js application...');
       this.appProcess.kill('SIGTERM');
 
-      // Wait for graceful shutdown, but force kill after timeout
-      const shutdownTimeout = setTimeout(() => {
-        this.log(
-          'Graceful shutdown timed out. Force killing application.',
-          'WARN'
-        );
-        this.appProcess.kill('SIGKILL');
-      }, 10000); // 10 second timeout
-
-      this.appProcess.on('exit', () => {
-        clearTimeout(shutdownTimeout);
-        this.log('Application stopped.');
+      // Give it a moment to shut down gracefully
+      setTimeout(() => {
         process.exit(0);
-      });
+      }, 5000);
     } else {
-      this.log('No application process to stop.');
       process.exit(0);
     }
   }
@@ -227,12 +183,19 @@ class ElectricityTokensService {
 async function main() {
   const service = new ElectricityTokensService();
 
-  service.log('===== Starting Electricity Tokens Tracker Service =====');
+  service.log('===== Electricity Tokens Tracker Service =====');
   service.log(`Node.js version: ${process.version}`);
   service.log(`Working directory: ${service.appRoot}`);
   service.log(`Process ID: ${process.pid}`);
+  service.log('node-windows will handle service monitoring and restarts');
 
+  // Start the application - node-windows handles the rest
   await service.startApplication();
+
+  // Keep the main process alive
+  // node-windows will restart this entire script if it exits
+  process.on('SIGTERM', () => service.gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => service.gracefulShutdown('SIGINT'));
 }
 
 // Handle startup
