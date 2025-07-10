@@ -41,7 +41,7 @@ class SimpleServiceInstaller {
     console.log('🔍 Checking for existing service...');
 
     try {
-      const result = execSync(`sc.exe query "${this.serviceName}"`, {
+      const result = execSync(`sc.exe . query "${this.serviceName}"`, {
         encoding: 'utf8',
       });
 
@@ -50,7 +50,7 @@ class SimpleServiceInstaller {
 
         // Stop service if running
         try {
-          execSync(`sc.exe stop "${this.serviceName}"`, { stdio: 'pipe' });
+          execSync(`sc.exe . stop "${this.serviceName}"`, { stdio: 'pipe' });
           console.log('🛑 Service stopped.');
           await new Promise((resolve) => setTimeout(resolve, 3000));
         } catch (err) {
@@ -58,7 +58,7 @@ class SimpleServiceInstaller {
         }
 
         // Delete service
-        execSync(`sc.exe delete "${this.serviceName}"`, { stdio: 'pipe' });
+        execSync(`sc.exe . delete "${this.serviceName}"`, { stdio: 'pipe' });
         console.log('🗑️  Existing service removed.');
 
         // Wait for cleanup
@@ -81,8 +81,8 @@ class SimpleServiceInstaller {
       console.log(`   Script: ${this.scriptPath}`);
 
       // Use sc.exe to avoid PowerShell alias conflicts
-      // Format: sc.exe create "ServiceName" binPath= "\"node.exe\" \"script.js\"" DisplayName= "Display Name" start= auto
-      const createCommand = `sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`;
+      // Format: sc.exe <server> create "ServiceName" binPath= "\"node.exe\" \"script.js\"" DisplayName= "Display Name" start= auto
+      const createCommand = `sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`;
 
       console.log(`🔧 Running: ${createCommand}`);
 
@@ -93,7 +93,7 @@ class SimpleServiceInstaller {
 
       // Try alternative method with different quoting
       try {
-        const altCommand = `sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`;
+        const altCommand = `sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`;
         console.log(`🔧 Trying alternative: ${altCommand}`);
         execSync(altCommand, { stdio: 'inherit' });
         console.log('✅ Service created successfully with alternative method!');
@@ -103,10 +103,10 @@ Primary error: ${err.message}
 Alternative error: ${altErr.message}
 
 Manual command to try (PowerShell):
-sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto
+sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto
 
 Manual command to try (Command Prompt):
-sc create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`);
+sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`);
       }
     }
   }
@@ -116,7 +116,7 @@ sc create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.script
 
     try {
       // Set failure actions
-      const failureCommand = `sc.exe failure "${this.serviceName}" reset=3600 actions=restart/60000/restart/120000/restart/300000`;
+      const failureCommand = `sc.exe . failure "${this.serviceName}" reset=3600 actions=restart/60000/restart/120000/restart/300000`;
       execSync(failureCommand, { stdio: 'pipe' });
       console.log('✅ Service recovery options configured.');
     } catch (err) {
@@ -134,13 +134,13 @@ sc create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.script
     console.log('🚀 Starting service...');
 
     try {
-      execSync(`sc.exe start "${this.serviceName}"`, { stdio: 'pipe' });
+      execSync(`sc.exe . start "${this.serviceName}"`, { stdio: 'pipe' });
       console.log('✅ Service started successfully!');
 
       // Wait a moment and verify
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      const result = execSync(`sc.exe query "${this.serviceName}"`, {
+      const result = execSync(`sc.exe . query "${this.serviceName}"`, {
         encoding: 'utf8',
       });
       if (result.includes('RUNNING')) {

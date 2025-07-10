@@ -38,44 +38,44 @@ class ManualServiceInstaller {
     console.log('1️⃣  Create the service (PowerShell - use sc.exe):');
     console.log('```');
     console.log(
-      `sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`
+      `sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`
     );
     console.log('```');
     console.log('💡 Or in Command Prompt (cmd):');
     console.log('```');
     console.log(
-      `sc create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`
+      `sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto`
     );
     console.log('```\n');
 
     console.log('2️⃣  Set service description:');
     console.log('```');
     console.log(
-      `sc.exe description "${this.serviceName}" "${this.serviceDescription}"`
+      `sc.exe . description "${this.serviceName}" "${this.serviceDescription}"`
     );
     console.log('```\n');
 
     console.log('3️⃣  Configure service recovery (optional):');
     console.log('```');
     console.log(
-      `sc.exe failure "${this.serviceName}" reset=3600 actions=restart/60000/restart/120000/restart/300000`
+      `sc.exe . failure "${this.serviceName}" reset=3600 actions=restart/60000/restart/120000/restart/300000`
     );
     console.log('```\n');
 
     console.log('4️⃣  Start the service:');
     console.log('```');
-    console.log(`sc.exe start "${this.serviceName}"`);
+    console.log(`sc.exe . start "${this.serviceName}"`);
     console.log('```\n');
 
     console.log('5️⃣  Check service status:');
     console.log('```');
-    console.log(`sc.exe query "${this.serviceName}"`);
+    console.log(`sc.exe . query "${this.serviceName}"`);
     console.log('```\n');
 
     console.log('🗑️  To remove the service later:');
     console.log('```');
-    console.log(`sc.exe stop "${this.serviceName}"`);
-    console.log(`sc.exe delete "${this.serviceName}"`);
+    console.log(`sc.exe . stop "${this.serviceName}"`);
+    console.log(`sc.exe . delete "${this.serviceName}"`);
     console.log('```\n');
 
     console.log('📊 Service Information:');
@@ -89,13 +89,13 @@ class ManualServiceInstaller {
 
     console.log('\n💡 Alternative single command (PowerShell):');
     console.log('```');
-    const singleCommand = `sc.exe create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto; sc.exe description "${this.serviceName}" "${this.serviceDescription}"; sc.exe start "${this.serviceName}"`;
+    const singleCommand = `sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto; sc.exe . description "${this.serviceName}" "${this.serviceDescription}"; sc.exe . start "${this.serviceName}"`;
     console.log(singleCommand);
     console.log('```\n');
 
     console.log('💡 For Command Prompt (cmd):');
     console.log('```');
-    const cmdCommand = `sc create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto && sc description "${this.serviceName}" "${this.serviceDescription}" && sc start "${this.serviceName}"`;
+    const cmdCommand = `sc.exe . create "${this.serviceName}" binPath= "\\"${this.nodeExe}\\" \\"${this.scriptPath}\\"" DisplayName= "${this.serviceName}" start= auto && sc.exe . description "${this.serviceName}" "${this.serviceDescription}" && sc.exe . start "${this.serviceName}"`;
     console.log(cmdCommand);
     console.log('```\n');
 

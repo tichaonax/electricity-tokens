@@ -45,11 +45,13 @@ async function debugInstall() {
   // Check existing service
   console.log('🔍 Checking Existing Service:');
   try {
-    const result = execSync(`sc query "${config.name}"`, { encoding: 'utf8' });
+    const result = execSync(`sc.exe . query "${config.name}"`, {
+      encoding: 'utf8',
+    });
     console.log('⚠️  Service already exists:');
     console.log(result);
     console.log(
-      '   You may need to delete it first with: sc delete "ElectricityTokensTracker"'
+      '   You may need to delete it first with: sc.exe . delete "ElectricityTokensTracker"'
     );
   } catch (err) {
     console.log('✅ No existing service found');
@@ -80,8 +82,8 @@ async function debugInstall() {
   console.log(`- Description: "${serviceDesc}"`);
   console.log('');
 
-  const psCommand = `sc.exe create "${serviceName}" binPath= "\\"${nodeExe}\\" \\"${scriptPath}\\"" DisplayName= "${serviceName}" start= auto`;
-  const cmdCommand = `sc create "${serviceName}" binPath= "\\"${nodeExe}\\" \\"${scriptPath}\\"" DisplayName= "${serviceName}" start= auto`;
+  const psCommand = `sc.exe . create "${serviceName}" binPath= "\\"${nodeExe}\\" \\"${scriptPath}\\"" DisplayName= "${serviceName}" start= auto`;
+  const cmdCommand = `sc.exe . create "${serviceName}" binPath= "\\"${nodeExe}\\" \\"${scriptPath}\\"" DisplayName= "${serviceName}" start= auto`;
 
   console.log('Commands to create service:');
   console.log('');
@@ -107,9 +109,11 @@ async function debugInstall() {
   console.log('2. Open PowerShell as Administrator');
   console.log('3. Paste and run the command');
   console.log(
-    '4. If successful, start with: sc start "ElectricityTokensTracker"'
+    '4. If successful, start with: sc.exe . start "ElectricityTokensTracker"'
   );
-  console.log('5. Check status with: sc query "ElectricityTokensTracker"');
+  console.log(
+    '5. Check status with: sc.exe . query "ElectricityTokensTracker"'
+  );
   console.log('');
 
   console.log('📞 For more help, run: npm run service:install-manual');
