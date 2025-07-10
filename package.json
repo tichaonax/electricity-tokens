@@ -28,7 +28,8 @@
     "service:stop": "node scripts/windows-service/stop-service.js",
     "service:status": "node scripts/windows-service/service-status.js",
     "service:validate": "node scripts/windows-service/validate-environment.js",
-    "service:diagnose": "node scripts/windows-service/diagnose-service.js"
+    "service:diagnose": "node scripts/windows-service/diagnose-service.js",
+    "service:install-hybrid": "node scripts/windows-service/install-service-hybrid.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
