@@ -1,4 +1,40 @@
 const path = require('path');
+const fs = require('fs');
+
+// Load environment variables from .env.local if it exists
+function loadEnvironmentVariables() {
+  const appRoot = path.resolve(__dirname, '../..');
+  const envFiles = ['.env.local', '.env'];
+
+  for (const envFile of envFiles) {
+    const envPath = path.join(appRoot, envFile);
+    if (fs.existsSync(envPath)) {
+      try {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        const lines = envContent.split('\n');
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine && !trimmedLine.startsWith('#')) {
+            const [key, ...valueParts] = trimmedLine.split('=');
+            if (key && valueParts.length > 0) {
+              const value = valueParts.join('=').replace(/^["']|["']$/g, '');
+              if (!process.env[key]) {
+                // Don't override existing env vars
+                process.env[key] = value;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not load ${envFile}: ${err.message}`);
+      }
+    }
+  }
+}
+
+// Load environment variables
+loadEnvironmentVariables();
 
 // Service configuration
 const SERVICE_CONFIG = {

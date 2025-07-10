@@ -7,6 +7,37 @@ class EnvironmentValidator {
     this.errors = [];
     this.warnings = [];
     this.appRoot = path.resolve(__dirname, '../..');
+
+    // Load environment variables from .env.local if it exists
+    this.loadEnvironmentVariables();
+  }
+
+  loadEnvironmentVariables() {
+    const envFiles = ['.env.local', '.env'];
+
+    for (const envFile of envFiles) {
+      const envPath = path.join(this.appRoot, envFile);
+      if (fs.existsSync(envPath)) {
+        try {
+          const envContent = fs.readFileSync(envPath, 'utf8');
+          const lines = envContent.split('\n');
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine && !trimmedLine.startsWith('#')) {
+              const [key, ...valueParts] = trimmedLine.split('=');
+              if (key && valueParts.length > 0) {
+                const value = valueParts.join('=').replace(/^["']|["']$/g, '');
+                process.env[key] = value;
+              }
+            }
+          }
+          console.log(`✅ Loaded environment variables from ${envFile}`);
+        } catch (err) {
+          console.warn(`⚠️  Could not load ${envFile}: ${err.message}`);
+        }
+      }
+    }
   }
 
   log(message, type = 'INFO') {
