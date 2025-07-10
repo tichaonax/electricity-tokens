@@ -85,6 +85,7 @@ export default function MeterReadingsPage() {
   const [validationResult, setValidationResult] =
     useState<ValidationResult | null>(null);
   const [validating, setValidating] = useState(false);
+  const [isEditingLatestReading, setIsEditingLatestReading] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -132,6 +133,43 @@ export default function MeterReadingsPage() {
 
     try {
       setValidating(true);
+
+      // Special validation for latest reading
+      if (isEditingLatestReading && meterReadings.length > 1) {
+        const newReadingValue = parseFloat(newReading.reading);
+        const previousReading = meterReadings[1]; // Second item is the previous reading
+
+        if (newReadingValue <= previousReading.reading) {
+          setValidationResult({
+            valid: false,
+            errors: [
+              `Reading must be greater than the previous reading (${previousReading.reading.toFixed(2)} kWh)`,
+            ],
+            warnings: [],
+          });
+          setValidating(false);
+          return;
+        }
+
+        // For latest reading, if it's greater than previous, it's valid
+        setValidationResult({
+          valid: true,
+          errors: [],
+          warnings: [],
+          statistics: {
+            dailyConsumption: newReadingValue - previousReading.reading,
+            historicalAverage: 0,
+            historicalMax: 0,
+            historicalMin: 0,
+            threshold: 0,
+            daysBetween: 1,
+          },
+        });
+        setValidating(false);
+        return;
+      }
+
+      // Standard validation for non-latest readings
       const response = await fetch('/api/validate-meter-reading-historical', {
         method: 'POST',
         headers: {
@@ -140,6 +178,7 @@ export default function MeterReadingsPage() {
         body: JSON.stringify({
           reading: parseFloat(newReading.reading),
           readingDate: newReading.readingDate,
+          editingId: editingId,
         }),
       });
 
@@ -155,7 +194,13 @@ export default function MeterReadingsPage() {
     } finally {
       setValidating(false);
     }
-  }, [newReading.reading, newReading.readingDate]);
+  }, [
+    newReading.reading,
+    newReading.readingDate,
+    isEditingLatestReading,
+    meterReadings,
+    editingId,
+  ]);
 
   // Trigger validation when reading or date changes
   useEffect(() => {
@@ -176,8 +221,15 @@ export default function MeterReadingsPage() {
       return;
     }
 
-    // Check validation before submitting (only for new readings, not edits)
-    if (!editingId && validationResult && !validationResult.valid) {
+    // Check validation before submitting
+    // For new readings: always check validation
+    // For editing latest reading: check validation
+    // For editing older readings: skip validation (existing constraints apply via API)
+    if (
+      (!editingId || isEditingLatestReading) &&
+      validationResult &&
+      !validationResult.valid
+    ) {
       setError('Please fix the validation errors before submitting');
       return;
     }
@@ -213,6 +265,7 @@ export default function MeterReadingsPage() {
       setValidationResult(null);
       setShowAddForm(false);
       setEditingId(null);
+      setIsEditingLatestReading(false);
       await fetchMeterReadings(1); // Reset to page 1 after adding/editing
     } catch (error) {
       console.error('Error saving meter reading:', error);
@@ -229,6 +282,12 @@ export default function MeterReadingsPage() {
       notes: reading.notes || '',
     });
     setEditingId(reading.id);
+
+    // Check if this is the latest reading (first in the sorted array)
+    const isLatest =
+      meterReadings.length > 0 && meterReadings[0].id === reading.id;
+    setIsEditingLatestReading(isLatest);
+
     setShowAddForm(true);
   };
 
@@ -264,6 +323,7 @@ export default function MeterReadingsPage() {
     setValidationResult(null);
     setShowAddForm(false);
     setEditingId(null);
+    setIsEditingLatestReading(false);
     setError(null);
   };
 
@@ -371,8 +431,20 @@ export default function MeterReadingsPage() {
           {showAddForm && (
             <div className="mb-6 bg-white rounded-lg shadow p-6 dark:bg-slate-800">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-                {editingId ? 'Edit Meter Reading' : 'Add New Meter Reading'}
+                {editingId
+                  ? isEditingLatestReading
+                    ? 'Edit Latest Meter Reading'
+                    : 'Edit Meter Reading'
+                  : 'Add New Meter Reading'}
               </h3>
+              {isEditingLatestReading && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Latest Reading:</strong> You can update this reading
+                    as long as it&apos;s greater than the previous reading.
+                  </p>
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
