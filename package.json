@@ -36,6 +36,7 @@
     "service:fix-husky": "node scripts/windows-service/fix-husky.js",
     "service:fix-deps": "node scripts/windows-service/fix-dependencies.js",
     "service:fix-prisma": "node scripts/windows-service/fix-prisma.js",
+    "service:force-fix-prisma": "node scripts/windows-service/force-fix-prisma.js",
     "service:repair-modules": "node scripts/windows-service/repair-modules.js"
   },
   "dependencies": {
