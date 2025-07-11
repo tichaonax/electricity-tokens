@@ -32,6 +32,7 @@
     "service:validate": "node scripts/windows-service/validate-environment.js",
     "service:diagnose": "node scripts/windows-service/diagnose-service.js",
     "service:upgrade": "node scripts/windows-service/upgrade-service.js",
+    "service:simple-upgrade": "node scripts/windows-service/simple-upgrade.js",
     "service:rollback": "echo \"Usage: npm run service:rollback <backup-path>\" && node scripts/windows-service/rollback-service.js",
     "service:fix-husky": "node scripts/windows-service/fix-husky.js",
     "service:fix-deps": "node scripts/windows-service/fix-dependencies.js",
