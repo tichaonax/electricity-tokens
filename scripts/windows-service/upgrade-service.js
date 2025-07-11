@@ -204,15 +204,15 @@ class ServiceUpgrader {
       try {
         // Install specific missing dependencies that are commonly needed
         const criticalDeps = [
-          'tailwindcss',
-          'autoprefixer',
-          'postcss',
+          'tailwindcss@^3.4.17',
+          'autoprefixer@^10.4.20',
+          'postcss@^8.4.49',
           '@next/swc-win32-x64-msvc',
         ];
 
         for (const dep of criticalDeps) {
           try {
-            execSync(`npm install ${dep} --no-audit`, {
+            execSync(`npm install ${dep} --no-audit --save-dev`, {
               cwd: config.appRoot,
               stdio: 'pipe',
             });
@@ -272,13 +272,35 @@ class ServiceUpgrader {
 
       // Build the application
       console.log('🏗️  Building application...');
-      execSync('npm run build', {
-        cwd: config.appRoot,
-        stdio: 'inherit',
-      });
+      try {
+        execSync('npm run build', {
+          cwd: config.appRoot,
+          stdio: 'inherit',
+        });
+        console.log('✅ Application updated successfully.');
+        return true;
+      } catch (buildErr) {
+        console.warn('⚠️  Build failed, trying repair modules approach...');
 
-      console.log('✅ Application updated successfully.');
-      return true;
+        // Fallback: Use repair modules approach
+        try {
+          console.log('🔧 Running comprehensive module repair...');
+          const repairModules = require('./repair-modules.js');
+          const repairSuccess = await repairModules();
+
+          if (repairSuccess) {
+            console.log(
+              '✅ Application updated successfully with repair approach.'
+            );
+            return true;
+          } else {
+            throw buildErr; // Throw original build error
+          }
+        } catch (repairErr) {
+          console.error('❌ Both build and repair approaches failed');
+          throw buildErr; // Throw original build error
+        }
+      }
     } catch (err) {
       console.error('❌ Application update failed:', err.message);
       return false;
