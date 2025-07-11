@@ -59,7 +59,20 @@ async function repairModules() {
       }
     }
 
-    // Step 5: Test build
+    // Step 5: Generate Prisma client
+    console.log('🔧 Generating Prisma client...');
+    try {
+      execSync('npx prisma generate', {
+        cwd: appRoot,
+        stdio: 'inherit',
+      });
+      console.log('✅ Prisma client generated successfully!');
+    } catch (prismaErr) {
+      console.error('❌ Prisma generation failed:', prismaErr.message);
+      return false;
+    }
+
+    // Step 6: Test build
     console.log('🏗️  Testing build process...');
     try {
       execSync('npm run build', {

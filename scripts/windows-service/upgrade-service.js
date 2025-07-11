@@ -257,6 +257,19 @@ class ServiceUpgrader {
         });
       }
 
+      // Generate Prisma client
+      console.log('🔧 Generating Prisma client...');
+      try {
+        execSync('npx prisma generate', {
+          cwd: config.appRoot,
+          stdio: 'inherit',
+        });
+        console.log('✅ Prisma client generated successfully!');
+      } catch (prismaErr) {
+        console.error('❌ Prisma generation failed:', prismaErr.message);
+        throw new Error(`Prisma generation failed: ${prismaErr.message}`);
+      }
+
       // Build the application
       console.log('🏗️  Building application...');
       execSync('npm run build', {
