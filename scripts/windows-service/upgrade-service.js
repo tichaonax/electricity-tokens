@@ -204,7 +204,9 @@ class ServiceUpgrader {
       try {
         // Install specific missing dependencies that are commonly needed
         const criticalDeps = [
-          '@tailwindcss/postcss',
+          'tailwindcss',
+          'autoprefixer',
+          'postcss',
           '@next/swc-win32-x64-msvc',
         ];
 

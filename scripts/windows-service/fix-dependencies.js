@@ -10,7 +10,9 @@ async function fixDependencies() {
   try {
     // Critical dependencies that often cause build issues
     const criticalDeps = [
-      '@tailwindcss/postcss@^4',
+      'tailwindcss@^3.4.17',
+      'autoprefixer@^10.4.20',
+      'postcss@^8.4.49',
       '@next/swc-win32-x64-msvc',
       'husky',
     ];
