@@ -65,8 +65,9 @@ npm install
 # Open PowerShell or Command Prompt as Administrator
 npm run service:install
 
-# If the above fails, try the simple installer:
-npm run service:install-simple
+# Alternative installation methods if needed:
+npm run service:install-old      # Pure node-windows approach
+npm run service:install-hybrid   # Hybrid approach (same as default)
 ```
 
 The installation process will:
@@ -88,21 +89,27 @@ npm run service:status
 
 ### Available Commands
 
-| Command                     | Description                   |
-| --------------------------- | ----------------------------- |
-| `npm run service:install`   | Install and start the service |
-| `npm run service:uninstall` | Stop and remove the service   |
-| `npm run service:start`     | Start the service             |
-| `npm run service:stop`      | Stop the service              |
-| `npm run service:status`    | Check service status          |
-| `npm run service:validate`  | Validate environment setup    |
+| Command                          | Description                            |
+| -------------------------------- | -------------------------------------- |
+| `npm run service:install`        | Install and start the service (hybrid) |
+| `npm run service:install-hybrid` | Install using hybrid approach          |
+| `npm run service:install-old`    | Install using pure node-windows        |
+| `npm run service:uninstall`      | Stop and remove the service            |
+| `npm run service:start`          | Start the service                      |
+| `npm run service:stop`           | Stop the service                       |
+| `npm run service:status`         | Check service status                   |
+| `npm run service:validate`       | Validate environment setup             |
+| `npm run service:diagnose`       | Run comprehensive diagnostics          |
+| `npm run service:upgrade`        | **Automated upgrade with backup**      |
+| `npm run service:rollback`       | Rollback to previous backup            |
 
 ### Manual Windows Commands
 
-Services created with node-windows are standard Windows services and can be managed through:
+Services created with the hybrid approach are full Windows services and can be managed through:
 
-- **Windows Services Management Console**: `services.msc`
-- **NET commands**: `NET START` / `NET STOP`
+- **Windows Services Management Console**: `services.msc` (service will be visible as "ElectricityTokensTracker")
+- **SC commands**: `sc.exe start/stop/query "ElectricityTokensTracker"`
+- **NET commands**: `NET START` / `NET STOP "ElectricityTokensTracker"`
 - **PowerShell**: `Get-Service`, `Start-Service`, `Stop-Service`
 
 However, it's recommended to use the npm scripts as they provide better error handling and logging.
@@ -163,9 +170,30 @@ The service inherits environment variables from the installation context. For pr
 2. **Service Account**: Configure service to run under specific account
 3. **Startup Type**: Automatic (default) or Manual
 
-## 🔄 Updating the Application
+## 🔄 Deploying Updates
 
-When updating the application code:
+### Automated Upgrade (Recommended)
+
+For seamless deployments with automatic backup and verification:
+
+```bash
+# Open PowerShell or Command Prompt as Administrator
+npm run service:upgrade
+```
+
+This automated process handles:
+
+- ✅ Creates backup of current application
+- ✅ Stops service gracefully
+- ✅ Updates dependencies and rebuilds application
+- ✅ Starts service and verifies functionality
+- ✅ Provides rollback path if issues occur
+
+**Typical downtime**: 2-5 minutes
+
+### Manual Deployment
+
+When you need more control over the process:
 
 1. **Stop the service**:
 
@@ -181,12 +209,41 @@ When updating the application code:
    npm install
    ```
 
-4. **Start the service**:
+4. **Build the application**:
+
+   ```bash
+   npm run build
+   ```
+
+5. **Start the service**:
    ```bash
    npm run service:start
    ```
 
-The service will automatically rebuild the application if needed.
+### Rollback if Needed
+
+If an upgrade fails or causes issues:
+
+```bash
+# Find backup directory
+dir backups\
+
+# Rollback to previous version
+npm run service:rollback "C:\path\to\backup\backup-2024-01-15T10-30-00-123Z"
+```
+
+### 📖 Detailed Deployment Guide
+
+For comprehensive deployment procedures, troubleshooting, and best practices, see:
+**[DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+This guide covers:
+
+- Different deployment scenarios
+- Troubleshooting common issues
+- Rollback procedures
+- Monitoring and health checks
+- Best practices for production deployments
 
 ## 🚨 Troubleshooting
 
@@ -268,15 +325,20 @@ type logs\service.log | findstr /C:"WARN"
 
 ```
 scripts/windows-service/
-├── config.js                  # Service configuration
-├── service-wrapper.js         # Main service runner
-├── install-service.js         # Installation script (node-windows)
-├── uninstall-service.js       # Uninstallation script (node-windows)
-├── start-service.js           # Service start script (node-windows)
-├── stop-service.js            # Service stop script (node-windows)
-├── service-status.js          # Service status checker (node-windows)
-├── validate-environment.js    # Environment validation
-└── README.md                  # This documentation
+├── config.js                     # Service configuration
+├── service-wrapper.js            # Main service runner
+├── install-service-hybrid.js     # Hybrid installation script (DEFAULT)
+├── install-service.js            # Pure node-windows installation script
+├── uninstall-service.js          # Uninstallation script
+├── start-service.js              # Service start script
+├── stop-service.js               # Service stop script
+├── service-status.js             # Service status checker
+├── validate-environment.js       # Environment validation
+├── diagnose-service.js           # Comprehensive diagnostics
+├── upgrade-service.js            # Automated upgrade with backup
+├── rollback-service.js           # Rollback to previous version
+├── README.md                     # Service documentation
+└── DEPLOYMENT.md                 # Comprehensive deployment guide
 ```
 
 ## 🔒 Security Considerations
@@ -337,6 +399,13 @@ If you encounter issues:
 
 ## 🔄 Version History
 
+- **v3.0.0**: Hybrid service implementation (CURRENT)
+  - Combines node-windows process management with Windows SCM integration
+  - Service properly appears in services.msc control panel
+  - Automatic .env.local file loading and environment variable validation
+  - Comprehensive diagnostic tools for troubleshooting
+  - Multiple installation options (hybrid, pure node-windows)
+  - Enhanced error handling and service visibility
 - **v2.0.0**: Pure node-windows implementation
   - Removed sc.exe command dependencies
   - Simplified service installation process
