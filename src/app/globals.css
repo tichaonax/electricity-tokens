@@ -1,6 +1,6 @@
-@import 'tailwindcss';
-
-@variant dark (.dark &);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -49,36 +49,11 @@
   }
 }
 
-@theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
 
 /* Better icon visibility */
 .lucide {
@@ -182,7 +157,7 @@ button .lucide {
   color: hsl(0 0% 100%) !important; /* White text for buttons */
 }
 
-.dark button[data-variant="outline"] {
+.dark button[data-variant='outline'] {
   background: hsl(0 0% 5%) !important; /* Dark background for outline buttons */
   border-color: hsl(0 0% 30%) !important; /* Visible border */
   color: hsl(0 0% 100%) !important; /* White text */
@@ -218,10 +193,10 @@ textarea::placeholder {
 /* Specific styling for purchase form inputs */
 .dark #totalTokens,
 .dark #totalPayment,
-.dark input[type="number"],
+.dark input[type='number'],
 .high-contrast #totalTokens,
 .high-contrast #totalPayment,
-.high-contrast input[type="number"] {
+.high-contrast input[type='number'] {
   background-color: black !important;
   color: white !important;
   border-color: rgb(100, 116, 139) !important;
@@ -285,10 +260,10 @@ label {
 }
 
 /* Extra specificity for stubborn labels */
-.dark label[for="totalTokens"],
-.dark label[for="totalPayment"],
-.high-contrast label[for="totalTokens"],
-.high-contrast label[for="totalPayment"] {
+.dark label[for='totalTokens'],
+.dark label[for='totalPayment'],
+.high-contrast label[for='totalTokens'],
+.high-contrast label[for='totalPayment'] {
   color: white !important;
   font-weight: 500 !important;
   display: block !important;
@@ -321,9 +296,9 @@ body.high-contrast [data-radix-label],
 }
 
 /* Fix for date inputs - Allow native browser functionality */
-input[type="date"],
-input[type="datetime-local"],
-input[type="time"] {
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'] {
   /* Reset any aggressive overrides that might break native date pickers */
   background-color: white !important;
   color: black !important;
@@ -337,18 +312,18 @@ input[type="time"] {
 }
 
 /* Dark mode date inputs */
-.dark input[type="date"],
-.dark input[type="datetime-local"],
-.dark input[type="time"] {
+.dark input[type='date'],
+.dark input[type='datetime-local'],
+.dark input[type='time'] {
   background-color: hsl(var(--background)) !important;
   color: hsl(var(--foreground)) !important;
   border-color: hsl(var(--border)) !important;
 }
 
 /* Ensure date picker button/icon is clickable */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-time-picker-indicator {
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-time-picker-indicator {
   cursor: pointer;
   background-color: transparent;
   border: none;
@@ -361,9 +336,9 @@ input[type="time"]::-webkit-time-picker-indicator {
 }
 
 /* Dark mode date picker indicators */
-.dark input[type="date"]::-webkit-calendar-picker-indicator,
-.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-.dark input[type="time"]::-webkit-time-picker-indicator {
+.dark input[type='date']::-webkit-calendar-picker-indicator,
+.dark input[type='datetime-local']::-webkit-calendar-picker-indicator,
+.dark input[type='time']::-webkit-time-picker-indicator {
   filter: invert(1);
 }
 
