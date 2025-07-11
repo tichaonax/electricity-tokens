@@ -203,6 +203,26 @@ class HybridServiceInstaller {
     } catch (err) {
       console.warn('⚠️  Could not set service description:', err.message);
     }
+
+    // Configure service timeout to allow for Next.js startup
+    try {
+      // Set service to auto-start
+      execSync(`sc.exe config "${this.serviceName}" start= auto`, {
+        stdio: 'pipe',
+      });
+
+      // Set a longer service timeout (120 seconds) via registry
+      // This prevents Windows from killing the service during Next.js startup
+      const timeoutMs = 120000; // 2 minutes
+      execSync(
+        `reg add "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control" /v ServicesPipeTimeout /t REG_DWORD /d ${timeoutMs} /f`,
+        { stdio: 'pipe' }
+      );
+
+      console.log('✅ Service startup timeout configured (120 seconds).');
+    } catch (err) {
+      console.warn('⚠️  Could not configure service timeout:', err.message);
+    }
   }
 
   async startService() {
