@@ -102,6 +102,7 @@ npm run service:status
 | `npm run service:diagnose`       | Run comprehensive diagnostics          |
 | `npm run service:upgrade`        | **Automated upgrade with backup**      |
 | `npm run service:rollback`       | Rollback to previous backup            |
+| `npm run service:fix-husky`      | Fix husky setup issues                 |
 
 ### Manual Windows Commands
 
@@ -266,6 +267,23 @@ This guide covers:
 3. **Ensure administrator privileges**: Service installation requires admin rights
 
 4. **Check Windows Event Viewer**: Look for service installation errors
+
+#### Upgrade/Deployment Issues
+
+1. **Husky setup issues during upgrade**:
+
+   ```bash
+   # Fix husky configuration
+   npm run service:fix-husky
+
+   # Then retry upgrade
+   npm run service:upgrade
+   ```
+
+2. **npm install failures**:
+   - The upgrade script now handles common npm issues automatically
+   - Uses `--no-audit --no-fund` flags to speed up installation
+   - Falls back to `--ignore-scripts` if prepare scripts fail
 
 #### Service Won't Start
 

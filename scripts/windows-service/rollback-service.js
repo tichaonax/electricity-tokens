@@ -147,10 +147,21 @@ class ServiceRollback {
         console.log('🔄 Using package-lock.json for consistent install...');
       }
 
-      execSync('npm install', {
-        cwd: config.appRoot,
-        stdio: 'inherit',
-      });
+      try {
+        execSync('npm install --no-audit --no-fund', {
+          cwd: config.appRoot,
+          stdio: 'inherit',
+        });
+      } catch (installErr) {
+        console.warn(
+          '⚠️  npm install had issues, trying with --ignore-scripts...'
+        );
+        execSync('npm install --no-audit --no-fund --ignore-scripts', {
+          cwd: config.appRoot,
+          stdio: 'inherit',
+        });
+        console.log('✅ Dependencies installed with --ignore-scripts');
+      }
 
       console.log('✅ Dependencies reinstalled successfully.');
       return true;

@@ -161,10 +161,43 @@ class ServiceUpgrader {
     try {
       // Install/update dependencies
       console.log('📦 Installing dependencies...');
-      execSync('npm install', {
-        cwd: config.appRoot,
-        stdio: 'inherit',
-      });
+      try {
+        execSync('npm install --no-audit --no-fund', {
+          cwd: config.appRoot,
+          stdio: 'inherit',
+        });
+      } catch (installErr) {
+        console.warn('⚠️  npm install had issues, trying to continue...');
+        console.warn('Error:', installErr.message);
+
+        // Try to fix common issues
+        console.log('🔧 Attempting to fix dependency issues...');
+
+        // Try to install husky specifically if it's missing
+        try {
+          execSync('npm install husky --save-dev --no-audit', {
+            cwd: config.appRoot,
+            stdio: 'pipe',
+          });
+          console.log('✅ Fixed husky installation');
+        } catch (huskyErr) {
+          console.warn('⚠️  Could not fix husky, continuing...');
+        }
+
+        // Try npm install again
+        try {
+          execSync('npm install --no-audit --no-fund --ignore-scripts', {
+            cwd: config.appRoot,
+            stdio: 'inherit',
+          });
+          console.log('✅ Dependencies installed with --ignore-scripts');
+        } catch (retryErr) {
+          console.error('❌ Could not install dependencies');
+          throw new Error(
+            `Dependency installation failed: ${retryErr.message}`
+          );
+        }
+      }
 
       // Run database migrations if they exist
       const migrationScript = path.join(
