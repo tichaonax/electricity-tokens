@@ -199,6 +199,40 @@ class ServiceUpgrader {
         }
       }
 
+      // Additional dependency fixes for build issues
+      console.log('🔧 Ensuring all required dependencies are installed...');
+      try {
+        // Install specific missing dependencies that are commonly needed
+        const criticalDeps = [
+          '@tailwindcss/postcss',
+          '@next/swc-win32-x64-msvc',
+        ];
+
+        for (const dep of criticalDeps) {
+          try {
+            execSync(`npm install ${dep} --no-audit`, {
+              cwd: config.appRoot,
+              stdio: 'pipe',
+            });
+            console.log(`✅ Installed ${dep}`);
+          } catch (depErr) {
+            console.warn(`⚠️  Could not install ${dep}, continuing...`);
+          }
+        }
+
+        // Run a final npm install to ensure everything is properly linked
+        console.log('🔄 Final dependency check...');
+        execSync('npm install --no-audit --no-fund', {
+          cwd: config.appRoot,
+          stdio: 'pipe',
+        });
+        console.log('✅ Final dependency check completed');
+      } catch (finalErr) {
+        console.warn(
+          '⚠️  Final dependency check had issues, but continuing...'
+        );
+      }
+
       // Run database migrations if they exist
       const migrationScript = path.join(
         config.appRoot,
