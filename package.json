@@ -34,7 +34,8 @@
     "service:upgrade": "node scripts/windows-service/upgrade-service.js",
     "service:rollback": "echo \"Usage: npm run service:rollback <backup-path>\" && node scripts/windows-service/rollback-service.js",
     "service:fix-husky": "node scripts/windows-service/fix-husky.js",
-    "service:fix-deps": "node scripts/windows-service/fix-dependencies.js"
+    "service:fix-deps": "node scripts/windows-service/fix-dependencies.js",
+    "service:repair-modules": "node scripts/windows-service/repair-modules.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

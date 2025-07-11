@@ -226,9 +226,17 @@ class ServiceUpgrader {
         console.log('🔄 Final dependency check...');
         execSync('npm install --no-audit --no-fund', {
           cwd: config.appRoot,
-          stdio: 'pipe',
+          stdio: 'inherit',
         });
         console.log('✅ Final dependency check completed');
+
+        // Additional step: Rebuild node_modules cache
+        console.log('🔄 Rebuilding module cache...');
+        execSync('npm rebuild', {
+          cwd: config.appRoot,
+          stdio: 'pipe',
+        });
+        console.log('✅ Module cache rebuilt');
       } catch (finalErr) {
         console.warn(
           '⚠️  Final dependency check had issues, but continuing...'
