@@ -62,14 +62,45 @@ async function repairModules() {
     // Step 5: Generate Prisma client
     console.log('🔧 Generating Prisma client...');
     try {
+      // First attempt: Normal generation
       execSync('npx prisma generate', {
         cwd: appRoot,
         stdio: 'inherit',
       });
       console.log('✅ Prisma client generated successfully!');
     } catch (prismaErr) {
-      console.error('❌ Prisma generation failed:', prismaErr.message);
-      return false;
+      console.warn('⚠️  Initial Prisma generation failed, trying fixes...');
+
+      try {
+        // Second attempt: Clear Prisma cache and try again
+        console.log('🧹 Clearing Prisma cache...');
+        const prismaPath = path.join(appRoot, 'node_modules', '.prisma');
+        if (fs.existsSync(prismaPath)) {
+          execSync(`rmdir /S /Q "${prismaPath}"`, {
+            cwd: appRoot,
+            stdio: 'pipe',
+          });
+        }
+
+        // Wait a moment for file handles to release
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        console.log('🔄 Retrying Prisma generation...');
+        execSync('npx prisma generate', {
+          cwd: appRoot,
+          stdio: 'inherit',
+        });
+        console.log('✅ Prisma client generated successfully on retry!');
+      } catch (retryErr) {
+        console.error(
+          '❌ Prisma generation failed after retry:',
+          retryErr.message
+        );
+        console.log(
+          'ℹ️  Continuing without Prisma generation - you may need to run "npx prisma generate" manually'
+        );
+        // Don't fail the entire process for Prisma issues
+      }
     }
 
     // Step 6: Test build
