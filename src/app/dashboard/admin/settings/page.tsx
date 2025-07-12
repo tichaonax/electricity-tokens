@@ -3,9 +3,22 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ChevronLeft, Save, RefreshCw, Database, Shield, Zap } from 'lucide-react';
+import {
+  ChevronLeft,
+  Save,
+  RefreshCw,
+  Database,
+  Shield,
+  Zap,
+} from 'lucide-react';
 
 interface SystemSettings {
   emergencyPurchaseMultiplier: number;
@@ -19,7 +32,7 @@ interface SystemSettings {
 export default function SystemSettings() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
+
   const [settings, setSettings] = useState<SystemSettings>({
     emergencyPurchaseMultiplier: 1.2,
     defaultTokensPerPurchase: 50,
@@ -28,7 +41,7 @@ export default function SystemSettings() {
     maxUsersPerPurchase: 10,
     sessionTimeoutMinutes: 60,
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,15 +65,17 @@ export default function SystemSettings() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Simulate fetching settings (in real implementation, this would be an API call)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // For now, use default settings
       // In real implementation: const response = await fetch('/api/admin/settings');
       setLoading(false);
-    } catch (error) {
-      setError('Failed to load system settings');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to load system settings'
+      );
       setLoading(false);
     }
   };
@@ -86,10 +101,10 @@ export default function SystemSettings() {
       }
 
       // Simulate saving settings
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       // In real implementation: await fetch('/api/admin/settings', { method: 'PUT', body: JSON.stringify(settings) });
-      
+
       setSuccess('System settings saved successfully');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
@@ -98,10 +113,13 @@ export default function SystemSettings() {
     }
   };
 
-  const handleInputChange = (key: keyof SystemSettings, value: string | number | boolean) => {
-    setSettings(prev => ({
+  const handleInputChange = (
+    key: keyof SystemSettings,
+    value: string | number | boolean
+  ) => {
+    setSettings((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
     setSuccess(null);
   };
@@ -155,7 +173,9 @@ export default function SystemSettings() {
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">System Configuration</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              System Configuration
+            </h2>
             <p className="text-gray-600 dark:text-gray-300">
               Configure application settings, defaults, and system behavior.
             </p>
@@ -163,13 +183,17 @@ export default function SystemSettings() {
 
           {error && (
             <Alert className="mb-6 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
-              <AlertDescription className="text-red-800 dark:text-red-200">{error}</AlertDescription>
+              <AlertDescription className="text-red-800 dark:text-red-200">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
           {success && (
             <Alert className="mb-6 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
-              <AlertDescription className="text-green-800 dark:text-green-200">{success}</AlertDescription>
+              <AlertDescription className="text-green-800 dark:text-green-200">
+                {success}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -177,8 +201,8 @@ export default function SystemSettings() {
             {/* Purchase Settings */}
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Zap className="h-5 w-5 mr-2 text-yellow-500" />
+                <CardTitle className="flex items-center text-amber-700 dark:text-amber-400">
+                  <Zap className="h-5 w-5 mr-2 text-amber-500 dark:text-amber-400" />
                   Purchase Settings
                 </CardTitle>
                 <CardDescription>
@@ -196,15 +220,21 @@ export default function SystemSettings() {
                       min="1"
                       step="0.1"
                       value={settings.emergencyPurchaseMultiplier}
-                      onChange={(e) => handleInputChange('emergencyPurchaseMultiplier', parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'emergencyPurchaseMultiplier',
+                          parseFloat(e.target.value)
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={loading}
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Cost multiplier for emergency purchases (e.g., 1.2 = 20% more expensive)
+                      Cost multiplier for emergency purchases (e.g., 1.2 = 20%
+                      more expensive)
                     </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Default Tokens Per Purchase
@@ -213,7 +243,12 @@ export default function SystemSettings() {
                       type="number"
                       min="1"
                       value={settings.defaultTokensPerPurchase}
-                      onChange={(e) => handleInputChange('defaultTokensPerPurchase', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'defaultTokensPerPurchase',
+                          parseInt(e.target.value)
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={loading}
                     />
@@ -221,7 +256,7 @@ export default function SystemSettings() {
                       Default number of tokens suggested for new purchases
                     </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Max Users Per Purchase
@@ -231,12 +266,18 @@ export default function SystemSettings() {
                       min="1"
                       max="50"
                       value={settings.maxUsersPerPurchase}
-                      onChange={(e) => handleInputChange('maxUsersPerPurchase', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'maxUsersPerPurchase',
+                          parseInt(e.target.value)
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={loading}
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Maximum number of users that can contribute to a single purchase
+                      Maximum number of users that can contribute to a single
+                      purchase
                     </p>
                   </div>
                 </div>
@@ -246,8 +287,8 @@ export default function SystemSettings() {
             {/* Security Settings */}
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="h-5 w-5 mr-2 text-green-500" />
+                <CardTitle className="flex items-center text-emerald-700 dark:text-emerald-400">
+                  <Shield className="h-5 w-5 mr-2 text-emerald-500 dark:text-emerald-400" />
                   Security Settings
                 </CardTitle>
                 <CardDescription>
@@ -264,7 +305,12 @@ export default function SystemSettings() {
                     min="5"
                     max="480"
                     value={settings.sessionTimeoutMinutes}
-                    onChange={(e) => handleInputChange('sessionTimeoutMinutes', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'sessionTimeoutMinutes',
+                        parseInt(e.target.value)
+                      )
+                    }
                     className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     disabled={loading}
                   />
@@ -278,8 +324,8 @@ export default function SystemSettings() {
             {/* System Settings */}
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Database className="h-5 w-5 mr-2 text-blue-500" />
+                <CardTitle className="flex items-center text-indigo-700 dark:text-indigo-400">
+                  <Database className="h-5 w-5 mr-2 text-indigo-500 dark:text-indigo-400" />
                   System Settings
                 </CardTitle>
                 <CardDescription>
@@ -298,15 +344,24 @@ export default function SystemSettings() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleInputChange('systemMaintenanceMode', !settings.systemMaintenanceMode)}
+                    onClick={() =>
+                      handleInputChange(
+                        'systemMaintenanceMode',
+                        !settings.systemMaintenanceMode
+                      )
+                    }
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      settings.systemMaintenanceMode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
+                      settings.systemMaintenanceMode
+                        ? 'bg-indigo-600'
+                        : 'bg-gray-200 dark:bg-gray-600'
                     }`}
                     disabled={loading}
                   >
                     <span
                       className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        settings.systemMaintenanceMode ? 'translate-x-5' : 'translate-x-0'
+                        settings.systemMaintenanceMode
+                          ? 'translate-x-5'
+                          : 'translate-x-0'
                       }`}
                     />
                   </button>
@@ -323,15 +378,24 @@ export default function SystemSettings() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleInputChange('autoBackupEnabled', !settings.autoBackupEnabled)}
+                    onClick={() =>
+                      handleInputChange(
+                        'autoBackupEnabled',
+                        !settings.autoBackupEnabled
+                      )
+                    }
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      settings.autoBackupEnabled ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'
+                      settings.autoBackupEnabled
+                        ? 'bg-indigo-600'
+                        : 'bg-gray-200 dark:bg-gray-600'
                     }`}
                     disabled={loading}
                   >
                     <span
                       className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        settings.autoBackupEnabled ? 'translate-x-5' : 'translate-x-0'
+                        settings.autoBackupEnabled
+                          ? 'translate-x-5'
+                          : 'translate-x-0'
                       }`}
                     />
                   </button>
@@ -346,16 +410,20 @@ export default function SystemSettings() {
                 disabled={loading || saving}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`}
+                />
                 {loading ? 'Loading...' : 'Reset'}
               </button>
-              
+
               <button
                 onClick={handleSaveSettings}
                 disabled={loading || saving}
                 className="px-4 py-2 bg-indigo-600 dark:bg-indigo-700 text-white rounded-md text-sm font-medium hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
-                <Save className={`h-4 w-4 mr-2 ${saving ? 'animate-spin' : ''}`} />
+                <Save
+                  className={`h-4 w-4 mr-2 ${saving ? 'animate-spin' : ''}`}
+                />
                 {saving ? 'Saving...' : 'Save Settings'}
               </button>
             </div>
