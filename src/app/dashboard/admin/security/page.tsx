@@ -128,17 +128,17 @@ export default function SecurityAndAudit() {
   const getActionBadgeColor = (action: string) => {
     switch (action.toUpperCase()) {
       case 'CREATE':
-        return 'default';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300 dark:border-green-700';
       case 'UPDATE':
-        return 'secondary';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-700';
       case 'DELETE':
-        return 'destructive';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300 dark:border-red-700';
       case 'LOGIN':
-        return 'default';
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700';
       case 'LOGOUT':
-        return 'secondary';
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border-orange-300 dark:border-orange-700';
       default:
-        return 'secondary';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600';
     }
   };
 
@@ -202,16 +202,18 @@ export default function SecurityAndAudit() {
                   Security Status
                 </CardTitle>
                 {securityStatus === 'good' ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CheckCircle className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                 ) : (
-                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                 )}
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   <Badge
-                    variant={
-                      securityStatus === 'good' ? 'default' : 'destructive'
+                    className={
+                      securityStatus === 'good'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300 dark:border-green-700'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300 dark:border-red-700'
                     }
                   >
                     {securityStatus === 'good' ? 'SECURE' : 'ALERT'}
@@ -228,10 +230,10 @@ export default function SecurityAndAudit() {
                 <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   Failed Logins
                 </CardTitle>
-                <Shield className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <Shield className="h-4 w-4 text-red-500 dark:text-red-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                   {securityMetrics.failedLogins}
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -245,10 +247,10 @@ export default function SecurityAndAudit() {
                 <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   Locked Accounts
                 </CardTitle>
-                <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <User className="h-4 w-4 text-orange-500 dark:text-orange-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {securityMetrics.lockedAccounts}
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -262,10 +264,10 @@ export default function SecurityAndAudit() {
                 <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   Last Backup
                 </CardTitle>
-                <Database className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <Database className="h-4 w-4 text-blue-500 dark:text-blue-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
                   {securityMetrics.lastBackup
                     ? new Date(securityMetrics.lastBackup).toLocaleDateString()
                     : 'Never'}
@@ -282,7 +284,7 @@ export default function SecurityAndAudit() {
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
-                  <Shield className="h-5 w-5 mr-2" />
+                  <Shield className="h-5 w-5 mr-2 text-purple-500 dark:text-purple-400" />
                   Security Metrics
                 </CardTitle>
               </CardHeader>
@@ -292,7 +294,7 @@ export default function SecurityAndAudit() {
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Total Logins (24h)
                     </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                       {securityMetrics.totalLogins}
                     </span>
                   </div>
@@ -300,7 +302,7 @@ export default function SecurityAndAudit() {
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Active Admins
                     </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
                       {securityMetrics.activeAdmins}
                     </span>
                   </div>
@@ -308,7 +310,7 @@ export default function SecurityAndAudit() {
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Suspicious Activity
                     </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
                       {securityMetrics.recentSuspiciousActivity}
                     </span>
                   </div>
@@ -319,7 +321,7 @@ export default function SecurityAndAudit() {
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
-                  <CheckCircle className="h-5 w-5 mr-2" />
+                  <CheckCircle className="h-5 w-5 mr-2 text-teal-500 dark:text-teal-400" />
                   System Integrity
                 </CardTitle>
               </CardHeader>
@@ -329,19 +331,25 @@ export default function SecurityAndAudit() {
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Database Status
                     </span>
-                    <Badge variant="default">Online</Badge>
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300 dark:border-green-700">
+                      Online
+                    </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Authentication Service
                     </span>
-                    <Badge variant="default">Active</Badge>
+                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-700">
+                      Active
+                    </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       Audit Logging
                     </span>
-                    <Badge variant="default">Enabled</Badge>
+                    <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 border-purple-300 dark:border-purple-700">
+                      Enabled
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
@@ -352,7 +360,7 @@ export default function SecurityAndAudit() {
           <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
-                <Eye className="h-5 w-5 mr-2" />
+                <Eye className="h-5 w-5 mr-2 text-indigo-500 dark:text-indigo-400" />
                 Recent Audit Trail
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
@@ -377,14 +385,14 @@ export default function SecurityAndAudit() {
                     >
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
-                          <Clock className="h-4 w-4 text-gray-400" />
+                          <Clock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center space-x-2">
                             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {log.userName}
                             </span>
-                            <Badge variant={getActionBadgeColor(log.action)}>
+                            <Badge className={getActionBadgeColor(log.action)}>
                               {log.action}
                             </Badge>
                             <span className="text-sm text-gray-500 dark:text-gray-400">
