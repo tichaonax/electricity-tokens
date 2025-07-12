@@ -600,8 +600,8 @@ export function PurchaseHistoryTable({
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full">
-            {/* Desktop: All buttons in a row */}
-            <div className="hidden sm:flex gap-2">
+            {/* Desktop: All buttons in a row with active filters display */}
+            <div className="hidden sm:flex gap-2 items-center">
               <Button
                 variant={showFilters ? 'default' : 'outline'}
                 size="sm"
@@ -619,11 +619,39 @@ export function PurchaseHistoryTable({
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
+
+              {/* Active Filters and Validation Errors Display */}
+              <div className="flex items-center gap-3 ml-4">
+                {(filters.startDate || filters.endDate) && (
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Active Filters:
+                      {filters.startDate && ` From ${filters.startDate}`}
+                      {filters.endDate && ` To ${filters.endDate}`}
+                      {!filters.startDate && !filters.endDate && ' This Month'}
+                    </span>
+                    <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">
+                      {pagination.total} result
+                      {pagination.total !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+
+                {dateError && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-red-100 border-2 border-red-300 rounded-md animate-pulse dark:bg-red-900/40 dark:border-red-600">
+                    <AlertTriangle className="h-5 w-5 text-red-700 dark:text-red-400" />
+                    <span className="text-sm font-bold text-red-900 dark:text-red-200">
+                      ⚠️ {dateError}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Mobile: Only show Filters and Refresh (Add Contribution and Add Token are now inline with message) */}
+            {/* Mobile: Filters, Refresh, and status display */}
             <div className="sm:hidden">
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-3">
                 <Button
                   variant={showFilters ? 'default' : 'outline'}
                   size="sm"
@@ -643,45 +671,41 @@ export function PurchaseHistoryTable({
                   Refresh
                 </Button>
               </div>
+
+              {/* Mobile Active Filters and Validation Errors */}
+              <div className="space-y-2">
+                {(filters.startDate || filters.endDate) && (
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded dark:bg-blue-900/20 dark:border-blue-800">
+                    <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Active Filters:
+                      {filters.startDate && ` From ${filters.startDate}`}
+                      {filters.endDate && ` To ${filters.endDate}`}
+                      {!filters.startDate && !filters.endDate && ' This Month'}
+                    </span>
+                    <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded ml-auto">
+                      {pagination.total} result
+                      {pagination.total !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+
+                {dateError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-100 border-2 border-red-300 rounded-md animate-pulse dark:bg-red-900/40 dark:border-red-600">
+                    <AlertTriangle className="h-5 w-5 text-red-700 dark:text-red-400" />
+                    <span className="text-sm font-bold text-red-900 dark:text-red-200">
+                      ⚠️ {dateError}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Current Filter Display - Always visible when filters are active */}
-        {(filters.startDate || filters.endDate) && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900/20 dark:border-blue-800">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Active Filters:
-                  {filters.startDate && ` From ${filters.startDate}`}
-                  {filters.endDate && ` To ${filters.endDate}`}
-                  {!filters.startDate && !filters.endDate && ' This Month'}
-                </span>
-              </div>
-              <span className="text-xs text-blue-600 dark:text-blue-400">
-                {pagination.total} result{pagination.total !== 1 ? 's' : ''}
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Filters */}
         {showFilters && (
           <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            {/* Date Filter Error Display */}
-            {dateError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-900/20 dark:border-red-800">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                  <span className="text-sm text-red-700 dark:text-red-300">
-                    {dateError}
-                  </span>
-                </div>
-              </div>
-            )}
-
             {/* Quick Date Preset Buttons */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -764,9 +788,11 @@ export function PurchaseHistoryTable({
                   onChange={(e) =>
                     handleDateChange('startDate', e.target.value, e)
                   }
-                  className={
-                    dateError ? 'border-red-500 dark:border-red-400' : ''
-                  }
+                  className={`${
+                    dateError
+                      ? 'border-2 border-red-500 bg-red-50 ring-2 ring-red-200 animate-pulse dark:border-red-400 dark:bg-red-900/20 dark:ring-red-800'
+                      : 'border-slate-300 dark:border-slate-600'
+                  }`}
                 />
               </div>
 
@@ -780,9 +806,11 @@ export function PurchaseHistoryTable({
                   onChange={(e) =>
                     handleDateChange('endDate', e.target.value, e)
                   }
-                  className={
-                    dateError ? 'border-red-500 dark:border-red-400' : ''
-                  }
+                  className={`${
+                    dateError
+                      ? 'border-2 border-red-500 bg-red-50 ring-2 ring-red-200 animate-pulse dark:border-red-400 dark:bg-red-900/20 dark:ring-red-800'
+                      : 'border-slate-300 dark:border-slate-600'
+                  }`}
                 />
               </div>
 
@@ -888,18 +916,18 @@ export function PurchaseHistoryTable({
             {
               key: 'totalTokens',
               label: 'Tokens',
-              render: (value) => (
+              render: (tokens) => (
                 <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                  {value.toLocaleString()} kWh
+                  {tokens.toLocaleString()} kWh
                 </span>
               ),
             },
             {
               key: 'totalPayment',
               label: 'Amount',
-              render: (value) => (
+              render: (payment) => (
                 <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                  ${value.toFixed(2)}
+                  ${payment.toFixed(2)}
                 </span>
               ),
             },
@@ -907,10 +935,10 @@ export function PurchaseHistoryTable({
               key: 'meterReading',
               label: 'Meter Reading',
               mobileHide: true,
-              render: (value) => (
+              render: (reading) => (
                 <div>
                   <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                    {value.toLocaleString()} kWh
+                    {reading.toLocaleString()} kWh
                   </span>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
                     at purchase
@@ -921,13 +949,17 @@ export function PurchaseHistoryTable({
             {
               key: 'isEmergency',
               label: 'Type',
-              render: (value) => (
+              render: (isEmergency) => (
                 <ResponsiveBadge
-                  variant={value ? 'destructive' : 'secondary'}
-                  className="inline-flex items-center gap-1"
+                  variant={isEmergency ? 'destructive' : 'secondary'}
+                  className={`inline-flex items-center gap-1 ${
+                    isEmergency
+                      ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
+                      : ''
+                  }`}
                 >
-                  {value && <AlertTriangle className="h-3 w-3" />}
-                  {value ? 'Emergency' : 'Regular'}
+                  {isEmergency && <AlertTriangle className="h-3 w-3" />}
+                  {isEmergency ? 'Emergency' : 'Regular'}
                 </ResponsiveBadge>
               ),
             },
@@ -935,9 +967,9 @@ export function PurchaseHistoryTable({
               key: 'creator',
               label: 'Creator',
               mobileHide: true,
-              render: (value) => (
+              render: (creator) => (
                 <span className="text-sm text-slate-900 dark:text-slate-100">
-                  {value?.name || 'Unknown'}
+                  {creator?.name || 'Unknown'}
                 </span>
               ),
             },
