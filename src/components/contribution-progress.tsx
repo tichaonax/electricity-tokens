@@ -181,7 +181,7 @@ export function ContributionProgress({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
           <TrendingUp className="h-5 w-5 text-blue-600" />
           Usage Tracking & Contributions
         </CardTitle>
@@ -293,7 +293,7 @@ export function ContributionProgress({
                 </Button>
               )}
             </div>
-            
+
             {/* Bottom Row - Contribute Next (mobile below, desktop inline) */}
             {hasNextPurchase && (
               <div className="block sm:hidden">
@@ -306,7 +306,7 @@ export function ContributionProgress({
                 </Button>
               </div>
             )}
-            
+
             {/* Desktop Row - All buttons together */}
             <div className="hidden sm:flex gap-2">
               {checkPermission('canViewPurchaseHistory') && (
@@ -338,21 +338,24 @@ export function ContributionProgress({
                 </Button>
               )}
             </div>
-            
+
             {/* Latest Reading Panel - Full Width */}
-            {checkPermission('canAddMeterReadings') && latestReading && latestReading.reading && (
-              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 w-full">
-                <div className="text-xs text-blue-600 dark:text-blue-300 mb-1">
-                  Latest Global Reading
+            {checkPermission('canAddMeterReadings') &&
+              latestReading &&
+              latestReading.reading && (
+                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 w-full">
+                  <div className="text-xs text-blue-600 dark:text-blue-300 mb-1">
+                    Latest Global Reading
+                  </div>
+                  <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                    {latestReading.reading.toLocaleString()} kWh
+                  </div>
+                  <div className="text-xs text-blue-500 dark:text-blue-400">
+                    by {latestReading.userName} •{' '}
+                    {formatDateTime(new Date(latestReading.readingDate!))}
+                  </div>
                 </div>
-                <div className="text-lg font-bold text-blue-700 dark:text-blue-400">
-                  {latestReading.reading.toLocaleString()} kWh
-                </div>
-                <div className="text-xs text-blue-500 dark:text-blue-400">
-                  by {latestReading.userName} • {formatDateTime(new Date(latestReading.readingDate!))}
-                </div>
-              </div>
-            )}
+              )}
           </div>
         )}
       </CardContent>
