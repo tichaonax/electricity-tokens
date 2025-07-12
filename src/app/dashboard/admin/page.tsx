@@ -12,7 +12,16 @@ import {
 } from '@/components/ui/card';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import { HelpPopover } from '@/components/ui/help-popover';
-import { Users, Shield, Settings, FileText, Activity, Trash2, Gauge, Database } from 'lucide-react';
+import {
+  Users,
+  Shield,
+  Settings,
+  FileText,
+  Activity,
+  Trash2,
+  Gauge,
+  Database,
+} from 'lucide-react';
 import { DataResetComponent } from '@/components/admin/data-reset';
 
 export default function AdminPanel() {
@@ -46,14 +55,15 @@ export default function AdminPanel() {
         backPath="/dashboard"
         showBackButton={true}
         backText="Back to Dashboard"
-      >
-      </ResponsiveNav>
+      ></ResponsiveNav>
 
       <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Panel</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Admin Panel
+              </h2>
               <HelpPopover
                 title="Admin Panel Help"
                 items={[
@@ -88,14 +98,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-blue-700 dark:text-blue-400">
                     User Management
                   </CardTitle>
                   <CardDescription>
                     Manage user accounts, roles, and permissions
                   </CardDescription>
                 </div>
-                <Users className="h-8 w-8 text-blue-500" />
+                <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -116,14 +126,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-green-700 dark:text-green-400">
                     Security & Audit
                   </CardTitle>
                   <CardDescription>
                     Monitor security and audit trails
                   </CardDescription>
                 </div>
-                <Shield className="h-8 w-8 text-green-500" />
+                <Shield className="h-8 w-8 text-green-600 dark:text-green-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -144,14 +154,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-red-700 dark:text-red-400">
                     Security Dashboard
                   </CardTitle>
                   <CardDescription>
                     Comprehensive security monitoring and threats
                   </CardDescription>
                 </div>
-                <Shield className="h-8 w-8 text-red-500" />
+                <Shield className="h-8 w-8 text-red-600 dark:text-red-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -172,14 +182,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-indigo-700 dark:text-indigo-400">
                     Audit Trail
                   </CardTitle>
                   <CardDescription>
                     Complete audit log with detailed tracking
                   </CardDescription>
                 </div>
-                <FileText className="h-8 w-8 text-indigo-500" />
+                <FileText className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -200,14 +210,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-purple-700 dark:text-purple-400">
                     System Settings
                   </CardTitle>
                   <CardDescription>
                     Configure application settings
                   </CardDescription>
                 </div>
-                <Settings className="h-8 w-8 text-purple-500" />
+                <Settings className="h-8 w-8 text-purple-600 dark:text-purple-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -224,18 +234,20 @@ export default function AdminPanel() {
             {/* Database Performance Card */}
             <Card
               className="hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-              onClick={() => router.push('/dashboard/admin/database-performance')}
+              onClick={() =>
+                router.push('/dashboard/admin/database-performance')
+              }
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-amber-700 dark:text-amber-400">
                     Database Performance
                   </CardTitle>
                   <CardDescription>
                     Optimize database performance and indexes
                   </CardDescription>
                 </div>
-                <Database className="h-8 w-8 text-amber-500" />
+                <Database className="h-8 w-8 text-amber-600 dark:text-amber-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -256,14 +268,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-cyan-700 dark:text-cyan-400">
                     Meter Readings
                   </CardTitle>
                   <CardDescription>
                     Manage daily electricity meter readings
                   </CardDescription>
                 </div>
-                <Gauge className="h-8 w-8 text-cyan-500" />
+                <Gauge className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -284,14 +296,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-orange-700 dark:text-orange-400">
                     System Reports
                   </CardTitle>
                   <CardDescription>
                     System-wide analytics and reports
                   </CardDescription>
                 </div>
-                <FileText className="h-8 w-8 text-orange-500" />
+                <FileText className="h-8 w-8 text-orange-600 dark:text-orange-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -312,14 +324,14 @@ export default function AdminPanel() {
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">
+                  <CardTitle className="text-lg font-medium text-teal-700 dark:text-teal-400">
                     System Monitoring
                   </CardTitle>
                   <CardDescription>
                     Real-time system health and performance
                   </CardDescription>
                 </div>
-                <Activity className="h-8 w-8 text-teal-500" />
+                <Activity className="h-8 w-8 text-teal-600 dark:text-teal-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -357,12 +369,12 @@ export default function AdminPanel() {
                   • All meter readings and consumption data
                   <br />
                   • All purchase-contribution relationships
-                  <br /><br />
+                  <br />
+                  <br />
                   <strong>What will be preserved:</strong>
                   <br />
                   • User accounts and login credentials
-                  <br />
-                  • System audit logs and activity history
+                  <br />• System audit logs and activity history
                 </div>
                 <DataResetComponent />
               </CardContent>
@@ -371,7 +383,7 @@ export default function AdminPanel() {
             {/* Quick Actions Card */}
             <Card className="md:col-span-2 lg:col-span-1 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="text-lg font-medium">
+                <CardTitle className="text-lg font-medium text-slate-700 dark:text-slate-400">
                   Quick Actions
                 </CardTitle>
                 <CardDescription>Common administrative tasks</CardDescription>
@@ -422,7 +434,7 @@ export default function AdminPanel() {
           <div className="mt-8">
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="text-lg font-medium">
+                <CardTitle className="text-lg font-medium text-emerald-700 dark:text-emerald-400">
                   System Status
                 </CardTitle>
                 <CardDescription>
@@ -435,13 +447,17 @@ export default function AdminPanel() {
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       Active
                     </div>
-                    <div className="text-sm text-blue-700 dark:text-blue-300">System Status</div>
+                    <div className="text-sm text-blue-700 dark:text-blue-300">
+                      System Status
+                    </div>
                   </div>
                   <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       Online
                     </div>
-                    <div className="text-sm text-green-700 dark:text-green-300">Database</div>
+                    <div className="text-sm text-green-700 dark:text-green-300">
+                      Database
+                    </div>
                   </div>
                   <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
@@ -455,7 +471,9 @@ export default function AdminPanel() {
                     <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                       Normal
                     </div>
-                    <div className="text-sm text-orange-700 dark:text-orange-300">Performance</div>
+                    <div className="text-sm text-orange-700 dark:text-orange-300">
+                      Performance
+                    </div>
                   </div>
                 </div>
               </CardContent>

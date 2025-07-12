@@ -7,7 +7,13 @@ import { ThemeToggleCompact } from './theme-toggle-compact';
 import { User, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { NavigationFormButton } from './navigation-form-button';
-import { navigateToDashboard, navigateToAdmin, navigateToUserManagement, navigateToHelp, navigateToProfile } from '@/app/actions/navigation';
+import {
+  navigateToDashboard,
+  navigateToAdmin,
+  navigateToUserManagement,
+  navigateToHelp,
+  navigateToProfile,
+} from '@/app/actions/navigation';
 
 interface ResponsiveNavProps {
   title: string;
@@ -16,6 +22,10 @@ interface ResponsiveNavProps {
   backText?: string;
   mobileBackText?: string;
   children?: React.ReactNode;
+  // New props for dual navigation context
+  showBackToDashboard?: boolean;
+  dashboardPath?: string;
+  dashboardText?: string;
 }
 
 export function ResponsiveNav({
@@ -25,6 +35,8 @@ export function ResponsiveNav({
   backText,
   mobileBackText,
   children,
+  showBackToDashboard = false,
+  dashboardText = 'Back to Dashboard',
 }: ResponsiveNavProps) {
   const { data: session } = useSession();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -65,11 +77,17 @@ export function ResponsiveNav({
             {/* Back button */}
             {showBackButton && backPath && (
               <NavigationFormButton
-                action={backPath === '/dashboard' ? navigateToDashboard : navigateToAdmin}
+                action={
+                  backPath === '/dashboard'
+                    ? navigateToDashboard
+                    : navigateToAdmin
+                }
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border border-gray-300 dark:border-gray-600"
               >
                 <span className="hidden sm:inline">← {backText || 'Back'}</span>
-                <span className="sm:hidden">← {mobileBackText || backText || 'Back'}</span>
+                <span className="sm:hidden">
+                  ← {mobileBackText || backText || 'Back'}
+                </span>
               </NavigationFormButton>
             )}
 
@@ -84,6 +102,16 @@ export function ResponsiveNav({
           {/* Right side - User info and menu */}
           <div className="flex items-center space-x-3">
             {children}
+
+            {/* Dashboard button */}
+            {showBackToDashboard && (
+              <NavigationFormButton
+                action={navigateToDashboard}
+                className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border border-gray-300 dark:border-gray-600"
+              >
+                {dashboardText}
+              </NavigationFormButton>
+            )}
 
             {/* Desktop theme toggle */}
             <div className="hidden md:block">
