@@ -198,7 +198,10 @@ export function ContributionProgress({
                 {progress.purchasesWithContributions} of{' '}
                 {progress.totalPurchases} purchases
               </span>
-              <Badge variant={isComplete ? 'default' : 'secondary'}>
+              <Badge
+                variant={isComplete ? 'default' : 'secondary'}
+                className="bg-white text-slate-900 dark:bg-white dark:text-slate-900"
+              >
                 {progress.progressPercentage}%
               </Badge>
             </div>
