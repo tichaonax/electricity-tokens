@@ -130,19 +130,19 @@ export default function AdminPanel() {
                     Security & Audit
                   </CardTitle>
                   <CardDescription>
-                    Monitor security and audit trails
+                    Historical audit logs and system integrity
                   </CardDescription>
                 </div>
                 <Shield className="h-8 w-8 text-green-600 dark:text-green-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  • View audit logs
+                  • Complete audit trail history
                   <br />
-                  • Monitor user sessions
+                  • Security metrics analysis
                   <br />
-                  • Security configuration
-                  <br />• System integrity checks
+                  • System integrity verification
+                  <br />• Authentication & access logs
                 </div>
               </CardContent>
             </Card>
@@ -150,7 +150,7 @@ export default function AdminPanel() {
             {/* Security Dashboard Card */}
             <Card
               className="hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-              onClick={() => router.push('/dashboard/admin/security')}
+              onClick={() => router.push('/dashboard/admin/security-dashboard')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
@@ -158,19 +158,19 @@ export default function AdminPanel() {
                     Security Dashboard
                   </CardTitle>
                   <CardDescription>
-                    Comprehensive security monitoring and threats
+                    Live monitoring and threat detection
                   </CardDescription>
                 </div>
                 <Shield className="h-8 w-8 text-red-600 dark:text-red-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  • Real-time threat detection
+                  • Real-time security events
                   <br />
-                  • Rate limiting & protection
+                  • Active user monitoring
                   <br />
-                  • Security event monitoring
-                  <br />• System integrity checks
+                  • Live system performance
+                  <br />• Immediate threat response
                 </div>
               </CardContent>
             </Card>
