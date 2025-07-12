@@ -711,17 +711,17 @@ export function PurchaseHistoryTable({
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Quick Filters
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex gap-2">
                 <Button
                   type="button"
                   variant={activePreset === 'thisMonth' ? 'default' : 'outline'}
                   size="sm"
                   onClick={handleThisMonth}
-                  className={
+                  className={`flex-1 text-xs sm:text-sm ${
                     activePreset === 'thisMonth'
                       ? 'bg-green-600 hover:bg-green-700 text-white border-green-600 dark:bg-green-600 dark:hover:bg-green-700 dark:text-white'
                       : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:text-green-300 dark:border-green-700'
-                  }
+                  }`}
                 >
                   This Month
                 </Button>
@@ -730,11 +730,11 @@ export function PurchaseHistoryTable({
                   variant={activePreset === 'lastMonth' ? 'default' : 'outline'}
                   size="sm"
                   onClick={handleLastMonth}
-                  className={
+                  className={`flex-1 text-xs sm:text-sm ${
                     activePreset === 'lastMonth'
                       ? 'bg-orange-600 hover:bg-orange-700 text-white border-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 dark:text-white'
                       : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:hover:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700'
-                  }
+                  }`}
                 >
                   Last Month
                 </Button>
@@ -743,11 +743,11 @@ export function PurchaseHistoryTable({
                   variant={activePreset === 'allTime' ? 'default' : 'outline'}
                   size="sm"
                   onClick={handleAllTime}
-                  className={
+                  className={`flex-1 text-xs sm:text-sm ${
                     activePreset === 'allTime'
                       ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 dark:text-white'
                       : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'
-                  }
+                  }`}
                 >
                   All Time
                 </Button>
@@ -843,7 +843,7 @@ export function PurchaseHistoryTable({
               </div>
 
               {/* Apply Filter and Reset Buttons */}
-              <div className="flex items-end gap-2">
+              <div className="md:col-span-2 lg:col-span-4 flex gap-2">
                 <Button
                   type="button"
                   variant="default"
@@ -854,7 +854,7 @@ export function PurchaseHistoryTable({
                     (tempDateRange.startDate === filters.startDate &&
                       tempDateRange.endDate === filters.endDate)
                   }
-                  className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
                 >
                   Apply Filter
                 </Button>
@@ -863,6 +863,7 @@ export function PurchaseHistoryTable({
                   variant="outline"
                   size="sm"
                   onClick={resetFilters}
+                  className="flex-1"
                 >
                   Reset
                 </Button>
@@ -977,7 +978,7 @@ export function PurchaseHistoryTable({
               key: 'contribution',
               label: 'Contribution Status',
               mobileLabel: 'Status',
-              render: (value, row) => {
+              render: (_, row) => {
                 const contribution = row.contribution;
 
                 if (contribution) {
@@ -1059,7 +1060,7 @@ export function PurchaseHistoryTable({
               label: 'Actions',
               mobileHide: true,
               className: 'w-24 min-w-24',
-              render: (value, row) => {
+              render: (_, row) => {
                 // Show actions based on permissions instead of ownership
                 const canEdit = isAdmin || checkPermission('canEditPurchases');
                 const canDelete =

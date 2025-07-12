@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ArrowLeft,
   Plus,
@@ -13,11 +13,44 @@ import {
   Edit,
   Trash2,
   ExternalLink,
+  Filter,
+  RefreshCw,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePermissions } from '@/hooks/usePermissions';
+
+// Helper function to get current month date range
+function getCurrentMonthRange() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
+
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  };
+}
+
+// Helper function to get last month date range
+function getLastMonthRange() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  };
+}
 
 interface MeterReading {
   id: string;
@@ -66,8 +99,13 @@ export default function MeterReadingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { checkPermission } = usePermissions();
+
+  // Get default date range for current month (memoized to prevent infinite loops)
+  const defaultDateRange = useMemo(() => getCurrentMonthRange(), []);
+
   const [meterReadings, setMeterReadings] = useState<MeterReading[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -75,6 +113,25 @@ export default function MeterReadingsPage() {
     total: 0,
     totalPages: 0,
   });
+
+  // Filtering state
+  const [filters, setFilters] = useState({
+    startDate: defaultDateRange.startDate,
+    endDate: defaultDateRange.endDate,
+    searchTerm: '',
+  });
+
+  const [tempDateRange, setTempDateRange] = useState({
+    startDate: defaultDateRange.startDate,
+    endDate: defaultDateRange.endDate,
+  });
+
+  const [dateError, setDateError] = useState<string>('');
+  const [activePreset, setActivePreset] = useState<
+    'thisMonth' | 'lastMonth' | 'allTime' | null
+  >('thisMonth');
+  const [showFilters, setShowFilters] = useState(false);
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newReading, setNewReading] = useState<NewMeterReading>({
@@ -94,14 +151,38 @@ export default function MeterReadingsPage() {
   }, [status, router]);
 
   const fetchMeterReadings = useCallback(
-    async (page = 1) => {
+    async (
+      page = 1,
+      useTableLoading = false,
+      customFilters?: typeof filters
+    ) => {
       try {
-        setLoading(true);
+        if (useTableLoading) {
+          setTableLoading(true);
+        } else {
+          setLoading(true);
+        }
         setError(null);
+
         const params = new URLSearchParams({
           page: page.toString(),
           limit: pagination.limit.toString(),
         });
+
+        // Use custom filters if provided, otherwise use current filters
+        const currentFilters = customFilters || filters;
+
+        // Add filtering parameters
+        if (currentFilters.startDate) {
+          params.append('startDate', currentFilters.startDate);
+        }
+        if (currentFilters.endDate) {
+          params.append('endDate', currentFilters.endDate);
+        }
+        if (currentFilters.searchTerm) {
+          params.append('search', currentFilters.searchTerm);
+        }
+
         const response = await fetch(`/api/meter-readings?${params}`);
         if (!response.ok) {
           throw new Error('Failed to fetch meter readings');
@@ -114,6 +195,7 @@ export default function MeterReadingsPage() {
         setError('Failed to load meter readings');
       } finally {
         setLoading(false);
+        setTableLoading(false);
       }
     },
     [pagination.limit]
@@ -121,9 +203,141 @@ export default function MeterReadingsPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      fetchMeterReadings();
+      // Initial load with default This Month filters
+      const defaultFilters = {
+        startDate: defaultDateRange.startDate,
+        endDate: defaultDateRange.endDate,
+        searchTerm: '',
+      };
+
+      const loadInitialData = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+
+          const params = new URLSearchParams({
+            page: '1',
+            limit: '20',
+            startDate: defaultFilters.startDate,
+            endDate: defaultFilters.endDate,
+          });
+
+          const response = await fetch(`/api/meter-readings?${params}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch meter readings');
+          }
+          const data = await response.json();
+          setMeterReadings(data.meterReadings || []);
+          setPagination(data.pagination);
+        } catch (error) {
+          console.error('Error fetching meter readings:', error);
+          setError('Failed to load meter readings');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadInitialData();
     }
-  }, [status, fetchMeterReadings]);
+  }, [status, defaultDateRange.startDate, defaultDateRange.endDate]);
+
+  // Date validation and filtering functions
+  const validateDateRange = useCallback(
+    (startDate: string, endDate: string) => {
+      if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+        setDateError('Start date cannot be after end date');
+        return false;
+      }
+      setDateError('');
+      return true;
+    },
+    []
+  );
+
+  const handleDateChange = useCallback(
+    (field: 'startDate' | 'endDate', value: string, e?: React.FormEvent) => {
+      e?.preventDefault();
+
+      const newTempRange = { ...tempDateRange, [field]: value };
+      setTempDateRange(newTempRange);
+
+      // Real-time validation
+      validateDateRange(newTempRange.startDate, newTempRange.endDate);
+    },
+    [tempDateRange, validateDateRange]
+  );
+
+  const applyFilters = useCallback(() => {
+    if (dateError) {
+      return;
+    }
+
+    const newFilters = {
+      ...filters,
+      startDate: tempDateRange.startDate,
+      endDate: tempDateRange.endDate,
+    };
+
+    setFilters(newFilters);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    fetchMeterReadings(1, true, newFilters);
+  }, [dateError, tempDateRange, fetchMeterReadings, filters]);
+
+  const refreshTable = useCallback(() => {
+    fetchMeterReadings(pagination.page, true);
+  }, [fetchMeterReadings, pagination.page]);
+
+  const resetFilters = useCallback(() => {
+    const defaultRange = getCurrentMonthRange();
+    const newFilters = {
+      startDate: defaultRange.startDate,
+      endDate: defaultRange.endDate,
+      searchTerm: '',
+    };
+
+    setTempDateRange(defaultRange);
+    setFilters(newFilters);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    setDateError('');
+    setActivePreset('thisMonth');
+    fetchMeterReadings(1, true, newFilters);
+  }, [fetchMeterReadings]);
+
+  // Quick preset handlers
+  const handleThisMonth = useCallback(() => {
+    const range = getCurrentMonthRange();
+    const newFilters = { ...filters, ...range };
+    setTempDateRange(range);
+    setFilters(newFilters);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    setDateError('');
+    setActivePreset('thisMonth');
+    fetchMeterReadings(1, true, newFilters);
+  }, [fetchMeterReadings, filters]);
+
+  const handleLastMonth = useCallback(() => {
+    const range = getLastMonthRange();
+    const newFilters = { ...filters, ...range };
+    setTempDateRange(range);
+    setFilters(newFilters);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    setDateError('');
+    setActivePreset('lastMonth');
+    fetchMeterReadings(1, true, newFilters);
+  }, [fetchMeterReadings, filters]);
+
+  const handleAllTime = useCallback(() => {
+    const range = { startDate: '', endDate: '' };
+    const newFilters = { ...filters, ...range };
+    setTempDateRange(range);
+    setFilters(newFilters);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    setDateError('');
+    setActivePreset('allTime');
+    fetchMeterReadings(1, true, newFilters);
+  }, [fetchMeterReadings, filters]);
+
+  // Note: Active preset is managed directly in button handlers to avoid useEffect triggers
 
   const validateReading = useCallback(async () => {
     if (!newReading.reading || !newReading.readingDate) {
@@ -427,6 +641,312 @@ export default function MeterReadingsPage() {
             </div>
           )}
 
+          {/* Filtering Controls */}
+          <div className="mb-6 bg-white rounded-lg shadow p-4 dark:bg-slate-800">
+            <div className="flex flex-col space-y-4">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                {/* Desktop: All buttons in a row with active filters display */}
+                <div className="hidden sm:flex gap-2 items-center">
+                  <Button
+                    variant={showFilters ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={
+                      showFilters
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700'
+                        : ''
+                    }
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    {showFilters ? 'Hide Filters' : 'Show Filters'}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={refreshTable}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+
+                  {/* Active Filters and Validation Errors Display */}
+                  <div className="flex items-center gap-3 ml-4">
+                    {(filters.startDate ||
+                      filters.endDate ||
+                      activePreset === 'allTime') && (
+                      <div className="flex items-center gap-2">
+                        <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                          Active Filters:
+                          {filters.startDate && ` From ${filters.startDate}`}
+                          {filters.endDate && ` To ${filters.endDate}`}
+                          {!filters.startDate &&
+                            !filters.endDate &&
+                            activePreset === 'allTime' &&
+                            ' All Time'}
+                          {!filters.startDate &&
+                            !filters.endDate &&
+                            activePreset !== 'allTime' &&
+                            ' This Month'}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded font-medium ${
+                            activePreset === 'allTime'
+                              ? 'text-purple-700 bg-purple-100 dark:text-purple-300 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800'
+                              : 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30'
+                          }`}
+                        >
+                          {activePreset === 'allTime'
+                            ? `${pagination.total} total record${pagination.total !== 1 ? 's' : ''}`
+                            : `${pagination.total} result${pagination.total !== 1 ? 's' : ''}`}
+                        </span>
+                      </div>
+                    )}
+
+                    {dateError && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-red-100 border-2 border-red-300 rounded-md animate-pulse dark:bg-red-900/40 dark:border-red-600">
+                        <AlertTriangle className="h-5 w-5 text-red-700 dark:text-red-400" />
+                        <span className="text-sm font-bold text-red-900 dark:text-red-200">
+                          ⚠️ {dateError}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile: Filters, Refresh, and status display */}
+                <div className="sm:hidden">
+                  <div className="flex gap-2 mb-3">
+                    <Button
+                      variant={showFilters ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className={`flex-1 ${showFilters ? 'bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700' : ''}`}
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      {showFilters ? 'Hide Filters' : 'Show Filters'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refreshTable}
+                      className="flex-1"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                  </div>
+
+                  {/* Mobile Active Filters and Validation Errors */}
+                  <div className="space-y-2">
+                    {(filters.startDate ||
+                      filters.endDate ||
+                      activePreset === 'allTime') && (
+                      <div
+                        className={`flex items-center gap-2 p-2 border rounded ${
+                          activePreset === 'allTime'
+                            ? 'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800'
+                            : 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800'
+                        }`}
+                      >
+                        <Filter
+                          className={`h-4 w-4 ${
+                            activePreset === 'allTime'
+                              ? 'text-purple-600 dark:text-purple-400'
+                              : 'text-blue-600 dark:text-blue-400'
+                          }`}
+                        />
+                        <span
+                          className={`text-sm font-medium ${
+                            activePreset === 'allTime'
+                              ? 'text-purple-800 dark:text-purple-200'
+                              : 'text-blue-800 dark:text-blue-200'
+                          }`}
+                        >
+                          Active Filters:
+                          {filters.startDate && ` From ${filters.startDate}`}
+                          {filters.endDate && ` To ${filters.endDate}`}
+                          {!filters.startDate &&
+                            !filters.endDate &&
+                            activePreset === 'allTime' &&
+                            ' All Time'}
+                          {!filters.startDate &&
+                            !filters.endDate &&
+                            activePreset !== 'allTime' &&
+                            ' This Month'}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ml-auto font-medium ${
+                            activePreset === 'allTime'
+                              ? 'text-purple-700 bg-purple-100 dark:text-purple-300 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800'
+                              : 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30'
+                          }`}
+                        >
+                          {activePreset === 'allTime'
+                            ? `${pagination.total} total record${pagination.total !== 1 ? 's' : ''}`
+                            : `${pagination.total} result${pagination.total !== 1 ? 's' : ''}`}
+                        </span>
+                      </div>
+                    )}
+
+                    {dateError && (
+                      <div className="flex items-center gap-2 p-3 bg-red-100 border-2 border-red-300 rounded-md animate-pulse dark:bg-red-900/40 dark:border-red-600">
+                        <AlertTriangle className="h-5 w-5 text-red-700 dark:text-red-400" />
+                        <span className="text-sm font-bold text-red-900 dark:text-red-200">
+                          ⚠️ {dateError}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filters */}
+            {showFilters && (
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                {/* Quick Date Preset Buttons */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Quick Filters
+                  </label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={
+                        activePreset === 'thisMonth' ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onClick={handleThisMonth}
+                      className={`flex-1 text-xs sm:text-sm ${
+                        activePreset === 'thisMonth'
+                          ? 'bg-green-600 hover:bg-green-700 text-white border-green-600 dark:bg-green-600 dark:hover:bg-green-700 dark:text-white'
+                          : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:text-green-300 dark:border-green-700'
+                      }`}
+                    >
+                      This Month
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        activePreset === 'lastMonth' ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onClick={handleLastMonth}
+                      className={`flex-1 text-xs sm:text-sm ${
+                        activePreset === 'lastMonth'
+                          ? 'bg-orange-600 hover:bg-orange-700 text-white border-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 dark:text-white'
+                          : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:hover:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700'
+                      }`}
+                    >
+                      Last Month
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        activePreset === 'allTime' ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onClick={handleAllTime}
+                      className={`flex-1 text-xs sm:text-sm ${
+                        activePreset === 'allTime'
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 dark:text-white'
+                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'
+                      }`}
+                    >
+                      All Time
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Date Range Inputs and Search */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  {/* Search Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Search Notes
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        type="text"
+                        placeholder="Search in notes..."
+                        value={filters.searchTerm}
+                        onChange={(e) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            searchTerm: e.target.value,
+                          }))
+                        }
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Date Range with validation */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Start Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={tempDateRange.startDate}
+                      onChange={(e) =>
+                        handleDateChange('startDate', e.target.value, e)
+                      }
+                      className={`${
+                        dateError
+                          ? 'border-2 border-red-500 bg-red-50 ring-2 ring-red-200 animate-pulse dark:border-red-400 dark:bg-red-900/20 dark:ring-red-800'
+                          : 'border-slate-300 dark:border-slate-600'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      End Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={tempDateRange.endDate}
+                      onChange={(e) =>
+                        handleDateChange('endDate', e.target.value, e)
+                      }
+                      className={`${
+                        dateError
+                          ? 'border-2 border-red-500 bg-red-50 ring-2 ring-red-200 animate-pulse dark:border-red-400 dark:bg-red-900/20 dark:ring-red-800'
+                          : 'border-slate-300 dark:border-slate-600'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Apply and Reset Buttons */}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={applyFilters}
+                    disabled={
+                      !!dateError ||
+                      (tempDateRange.startDate === filters.startDate &&
+                        tempDateRange.endDate === filters.endDate)
+                    }
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+                  >
+                    Apply Filter
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="flex-1"
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Add/Edit Form */}
           {showAddForm && (
             <div className="mb-6 bg-white rounded-lg shadow p-6 dark:bg-slate-800">
@@ -629,7 +1149,17 @@ export default function MeterReadingsPage() {
           )}
 
           {/* Meter Readings List */}
-          <div className="bg-white rounded-lg shadow dark:bg-slate-800">
+          <div className="relative bg-white rounded-lg shadow dark:bg-slate-800">
+            {tableLoading && (
+              <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 z-10 flex items-center justify-center rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Loading...
+                  </span>
+                </div>
+              </div>
+            )}
             {meterReadings.length === 0 ? (
               <div className="p-12 text-center">
                 <Gauge className="h-12 w-12 text-slate-400 mx-auto mb-4" />
@@ -700,8 +1230,8 @@ export default function MeterReadingsPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
-                                <Gauge className="h-4 w-4 text-blue-600 mr-2" />
-                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                <Gauge className="h-4 w-4 text-purple-600 mr-2" />
+                                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
                                   {reading.reading.toFixed(2)} kWh
                                 </span>
                               </div>
@@ -848,8 +1378,8 @@ export default function MeterReadingsPage() {
                                 </span>
                               </div>
                               <div className="flex items-center">
-                                <Gauge className="h-4 w-4 text-blue-600 mr-2" />
-                                <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                                <Gauge className="h-4 w-4 text-purple-600 mr-2" />
+                                <span className="text-lg font-semibold text-purple-700 dark:text-purple-300">
                                   {reading.reading.toFixed(2)} kWh
                                 </span>
                               </div>
