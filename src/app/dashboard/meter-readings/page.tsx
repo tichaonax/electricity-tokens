@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -95,7 +96,7 @@ interface ValidationResult {
   };
 }
 
-export default function MeterReadingsPage() {
+function MeterReadingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1627,3 +1628,13 @@ export default function MeterReadingsPage() {
     </div>
   );
 }
+
+// Disable SSR for this component since it uses client-side hooks
+export default dynamic(() => Promise.resolve(MeterReadingsPage), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+    </div>
+  ),
+});

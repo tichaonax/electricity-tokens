@@ -28,7 +28,6 @@ export const metadata: Metadata = {
   title: 'Electricity Tokens Tracker',
   description: 'Track and manage electricity usage with token-based billing',
   manifest: '/manifest.json',
-  themeColor: '#4f46e5',
   icons: {
     icon: [
       { url: '/icons/icon-32x32.svg', sizes: '32x32', type: 'image/svg+xml' },
@@ -68,6 +67,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: '#4f46e5',
 };
 
 export default function RootLayout({
