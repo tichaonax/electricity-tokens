@@ -195,7 +195,7 @@ async function diagnoseService() {
     console.log(`\n⚙️  Service Configuration:`);
     try {
       const { stdout } = await execAsync(
-        `${config.commands.SC_COMMAND} qc "ElectricityTokensTracker"`
+        `${config.commands.SC_COMMAND} qc "electricitytokenstracker.exe"`
       );
       const lines = stdout.split('\n');
 

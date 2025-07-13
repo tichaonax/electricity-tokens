@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 class HybridServiceManager {
   constructor() {
-    this.serviceName = 'ElectricityTokensTracker';
+    this.serviceName = 'electricitytokenstracker.exe';
     this.appRoot = path.resolve(__dirname, '../..');
     this.logFile = path.join(this.appRoot, 'logs', 'hybrid-service.log');
     this.pidFile = path.join(this.appRoot, 'logs', 'service.pid');

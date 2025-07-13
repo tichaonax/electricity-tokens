@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 class ForceInstallManager {
   constructor() {
-    this.serviceName = 'ElectricityTokensTracker';
+    this.serviceName = 'electricitytokenstracker.exe';
     this.daemonPath = path.join(__dirname, 'daemon');
   }
 
