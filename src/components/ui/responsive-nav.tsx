@@ -66,7 +66,7 @@ export function ResponsiveNav({
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <nav className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 transition-all duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left side - Mobile menu + Back button + Title */}
@@ -82,7 +82,7 @@ export function ResponsiveNav({
                     ? navigateToDashboard
                     : navigateToAdmin
                 }
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border border-gray-300 dark:border-gray-600"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-transparent border border-gray-300 dark:border-gray-600 transition-all duration-200 hover:scale-105 hover:shadow-md"
               >
                 <span className="hidden sm:inline">← {backText || 'Back'}</span>
                 <span className="sm:hidden">
@@ -93,7 +93,7 @@ export function ResponsiveNav({
 
             {/* Title */}
             <div className="flex items-center">
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden">
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden transition-all duration-300 hover:text-blue-600 dark:hover:text-blue-400">
                 {title}
               </h1>
             </div>
@@ -122,10 +122,10 @@ export function ResponsiveNav({
             <div className="relative hidden md:block" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 hover:scale-105 hover:shadow-md"
               >
-                <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900 dark:to-indigo-800 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+                  <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400 transition-all duration-200" />
                 </div>
                 <div className="text-left min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-32">
@@ -145,7 +145,7 @@ export function ResponsiveNav({
 
               {/* Desktop dropdown menu */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-50 border border-gray-200 dark:border-slate-600">
+                <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-50 border border-gray-200/50 dark:border-slate-600/50 animate-fade-in">
                   <div className="py-1">
                     {/* User info section */}
                     <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-600">
@@ -160,14 +160,14 @@ export function ResponsiveNav({
                     {/* Navigation links */}
                     <NavigationFormButton
                       action={navigateToDashboard}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200 hover:pl-6"
                     >
                       Dashboard
                     </NavigationFormButton>
 
                     <NavigationFormButton
                       action={navigateToProfile}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200 hover:pl-6"
                     >
                       Profile & Settings
                     </NavigationFormButton>
@@ -176,13 +176,13 @@ export function ResponsiveNav({
                       <>
                         <NavigationFormButton
                           action={navigateToAdmin}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200 hover:pl-6"
                         >
                           Admin Panel
                         </NavigationFormButton>
                         <NavigationFormButton
                           action={navigateToUserManagement}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200 hover:pl-6"
                         >
                           User Management
                         </NavigationFormButton>
@@ -202,7 +202,7 @@ export function ResponsiveNav({
                     <div className="border-t border-gray-100 dark:border-slate-600 mt-1">
                       <button
                         onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100"
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200 hover:pl-6"
                       >
                         Sign Out
                       </button>

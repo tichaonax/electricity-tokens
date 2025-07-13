@@ -278,7 +278,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
                 Avg Cost/kWh
               </p>
               <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                ${data.personalSummary.averageCostPerKwh.toFixed(4)}
+                ${data.personalSummary.averageCostPerKwh.toFixed(3)}
               </p>
               <p className="text-xs text-purple-600 dark:text-purple-400">
                 per kilowatt-hour

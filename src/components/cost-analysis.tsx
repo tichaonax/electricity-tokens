@@ -228,10 +228,10 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             }
             className="flex-1 sm:max-w-40"
           />
-          <Button 
+          <Button
             type="button"
-            onClick={fetchCostAnalysis} 
-            variant="outline" 
+            onClick={fetchCostAnalysis}
+            variant="outline"
             size="sm"
             className="flex-1 sm:flex-none"
           >
@@ -335,7 +335,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                     Average Cost/kWh:
                   </span>
                   <span className="font-medium text-slate-900 dark:text-slate-100">
-                    ${costData.averageCostPerKwh.toFixed(4)}
+                    ${costData.averageCostPerKwh.toFixed(3)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -464,7 +464,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             <PieChart className="h-5 w-5" />
             Optimal vs Actual Contributions
           </h3>
-          
+
           {/* Desktop Table View */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm">
@@ -563,22 +563,26 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <div className="text-slate-600 dark:text-slate-400">Actual</div>
+                    <div className="text-slate-600 dark:text-slate-400">
+                      Actual
+                    </div>
                     <div className="font-medium text-slate-900 dark:text-slate-100">
                       ${contrib.actualContribution.toFixed(2)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-slate-600 dark:text-slate-400">Optimal</div>
+                    <div className="text-slate-600 dark:text-slate-400">
+                      Optimal
+                    </div>
                     <div className="font-medium text-slate-900 dark:text-slate-100">
                       ${contrib.totalOptimalContribution.toFixed(2)}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-600 dark:text-slate-400">

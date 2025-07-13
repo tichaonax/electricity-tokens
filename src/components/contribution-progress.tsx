@@ -17,6 +17,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/hooks/usePermissions';
 import { formatDateTime } from '@/lib/utils';
+import { ContributionProgressSkeleton } from '@/components/ui/skeleton';
 
 interface ContributionProgressData {
   totalPurchases: number;
@@ -112,18 +113,7 @@ export function ContributionProgress({
   };
 
   if (loading) {
-    return (
-      <Card className={compact ? 'p-4' : ''}>
-        <CardContent className={compact ? 'p-0' : ''}>
-          <div className="flex items-center justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-            <span className="ml-2 text-sm text-slate-600 dark:text-slate-400">
-              Loading progress...
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <ContributionProgressSkeleton />;
   }
 
   if (error) {

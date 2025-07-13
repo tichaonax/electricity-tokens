@@ -11,6 +11,8 @@ import { ContributionProgress } from '@/components/contribution-progress';
 import { ProgressiveConsumptionWidget } from '@/components/ui/progressive-consumption-widget';
 import { RunningBalanceWidget } from '@/components/ui/running-balance-widget';
 import { MaxDailyConsumptionWidget } from '@/components/ui/max-daily-consumption-widget';
+// Skeleton components imported but not currently used in this component
+// import { QuickStatsSkeleton, DashboardGridSkeleton, ContributionProgressSkeleton } from '@/components/ui/skeleton';
 
 interface QuickStats {
   totalTokensUsed: number;
@@ -307,14 +309,14 @@ export function DashboardClient() {
                 onClick={() =>
                   navigateAndSaveScroll('/dashboard/contributions')
                 }
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -356,14 +358,14 @@ export function DashboardClient() {
                 onClick={() =>
                   navigateAndSaveScroll('/dashboard/meter-readings')
                 }
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -405,14 +407,14 @@ export function DashboardClient() {
                 onClick={() =>
                   navigateAndSaveScroll('/dashboard/cost-analysis')
                 }
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -452,14 +454,14 @@ export function DashboardClient() {
             {checkPermission('canViewPersonalDashboard') && (
               <button
                 onClick={() => navigateAndSaveScroll('/dashboard/personal')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-teal-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -501,14 +503,14 @@ export function DashboardClient() {
                 onClick={() =>
                   navigateAndSaveScroll('/dashboard/data-management')
                 }
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -550,14 +552,14 @@ export function DashboardClient() {
                 onClick={() =>
                   navigateAndSaveScroll('/dashboard/reports/usage')
                 }
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -599,14 +601,14 @@ export function DashboardClient() {
                 onClick={() =>
                   navigateAndSaveScroll('/dashboard/reports/financial')
                 }
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -648,14 +650,14 @@ export function DashboardClient() {
                 onClick={() =>
                   navigateAndSaveScroll('/dashboard/reports/efficiency')
                 }
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 rounded-md flex items-center justify-center">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -745,14 +747,14 @@ export function DashboardClient() {
               {isAdmin && (
                 <button
                   onClick={() => navigateAndSaveScroll('/dashboard/admin')}
-                  className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200 dark:border-red-800 block text-left w-full"
+                  className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-red-200 dark:border-red-800 block text-left w-full card-hover transform hover:scale-[1.02]"
                 >
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -799,9 +801,9 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -821,10 +823,12 @@ export function DashboardClient() {
                             Total Tokens Consumed
                           </dt>
                           <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            {loadingStats
-                              ? '...'
-                              : quickStats?.totalTokensUsed.toLocaleString() ||
-                                '0'}
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-16 rounded"></div>
+                            ) : (
+                              quickStats?.totalTokensUsed.toLocaleString() ||
+                              '0'
+                            )}
                           </dd>
                         </dl>
                       </div>
@@ -836,9 +840,9 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -858,11 +862,13 @@ export function DashboardClient() {
                             Average Cost/Token
                           </dt>
                           <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            {loadingStats
-                              ? '...'
-                              : quickStats
-                                ? `$${quickStats.averageCostPerKwh.toFixed(4)}`
-                                : '$0.0000'}
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-20 rounded"></div>
+                            ) : quickStats ? (
+                              `$${quickStats.averageCostPerKwh.toFixed(3)}`
+                            ) : (
+                              '$0.000'
+                            )}
                           </dd>
                         </dl>
                       </div>
@@ -874,9 +880,9 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -896,11 +902,13 @@ export function DashboardClient() {
                             Total Spent
                           </dt>
                           <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            {loadingStats
-                              ? '...'
-                              : quickStats
-                                ? `$${quickStats.totalAmountPaid.toFixed(2)}`
-                                : '$0.00'}
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-18 rounded"></div>
+                            ) : quickStats ? (
+                              `$${quickStats.totalAmountPaid.toFixed(2)}`
+                            ) : (
+                              '$0.00'
+                            )}
                           </dd>
                         </dl>
                       </div>
@@ -921,7 +929,7 @@ export function DashboardClient() {
                           }`}
                         >
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -948,11 +956,13 @@ export function DashboardClient() {
                                 : 'text-red-600 dark:text-red-400'
                             }`}
                           >
-                            {loadingStats
-                              ? '...'
-                              : quickStats
-                                ? `$${quickStats.accountBalance.toFixed(2)}`
-                                : '$0.00'}
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-18 rounded"></div>
+                            ) : quickStats ? (
+                              `$${quickStats.accountBalance.toFixed(2)}`
+                            ) : (
+                              '$0.00'
+                            )}
                           </dd>
                         </dl>
                       </div>

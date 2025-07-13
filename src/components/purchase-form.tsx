@@ -16,6 +16,7 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { AlertCircle, CheckCircle2, DollarSign, Zap, Info } from 'lucide-react';
+import { useFormAnimations } from '@/hooks/useFormAnimations';
 
 // Form-specific schema for react-hook-form
 const purchaseFormSchema = z.object({
@@ -64,6 +65,7 @@ export function PurchaseForm({
 }: PurchaseFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const { formRef, animateFormSuccess, animateFormError } = useFormAnimations();
   const [meterReadingValidation, setMeterReadingValidation] = useState<{
     isValidating: boolean;
     isValid: boolean;
@@ -230,7 +232,9 @@ export function PurchaseForm({
     setLastMeterReading({ isLoading: true });
 
     try {
-      const response = await fetch('/api/purchases?limit=1&sortBy=purchaseDate&sortDirection=desc');
+      const response = await fetch(
+        '/api/purchases?limit=1&sortBy=purchaseDate&sortDirection=desc'
+      );
       if (response.ok) {
         const result = await response.json();
         if (result.purchases && result.purchases.length > 0) {
@@ -279,7 +283,7 @@ export function PurchaseForm({
             date: latestMeterReading.readingDate,
             source: 'meter_reading',
           });
-          
+
           // Auto-populate the form with the latest meter reading
           setValue('meterReading', latestMeterReading.reading);
           return;
@@ -287,7 +291,9 @@ export function PurchaseForm({
       }
 
       // Fallback to last purchase meter reading if no meter readings exist
-      const purchaseResponse = await fetch('/api/purchases?limit=1&sortBy=purchaseDate&sortDirection=desc');
+      const purchaseResponse = await fetch(
+        '/api/purchases?limit=1&sortBy=purchaseDate&sortDirection=desc'
+      );
       if (purchaseResponse.ok) {
         const purchaseResult = await purchaseResponse.json();
         if (purchaseResult.purchases && purchaseResult.purchases.length > 0) {
@@ -298,7 +304,7 @@ export function PurchaseForm({
             date: lastPurchase.purchaseDate,
             source: 'purchase',
           });
-          
+
           // Auto-populate the form with the last purchase meter reading
           setValue('meterReading', lastPurchase.meterReading);
           return;
@@ -380,25 +386,32 @@ export function PurchaseForm({
 
   // Additional validation for meter reading vs tokens purchased
   useEffect(() => {
-    if (watchedValues.meterReading && watchedValues.totalTokens && contextInfo.previousPurchase) {
+    if (
+      watchedValues.meterReading &&
+      watchedValues.totalTokens &&
+      contextInfo.previousPurchase
+    ) {
       // For latest purchase (no nextPurchase), include current purchase tokens in maximum
-      const expectedMaximum = contextInfo.nextPurchase 
-        ? contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens
-        : contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens + watchedValues.totalTokens;
-      
+      const expectedMaximum = contextInfo.nextPurchase
+        ? contextInfo.previousPurchase.meterReading +
+          contextInfo.previousPurchase.totalTokens
+        : contextInfo.previousPurchase.meterReading +
+          contextInfo.previousPurchase.totalTokens +
+          watchedValues.totalTokens;
+
       if (watchedValues.meterReading > expectedMaximum) {
         const errorMessage = contextInfo.nextPurchase
           ? `Meter reading (${watchedValues.meterReading.toLocaleString()}) cannot exceed maximum of ${expectedMaximum.toLocaleString()} kWh. Please increase tokens purchased to at least ${(watchedValues.meterReading - contextInfo.previousPurchase.meterReading).toLocaleString()} kWh or reduce the meter reading.`
           : `Meter reading (${watchedValues.meterReading.toLocaleString()}) cannot exceed maximum of ${expectedMaximum.toLocaleString()} kWh (prev reading: ${contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: ${contextInfo.previousPurchase.totalTokens.toLocaleString()} + current tokens: ${watchedValues.totalTokens.toLocaleString()}).`;
-        
-        setMeterReadingValidation(prev => ({
+
+        setMeterReadingValidation((prev) => ({
           ...prev,
           isValid: false,
           error: errorMessage,
           expectedMaximum,
         }));
       } else {
-        setMeterReadingValidation(prev => ({
+        setMeterReadingValidation((prev) => ({
           ...prev,
           isValid: true,
           error: undefined,
@@ -435,7 +448,10 @@ export function PurchaseForm({
   useEffect(() => {
     if (initialData && mode === 'edit') {
       if (initialData.purchaseDate) {
-        setValue('purchaseDate', new Date(initialData.purchaseDate + 'T00:00:00'));
+        setValue(
+          'purchaseDate',
+          new Date(initialData.purchaseDate + 'T00:00:00')
+        );
       }
     }
   }, [initialData, mode, setValue]);
@@ -473,6 +489,7 @@ export function PurchaseForm({
         }
 
         setSubmitSuccess(true);
+        animateFormSuccess();
         setTimeout(() => {
           if (onSuccess) onSuccess();
         }, 1500);
@@ -480,6 +497,7 @@ export function PurchaseForm({
         // Create new purchase (legacy path for existing usage)
         await onSubmit(submitData);
         setSubmitSuccess(true);
+        animateFormSuccess();
 
         // Reset form after successful submission
         setTimeout(() => {
@@ -493,6 +511,7 @@ export function PurchaseForm({
           ? error.message
           : `Failed to ${mode} purchase. Please try again.`
       );
+      animateFormError();
     }
   };
 
@@ -517,27 +536,42 @@ export function PurchaseForm({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block">Current Tokens:</span>
+                <span className="text-slate-500 dark:text-slate-400 block">
+                  Current Tokens:
+                </span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
                   {initialData.totalTokens?.toLocaleString() || 'N/A'} kWh
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block">Current Payment:</span>
+                <span className="text-slate-500 dark:text-slate-400 block">
+                  Current Payment:
+                </span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
                   ${initialData.totalPayment?.toFixed(2) || 'N/A'}
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block">Current Meter Reading:</span>
+                <span className="text-slate-500 dark:text-slate-400 block">
+                  Current Meter Reading:
+                </span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {typeof initialData.meterReading !== 'undefined' ? initialData.meterReading.toLocaleString() : 'N/A'} kWh
+                  {typeof initialData.meterReading !== 'undefined'
+                    ? initialData.meterReading.toLocaleString()
+                    : 'N/A'}{' '}
+                  kWh
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block">Current Date:</span>
+                <span className="text-slate-500 dark:text-slate-400 block">
+                  Current Date:
+                </span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
-                  {initialData.purchaseDate ? new Date(initialData.purchaseDate + 'T00:00:00').toLocaleDateString() : 'N/A'}
+                  {initialData.purchaseDate
+                    ? new Date(
+                        initialData.purchaseDate + 'T00:00:00'
+                      ).toLocaleDateString()
+                    : 'N/A'}
                 </span>
               </div>
             </div>
@@ -567,7 +601,7 @@ export function PurchaseForm({
         </div>
       )}
 
-      <Form onSubmit={handleSubmit(handleFormSubmit)}>
+      <Form ref={formRef} onSubmit={handleSubmit(handleFormSubmit)}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Total Tokens */}
           <FormField>
@@ -578,14 +612,19 @@ export function PurchaseForm({
                   {initialData?.totalTokens !== undefined ? (
                     <>
                       (was: {initialData.totalTokens.toLocaleString()} kWh)
-                      {watchedValues.totalTokens !== initialData.totalTokens && (
+                      {watchedValues.totalTokens !==
+                        initialData.totalTokens && (
                         <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
-                          → changing to {watchedValues.totalTokens?.toLocaleString() || '0'} kWh
+                          → changing to{' '}
+                          {watchedValues.totalTokens?.toLocaleString() || '0'}{' '}
+                          kWh
                         </span>
                       )}
                     </>
                   ) : (
-                    <span className="text-red-500">(original value loading...)</span>
+                    <span className="text-red-500">
+                      (original value loading...)
+                    </span>
                   )}
                 </span>
               )}
@@ -597,9 +636,10 @@ export function PurchaseForm({
               min="0"
               max="100000"
               placeholder="Enter total tokens"
-              {...register('totalTokens', { 
+              {...register('totalTokens', {
                 valueAsNumber: true,
-                setValueAs: (value) => Math.round(parseFloat(value) * 100) / 100
+                setValueAs: (value) =>
+                  Math.round(parseFloat(value) * 100) / 100,
               })}
               className={errors.totalTokens ? 'border-red-500' : ''}
             />
@@ -620,14 +660,18 @@ export function PurchaseForm({
                   {initialData?.totalPayment !== undefined ? (
                     <>
                       (was: ${initialData.totalPayment.toFixed(2)})
-                      {watchedValues.totalPayment !== initialData.totalPayment && (
+                      {watchedValues.totalPayment !==
+                        initialData.totalPayment && (
                         <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
-                          → changing to ${watchedValues.totalPayment?.toFixed(2) || '0.00'}
+                          → changing to $
+                          {watchedValues.totalPayment?.toFixed(2) || '0.00'}
                         </span>
                       )}
                     </>
                   ) : (
-                    <span className="text-red-500">(original value loading...)</span>
+                    <span className="text-red-500">
+                      (original value loading...)
+                    </span>
                   )}
                 </span>
               )}
@@ -663,29 +707,37 @@ export function PurchaseForm({
                   {initialData?.meterReading !== undefined ? (
                     <>
                       (was: {initialData.meterReading.toLocaleString()} kWh)
-                      {watchedValues.meterReading !== initialData.meterReading && (
+                      {watchedValues.meterReading !==
+                        initialData.meterReading && (
                         <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
-                          → changing to {watchedValues.meterReading?.toLocaleString() || '0'} kWh
+                          → changing to{' '}
+                          {watchedValues.meterReading?.toLocaleString() || '0'}{' '}
+                          kWh
                         </span>
                       )}
                     </>
                   ) : (
-                    <span className="text-red-500">(original value loading...)</span>
+                    <span className="text-red-500">
+                      (original value loading...)
+                    </span>
                   )}
                 </span>
               )}
             </FormLabel>
 
             {/* Current Meter Reading Display for Edit Mode */}
-            {mode === 'edit' && initialData && typeof initialData.meterReading !== 'undefined' && (
-              <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-md dark:bg-green-950 dark:border-green-800">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm font-medium text-green-800 dark:text-green-200">
-                    🔄 Changing meter reading from: {initialData.meterReading.toLocaleString()} kWh
+            {mode === 'edit' &&
+              initialData &&
+              typeof initialData.meterReading !== 'undefined' && (
+                <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-md dark:bg-green-950 dark:border-green-800">
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-medium text-green-800 dark:text-green-200">
+                      🔄 Changing meter reading from:{' '}
+                      {initialData.meterReading.toLocaleString()} kWh
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Auto-populated Meter Reading Display for Create Mode */}
             {mode === 'create' && (
@@ -693,7 +745,9 @@ export function PurchaseForm({
                 <div className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
                   <div className="text-sm text-green-700 dark:text-green-300">
-                    <div className="font-medium mb-1">Auto-populated Meter Reading:</div>
+                    <div className="font-medium mb-1">
+                      Auto-populated Meter Reading:
+                    </div>
                     {meterReadingSuggestion.isLoading ? (
                       <div>Loading latest meter reading...</div>
                     ) : meterReadingSuggestion.error ? (
@@ -703,19 +757,37 @@ export function PurchaseForm({
                     ) : meterReadingSuggestion.reading ? (
                       <div>
                         <div>
-                          Using {meterReadingSuggestion.source === 'meter_reading' ? 'latest meter reading' : 'last purchase meter reading'}: <span className="font-medium">{meterReadingSuggestion.reading.toLocaleString()} kWh</span>
+                          Using{' '}
+                          {meterReadingSuggestion.source === 'meter_reading'
+                            ? 'latest meter reading'
+                            : 'last purchase meter reading'}
+                          :{' '}
+                          <span className="font-medium">
+                            {meterReadingSuggestion.reading.toLocaleString()}{' '}
+                            kWh
+                          </span>
                         </div>
                         <div className="text-xs mt-1">
-                          From {meterReadingSuggestion.source === 'meter_reading' ? 'meter reading' : 'purchase'} on: {new Date(meterReadingSuggestion.date!).toLocaleDateString()}
+                          From{' '}
+                          {meterReadingSuggestion.source === 'meter_reading'
+                            ? 'meter reading'
+                            : 'purchase'}{' '}
+                          on:{' '}
+                          {new Date(
+                            meterReadingSuggestion.date!
+                          ).toLocaleDateString()}
                         </div>
                         <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          ✨ {meterReadingSuggestion.source === 'meter_reading' 
-                            ? 'Form auto-populated with your latest meter reading' 
+                          ✨{' '}
+                          {meterReadingSuggestion.source === 'meter_reading'
+                            ? 'Form auto-populated with your latest meter reading'
                             : 'Form auto-populated with last purchase meter reading'}
                         </div>
                       </div>
                     ) : (
-                      <div>No previous readings found - you can enter any value</div>
+                      <div>
+                        No previous readings found - you can enter any value
+                      </div>
                     )}
                   </div>
                 </div>
@@ -728,7 +800,9 @@ export function PurchaseForm({
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div className="text-sm text-blue-700 dark:text-blue-300">
-                    <div className="font-medium mb-1">Last Purchase Context:</div>
+                    <div className="font-medium mb-1">
+                      Last Purchase Context:
+                    </div>
                     {lastMeterReading.isLoading ? (
                       <div>Loading last purchase information...</div>
                     ) : lastMeterReading.error ? (
@@ -738,13 +812,20 @@ export function PurchaseForm({
                     ) : lastMeterReading.reading ? (
                       <div>
                         <div>
-                          Last purchase meter reading: <span className="font-medium">{lastMeterReading.reading.toLocaleString()} kWh</span>
+                          Last purchase meter reading:{' '}
+                          <span className="font-medium">
+                            {lastMeterReading.reading.toLocaleString()} kWh
+                          </span>
                         </div>
                         <div className="text-xs mt-1">
-                          From purchase on: {new Date(lastMeterReading.date!).toLocaleDateString()}
+                          From purchase on:{' '}
+                          {new Date(
+                            lastMeterReading.date!
+                          ).toLocaleDateString()}
                         </div>
                         <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                          💡 Your new meter reading should be greater than {lastMeterReading.reading.toLocaleString()} kWh
+                          💡 Your new meter reading should be greater than{' '}
+                          {lastMeterReading.reading.toLocaleString()} kWh
                         </div>
                       </div>
                     ) : (
@@ -761,52 +842,92 @@ export function PurchaseForm({
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div className="text-sm text-blue-700 dark:text-blue-300">
-                    <div className="font-medium mb-1">Chronological Context:</div>
+                    <div className="font-medium mb-1">
+                      Chronological Context:
+                    </div>
                     {contextInfo.isLoading ? (
                       <div>Loading context information...</div>
                     ) : (
                       <div className="space-y-1">
                         {contextInfo.previousPurchase ? (
                           <div>
-                            Previous purchase: {contextInfo.previousPurchase.meterReading?.toLocaleString()} kWh 
-                            ({contextInfo.previousPurchase.date ? new Date(contextInfo.previousPurchase.date).toLocaleDateString() : 'Unknown date'})
+                            Previous purchase:{' '}
+                            {contextInfo.previousPurchase.meterReading?.toLocaleString()}{' '}
+                            kWh (
+                            {contextInfo.previousPurchase.date
+                              ? new Date(
+                                  contextInfo.previousPurchase.date
+                                ).toLocaleDateString()
+                              : 'Unknown date'}
+                            )
                           </div>
                         ) : (
                           <div>No previous purchase found</div>
                         )}
                         {contextInfo.nextPurchase && (
                           <div>
-                            Next purchase: {contextInfo.nextPurchase.meterReading?.toLocaleString()} kWh 
-                            ({contextInfo.nextPurchase.date ? new Date(contextInfo.nextPurchase.date).toLocaleDateString() : 'Unknown date'})
+                            Next purchase:{' '}
+                            {contextInfo.nextPurchase.meterReading?.toLocaleString()}{' '}
+                            kWh (
+                            {contextInfo.nextPurchase.date
+                              ? new Date(
+                                  contextInfo.nextPurchase.date
+                                ).toLocaleDateString()
+                              : 'Unknown date'}
+                            )
                           </div>
                         )}
-                        {watchedValues.totalTokens && contextInfo.previousPurchase && (
-                          <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
-                            <div className="font-medium">Maximum Allowed Reading:</div>
-                            <div>
-                              {contextInfo.nextPurchase ? (
-                                // Not the latest purchase - use previous reading + previous tokens
-                                <>
-                                  {(contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens).toLocaleString()} kWh 
-                                  <span className="text-xs ml-1">
-                                    (prev reading: {contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: {contextInfo.previousPurchase.totalTokens.toLocaleString()})
-                                  </span>
-                                </>
-                              ) : (
-                                // Latest purchase - include current purchase tokens
-                                <>
-                                  {(contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens + watchedValues.totalTokens).toLocaleString()} kWh 
-                                  <span className="text-xs ml-1">
-                                    (prev reading: {contextInfo.previousPurchase.meterReading.toLocaleString()} + prev tokens: {contextInfo.previousPurchase.totalTokens.toLocaleString()} + token purchase: {watchedValues.totalTokens.toLocaleString()})
-                                  </span>
-                                </>
-                              )}
+                        {watchedValues.totalTokens &&
+                          contextInfo.previousPurchase && (
+                            <div className="mt-2 pt-2 border-t border-blue-300 dark:border-blue-700">
+                              <div className="font-medium">
+                                Maximum Allowed Reading:
+                              </div>
+                              <div>
+                                {contextInfo.nextPurchase ? (
+                                  // Not the latest purchase - use previous reading + previous tokens
+                                  <>
+                                    {(
+                                      contextInfo.previousPurchase
+                                        .meterReading +
+                                      contextInfo.previousPurchase.totalTokens
+                                    ).toLocaleString()}{' '}
+                                    kWh
+                                    <span className="text-xs ml-1">
+                                      (prev reading:{' '}
+                                      {contextInfo.previousPurchase.meterReading.toLocaleString()}{' '}
+                                      + prev tokens:{' '}
+                                      {contextInfo.previousPurchase.totalTokens.toLocaleString()}
+                                      )
+                                    </span>
+                                  </>
+                                ) : (
+                                  // Latest purchase - include current purchase tokens
+                                  <>
+                                    {(
+                                      contextInfo.previousPurchase
+                                        .meterReading +
+                                      contextInfo.previousPurchase.totalTokens +
+                                      watchedValues.totalTokens
+                                    ).toLocaleString()}{' '}
+                                    kWh
+                                    <span className="text-xs ml-1">
+                                      (prev reading:{' '}
+                                      {contextInfo.previousPurchase.meterReading.toLocaleString()}{' '}
+                                      + prev tokens:{' '}
+                                      {contextInfo.previousPurchase.totalTokens.toLocaleString()}{' '}
+                                      + token purchase:{' '}
+                                      {watchedValues.totalTokens.toLocaleString()}
+                                      )
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                              <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                📏 Meter reading cannot exceed this value
+                              </div>
                             </div>
-                            <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                              📏 Meter reading cannot exceed this value
-                            </div>
-                          </div>
-                        )}
+                          )}
                       </div>
                     )}
                   </div>
@@ -820,29 +941,30 @@ export function PurchaseForm({
                 type="number"
                 step="0.01"
                 min={
-                  mode === 'edit' ? (
-                    contextInfo.previousPurchase?.meterReading || 
-                    meterReadingValidation.minimum || 
-                    0
-                  ) : (
-                    lastMeterReading.reading || 
-                    meterReadingValidation.minimum || 
-                    0
-                  )
+                  mode === 'edit'
+                    ? contextInfo.previousPurchase?.meterReading ||
+                      meterReadingValidation.minimum ||
+                      0
+                    : lastMeterReading.reading ||
+                      meterReadingValidation.minimum ||
+                      0
                 }
                 max={
-                  contextInfo.nextPurchase?.meterReading || 
-                  (watchedValues.totalTokens && contextInfo.previousPurchase ? 
-                    (contextInfo.nextPurchase 
-                      ? contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens
-                      : contextInfo.previousPurchase.meterReading + contextInfo.previousPurchase.totalTokens + watchedValues.totalTokens
-                    ) : 
-                    1000000)
+                  contextInfo.nextPurchase?.meterReading ||
+                  (watchedValues.totalTokens && contextInfo.previousPurchase
+                    ? contextInfo.nextPurchase
+                      ? contextInfo.previousPurchase.meterReading +
+                        contextInfo.previousPurchase.totalTokens
+                      : contextInfo.previousPurchase.meterReading +
+                        contextInfo.previousPurchase.totalTokens +
+                        watchedValues.totalTokens
+                    : 1000000)
                 }
                 placeholder={
                   meterReadingValidation.suggestion
                     ? `Enter reading (suggested: ${meterReadingValidation.suggestion.toLocaleString()})`
-                    : mode === 'edit' && contextInfo.previousPurchase?.meterReading
+                    : mode === 'edit' &&
+                        contextInfo.previousPurchase?.meterReading
                       ? `Must be >= ${contextInfo.previousPurchase.meterReading.toLocaleString()} kWh`
                       : mode === 'create' && lastMeterReading.reading
                         ? `Must be > ${lastMeterReading.reading.toLocaleString()} kWh`
@@ -900,9 +1022,10 @@ export function PurchaseForm({
                 </div>
               )}
 
-
             <FormDescription>
-              Enter the meter reading at the time of purchase. This value must be greater than or equal to the previous meter reading and cannot exceed the previous reading plus tokens purchased.
+              Enter the meter reading at the time of purchase. This value must
+              be greater than or equal to the previous meter reading and cannot
+              exceed the previous reading plus tokens purchased.
             </FormDescription>
             {errors.meterReading && (
               <FormMessage>{errors.meterReading.message}</FormMessage>
@@ -915,27 +1038,43 @@ export function PurchaseForm({
               Purchase Date *
               {mode === 'edit' && initialData?.purchaseDate && (
                 <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
-                  (was: {new Date(initialData.purchaseDate + 'T00:00:00').toLocaleDateString()})
-                  {watchedValues.purchaseDate && 
-                   new Date(watchedValues.purchaseDate).toLocaleDateString() !== new Date(initialData.purchaseDate + 'T00:00:00').toLocaleDateString() && (
-                    <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
-                      → changing to {new Date(watchedValues.purchaseDate).toLocaleDateString()}
-                    </span>
-                  )}
+                  (was:{' '}
+                  {new Date(
+                    initialData.purchaseDate + 'T00:00:00'
+                  ).toLocaleDateString()}
+                  )
+                  {watchedValues.purchaseDate &&
+                    new Date(
+                      watchedValues.purchaseDate
+                    ).toLocaleDateString() !==
+                      new Date(
+                        initialData.purchaseDate + 'T00:00:00'
+                      ).toLocaleDateString() && (
+                      <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
+                        → changing to{' '}
+                        {new Date(
+                          watchedValues.purchaseDate
+                        ).toLocaleDateString()}
+                      </span>
+                    )}
                 </span>
               )}
             </FormLabel>
             <Input
               type="date"
               {...register('purchaseDate', {
-                setValueAs: (value) => value ? new Date(value) : new Date()
+                setValueAs: (value) => (value ? new Date(value) : new Date()),
               })}
               defaultValue={
-                initialData?.purchaseDate 
+                initialData?.purchaseDate
                   ? initialData.purchaseDate.split('T')[0]
                   : new Date().toISOString().split('T')[0]
               }
-              className={errors.purchaseDate ? 'border-red-500 dark:bg-slate-800 dark:text-slate-100 dark:border-red-600' : 'dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600'}
+              className={
+                errors.purchaseDate
+                  ? 'border-red-500 dark:bg-slate-800 dark:text-slate-100 dark:border-red-600'
+                  : 'dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600'
+              }
             />
             <FormDescription>
               Select the date when the tokens were purchased
@@ -999,9 +1138,11 @@ export function PurchaseForm({
                   {mode === 'edit' && initialData && (
                     <span className="ml-2 text-sm text-slate-500 dark:text-slate-400 font-normal">
                       (was: {initialData.isEmergency ? 'Emergency' : 'Regular'})
-                      {watchedValues.isEmergency !== initialData.isEmergency && (
+                      {watchedValues.isEmergency !==
+                        initialData.isEmergency && (
                         <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
-                          → changing to {watchedValues.isEmergency ? 'Emergency' : 'Regular'}
+                          → changing to{' '}
+                          {watchedValues.isEmergency ? 'Emergency' : 'Regular'}
                         </span>
                       )}
                     </span>

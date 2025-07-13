@@ -27,7 +27,7 @@ const FormLabel = React.forwardRef<
   <LabelPrimitive.Root
     ref={ref}
     className={cn(
-      'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+      'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 transition-all duration-200 peer-focus:text-blue-600 dark:peer-focus:text-blue-400',
       // High contrast dark mode - pure white text with important overrides
       'text-slate-900 dark:!text-white dark:!opacity-100 high-contrast:!text-white high-contrast:!opacity-100',
       className
