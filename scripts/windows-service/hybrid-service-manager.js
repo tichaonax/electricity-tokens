@@ -123,15 +123,30 @@ class HybridServiceManager {
   // Find processes by port (Next.js typically runs on 3000)
   async findProcessByPort(port = 3000) {
     try {
-      const { stdout } = await execAsync(`netstat -ano | findstr :${port}`);
-      const lines = stdout.split('\n');
+      // Try PowerShell approach first (more reliable on modern Windows)
+      try {
+        const { stdout } = await execAsync(
+          `powershell "Get-NetTCPConnection -LocalPort ${port} -State Listen | Select-Object OwningProcess | Format-Table -HideTableHeaders"`
+        );
+        const lines = stdout.split('\n').filter((line) => line.trim());
+        if (lines.length > 0) {
+          const pid = parseInt(lines[0].trim(), 10);
+          if (!isNaN(pid) && pid > 0) {
+            return pid;
+          }
+        }
+      } catch (psError) {
+        // Fall back to netstat
+        const { stdout } = await execAsync(`netstat -ano`);
+        const lines = stdout.split('\n');
 
-      for (const line of lines) {
-        if (line.includes('LISTENING')) {
-          const parts = line.trim().split(/\s+/);
-          const pid = parts[parts.length - 1];
-          if (pid && !isNaN(pid)) {
-            return parseInt(pid, 10);
+        for (const line of lines) {
+          if (line.includes(`:${port} `) && line.includes('LISTENING')) {
+            const parts = line.trim().split(/\s+/);
+            const pid = parts[parts.length - 1];
+            if (pid && !isNaN(pid)) {
+              return parseInt(pid, 10);
+            }
           }
         }
       }

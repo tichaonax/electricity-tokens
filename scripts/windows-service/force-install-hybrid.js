@@ -231,9 +231,9 @@ class ForceInstallManager {
         console.log(`   Script: ${svc.script}`);
         console.log('');
         console.log('🚀 Usage:');
-        console.log('   Start:     npm run service:start-hybrid');
-        console.log('   Stop:      npm run service:stop-hybrid');
-        console.log('   Diagnose:  npm run service:diagnose-hybrid');
+        console.log('   Start:     npm run service:start');
+        console.log('   Stop:      npm run service:stop');
+        console.log('   Diagnose:  npm run service:diagnose');
         console.log('');
         console.log('💡 The hybrid service provides:');
         console.log('   • Direct Next.js process execution (no npm layer)');
@@ -304,9 +304,9 @@ async function forceInstallHybrid() {
     console.log('✅ Force installation completed successfully!');
     console.log('');
     console.log('🎯 Next Steps:');
-    console.log('   1. Test the service: npm run service:diagnose-hybrid');
-    console.log('   2. Start the service: npm run service:start-hybrid');
-    console.log('   3. Stop the service: npm run service:stop-hybrid');
+    console.log('   1. Test the service: npm run service:diagnose');
+    console.log('   2. Start the service: npm run service:start');
+    console.log('   3. Stop the service: npm run service:stop');
   } catch (err) {
     console.error('❌ Force installation failed:', err.message);
     console.log('');
