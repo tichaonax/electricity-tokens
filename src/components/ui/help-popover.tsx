@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { HelpCircle, Book, ExternalLink, X } from 'lucide-react';
+import { HelpCircle, Book, ExternalLink, X, Info } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
+import { AboutDialog } from './about-dialog';
 
 interface HelpItem {
   title: string;
@@ -30,6 +31,7 @@ export function HelpPopover({
   className,
 }: HelpPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const defaultTrigger = (
     <button
@@ -107,10 +109,29 @@ export function HelpPopover({
                   )}
                 </div>
               ))}
+
+              {/* About Button */}
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowAbout(true);
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2"
+                >
+                  <Info className="h-4 w-4" />
+                  About & Version Info
+                </Button>
+              </div>
             </div>
           </div>
         </>
       )}
+
+      {/* About Dialog */}
+      <AboutDialog isOpen={showAbout} onClose={() => setShowAbout(false)} />
     </div>
   );
 }

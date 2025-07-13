@@ -32,19 +32,24 @@ export function ProgressiveConsumptionWidget() {
   const [loading, setLoading] = useState(true);
   const { checkPermission } = usePermissions();
 
+  useEffect(() => {
+    // Only fetch data if user has permission
+    if (checkPermission('canViewProgressiveTokenConsumption')) {
+      fetchConsumptionData();
+    }
+  }, [checkPermission]);
+
   // Check if user has permission to view progressive token consumption
   if (!checkPermission('canViewProgressiveTokenConsumption')) {
     return null; // Don't render the widget if user doesn't have permission
   }
 
-  useEffect(() => {
-    fetchConsumptionData();
-  }, []);
-
   const fetchConsumptionData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/dashboard/progressive-consumption?_t=${Date.now()}`);
+      const response = await fetch(
+        `/api/dashboard/progressive-consumption?_t=${Date.now()}`
+      );
       if (response.ok) {
         const result = await response.json();
         console.log('🎨 Progressive Consumption Widget received data:');
@@ -154,7 +159,7 @@ export function ProgressiveConsumptionWidget() {
 
             <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <div className="text-lg font-semibold text-green-700 dark:text-green-400 mb-1">
-                ${data.currentMonth.costPerKwh.toFixed(4)}
+                ${data.currentMonth.costPerKwh.toFixed(3)}
               </div>
               <div className="text-xs text-green-600 dark:text-green-300">
                 Cost per kWh
@@ -188,7 +193,7 @@ export function ProgressiveConsumptionWidget() {
                 Cost/kWh:
               </span>
               <span className="font-medium text-gray-900 dark:text-gray-100">
-                ${data.previousMonth.costPerKwh.toFixed(4)}
+                ${data.previousMonth.costPerKwh.toFixed(3)}
               </span>
             </div>
           </div>
@@ -230,7 +235,7 @@ export function ProgressiveConsumptionWidget() {
             {/* Average Cost */}
             <div className="text-center py-4 pr-4 pl-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
               <div className="text-2xl font-bold text-green-700 dark:text-green-400 mb-1 text-center">
-                ${data.historical.averageCostPerKwhAllTime.toFixed(4)}
+                ${data.historical.averageCostPerKwhAllTime.toFixed(3)}
               </div>
               <div className="text-sm text-green-600 dark:text-green-300">
                 Average Cost/kWh

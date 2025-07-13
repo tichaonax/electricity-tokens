@@ -18,18 +18,18 @@ import {
 } from 'lucide-react';
 import { Badge } from './badge';
 import { NavigationFormButton } from './navigation-form-button';
-import { 
-  navigateToDashboard, 
-  navigateToPurchaseHistory, 
-  navigateToUsageReports, 
-  navigateToFinancialReports, 
+import {
+  navigateToDashboard,
+  navigateToPurchaseHistory,
+  navigateToUsageReports,
+  navigateToFinancialReports,
   navigateToEfficiencyReports,
   navigateToAdmin,
   navigateToUserManagement,
   navigateToSecurityDashboard,
   navigateToAuditTrail,
   navigateToHelp,
-  navigateToProfile
+  navigateToProfile,
 } from '@/app/actions/navigation';
 import { ThemeToggle } from './theme-toggle';
 
@@ -104,7 +104,7 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
       {/* Mobile menu button - Enhanced touch target */}
       <button
         onClick={toggleNav}
-        className="md:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-600 transition-colors"
+        className="md:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-600 transition-all duration-200 hover:scale-110 hover:shadow-md"
         aria-expanded={isOpen}
         aria-label="Toggle navigation menu"
       >
@@ -130,11 +130,11 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
         />
 
         {/* Slide-out panel */}
-        <div className="relative flex flex-col w-80 max-w-xs bg-white dark:bg-gray-800 h-full shadow-xl overflow-hidden max-h-screen">
+        <div className="relative flex flex-col w-80 max-w-xs bg-white/95 dark:bg-gray-800/95 backdrop-blur-md h-full shadow-2xl overflow-hidden max-h-screen border-r border-gray-200/50 dark:border-gray-700/50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-500 dark:to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">ET</span>
               </div>
               <div>
@@ -261,7 +261,7 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
               <div className="mt-4">
                 <ThemeToggle />
               </div>
-              
+
               {/* Extra padding for better scrolling */}
               <div className="h-6"></div>
             </div>

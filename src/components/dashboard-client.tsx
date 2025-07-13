@@ -11,6 +11,8 @@ import { ContributionProgress } from '@/components/contribution-progress';
 import { ProgressiveConsumptionWidget } from '@/components/ui/progressive-consumption-widget';
 import { RunningBalanceWidget } from '@/components/ui/running-balance-widget';
 import { MaxDailyConsumptionWidget } from '@/components/ui/max-daily-consumption-widget';
+// Skeleton components imported but not currently used in this component
+// import { QuickStatsSkeleton, DashboardGridSkeleton, ContributionProgressSkeleton } from '@/components/ui/skeleton';
 
 interface QuickStats {
   totalTokensUsed: number;
@@ -43,7 +45,7 @@ export function DashboardClient() {
         const data = await response.json();
         setQuickStats(data.personalSummary);
       }
-    } catch (error) {
+    } catch {
       // Error fetching quick stats
     } finally {
       setLoadingStats(false);
@@ -52,8 +54,21 @@ export function DashboardClient() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 dark:border-blue-800"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-transparent border-t-blue-500 absolute top-0 left-0"></div>
+          </div>
+          <div className="flex space-x-1">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce delay-100"></div>
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-200"></div>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 font-medium">
+            Loading your dashboard...
+          </p>
+        </div>
       </div>
     );
   }
@@ -109,23 +124,27 @@ export function DashboardClient() {
           {/* Dashboard Widgets */}
           {(() => {
             // Check which widgets the user has permission to view
-            const canViewProgressive = checkPermission('canViewProgressiveTokenConsumption');
+            const canViewProgressive = checkPermission(
+              'canViewProgressiveTokenConsumption'
+            );
             const canViewBalance = checkPermission('canViewAccountBalance');
-            const canViewMaxDaily = checkPermission('canViewMaximumDailyConsumption');
-            
+            const canViewMaxDaily = checkPermission(
+              'canViewMaximumDailyConsumption'
+            );
+
             const visibleWidgets = [
               canViewProgressive && 'progressive',
               canViewBalance && 'balance',
-              canViewMaxDaily && 'maxDaily'
+              canViewMaxDaily && 'maxDaily',
             ].filter(Boolean);
-            
+
             const visibleCount = visibleWidgets.length;
-            
+
             // Return appropriate layout based on number of visible widgets
             if (visibleCount === 0) {
               return null; // No widgets to show
             }
-            
+
             if (visibleCount === 1) {
               // Single widget - full width
               return (
@@ -138,25 +157,35 @@ export function DashboardClient() {
                 </div>
               );
             }
-            
+
             if (visibleCount === 2) {
               // Two widgets - left and right justified on desktop
               return (
                 <div className="flex flex-col lg:flex-row gap-6">
                   <div className="flex-1 lg:pr-3">
                     {canViewProgressive && <ProgressiveConsumptionWidget />}
-                    {!canViewProgressive && canViewBalance && <RunningBalanceWidget />}
-                    {!canViewProgressive && !canViewBalance && canViewMaxDaily && <MaxDailyConsumptionWidget />}
+                    {!canViewProgressive && canViewBalance && (
+                      <RunningBalanceWidget />
+                    )}
+                    {!canViewProgressive &&
+                      !canViewBalance &&
+                      canViewMaxDaily && <MaxDailyConsumptionWidget />}
                   </div>
                   <div className="flex-1 lg:pl-3">
-                    {canViewProgressive && canViewBalance && <RunningBalanceWidget />}
-                    {canViewProgressive && !canViewBalance && canViewMaxDaily && <MaxDailyConsumptionWidget />}
-                    {!canViewProgressive && canViewBalance && canViewMaxDaily && <MaxDailyConsumptionWidget />}
+                    {canViewProgressive && canViewBalance && (
+                      <RunningBalanceWidget />
+                    )}
+                    {canViewProgressive &&
+                      !canViewBalance &&
+                      canViewMaxDaily && <MaxDailyConsumptionWidget />}
+                    {!canViewProgressive &&
+                      canViewBalance &&
+                      canViewMaxDaily && <MaxDailyConsumptionWidget />}
                   </div>
                 </div>
               );
             }
-            
+
             // Three widgets - evenly spaced
             return (
               <div className="flex flex-col lg:flex-row gap-6">
@@ -178,63 +207,67 @@ export function DashboardClient() {
             {/* Token Purchases Card - Only show if user can view purchase history */}
             {checkPermission('canViewPurchaseHistory') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/purchases/history')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/purchases/history')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
                 title="View and manage all electricity token purchases with advanced filtering and sorting"
               >
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <svg
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                          Purchase History
+                        </dt>
+                        <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                          View & Manage
+                        </dd>
+                      </dl>
                     </div>
                   </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                        Purchase History
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        View & Manage
-                      </dd>
-                    </dl>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
+                  <div className="text-sm">
+                    <span className="font-medium text-blue-700 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                      View purchase history with filters
+                    </span>
                   </div>
                 </div>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3">
-                <div className="text-sm">
-                  <span className="font-medium text-blue-700 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                    View purchase history with filters
-                  </span>
-                </div>
-              </div>
               </button>
             )}
 
             {/* New Purchase Card - Only show if user can access new purchase */}
             {checkPermission('canAccessNewPurchase') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/purchases/new')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/purchases/new')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -273,15 +306,17 @@ export function DashboardClient() {
             {/* User Contributions Card - Only show if user can view user contributions */}
             {checkPermission('canViewUserContributions') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/contributions')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/contributions')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -320,15 +355,17 @@ export function DashboardClient() {
             {/* Meter Readings Card - Only show if user can add meter readings */}
             {checkPermission('canAddMeterReadings') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/meter-readings')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/meter-readings')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -367,15 +404,17 @@ export function DashboardClient() {
             {/* Cost Analysis Card */}
             {checkPermission('canViewCostAnalysis') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/cost-analysis')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/cost-analysis')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -415,14 +454,14 @@ export function DashboardClient() {
             {checkPermission('canViewPersonalDashboard') && (
               <button
                 onClick={() => navigateAndSaveScroll('/dashboard/personal')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-teal-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -461,15 +500,17 @@ export function DashboardClient() {
             {/* Data Management Card */}
             {checkPermission('canExportData') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/data-management')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/data-management')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -508,15 +549,17 @@ export function DashboardClient() {
             {/* Usage Reports Card */}
             {checkPermission('canViewUsageReports') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/reports/usage')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/reports/usage')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -555,15 +598,17 @@ export function DashboardClient() {
             {/* Financial Reports Card */}
             {checkPermission('canViewFinancialReports') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/reports/financial')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/reports/financial')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -602,15 +647,17 @@ export function DashboardClient() {
             {/* Efficiency Metrics Card */}
             {checkPermission('canViewEfficiencyReports') && (
               <button
-                onClick={() => navigateAndSaveScroll('/dashboard/reports/efficiency')}
-                className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer block text-left w-full"
+                onClick={() =>
+                  navigateAndSaveScroll('/dashboard/reports/efficiency')
+                }
+                className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer block text-left w-full card-hover transform hover:scale-[1.02]"
               >
                 <div className="p-5">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 rounded-md flex items-center justify-center">
                         <svg
-                          className="w-5 h-5 text-white"
+                          className="w-5 h-5 text-white group-hover:animate-pulse"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -648,35 +695,47 @@ export function DashboardClient() {
           </div>
 
           {/* Limited Access Notice */}
-          {!checkPermission('canViewPurchaseHistory') && 
-           !checkPermission('canAccessNewPurchase') && 
-           !checkPermission('canViewUserContributions') &&
-           !checkPermission('canViewUsageReports') &&
-           !checkPermission('canViewFinancialReports') &&
-           !checkPermission('canViewEfficiencyReports') &&
-           !checkPermission('canViewCostAnalysis') && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    Limited Dashboard Access
-                  </h3>
-                  <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                    <p>
-                      You have basic access to the electricity tokens tracker. To access core features like 
-                      Purchase History, New Purchase creation, User Contributions, Reports, or Cost Analysis, 
-                      please contact an administrator to request the appropriate special permissions.
-                    </p>
+          {!checkPermission('canViewPurchaseHistory') &&
+            !checkPermission('canAccessNewPurchase') &&
+            !checkPermission('canViewUserContributions') &&
+            !checkPermission('canViewUsageReports') &&
+            !checkPermission('canViewFinancialReports') &&
+            !checkPermission('canViewEfficiencyReports') &&
+            !checkPermission('canViewCostAnalysis') && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Limited Dashboard Access
+                    </h3>
+                    <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                      <p>
+                        You have basic access to the electricity tokens tracker.
+                        To access core features like Purchase History, New
+                        Purchase creation, User Contributions, Reports, or Cost
+                        Analysis, please contact an administrator to request the
+                        appropriate special permissions.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Main Features Section */}
           <div>
@@ -688,14 +747,14 @@ export function DashboardClient() {
               {isAdmin && (
                 <button
                   onClick={() => navigateAndSaveScroll('/dashboard/admin')}
-                  className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow cursor-pointer border-2 border-red-200 dark:border-red-800 block text-left w-full"
+                  className="group bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-red-200 dark:border-red-800 block text-left w-full card-hover transform hover:scale-[1.02]"
                 >
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -742,9 +801,9 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -764,10 +823,12 @@ export function DashboardClient() {
                             Total Tokens Consumed
                           </dt>
                           <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            {loadingStats
-                              ? '...'
-                              : quickStats?.totalTokensUsed.toLocaleString() ||
-                                '0'}
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-16 rounded"></div>
+                            ) : (
+                              quickStats?.totalTokensUsed.toLocaleString() ||
+                              '0'
+                            )}
                           </dd>
                         </dl>
                       </div>
@@ -779,9 +840,9 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -801,11 +862,13 @@ export function DashboardClient() {
                             Average Cost/Token
                           </dt>
                           <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            {loadingStats
-                              ? '...'
-                              : quickStats
-                                ? `$${quickStats.averageCostPerKwh.toFixed(4)}`
-                                : '$0.0000'}
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-20 rounded"></div>
+                            ) : quickStats ? (
+                              `$${quickStats.averageCostPerKwh.toFixed(3)}`
+                            ) : (
+                              '$0.000'
+                            )}
                           </dd>
                         </dl>
                       </div>
@@ -817,9 +880,9 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -839,11 +902,13 @@ export function DashboardClient() {
                             Total Spent
                           </dt>
                           <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            {loadingStats
-                              ? '...'
-                              : quickStats
-                                ? `$${quickStats.totalAmountPaid.toFixed(2)}`
-                                : '$0.00'}
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-18 rounded"></div>
+                            ) : quickStats ? (
+                              `$${quickStats.totalAmountPaid.toFixed(2)}`
+                            ) : (
+                              '$0.00'
+                            )}
                           </dd>
                         </dl>
                       </div>
@@ -855,13 +920,16 @@ export function DashboardClient() {
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
-                          quickStats?.accountBalance && quickStats.accountBalance >= 0 
-                            ? 'bg-green-500' 
-                            : 'bg-red-500'
-                        }`}>
+                        <div
+                          className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                            quickStats?.accountBalance &&
+                            quickStats.accountBalance >= 0
+                              ? 'bg-green-500'
+                              : 'bg-red-500'
+                          }`}
+                        >
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-5 h-5 text-white group-hover:animate-pulse"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -880,16 +948,21 @@ export function DashboardClient() {
                           <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                             Account Balance
                           </dt>
-                          <dd className={`text-lg font-medium ${
-                            quickStats?.accountBalance && quickStats.accountBalance >= 0 
-                              ? 'text-green-600 dark:text-green-400' 
-                              : 'text-red-600 dark:text-red-400'
-                          }`}>
-                            {loadingStats
-                              ? '...'
-                              : quickStats
-                                ? `$${quickStats.accountBalance.toFixed(2)}`
-                                : '$0.00'}
+                          <dd
+                            className={`text-lg font-medium ${
+                              quickStats?.accountBalance &&
+                              quickStats.accountBalance >= 0
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
+                            }`}
+                          >
+                            {loadingStats ? (
+                              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-18 rounded"></div>
+                            ) : quickStats ? (
+                              `$${quickStats.accountBalance.toFixed(2)}`
+                            ) : (
+                              '$0.00'
+                            )}
                           </dd>
                         </dl>
                       </div>

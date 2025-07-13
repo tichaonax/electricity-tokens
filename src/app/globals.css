@@ -49,6 +49,104 @@
   }
 }
 
+/* Custom animations for enhanced UI */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-delay {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-fade-in-delay {
+  animation: fade-in-delay 1.2s ease-out 0.3s both;
+}
+
+/* Improved hover effects for cards */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .card-hover:hover {
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading states */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-skeleton {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Micro interactions */
+.btn-micro {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-micro:hover {
+  transform: translateY(-1px);
+}
+
+.btn-micro:active {
+  transform: translateY(0);
+}
+
+/* Gradient text utilities */
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism utility */
+.glass {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(209, 213, 219, 0.3);
+}
+
+.dark .glass {
+  background-color: rgba(17, 24, 39, 0.75);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
 /* Custom CSS variables for compatibility (previously in @theme inline) */
 :root {
   --color-background: hsl(var(--background));
@@ -393,6 +491,241 @@ input[type='time']::-webkit-time-picker-indicator {
 .rdp-button {
   pointer-events: auto !important;
   cursor: pointer !important;
+}
+
+/* Form micro-animations */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-success {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes pulse-error {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.form-error {
+  animation:
+    shake 0.5s ease-in-out,
+    pulse-error 0.6s ease-out;
+}
+
+.form-success {
+  animation:
+    bounce-in 0.3s ease-out,
+    pulse-success 0.6s ease-out;
+}
+
+.form-field-focus {
+  animation: bounce-in 0.2s ease-out;
+}
+
+/* Enhanced button hover effects */
+.btn-primary:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px -8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px -4px rgba(0, 0, 0, 0.1);
+}
+
+.dark .btn-primary:hover {
+  box-shadow: 0 8px 25px -8px rgba(59, 130, 246, 0.5);
+}
+
+/* Form validation states */
+.input-valid {
+  border-color: #22c55e;
+  background-color: rgba(34, 197, 94, 0.02);
+}
+
+.input-invalid {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.02);
+}
+
+.dark .input-valid {
+  border-color: #22c55e;
+  background-color: rgba(34, 197, 94, 0.05);
+}
+
+.dark .input-invalid {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* Loading button animation */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin-slow 1s linear infinite;
+}
+
+/* Navigation enhancements */
+.nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.nav-item:hover::before {
+  left: 100%;
+}
+
+/* Breadcrumb animations */
+.breadcrumb-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.breadcrumb-item:hover {
+  transform: translateY(-1px);
+  color: var(--primary);
+}
+
+.breadcrumb-separator {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  margin: 0 8px;
+}
+
+.breadcrumb-item:hover + .breadcrumb-separator {
+  opacity: 0.8;
+}
+
+/* Mobile nav slide animations */
+.mobile-nav-enter {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.mobile-nav-enter-active {
+  transform: translateX(0);
+  opacity: 1;
+  transition:
+    transform 300ms ease-out,
+    opacity 200ms ease-out;
+}
+
+.mobile-nav-exit {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.mobile-nav-exit-active {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition:
+    transform 300ms ease-in,
+    opacity 200ms ease-in;
+}
+
+/* Menu item stagger animation */
+.nav-menu-item {
+  animation: slideInLeft 0.3s ease-out forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.nav-menu-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.nav-menu-item:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.nav-menu-item:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.nav-menu-item:nth-child(4) {
+  animation-delay: 0.25s;
+}
+.nav-menu-item:nth-child(5) {
+  animation-delay: 0.3s;
+}
+
+@keyframes slideInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* High contrast mode improvements */

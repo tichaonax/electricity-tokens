@@ -165,22 +165,37 @@ class HybridElectricityTokensService {
 
   async saveBuildInfo() {
     try {
-      const buildDir = path.join(this.appRoot, '.next');
-      const buildInfoFile = path.join(buildDir, 'build-info.json');
-      const currentCommit = await this.getCurrentGitCommit();
-
-      const buildInfo = {
-        gitCommit: currentCommit,
-        buildTime: new Date().toISOString(),
-        nodeVersion: process.version,
-      };
-
-      fs.writeFileSync(buildInfoFile, JSON.stringify(buildInfo, null, 2));
+      // Use the dedicated build info generation script
+      const { generateBuildInfo } = require('../generate-build-info.js');
+      const buildInfo = generateBuildInfo();
       this.log(
-        `Build info saved: commit ${currentCommit?.substring(0, 8) || 'unknown'}`
+        `Build info saved: commit ${buildInfo.gitCommit?.substring(0, 8) || 'unknown'}, version ${buildInfo.version}`
       );
     } catch (err) {
       this.log(`Error saving build info: ${err.message}`, 'WARN');
+      // Fallback to original method
+      try {
+        const buildDir = path.join(this.appRoot, '.next');
+        const buildInfoFile = path.join(buildDir, 'build-info.json');
+        const currentCommit = await this.getCurrentGitCommit();
+
+        const buildInfo = {
+          version: '0.1.0',
+          gitCommit: currentCommit,
+          buildTime: new Date().toISOString(),
+          nodeVersion: process.version,
+        };
+
+        fs.writeFileSync(buildInfoFile, JSON.stringify(buildInfo, null, 2));
+        this.log(
+          `Fallback build info saved: commit ${currentCommit?.substring(0, 8) || 'unknown'}`
+        );
+      } catch (fallbackErr) {
+        this.log(
+          `Fallback build info also failed: ${fallbackErr.message}`,
+          'ERROR'
+        );
+      }
     }
   }
 
