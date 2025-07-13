@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileText, ChevronLeft, Download, TrendingUp, Users, Database, DollarSign, Calendar } from 'lucide-react';
@@ -37,21 +37,7 @@ export default function SystemReports() {
   const [error, setError] = useState<string | null>(null);
   const [reportPeriod, setReportPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
-      router.push('/dashboard');
-    }
-  }, [status, session, router]);
-
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
-      fetchSystemStats();
-    }
-  }, [status, session, reportPeriod]);
-
-  const fetchSystemStats = async () => {
+  const fetchSystemStats = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,12 +58,26 @@ export default function SystemReports() {
       };
       
       setStats(mockStats);
-    } catch (err) {
+    } catch {
       setError('Failed to load system statistics');
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportPeriod]);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+      router.push('/dashboard');
+    }
+  }, [status, session, router]);
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
+      fetchSystemStats();
+    }
+  }, [status, session, reportPeriod, fetchSystemStats]);
 
   const exportReport = async (format: 'csv' | 'pdf') => {
     try {
@@ -101,7 +101,7 @@ export default function SystemReports() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch {
       setError('Failed to export report');
     }
   };
@@ -183,7 +183,7 @@ export default function SystemReports() {
                   </label>
                   <select
                     value={reportPeriod}
-                    onChange={(e) => setReportPeriod(e.target.value as any)}
+                    onChange={(e) => setReportPeriod(e.target.value as 'week' | 'month' | 'quarter' | 'year')}
                     className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     disabled={loading}
                   >
