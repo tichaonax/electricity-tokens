@@ -111,9 +111,6 @@ class ServiceUninstaller {
     console.log('🧹 Cleaning up service files...');
 
     try {
-      const fs = require('fs');
-      const path = require('path');
-
       // Note: We don't delete the application files, just service-specific files
       // The logs directory and application remain intact
 
