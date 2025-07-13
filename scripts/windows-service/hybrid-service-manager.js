@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const wincmd = require('node-windows');
 const path = require('path');
 const fs = require('fs');
+const config = require('./config');
 
 const execAsync = promisify(exec);
 
@@ -83,7 +84,9 @@ class HybridServiceManager {
   // Get service status using sc.exe
   async getServiceStatus() {
     try {
-      const { stdout } = await execAsync(`sc query "${this.serviceName}"`);
+      const { stdout } = await execAsync(
+        `${config.commands.SC_COMMAND} query "${this.serviceName}"`
+      );
 
       if (stdout.includes('RUNNING')) return 'RUNNING';
       if (stdout.includes('STOPPED')) return 'STOPPED';
@@ -177,7 +180,9 @@ class HybridServiceManager {
       }
 
       // Start the service
-      await execAsync(`sc start "${this.serviceName}"`);
+      await execAsync(
+        `${config.commands.SC_COMMAND} start "${this.serviceName}"`
+      );
 
       // Wait for service to start and track PID
       let attempts = 0;
@@ -230,7 +235,9 @@ class HybridServiceManager {
       // Step 1: Try graceful stop using sc.exe
       this.log('Attempting graceful stop...');
       try {
-        await execAsync(`sc stop "${this.serviceName}"`);
+        await execAsync(
+          `${config.commands.SC_COMMAND} stop "${this.serviceName}"`
+        );
 
         // Wait for graceful stop
         let attempts = 0;
@@ -314,7 +321,9 @@ class HybridServiceManager {
       // Use Windows taskkill command instead of node-windows kill
       // This approach is more reliable and doesn't have API compatibility issues
       try {
-        await execAsync(`taskkill /PID ${numericPID} /F`);
+        await execAsync(
+          `${config.commands.TASKKILL_COMMAND} /PID ${numericPID} /F`
+        );
         this.log(`Successfully killed PID ${numericPID}`);
       } catch (err) {
         // Check if the process was already terminated

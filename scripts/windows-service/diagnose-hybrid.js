@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const { exec, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const config = require('./config');
 
 const execAsync = promisify(exec);
 
@@ -139,7 +140,9 @@ async function diagnoseService() {
 
     // Check port 3000 specifically
     try {
-      const { stdout } = await execAsync('netstat -ano | findstr :3000');
+      const { stdout } = await execAsync(
+        `${config.commands.NETSTAT_COMMAND} -ano | findstr :3000`
+      );
       console.log(`\n🌐 Port 3000 Status:`);
       const lines = stdout.split('\n').filter((line) => line.trim());
 
@@ -163,7 +166,7 @@ async function diagnoseService() {
     // Check for zombie processes
     try {
       const { stdout } = await execAsync(
-        'tasklist /fi "imagename eq node.exe" /fo csv'
+        `${config.commands.TASKKILL_COMMAND.replace('.exe', 'list.exe')} /fi "imagename eq node.exe" /fo csv`
       );
       const lines = stdout
         .split('\n')
@@ -191,7 +194,9 @@ async function diagnoseService() {
     // Service configuration check
     console.log(`\n⚙️  Service Configuration:`);
     try {
-      const { stdout } = await execAsync(`sc qc "ElectricityTokensTracker"`);
+      const { stdout } = await execAsync(
+        `${config.commands.SC_COMMAND} qc "ElectricityTokensTracker"`
+      );
       const lines = stdout.split('\n');
 
       lines.forEach((line) => {
@@ -217,12 +222,10 @@ async function diagnoseService() {
       console.log(`   ✅ Service is running normally.`);
     } else if (status.isRunning && !status.portPID) {
       console.log(`   ⚠️  Service is running but not listening on port 3000.`);
-      console.log(
-        `      Try: npm run service:stop-hybrid && npm run service:start-hybrid`
-      );
+      console.log(`      Try: npm run service:stop && npm run service:start`);
     } else if (!status.isRunning && status.hasOrphanedProcesses) {
       console.log(`   ⚠️  Orphaned processes detected. Clean them up:`);
-      console.log(`      Run: npm run service:stop-hybrid`);
+      console.log(`      Run: npm run service:stop`);
     }
 
     if (!isAdmin) {

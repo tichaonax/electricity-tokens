@@ -22,7 +22,7 @@
     "user:reset-password": "node scripts/reset-password.js",
     "user:promote": "node scripts/promote-to-admin.js",
     "balances:fix": "node scripts/fix-account-balances.js",
-    "service:install": "node scripts/windows-service/install-service-hybrid.js",
+    "service:install": "node scripts/windows-service/force-install-hybrid.js",
     "service:force-install": "node scripts/windows-service/force-install-hybrid.js",
     "service:uninstall": "node scripts/windows-service/uninstall-service.js",
     "service:start": "node scripts/windows-service/start-service-hybrid.js",

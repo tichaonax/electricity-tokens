@@ -110,6 +110,13 @@ const SERVICE_CONFIG = {
       ],
     },
   },
+
+  // Windows commands (avoid conflicts with PowerShell aliases)
+  commands: {
+    SC_COMMAND: 'sc.exe',
+    TASKKILL_COMMAND: 'taskkill.exe',
+    NETSTAT_COMMAND: 'netstat.exe',
+  },
 };
 
 module.exports = SERVICE_CONFIG;
