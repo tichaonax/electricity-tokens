@@ -156,15 +156,15 @@ export default function MonitoringPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
                   System Status
                 </CardTitle>
-                <Activity className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <Activity className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(metrics.health.status)}
-                  <div className="text-2xl font-bold capitalize text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-bold capitalize text-emerald-600 dark:text-emerald-400">
                     {metrics.health.status}
                   </div>
                 </div>
@@ -177,17 +177,17 @@ export default function MonitoringPage() {
 
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400">
                   Database
                 </CardTitle>
-                <Database className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <Database className="h-4 w-4 text-blue-500 dark:text-blue-400" />
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(
                     metrics.health.checks.database?.status || 'unknown'
                   )}
-                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {metrics.health.checks.database?.latency
                       ? `${Math.round(metrics.health.checks.database.latency)}ms`
                       : 'Connected'}
@@ -203,17 +203,17 @@ export default function MonitoringPage() {
 
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <CardTitle className="text-sm font-medium text-amber-700 dark:text-amber-400">
                   Environment
                 </CardTitle>
-                <Zap className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <Zap className="h-4 w-4 text-amber-500 dark:text-amber-400" />
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(
                     metrics.health.checks.environment?.status || 'unknown'
                   )}
-                  <div className="text-2xl font-bold capitalize text-gray-900 dark:text-gray-100">
+                  <div className="text-2xl font-bold capitalize text-amber-600 dark:text-amber-400">
                     {process.env.NODE_ENV || 'Unknown'}
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export default function MonitoringPage() {
           {/* Detailed Health Checks */}
           <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-gray-100">
+              <CardTitle className="text-purple-700 dark:text-purple-400">
                 Health Checks
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
@@ -259,7 +259,7 @@ export default function MonitoringPage() {
                       </div>
                       <div className="flex items-center space-x-2">
                         {result.latency && (
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
                             {Math.round(result.latency)}ms
                           </span>
                         )}
@@ -279,7 +279,7 @@ export default function MonitoringPage() {
             metrics.database.poolSize !== undefined) && (
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="text-gray-900 dark:text-gray-100">
+                <CardTitle className="text-cyan-700 dark:text-cyan-400">
                   Database Statistics
                 </CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-400">
@@ -293,7 +293,7 @@ export default function MonitoringPage() {
                       <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         Active Connections
                       </div>
-                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
                         {metrics.database.activeConnections}
                       </div>
                     </div>
@@ -303,7 +303,7 @@ export default function MonitoringPage() {
                       <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         Total Connections
                       </div>
-                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                         {metrics.database.poolSize}
                       </div>
                     </div>
@@ -323,7 +323,7 @@ export default function MonitoringPage() {
           {/* Performance Tips */}
           <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-gray-100">
+              <CardTitle className="text-violet-700 dark:text-violet-400">
                 Performance Monitoring
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">

@@ -170,8 +170,8 @@ export default function SystemReports() {
           {/* Report Controls */}
           <Card className="mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
-                <Calendar className="h-5 w-5 mr-2" />
+              <CardTitle className="flex items-center text-indigo-700 dark:text-indigo-400">
+                <Calendar className="h-5 w-5 mr-2 text-indigo-500 dark:text-indigo-400" />
                 Report Configuration
               </CardTitle>
             </CardHeader>
@@ -218,11 +218,11 @@ export default function SystemReports() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-400">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-blue-500 dark:text-blue-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {loading ? '...' : stats.totalUsers.toLocaleString()}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -233,11 +233,11 @@ export default function SystemReports() {
 
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Purchases</CardTitle>
-                <FileText className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <CardTitle className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Total Purchases</CardTitle>
+                <FileText className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {loading ? '...' : stats.totalPurchases.toLocaleString()}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -248,11 +248,11 @@ export default function SystemReports() {
 
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <CardTitle className="text-sm font-medium text-amber-700 dark:text-amber-400">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-amber-500 dark:text-amber-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                   {loading ? '...' : `$${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -263,11 +263,11 @@ export default function SystemReports() {
 
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">System Uptime</CardTitle>
-                <TrendingUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-400">System Uptime</CardTitle>
+                <TrendingUp className="h-4 w-4 text-purple-500 dark:text-purple-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {loading ? '...' : `${stats.systemUptime}%`}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -281,8 +281,8 @@ export default function SystemReports() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
-                  <Database className="h-5 w-5 mr-2" />
+                <CardTitle className="flex items-center text-teal-700 dark:text-teal-400">
+                  <Database className="h-5 w-5 mr-2 text-teal-500 dark:text-teal-400" />
                   Usage Statistics
                 </CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-400">
@@ -293,25 +293,25 @@ export default function SystemReports() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Tokens Consumed</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">
                       {loading ? '...' : stats.totalTokens.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Average Usage per User</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-cyan-600 dark:text-cyan-400">
                       {loading ? '...' : `${stats.averageUsagePerUser} tokens`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Emergency Purchase Rate</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-red-600 dark:text-red-400">
                       {loading ? '...' : `${stats.emergencyPurchaseRate}%`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Average Cost per kWh</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                       {loading ? '...' : `$${(stats.totalRevenue / stats.totalTokens || 0).toFixed(4)}`}
                     </span>
                   </div>
@@ -321,8 +321,8 @@ export default function SystemReports() {
 
             <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
-                  <TrendingUp className="h-5 w-5 mr-2" />
+                <CardTitle className="flex items-center text-violet-700 dark:text-violet-400">
+                  <TrendingUp className="h-5 w-5 mr-2 text-violet-500 dark:text-violet-400" />
                   Performance Metrics
                 </CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-400">
@@ -333,25 +333,25 @@ export default function SystemReports() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Data Growth Rate</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-violet-600 dark:text-violet-400">
                       {loading ? '...' : `+${stats.dataGrowthRate}%`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Average Purchases per User</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-pink-600 dark:text-pink-400">
                       {loading ? '...' : (stats.totalPurchases / stats.totalUsers || 0).toFixed(1)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">System Response Time</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-lime-600 dark:text-lime-400">
                       {loading ? '...' : '< 200ms'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Database Size</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">
                       {loading ? '...' : '2.3 GB'}
                     </span>
                   </div>
@@ -363,8 +363,8 @@ export default function SystemReports() {
           {/* Report Summary */}
           <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
-              <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
-                <FileText className="h-5 w-5 mr-2" />
+              <CardTitle className="flex items-center text-slate-700 dark:text-slate-400">
+                <FileText className="h-5 w-5 mr-2 text-slate-500 dark:text-slate-400" />
                 Report Summary
               </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
