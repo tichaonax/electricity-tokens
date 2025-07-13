@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node scripts/generate-build-info.js && next build",
+    "prebuild": "node scripts/generate-build-info.js",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

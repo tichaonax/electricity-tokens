@@ -40,9 +40,18 @@ export function ResponsiveNav({
 }: ResponsiveNavProps) {
   const { data: session } = useSession();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [version, setVersion] = useState<string>('');
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = session?.user?.role === 'ADMIN';
+
+  // Fetch version info
+  useEffect(() => {
+    fetch('/build-info.json')
+      .then((response) => response.json())
+      .then((data) => setVersion(data.version || '0.1.0'))
+      .catch(() => setVersion('0.1.0'));
+  }, []);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -92,10 +101,18 @@ export function ResponsiveNav({
             )}
 
             {/* Title */}
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
               <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden transition-all duration-300 hover:text-blue-600 dark:hover:text-blue-400">
                 {title}
               </h1>
+              {version && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs hidden sm:inline-flex bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1"
+                >
+                  v{version}
+                </Badge>
+              )}
             </div>
           </div>
 
