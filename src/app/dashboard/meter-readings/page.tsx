@@ -583,14 +583,25 @@ export default function MeterReadingsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
-                <span className="sm:hidden">Dashboard</span>
-              </button>
+              {session.user?.role === 'ADMIN' ? (
+                <button
+                  onClick={() => router.push('/dashboard/admin')}
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Back to Admin Panel</span>
+                  <span className="sm:hidden">Admin</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
+                  <span className="sm:hidden">Dashboard</span>
+                </button>
+              )}
               <div className="flex items-center gap-2">
                 <Gauge className="h-5 w-5 text-blue-600" />
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
@@ -598,13 +609,23 @@ export default function MeterReadingsPage() {
                 </h1>
               </div>
             </div>
-            <div className="hidden sm:flex items-center space-x-4">
-              <span className="text-slate-700 dark:text-slate-300">
-                {session.user?.name}
-              </span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                ({session.user?.role})
-              </span>
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-4">
+                <span className="text-slate-700 dark:text-slate-300">
+                  {session.user?.name}
+                </span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                  ({session.user?.role})
+                </span>
+              </div>
+              {session.user?.role === 'ADMIN' && (
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+                >
+                  Back to Dashboard
+                </button>
+              )}
             </div>
           </div>
         </div>
