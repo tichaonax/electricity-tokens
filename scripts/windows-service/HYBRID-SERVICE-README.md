@@ -56,15 +56,18 @@ Our hybrid approach combines:
 
 ```bash
 # Run as Administrator
-npm run service:install-hybrid-v2
+npm run service:install
+
+# For installation issues (EBUSY errors, locked files)
+npm run service:force-install
 ```
 
-This installs the service using the enhanced hybrid wrapper.
+This installs the service using the enhanced hybrid wrapper with automatic error handling.
 
 ### 2. Verify Installation
 
 ```bash
-npm run service:diagnose-hybrid
+npm run service:diagnose
 ```
 
 ## Usage
@@ -72,20 +75,14 @@ npm run service:diagnose-hybrid
 ### Starting the Service
 
 ```bash
-# Hybrid mode (recommended)
-npm run service:start-hybrid
-
-# Traditional mode (for comparison)
+# Start the hybrid service
 npm run service:start
 ```
 
 ### Stopping the Service
 
 ```bash
-# Hybrid mode (recommended)
-npm run service:stop-hybrid
-
-# Traditional mode (may leave orphans)
+# Stop with guaranteed process cleanup
 npm run service:stop
 ```
 
@@ -93,10 +90,7 @@ npm run service:stop
 
 ```bash
 # Comprehensive diagnostic report
-npm run service:diagnose-hybrid
-
-# Basic status check
-npm run service:status
+npm run service:diagnose
 ```
 
 ## How It Works
@@ -144,7 +138,8 @@ graph TD
 - `start-service-hybrid.js` - Hybrid start script
 - `stop-service-hybrid.js` - Hybrid stop script
 - `diagnose-hybrid.js` - Comprehensive diagnostics
-- `install-service-hybrid-v2.js` - Hybrid service installer
+- `install-service-hybrid.js` - Hybrid service installer
+- `force-install-hybrid.js` - Force installation with error handling
 
 ### Log Files
 
@@ -157,15 +152,16 @@ graph TD
 
 ### Service Won't Start
 
-1. Check admin privileges: `npm run service:diagnose-hybrid`
+1. Check admin privileges: `npm run service:diagnose`
 2. Verify service installation: `sc query ElectricityTokensTracker`
-3. Check for orphaned processes: `npm run service:stop-hybrid`
-4. Reinstall if needed: `npm run service:uninstall && npm run service:install-hybrid-v2`
+3. Check for orphaned processes: `npm run service:stop`
+4. Reinstall if needed: `npm run service:uninstall && npm run service:install`
+5. Force install for errors: `npm run service:force-install`
 
 ### Service Won't Stop
 
-1. Use hybrid stop: `npm run service:stop-hybrid`
-2. Check diagnostics: `npm run service:diagnose-hybrid`
+1. Use hybrid stop: `npm run service:stop`
+2. Check diagnostics: `npm run service:diagnose`
 3. Manual force kill: Open Task Manager, kill Node.js processes
 4. Port check: `netstat -ano | findstr :3000`
 
@@ -173,10 +169,10 @@ graph TD
 
 ```bash
 # Comprehensive cleanup
-npm run service:stop-hybrid
+npm run service:stop
 
 # Check for remaining processes
-npm run service:diagnose-hybrid
+npm run service:diagnose
 
 # Manual cleanup if needed
 taskkill /f /im node.exe
@@ -199,30 +195,28 @@ taskkill /f /im node.exe
 
 ### For New Installations
 
-Use the hybrid approach from the start:
+Use the hybrid approach:
 
 ```bash
-npm run service:install-hybrid-v2
-npm run service:start-hybrid
+npm run service:install
+npm run service:start
 ```
 
-### For Existing Installations
+### For Installation Issues
 
-Migrate to hybrid mode:
+Handle locked files and EBUSY errors:
 
 ```bash
-npm run service:stop
-npm run service:uninstall
-npm run service:install-hybrid-v2
-npm run service:start-hybrid
+npm run service:force-install
+npm run service:start
 ```
 
 ### Daily Operations
 
-- **Start**: `npm run service:start-hybrid`
-- **Stop**: `npm run service:stop-hybrid`
-- **Check Status**: `npm run service:diagnose-hybrid`
-- **Troubleshoot**: `npm run service:diagnose-hybrid`
+- **Start**: `npm run service:start`
+- **Stop**: `npm run service:stop`
+- **Check Status**: `npm run service:diagnose`
+- **Troubleshoot**: `npm run service:diagnose`
 
 ## Advanced Usage
 
@@ -282,7 +276,17 @@ manager.clearPID();
 
 For issues or questions:
 
-1. Run diagnostics: `npm run service:diagnose-hybrid`
+1. Run diagnostics: `npm run service:diagnose`
 2. Check logs in `logs/` directory
 3. Review this documentation
 4. Open GitHub issue with diagnostic output
+
+## Recent Updates
+
+### Version 2.0 (Current)
+
+- **Force Installation**: Added `npm run service:force-install` to handle EBUSY errors
+- **Windows Compatibility**: Fixed Next.js path issues on Windows
+- **Native Process Killing**: Replaced node-windows kill with taskkill command
+- **Simplified Commands**: Consolidated hybrid commands as primary service commands
+- **Enhanced Error Handling**: Better error recovery and diagnostics

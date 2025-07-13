@@ -247,7 +247,7 @@ npm run test:coverage
 
 ### Windows Service Deployment
 
-For production Windows servers, you can run the application as a Windows service for automatic startup and crash recovery:
+For production Windows servers, you can run the application as a Windows service using our **Hybrid Service Architecture** for enhanced reliability and process management:
 
 #### Prerequisites
 
@@ -261,30 +261,53 @@ For production Windows servers, you can run the application as a Windows service
 # Validate environment (run as Administrator)
 npm run service:validate
 
-# Install and start service (run as Administrator)
+# Install service (run as Administrator)
 npm run service:install
 
-# Check service status
-npm run service:status
+# For installation issues (EBUSY errors, locked files)
+npm run service:force-install
+
+# Check service status and diagnostics
+npm run service:diagnose
 ```
 
 #### Service Management
 
 ```bash
 npm run service:start      # Start the service
-npm run service:stop       # Stop the service
-npm run service:status     # Check service status
+npm run service:stop       # Stop the service (guaranteed process cleanup)
+npm run service:diagnose   # Comprehensive diagnostics and health check
 npm run service:uninstall  # Remove the service
 ```
 
-#### Features
+#### Hybrid Service Features
 
+- **Enhanced Process Management**: Direct Next.js execution without npm layer issues
+- **Guaranteed Process Cleanup**: Eliminates orphaned Node.js processes on port 3000
+- **Force Installation**: Handles EBUSY errors and locked files during installation
+- **Auto-Build Detection**: Automatically runs production build when needed
+- **PID Tracking**: Advanced process monitoring and management
+- **Native Windows Integration**: Uses taskkill and sc.exe for reliable operation
+- **Comprehensive Diagnostics**: Real-time status monitoring and troubleshooting
 - **Auto-start**: Starts automatically on system boot
 - **Crash Recovery**: Automatic restart on application failures
-- **Logging**: Integrated with Windows Event Log
-- **Production Ready**: Ensures production build before starting
 
-📖 **Detailed Documentation**: See `scripts/windows-service/README.md` for complete setup guide and troubleshooting.
+#### Troubleshooting
+
+If you encounter installation errors or orphaned processes:
+
+```bash
+# Force installation (handles locked files)
+npm run service:force-install
+
+# Comprehensive diagnostics
+npm run service:diagnose
+
+# Manual cleanup if needed
+taskkill /F /IM node.exe
+```
+
+📖 **Detailed Documentation**: See `scripts/windows-service/HYBRID-SERVICE-README.md` for complete setup guide and architecture details.
 
 ## 📊 Application Status
 
