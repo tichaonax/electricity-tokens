@@ -166,7 +166,7 @@ async function diagnoseService() {
     // Check for zombie processes
     try {
       const { stdout } = await execAsync(
-        `${config.commands.TASKKILL_COMMAND.replace('.exe', 'list.exe')} /fi "imagename eq node.exe" /fo csv`
+        `tasklist.exe /fi "imagename eq node.exe" /fo csv`
       );
       const lines = stdout
         .split('\n')
