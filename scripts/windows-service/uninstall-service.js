@@ -34,9 +34,12 @@ class ServiceUninstaller {
 
     try {
       const { execSync } = require('child_process');
-      const result = execSync(`sc query "${config.name}"`, {
-        encoding: 'utf8',
-      });
+      const result = execSync(
+        `${config.commands.SC_COMMAND} query "${config.name}"`,
+        {
+          encoding: 'utf8',
+        }
+      );
 
       if (
         result.includes('does not exist') ||
@@ -59,7 +62,9 @@ class ServiceUninstaller {
 
     try {
       const { execSync } = require('child_process');
-      execSync(`sc stop "${config.name}"`, { stdio: 'pipe' });
+      execSync(`${config.commands.SC_COMMAND} stop "${config.name}"`, {
+        stdio: 'pipe',
+      });
 
       // Wait for service to stop
       console.log('⏳ Waiting for service to stop...');
@@ -106,9 +111,6 @@ class ServiceUninstaller {
     console.log('🧹 Cleaning up service files...');
 
     try {
-      const fs = require('fs');
-      const path = require('path');
-
       // Note: We don't delete the application files, just service-specific files
       // The logs directory and application remain intact
 
@@ -167,8 +169,8 @@ async function main() {
     console.error('  - Check Windows Event Viewer for detailed error logs');
 
     console.error('\n💡 Manual uninstallation:');
-    console.error(`  sc stop "${config.name}"`);
-    console.error(`  sc delete "${config.name}"`);
+    console.error(`  ${config.commands.SC_COMMAND} stop "${config.name}"`);
+    console.error(`  ${config.commands.SC_COMMAND} delete "${config.name}"`);
 
     process.exit(1);
   }

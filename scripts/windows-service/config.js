@@ -39,7 +39,7 @@ loadEnvironmentVariables();
 // Service configuration
 const SERVICE_CONFIG = {
   // Service identification
-  name: 'ElectricityTokensTracker',
+  name: 'electricitytokenstracker.exe',
   description:
     'Electricity Tokens Tracker - A web application for tracking electricity token purchases and usage',
 
@@ -109,6 +109,13 @@ const SERVICE_CONFIG = {
         { type: 'restart', delay: 300000 }, // Third failure: restart after 5 minutes
       ],
     },
+  },
+
+  // Windows commands (avoid conflicts with PowerShell aliases)
+  commands: {
+    SC_COMMAND: 'sc.exe',
+    TASKKILL_COMMAND: 'taskkill.exe',
+    NETSTAT_COMMAND: 'netstat.exe',
   },
 };
 
