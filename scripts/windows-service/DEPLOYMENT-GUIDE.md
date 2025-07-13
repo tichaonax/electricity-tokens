@@ -74,6 +74,21 @@ npm run service:start
 3. Starts with fresh build
 4. Logs all activities for troubleshooting
 
+### **✅ Verified Working Process**
+
+**Confirmed Steps:**
+
+1. **Install:** `npm run service:install` (creates `electricitytokenstracker.exe` service)
+2. **Diagnose:** `npm run service:diagnose` (shows build status and service health)
+3. **Start:** `npm run service:start` (auto-builds if stale, starts Next.js on port 3000)
+4. **Stop:** `npm run service:stop` (graceful shutdown with process cleanup)
+
+**✅ Build Detection:**
+
+- Missing `.next/build-info.json` → triggers automatic build
+- Git commit mismatch → triggers automatic rebuild
+- Build success → saves commit hash for future comparisons
+
 ### **Force Clean Deployment**
 
 ```bash
@@ -107,6 +122,19 @@ npm run service:force-install
 npm run service:start
 ```
 
+### **Service Name Issues**
+
+The actual Windows service name is: `electricitytokenstracker.exe`
+
+- **Display Name**: ElectricityTokensTracker
+- **Service Name**: electricitytokenstracker.exe
+
+If you see "service does not exist" errors, verify with:
+
+```powershell
+Get-Service | Where-Object {$_.DisplayName -eq "ElectricityTokensTracker"}
+```
+
 ### **Build Issues**
 
 ```bash
@@ -117,6 +145,13 @@ npm run build
 rm -rf .next
 npm run service:start
 ```
+
+**Build Detection Process:**
+
+1. Service checks for `.next/build-info.json` file
+2. Compares current git commit with build commit
+3. Auto-rebuilds if commits differ or build info missing
+4. Saves build metadata after successful build
 
 ### **Port Issues**
 
