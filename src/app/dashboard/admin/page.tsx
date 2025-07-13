@@ -264,7 +264,9 @@ export default function AdminPanel() {
             {/* Meter Readings Card */}
             <Card
               className="hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-              onClick={() => router.push('/dashboard/meter-readings')}
+              onClick={() =>
+                router.push('/dashboard/meter-readings?from=admin')
+              }
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>

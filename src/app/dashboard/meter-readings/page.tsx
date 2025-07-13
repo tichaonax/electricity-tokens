@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   ArrowLeft,
@@ -98,7 +98,14 @@ interface ValidationResult {
 export default function MeterReadingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { checkPermission } = usePermissions();
+
+  // Check if coming from admin panel
+  const isFromAdmin =
+    searchParams.get('from') === 'admin' ||
+    (typeof window !== 'undefined' &&
+      document.referrer.includes('/dashboard/admin'));
 
   // Get default date range for current month (memoized to prevent infinite loops)
   const defaultDateRange = useMemo(() => getCurrentMonthRange(), []);
@@ -583,7 +590,7 @@ export default function MeterReadingsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              {session.user?.role === 'ADMIN' ? (
+              {isFromAdmin ? (
                 <button
                   onClick={() => router.push('/dashboard/admin')}
                   className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 mr-4 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
@@ -618,7 +625,7 @@ export default function MeterReadingsPage() {
                   ({session.user?.role})
                 </span>
               </div>
-              {session.user?.role === 'ADMIN' && (
+              {isFromAdmin && (
                 <button
                   onClick={() => router.push('/dashboard')}
                   className="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium"
