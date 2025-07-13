@@ -1,8 +1,98 @@
 const HybridServiceManager = require('./hybrid-service-manager');
 const { promisify } = require('util');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 const execAsync = promisify(exec);
+
+async function getCurrentGitCommit() {
+  try {
+    return new Promise((resolve) => {
+      const gitProcess = spawn('git', ['rev-parse', 'HEAD'], {
+        cwd: process.cwd(),
+        stdio: 'pipe',
+      });
+
+      let output = '';
+      gitProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      gitProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve(output.trim());
+        } else {
+          resolve(null);
+        }
+      });
+
+      gitProcess.on('error', () => {
+        resolve(null);
+      });
+    });
+  } catch (err) {
+    return null;
+  }
+}
+
+async function displayBuildInfo() {
+  try {
+    const buildDir = path.join(process.cwd(), '.next');
+    const buildInfoFile = path.join(buildDir, 'build-info.json');
+
+    // Check if build exists
+    if (!fs.existsSync(buildDir)) {
+      console.log('   Build Directory: ❌ NOT FOUND');
+      console.log('   Status: 🚨 No production build available');
+      console.log(
+        '   Action Required: Run `npm run build` or start service to auto-build'
+      );
+      return;
+    }
+
+    console.log('   Build Directory: ✅ EXISTS');
+
+    // Check build info
+    if (!fs.existsSync(buildInfoFile)) {
+      console.log('   Build Info: ⚠️  NO BUILD TRACKING (legacy build)');
+      console.log(
+        '   Recommendation: Restart service to enable smart build detection'
+      );
+      return;
+    }
+
+    // Read build info
+    const buildInfo = JSON.parse(fs.readFileSync(buildInfoFile, 'utf8'));
+    const currentCommit = await getCurrentGitCommit();
+
+    console.log(
+      `   Build Commit: ${buildInfo.gitCommit?.substring(0, 8) || 'unknown'}`
+    );
+    console.log(
+      `   Build Time: ${new Date(buildInfo.buildTime).toLocaleString()}`
+    );
+    console.log(`   Node Version: ${buildInfo.nodeVersion}`);
+
+    if (currentCommit) {
+      console.log(`   Current Commit: ${currentCommit.substring(0, 8)}`);
+
+      if (buildInfo.gitCommit === currentCommit) {
+        console.log('   Status: ✅ BUILD UP TO DATE');
+      } else {
+        console.log('   Status: 🚨 BUILD IS STALE');
+        console.log(
+          '   Action Required: Restart service to auto-rebuild with latest changes'
+        );
+      }
+    } else {
+      console.log('   Current Commit: ❓ Unable to determine');
+      console.log('   Status: ⚠️  Cannot verify build freshness');
+    }
+  } catch (err) {
+    console.log(`   Error: ❌ ${err.message}`);
+  }
+}
 
 async function diagnoseService() {
   const manager = new HybridServiceManager();
@@ -140,6 +230,10 @@ async function diagnoseService() {
         `   🔑 Run as Administrator for full diagnostic capabilities`
       );
     }
+
+    // Build Information
+    console.log(`\n🔨 Build Status:`);
+    await displayBuildInfo();
 
     console.log(`\n📝 Log Files:`);
     console.log(`   Hybrid Service Log: logs/hybrid-service.log`);

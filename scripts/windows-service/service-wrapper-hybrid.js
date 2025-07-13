@@ -77,13 +77,111 @@ class HybridElectricityTokensService {
     this.log('Checking for production build...');
 
     const buildDir = path.join(this.appRoot, '.next');
+    const buildInfoFile = path.join(buildDir, 'build-info.json');
+
+    // Check if build directory exists
     if (!fs.existsSync(buildDir)) {
       this.log('No production build found. Building application...', 'WARN');
       return this.buildApplication();
     }
 
-    this.log('Production build found.');
+    // Check if build is stale by comparing git commit hashes
+    const currentCommit = await this.getCurrentGitCommit();
+    const lastBuildCommit = this.getLastBuildCommit(buildInfoFile);
+
+    if (!lastBuildCommit) {
+      this.log(
+        'No build info found. Rebuilding to ensure freshness...',
+        'WARN'
+      );
+      return this.buildApplication();
+    }
+
+    if (currentCommit && currentCommit !== lastBuildCommit) {
+      this.log(
+        `Code changes detected: ${lastBuildCommit.substring(0, 8)} → ${currentCommit.substring(0, 8)}`,
+        'WARN'
+      );
+      this.log('Rebuilding application with latest changes...', 'WARN');
+      return this.buildApplication();
+    }
+
+    if (!currentCommit) {
+      this.log('Cannot determine git state. Using existing build.', 'WARN');
+    } else {
+      this.log(
+        `Production build current (commit: ${currentCommit.substring(0, 8)})`
+      );
+    }
+
     return true;
+  }
+
+  async getCurrentGitCommit() {
+    try {
+      const { spawn } = require('child_process');
+      return new Promise((resolve) => {
+        const gitProcess = spawn('git', ['rev-parse', 'HEAD'], {
+          cwd: this.appRoot,
+          stdio: 'pipe',
+        });
+
+        let output = '';
+        gitProcess.stdout.on('data', (data) => {
+          output += data.toString();
+        });
+
+        gitProcess.on('close', (code) => {
+          if (code === 0) {
+            resolve(output.trim());
+          } else {
+            this.log('Could not determine git commit', 'WARN');
+            resolve(null);
+          }
+        });
+
+        gitProcess.on('error', () => {
+          this.log('Git not available or not a git repository', 'WARN');
+          resolve(null);
+        });
+      });
+    } catch (err) {
+      this.log(`Error getting git commit: ${err.message}`, 'WARN');
+      return null;
+    }
+  }
+
+  getLastBuildCommit(buildInfoFile) {
+    try {
+      if (fs.existsSync(buildInfoFile)) {
+        const buildInfo = JSON.parse(fs.readFileSync(buildInfoFile, 'utf8'));
+        return buildInfo.gitCommit;
+      }
+    } catch (err) {
+      this.log(`Error reading build info: ${err.message}`, 'WARN');
+    }
+    return null;
+  }
+
+  async saveBuildInfo() {
+    try {
+      const buildDir = path.join(this.appRoot, '.next');
+      const buildInfoFile = path.join(buildDir, 'build-info.json');
+      const currentCommit = await this.getCurrentGitCommit();
+
+      const buildInfo = {
+        gitCommit: currentCommit,
+        buildTime: new Date().toISOString(),
+        nodeVersion: process.version,
+      };
+
+      fs.writeFileSync(buildInfoFile, JSON.stringify(buildInfo, null, 2));
+      this.log(
+        `Build info saved: commit ${currentCommit?.substring(0, 8) || 'unknown'}`
+      );
+    } catch (err) {
+      this.log(`Error saving build info: ${err.message}`, 'WARN');
+    }
   }
 
   buildApplication() {
@@ -111,9 +209,11 @@ class HybridElectricityTokensService {
         this.log(`Build Error: ${error.trim()}`, 'ERROR');
       });
 
-      buildProcess.on('close', (code) => {
+      buildProcess.on('close', async (code) => {
         if (code === 0) {
           this.log('Production build completed successfully.');
+          // Save build info after successful build
+          await this.saveBuildInfo();
           resolve(true);
         } else {
           this.log(`Build failed with code ${code}`, 'ERROR');
