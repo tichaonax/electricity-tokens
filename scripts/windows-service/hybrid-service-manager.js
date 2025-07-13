@@ -286,13 +286,22 @@ class HybridServiceManager {
   // Kill process by PID using node-windows
   async killPID(pid) {
     return new Promise((resolve) => {
-      this.log(`Attempting to kill PID ${pid}...`);
+      // Ensure PID is a number
+      const numericPID = typeof pid === 'number' ? pid : parseInt(pid, 10);
 
-      wincmd.kill(pid, (err) => {
+      if (isNaN(numericPID)) {
+        this.log(`Invalid PID: ${pid}`, 'ERROR');
+        resolve();
+        return;
+      }
+
+      this.log(`Attempting to kill PID ${numericPID}...`);
+
+      wincmd.kill(numericPID, (err) => {
         if (err) {
-          this.log(`Failed to kill PID ${pid}: ${err.message}`, 'WARN');
+          this.log(`Failed to kill PID ${numericPID}: ${err.message}`, 'WARN');
         } else {
-          this.log(`Successfully killed PID ${pid}`);
+          this.log(`Successfully killed PID ${numericPID}`);
         }
         resolve();
       });
