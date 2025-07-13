@@ -283,29 +283,38 @@ class HybridServiceManager {
     }
   }
 
-  // Kill process by PID using node-windows
+  // Kill process by PID using Windows taskkill command
   async killPID(pid) {
-    return new Promise((resolve) => {
+    try {
       // Ensure PID is a number
       const numericPID = typeof pid === 'number' ? pid : parseInt(pid, 10);
 
       if (isNaN(numericPID)) {
-        this.log(`Invalid PID: ${pid}`, 'ERROR');
-        resolve();
+        this.log(`Invalid PID: ${pid} (type: ${typeof pid})`, 'ERROR');
         return;
       }
 
       this.log(`Attempting to kill PID ${numericPID}...`);
 
-      wincmd.kill(numericPID, (err) => {
-        if (err) {
-          this.log(`Failed to kill PID ${numericPID}: ${err.message}`, 'WARN');
+      // Use Windows taskkill command instead of node-windows kill
+      // This approach is more reliable and doesn't have API compatibility issues
+      try {
+        await execAsync(`taskkill /PID ${numericPID} /F`);
+        this.log(`Successfully killed PID ${numericPID}`);
+      } catch (err) {
+        // Check if the process was already terminated
+        if (
+          err.message.includes('not found') ||
+          err.message.includes('not running')
+        ) {
+          this.log(`PID ${numericPID} was already terminated`);
         } else {
-          this.log(`Successfully killed PID ${numericPID}`);
+          this.log(`Failed to kill PID ${numericPID}: ${err.message}`, 'WARN');
         }
-        resolve();
-      });
-    });
+      }
+    } catch (err) {
+      this.log(`Error in killPID: ${err.message}`, 'ERROR');
+    }
   }
 
   // Get detailed service status
