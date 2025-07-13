@@ -134,7 +134,15 @@ class HybridElectricityTokensService {
 
       // Start Next.js directly using node, not npm
       // This eliminates the npm layer that causes signal propagation issues
-      const nextPath = path.join(this.appRoot, 'node_modules', '.bin', 'next');
+      // Use the actual Next.js JavaScript file instead of the shell script
+      const nextPath = path.join(
+        this.appRoot,
+        'node_modules',
+        'next',
+        'dist',
+        'bin',
+        'next'
+      );
 
       this.appProcess = spawn('node', [nextPath, 'start'], {
         cwd: this.appRoot,
