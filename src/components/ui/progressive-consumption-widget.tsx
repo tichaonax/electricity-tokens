@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 
@@ -30,14 +31,25 @@ interface ConsumptionData {
 export function ProgressiveConsumptionWidget() {
   const [data, setData] = useState<ConsumptionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { status } = useSession();
   const { checkPermission } = usePermissions();
 
   useEffect(() => {
-    // Only fetch data if user has permission
-    if (checkPermission('canViewProgressiveTokenConsumption')) {
+    // Only fetch data if user has permission and session is loaded
+    if (
+      status === 'authenticated' &&
+      checkPermission('canViewProgressiveTokenConsumption')
+    ) {
       fetchConsumptionData();
+    } else if (status === 'authenticated') {
+      setLoading(false);
     }
-  }, [checkPermission]);
+  }, [status]);
+
+  // Don't render anything while session is loading to prevent flash
+  if (status === 'loading') {
+    return null;
+  }
 
   // Check if user has permission to view progressive token consumption
   if (!checkPermission('canViewProgressiveTokenConsumption')) {

@@ -29,7 +29,8 @@
     "service:start": "node scripts/windows-service/start-service-hybrid.js",
     "service:stop": "node scripts/windows-service/stop-service-hybrid.js",
     "service:diagnose": "node scripts/windows-service/diagnose-hybrid.js",
-    "service:validate": "node scripts/windows-service/validate-environment.js"
+    "service:validate": "node scripts/windows-service/validate-environment.js",
+    "service:test-logs": "node scripts/windows-service/test-log-rotation.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
