@@ -42,7 +42,8 @@
     "service:fix-deps": "node scripts/windows-service/fix-dependencies.js",
     "service:fix-prisma": "node scripts/windows-service/fix-prisma.js",
     "service:force-fix-prisma": "node scripts/windows-service/force-fix-prisma.js",
-    "service:repair-modules": "node scripts/windows-service/repair-modules.js"
+    "service:repair-modules": "node scripts/windows-service/repair-modules.js",
+    "service:force-install-hybrid": "node scripts/windows-service/force-install-hybrid.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
