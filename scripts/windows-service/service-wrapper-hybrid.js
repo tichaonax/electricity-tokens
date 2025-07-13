@@ -7,14 +7,22 @@ class HybridElectricityTokensService {
     this.appProcess = null;
     this.isShuttingDown = false;
     this.appRoot = path.resolve(__dirname, '../..');
-    this.logFile = path.join(this.appRoot, 'logs', 'service-wrapper.log');
+    this.logFile = this.getDailyLogFile();
     this.pidFile = path.join(this.appRoot, 'logs', 'service.pid');
 
     // Ensure logs directory exists
     this.ensureLogsDirectory();
 
+    // Clean up old log files
+    this.cleanupOldLogs();
+
     // Set up signal handlers for graceful shutdown
     this.setupSignalHandlers();
+  }
+
+  getDailyLogFile() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    return path.join(this.appRoot, 'logs', `service-wrapper-${today}.log`);
   }
 
   ensureLogsDirectory() {
@@ -24,9 +32,54 @@ class HybridElectricityTokensService {
     }
   }
 
+  cleanupOldLogs() {
+    try {
+      const logsDir = path.join(this.appRoot, 'logs');
+      if (!fs.existsSync(logsDir)) {
+        return;
+      }
+
+      const files = fs.readdirSync(logsDir);
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+      let deletedCount = 0;
+
+      files.forEach((file) => {
+        // Match service wrapper log files with date pattern
+        const match = file.match(/^service-wrapper-(\d{4}-\d{2}-\d{2})\.log$/);
+        if (match) {
+          const fileDate = new Date(match[1]);
+          if (fileDate < twoWeeksAgo) {
+            try {
+              fs.unlinkSync(path.join(logsDir, file));
+              deletedCount++;
+              console.log(`Deleted old log file: ${file}`);
+            } catch (err) {
+              console.error(`Failed to delete log file ${file}:`, err.message);
+            }
+          }
+        }
+      });
+
+      if (deletedCount > 0) {
+        console.log(`Cleaned up ${deletedCount} old log files`);
+      }
+    } catch (err) {
+      console.error('Error during log cleanup:', err.message);
+    }
+  }
+
   log(message, level = 'INFO') {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${level}] ${message}`;
+
+    // Update log file path if date has changed (for daily rotation)
+    const currentLogFile = this.getDailyLogFile();
+    if (currentLogFile !== this.logFile) {
+      this.logFile = currentLogFile;
+      this.ensureLogsDirectory();
+    }
 
     // Write to log file
     try {

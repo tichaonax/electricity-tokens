@@ -190,7 +190,7 @@ export function DashboardClient() {
             return (
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="flex-1 lg:pr-2">
-                  <ProgressiveConsumptionWidget />
+                  {canViewProgressive && <ProgressiveConsumptionWidget />}
                 </div>
                 <div className="flex-1 lg:px-2">
                   <RunningBalanceWidget />
