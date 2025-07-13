@@ -101,11 +101,8 @@ export default function MeterReadingsPage() {
   const searchParams = useSearchParams();
   const { checkPermission } = usePermissions();
 
-  // Check if coming from admin panel
-  const isFromAdmin =
-    searchParams.get('from') === 'admin' ||
-    (typeof window !== 'undefined' &&
-      document.referrer.includes('/dashboard/admin'));
+  // Check if coming from admin panel - only rely on URL parameter
+  const isFromAdmin = searchParams.get('from') === 'admin';
 
   // Get default date range for current month (memoized to prevent infinite loops)
   const defaultDateRange = useMemo(() => getCurrentMonthRange(), []);
