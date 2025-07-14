@@ -36,6 +36,10 @@ function loadEnvironmentVariables() {
 // Load environment variables
 loadEnvironmentVariables();
 
+// Build Service name
+export function buildServiceExpectedName(name) {
+  return `${name}.exe`;
+}
 // Service configuration
 const SERVICE_CONFIG = {
   // Service identification

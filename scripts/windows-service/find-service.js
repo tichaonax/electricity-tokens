@@ -135,7 +135,7 @@ class ServiceFinder {
       try {
         this.log(`Testing: "${name}"`);
         const { stdout } = await execAsync(
-          `${commands.SC_COMMAND} query "${name}"`
+          `${commands.SC_COMMAND} query "${config.buildServiceExpectedName(name)}"`
         );
         this.log(`✅ FOUND: "${name}"`);
         this.log('Service details:');

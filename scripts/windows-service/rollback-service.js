@@ -36,7 +36,7 @@ class ServiceRollback {
   async getServiceStatus() {
     try {
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${this.serviceName}"`,
+        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
@@ -63,9 +63,12 @@ class ServiceRollback {
 
     if (status === 'RUNNING') {
       try {
-        execSync(`${config.commands.SC_COMMAND} stop "${this.serviceName}"`, {
-          stdio: 'pipe',
-        });
+        execSync(
+          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`,
+          {
+            stdio: 'pipe',
+          }
+        );
 
         // Wait for service to stop
         let attempts = 0;
@@ -197,9 +200,12 @@ class ServiceRollback {
     console.log('🚀 Starting service...');
 
     try {
-      execSync(`${config.commands.SC_COMMAND} start "${this.serviceName}"`, {
-        stdio: 'pipe',
-      });
+      execSync(
+        `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(this.serviceName)}"`,
+        {
+          stdio: 'pipe',
+        }
+      );
 
       // Wait for service to start
       let attempts = 0;

@@ -33,7 +33,7 @@ class ServiceFixer {
       // Try to stop the service first
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} stop "${this.serviceName}"`
+          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`
         );
         this.log('Service stopped');
       } catch (err) {
@@ -43,7 +43,7 @@ class ServiceFixer {
       // Try to delete the service
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} delete "${this.serviceName}"`
+          `${config.commands.SC_COMMAND} delete "${config.buildServiceExpectedName(this.serviceName)}"`
         );
         this.log('✅ Service deleted from Windows registry');
       } catch (err) {

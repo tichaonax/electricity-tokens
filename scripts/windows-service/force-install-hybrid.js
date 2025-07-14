@@ -30,7 +30,7 @@ class ForceInstallManager {
   async getServiceStatus() {
     try {
       const { stdout } = await execAsync(
-        `${config.commands.SC_COMMAND} query "${this.serviceName}"`
+        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`
       );
 
       if (stdout.includes('RUNNING')) return 'RUNNING';
@@ -65,7 +65,7 @@ class ForceInstallManager {
       // Try to stop the service
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} stop "${this.serviceName}"`
+          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`
         );
         this.log('Sent stop command to service');
 

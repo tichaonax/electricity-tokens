@@ -12,9 +12,12 @@ async function simpleUpgrade() {
     // Step 1: Stop service
     console.log('🛑 Stopping service...');
     try {
-      execSync(`${config.commands.SC_COMMAND} stop "${serviceName}"`, {
-        stdio: 'pipe',
-      });
+      execSync(
+        `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(serviceName)}"`,
+        {
+          stdio: 'pipe',
+        }
+      );
 
       // Wait for service to stop
       let attempts = 0;
@@ -22,7 +25,7 @@ async function simpleUpgrade() {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const result = execSync(
-          `${config.commands.SC_COMMAND} query "${serviceName}"`,
+          `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(serviceName)}"`,
           {
             encoding: 'utf8',
             stdio: 'pipe',
@@ -51,9 +54,12 @@ async function simpleUpgrade() {
 
     // Step 3: Start service
     console.log('🚀 Starting service...');
-    execSync(`${config.commands.SC_COMMAND} start "${serviceName}"`, {
-      stdio: 'pipe',
-    });
+    execSync(
+      `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(serviceName)}"`,
+      {
+        stdio: 'pipe',
+      }
+    );
 
     // Wait for service to start
     let startAttempts = 0;
@@ -61,7 +67,7 @@ async function simpleUpgrade() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${serviceName}"`,
+        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',

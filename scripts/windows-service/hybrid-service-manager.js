@@ -85,7 +85,7 @@ class HybridServiceManager {
   async getServiceStatus() {
     try {
       const { stdout } = await execAsync(
-        `${config.commands.SC_COMMAND} query "${this.serviceName}"`
+        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`
       );
 
       if (stdout.includes('RUNNING')) return 'RUNNING';
@@ -181,7 +181,7 @@ class HybridServiceManager {
 
       // Start the service
       await execAsync(
-        `${config.commands.SC_COMMAND} start "${this.serviceName}"`
+        `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(this.serviceName)}"`
       );
 
       // Wait for service to start and track PID
@@ -236,7 +236,7 @@ class HybridServiceManager {
       this.log('Attempting graceful stop...');
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} stop "${this.serviceName}"`
+          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`
         );
 
         // Wait for graceful stop
