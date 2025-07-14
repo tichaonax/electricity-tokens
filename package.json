@@ -31,8 +31,6 @@
     "service:diagnose": "node scripts/windows-service/diagnose-hybrid.js",
     "service:validate": "node scripts/windows-service/validate-environment.js",
     "service:test-logs": "node scripts/windows-service/test-log-creation.js",
-    "service:fix": "node scripts/windows-service/fix-broken-service.js",
-    "service:find": "node scripts/windows-service/find-service.js",
     "service:reset": "node scripts/windows-service/complete-service-reset.js",
     "service:restore-tokenbroker": "node scripts/windows-service/restore-tokenbroker.js"
   },
