@@ -47,22 +47,29 @@ class HybridServiceInstaller {
 
     // Check Windows SCM first
     try {
-      const result = execSync(`sc.exe query "${this.serviceName}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+      const result = execSync(
+        `${config.commands.SC_COMMAND} query "${this.serviceName}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      );
 
       if (result.includes('SERVICE_NAME')) {
         console.log('🛑 Stopping existing Windows service...');
         try {
-          execSync(`sc.exe stop "${this.serviceName}"`, { stdio: 'pipe' });
+          execSync(`${config.commands.SC_COMMAND} stop "${this.serviceName}"`, {
+            stdio: 'pipe',
+          });
           await new Promise((resolve) => setTimeout(resolve, 3000));
         } catch (err) {
           console.log('ℹ️  Service was not running.');
         }
 
         console.log('🗑️  Removing existing Windows service...');
-        execSync(`sc.exe delete "${this.serviceName}"`, { stdio: 'pipe' });
+        execSync(`${config.commands.SC_COMMAND} delete "${this.serviceName}"`, {
+          stdio: 'pipe',
+        });
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     } catch (err) {
@@ -183,7 +190,7 @@ class HybridServiceInstaller {
     console.log(`📋 Service executable: ${exePath}`);
 
     // Register with Windows using sc.exe
-    const createCommand = `sc.exe create "${this.serviceName}" binPath= "\\"${exePath}\\"" DisplayName= "${this.serviceName}" start= auto`;
+    const createCommand = `${config.commands.SC_COMMAND} create "${this.serviceName}" binPath= "\\"${exePath}\\"" DisplayName= "${this.serviceName}" start= auto`;
     console.log('🔧 Registering with Windows SCM...');
 
     try {
@@ -196,7 +203,7 @@ class HybridServiceInstaller {
     // Set description
     try {
       execSync(
-        `sc.exe description "${this.serviceName}" "${config.description}"`,
+        `${config.commands.SC_COMMAND} description "${this.serviceName}" "${config.description}"`,
         { stdio: 'pipe' }
       );
       console.log('✅ Service description set.');
@@ -207,9 +214,12 @@ class HybridServiceInstaller {
     // Configure service timeout to allow for Next.js startup
     try {
       // Set service to auto-start
-      execSync(`sc.exe config "${this.serviceName}" start= auto`, {
-        stdio: 'pipe',
-      });
+      execSync(
+        `${config.commands.SC_COMMAND} config "${this.serviceName}" start= auto`,
+        {
+          stdio: 'pipe',
+        }
+      );
 
       // Set a longer service timeout (120 seconds) via registry
       // This prevents Windows from killing the service during Next.js startup
@@ -229,16 +239,21 @@ class HybridServiceInstaller {
     console.log('🚀 Starting Windows service...');
 
     try {
-      execSync(`sc.exe start "${this.serviceName}"`, { stdio: 'pipe' });
+      execSync(`${config.commands.SC_COMMAND} start "${this.serviceName}"`, {
+        stdio: 'pipe',
+      });
       console.log('✅ Service started successfully!');
 
       // Wait and verify
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
-      const result = execSync(`sc.exe query "${this.serviceName}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+      const result = execSync(
+        `${config.commands.SC_COMMAND} query "${this.serviceName}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      );
 
       if (result.includes('RUNNING')) {
         console.log('✅ Service is running.');

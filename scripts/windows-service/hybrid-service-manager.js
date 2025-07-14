@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 class HybridServiceManager {
   constructor() {
-    this.serviceName = 'electricitytokenstrackerexe.exe';
+    this.serviceName = config.name;
     this.appRoot = path.resolve(__dirname, '../..');
     this.logFile = path.join(this.appRoot, 'logs', 'hybrid-service.log');
     this.pidFile = path.join(this.appRoot, 'logs', 'service.pid');
@@ -165,7 +165,7 @@ class HybridServiceManager {
   // Start service using sc.exe
   async startService() {
     try {
-      this.log('Starting service using sc.exe...');
+      this.log(`Starting service using ${config.commands.SC_COMMAND}...`);
 
       const status = await this.getServiceStatus();
       if (status === 'RUNNING') {

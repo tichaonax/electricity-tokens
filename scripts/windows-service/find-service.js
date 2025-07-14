@@ -1,5 +1,6 @@
 const { promisify } = require('util');
 const { exec } = require('child_process');
+const { commands } = require('./config');
 
 const execAsync = promisify(exec);
 
@@ -15,7 +16,9 @@ class ServiceFinder {
 
     try {
       // Get all services and filter for our service
-      const { stdout } = await execAsync('sc.exe query state= all');
+      const { stdout } = await execAsync(
+        `${commands.SC_COMMAND} query state= all`
+      );
 
       // Look for services containing relevant keywords
       const lines = stdout.split('\n');
@@ -131,7 +134,9 @@ class ServiceFinder {
     for (const name of possibleNames) {
       try {
         this.log(`Testing: "${name}"`);
-        const { stdout } = await execAsync(`sc.exe query "${name}"`);
+        const { stdout } = await execAsync(
+          `${commands.SC_COMMAND} query "${name}"`
+        );
         this.log(`✅ FOUND: "${name}"`);
         this.log('Service details:');
         this.log(stdout);
@@ -190,8 +195,10 @@ class ServiceFinder {
       this.log('');
       this.log('🎯 Recommended actions:');
       this.log(`   - Update config.js to use: "${workingName}"`);
-      this.log(`   - Test with: sc.exe query "${workingName}"`);
-      this.log(`   - Start with: sc.exe start "${workingName}"`);
+      this.log(`   - Test with: ${commands.SC_COMMAND} query "${workingName}"`);
+      this.log(
+        `   - Start with: ${commands.SC_COMMAND} start "${workingName}"`
+      );
     } else {
       this.log('❌ No working service name found');
       this.log('');

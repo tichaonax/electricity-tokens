@@ -12,17 +12,22 @@ async function simpleUpgrade() {
     // Step 1: Stop service
     console.log('🛑 Stopping service...');
     try {
-      execSync(`sc.exe stop "${serviceName}"`, { stdio: 'pipe' });
+      execSync(`${config.commands.SC_COMMAND} stop "${serviceName}"`, {
+        stdio: 'pipe',
+      });
 
       // Wait for service to stop
       let attempts = 0;
       while (attempts < 10) {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        const result = execSync(`sc.exe query "${serviceName}"`, {
-          encoding: 'utf8',
-          stdio: 'pipe',
-        });
+        const result = execSync(
+          `${config.commands.SC_COMMAND} query "${serviceName}"`,
+          {
+            encoding: 'utf8',
+            stdio: 'pipe',
+          }
+        );
 
         if (result.includes('STOPPED')) {
           console.log('✅ Service stopped successfully.');
@@ -46,17 +51,22 @@ async function simpleUpgrade() {
 
     // Step 3: Start service
     console.log('🚀 Starting service...');
-    execSync(`sc.exe start "${serviceName}"`, { stdio: 'pipe' });
+    execSync(`${config.commands.SC_COMMAND} start "${serviceName}"`, {
+      stdio: 'pipe',
+    });
 
     // Wait for service to start
     let startAttempts = 0;
     while (startAttempts < 10) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const result = execSync(`sc.exe query "${serviceName}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+      const result = execSync(
+        `${config.commands.SC_COMMAND} query "${serviceName}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      );
 
       if (result.includes('RUNNING')) {
         console.log('✅ Service started successfully.');
