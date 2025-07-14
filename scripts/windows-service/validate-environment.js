@@ -266,9 +266,13 @@ class EnvironmentValidator {
 
     const serviceFiles = [
       'config.js',
-      'service-wrapper.js',
-      'install-service.js',
+      'service-wrapper-hybrid.js',
+      'force-install-hybrid.js',
       'uninstall-service.js',
+      'diagnose-hybrid.js',
+      'start-service-hybrid.js',
+      'stop-service-hybrid.js',
+      'buildexpectedservicename.js',
     ];
 
     let allFilesExist = true;

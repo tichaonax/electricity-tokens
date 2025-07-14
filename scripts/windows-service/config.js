@@ -45,7 +45,7 @@ const SERVICE_CONFIG = {
 
   // Application paths
   appRoot: path.resolve(__dirname, '../..'),
-  script: path.resolve(__dirname, 'service-wrapper.js'),
+  script: path.resolve(__dirname, 'service-wrapper-hybrid.js'),
 
   // Service options
   nodeOptions: ['--max-old-space-size=1024'],
