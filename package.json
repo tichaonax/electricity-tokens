@@ -32,7 +32,8 @@
     "service:validate": "node scripts/windows-service/validate-environment.js",
     "service:test-logs": "node scripts/windows-service/test-log-rotation.js",
     "service:test-log-creation": "node scripts/windows-service/test-log-creation.js",
-    "service:fix": "node scripts/windows-service/fix-broken-service.js"
+    "service:fix": "node scripts/windows-service/fix-broken-service.js",
+    "service:find": "node scripts/windows-service/find-service.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
