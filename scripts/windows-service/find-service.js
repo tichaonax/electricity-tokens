@@ -119,6 +119,7 @@ class ServiceFinder {
     this.log('');
 
     const possibleNames = [
+      'electricitytokenstrackerexe.exe',
       'electricitytokenstracker.exe',
       'electricitytokenstracker',
       'ElectricityTokensTracker',

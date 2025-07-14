@@ -1,0 +1,4 @@
+Test log entry for 2025-07-13
+[2025-07-13T23:04:46.698Z] [INFO] Test log message
+[2025-07-13T23:04:46.698Z] [WARN] Test warning message
+[2025-07-13T23:04:46.698Z] [ERROR] Test error message

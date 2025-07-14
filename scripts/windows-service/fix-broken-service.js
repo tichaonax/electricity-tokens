@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 class ServiceFixer {
   constructor() {
-    this.serviceName = 'electricitytokenstracker.exe';
+    this.serviceName = 'electricitytokenstrackerexe.exe';
   }
 
   async log(message, level = 'INFO') {
