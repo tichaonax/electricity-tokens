@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 class ServiceUpgrader {
   constructor() {
@@ -42,7 +43,7 @@ class ServiceUpgrader {
   async checkServiceExists() {
     try {
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
@@ -57,7 +58,7 @@ class ServiceUpgrader {
   async getServiceStatus() {
     try {
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
@@ -135,7 +136,7 @@ class ServiceUpgrader {
     if (status === 'RUNNING') {
       try {
         execSync(
-          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`,
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`,
           {
             stdio: 'pipe',
           }
@@ -323,7 +324,7 @@ class ServiceUpgrader {
 
     try {
       execSync(
-        `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(this.serviceName)}"`,
         {
           stdio: 'pipe',
         }

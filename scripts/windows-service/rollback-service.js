@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 class ServiceRollback {
   constructor(backupPath) {
@@ -36,7 +37,7 @@ class ServiceRollback {
   async getServiceStatus() {
     try {
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
@@ -64,7 +65,7 @@ class ServiceRollback {
     if (status === 'RUNNING') {
       try {
         execSync(
-          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`,
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`,
           {
             stdio: 'pipe',
           }
@@ -201,7 +202,7 @@ class ServiceRollback {
 
     try {
       execSync(
-        `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(this.serviceName)}"`,
         {
           stdio: 'pipe',
         }

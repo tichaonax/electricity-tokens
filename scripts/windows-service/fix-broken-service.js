@@ -4,6 +4,7 @@ const Service = require('node-windows').Service;
 const config = require('./config');
 const path = require('path');
 const fs = require('fs');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 const execAsync = promisify(exec);
 
@@ -33,7 +34,7 @@ class ServiceFixer {
       // Try to stop the service first
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`
         );
         this.log('Service stopped');
       } catch (err) {
@@ -43,7 +44,7 @@ class ServiceFixer {
       // Try to delete the service
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} delete "${config.buildServiceExpectedName(this.serviceName)}"`
+          `${config.commands.SC_COMMAND} delete "${buildServiceExpectedName(this.serviceName)}"`
         );
         this.log('✅ Service deleted from Windows registry');
       } catch (err) {

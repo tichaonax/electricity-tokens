@@ -4,6 +4,7 @@ const { exec, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 const execAsync = promisify(exec);
 
@@ -195,7 +196,7 @@ async function diagnoseService() {
     console.log(`\n⚙️  Service Configuration:`);
     try {
       const { stdout } = await execAsync(
-        `${config.commands.SC_COMMAND} qc ${config.buildServiceExpectedName(config.name)}`
+        `${config.commands.SC_COMMAND} qc ${buildServiceExpectedName(config.name)}`
       );
       const lines = stdout.split('\n');
 

@@ -4,6 +4,7 @@ const wincmd = require('node-windows');
 const path = require('path');
 const fs = require('fs');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 const execAsync = promisify(exec);
 
@@ -85,7 +86,7 @@ class HybridServiceManager {
   async getServiceStatus() {
     try {
       const { stdout } = await execAsync(
-        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`
       );
 
       if (stdout.includes('RUNNING')) return 'RUNNING';
@@ -181,7 +182,7 @@ class HybridServiceManager {
 
       // Start the service
       await execAsync(
-        `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(this.serviceName)}"`
+        `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(this.serviceName)}"`
       );
 
       // Wait for service to start and track PID
@@ -236,7 +237,7 @@ class HybridServiceManager {
       this.log('Attempting graceful stop...');
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`
         );
 
         // Wait for graceful stop

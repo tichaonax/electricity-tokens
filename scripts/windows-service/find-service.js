@@ -1,6 +1,7 @@
 const { promisify } = require('util');
 const { exec } = require('child_process');
 const { commands } = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 const execAsync = promisify(exec);
 
@@ -135,7 +136,7 @@ class ServiceFinder {
       try {
         this.log(`Testing: "${name}"`);
         const { stdout } = await execAsync(
-          `${commands.SC_COMMAND} query "${config.buildServiceExpectedName(name)}"`
+          `${commands.SC_COMMAND} query "${buildServiceExpectedName(name)}"`
         );
         this.log(`✅ FOUND: "${name}"`);
         this.log('Service details:');

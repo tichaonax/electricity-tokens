@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 class HybridServiceInstaller {
   constructor() {
@@ -48,7 +49,7 @@ class HybridServiceInstaller {
     // Check Windows SCM first
     try {
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
@@ -59,7 +60,7 @@ class HybridServiceInstaller {
         console.log('🛑 Stopping existing Windows service...');
         try {
           execSync(
-            `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(this.serviceName)}"`,
+            `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`,
             {
               stdio: 'pipe',
             }
@@ -71,7 +72,7 @@ class HybridServiceInstaller {
 
         console.log('🗑️  Removing existing Windows service...');
         execSync(
-          `${config.commands.SC_COMMAND} delete "${config.buildServiceExpectedName(this.serviceName)}"`,
+          `${config.commands.SC_COMMAND} delete "${buildServiceExpectedName(this.serviceName)}"`,
           {
             stdio: 'pipe',
           }
@@ -196,7 +197,7 @@ class HybridServiceInstaller {
     console.log(`📋 Service executable: ${exePath}`);
 
     // Register with Windows using sc.exe
-    const createCommand = `${config.commands.SC_COMMAND} create "${config.buildServiceExpectedName(this.serviceName)}" binPath= "\\"${exePath}\\"" DisplayName= "${this.serviceName}" start= auto`;
+    const createCommand = `${config.commands.SC_COMMAND} create "${buildServiceExpectedName(this.serviceName)}" binPath= "\\"${exePath}\\"" DisplayName= "${this.serviceName}" start= auto`;
     console.log('🔧 Registering with Windows SCM...');
 
     try {
@@ -209,7 +210,7 @@ class HybridServiceInstaller {
     // Set description
     try {
       execSync(
-        `${config.commands.SC_COMMAND} description "${config.buildServiceExpectedName(this.serviceName)}" "${config.description}"`,
+        `${config.commands.SC_COMMAND} description "${buildServiceExpectedName(this.serviceName)}" "${config.description}"`,
         { stdio: 'pipe' }
       );
       console.log('✅ Service description set.');
@@ -221,7 +222,7 @@ class HybridServiceInstaller {
     try {
       // Set service to auto-start
       execSync(
-        `${config.commands.SC_COMMAND} config "${config.buildServiceExpectedName(this.serviceName)}" start= auto`,
+        `${config.commands.SC_COMMAND} config "${buildServiceExpectedName(this.serviceName)}" start= auto`,
         {
           stdio: 'pipe',
         }
@@ -246,7 +247,7 @@ class HybridServiceInstaller {
 
     try {
       execSync(
-        `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(this.serviceName)}"`,
         {
           stdio: 'pipe',
         }
@@ -257,7 +258,7 @@ class HybridServiceInstaller {
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(this.serviceName)}"`,
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',

@@ -1,6 +1,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 async function simpleUpgrade() {
   console.log('🚀 Starting Simple Service Upgrade');
@@ -13,7 +14,7 @@ async function simpleUpgrade() {
     console.log('🛑 Stopping service...');
     try {
       execSync(
-        `${config.commands.SC_COMMAND} stop "${config.buildServiceExpectedName(serviceName)}"`,
+        `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(serviceName)}"`,
         {
           stdio: 'pipe',
         }
@@ -25,7 +26,7 @@ async function simpleUpgrade() {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const result = execSync(
-          `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(serviceName)}"`,
+          `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(serviceName)}"`,
           {
             encoding: 'utf8',
             stdio: 'pipe',
@@ -55,7 +56,7 @@ async function simpleUpgrade() {
     // Step 3: Start service
     console.log('🚀 Starting service...');
     execSync(
-      `${config.commands.SC_COMMAND} start "${config.buildServiceExpectedName(serviceName)}"`,
+      `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(serviceName)}"`,
       {
         stdio: 'pipe',
       }
@@ -67,7 +68,7 @@ async function simpleUpgrade() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${config.buildServiceExpectedName(serviceName)}"`,
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(serviceName)}"`,
         {
           encoding: 'utf8',
           stdio: 'pipe',
