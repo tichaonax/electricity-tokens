@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 class ServiceRollback {
   constructor(backupPath) {
@@ -35,10 +36,13 @@ class ServiceRollback {
 
   async getServiceStatus() {
     try {
-      const result = execSync(`sc.exe query "${this.serviceName}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+      const result = execSync(
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      );
 
       if (result.includes('RUNNING')) return 'RUNNING';
       if (result.includes('STOPPED')) return 'STOPPED';
@@ -60,7 +64,12 @@ class ServiceRollback {
 
     if (status === 'RUNNING') {
       try {
-        execSync(`sc.exe stop "${this.serviceName}"`, { stdio: 'pipe' });
+        execSync(
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`,
+          {
+            stdio: 'pipe',
+          }
+        );
 
         // Wait for service to stop
         let attempts = 0;
@@ -192,7 +201,12 @@ class ServiceRollback {
     console.log('🚀 Starting service...');
 
     try {
-      execSync(`sc.exe start "${this.serviceName}"`, { stdio: 'pipe' });
+      execSync(
+        `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(this.serviceName)}"`,
+        {
+          stdio: 'pipe',
+        }
+      );
 
       // Wait for service to start
       let attempts = 0;

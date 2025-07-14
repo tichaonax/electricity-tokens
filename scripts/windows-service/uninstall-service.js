@@ -1,5 +1,6 @@
 const Service = require('node-windows').Service;
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 class ServiceUninstaller {
   constructor() {
@@ -35,7 +36,7 @@ class ServiceUninstaller {
     try {
       const { execSync } = require('child_process');
       const result = execSync(
-        `${config.commands.SC_COMMAND} query "${config.name}"`,
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(config.name)}"`,
         {
           encoding: 'utf8',
         }
@@ -62,9 +63,12 @@ class ServiceUninstaller {
 
     try {
       const { execSync } = require('child_process');
-      execSync(`${config.commands.SC_COMMAND} stop "${config.name}"`, {
-        stdio: 'pipe',
-      });
+      execSync(
+        `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(config.name)}"`,
+        {
+          stdio: 'pipe',
+        }
+      );
 
       // Wait for service to stop
       console.log('⏳ Waiting for service to stop...');
@@ -169,8 +173,12 @@ async function main() {
     console.error('  - Check Windows Event Viewer for detailed error logs');
 
     console.error('\n💡 Manual uninstallation:');
-    console.error(`  ${config.commands.SC_COMMAND} stop "${config.name}"`);
-    console.error(`  ${config.commands.SC_COMMAND} delete "${config.name}"`);
+    console.error(
+      `  ${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(config.name)}"`
+    );
+    console.error(
+      `  ${config.commands.SC_COMMAND} delete "${buildServiceExpectedName(config.name)}"`
+    );
 
     process.exit(1);
   }

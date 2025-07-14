@@ -4,12 +4,13 @@ const wincmd = require('node-windows');
 const path = require('path');
 const fs = require('fs');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 const execAsync = promisify(exec);
 
 class HybridServiceManager {
   constructor() {
-    this.serviceName = 'electricitytokenstrackerexe.exe';
+    this.serviceName = config.name;
     this.appRoot = path.resolve(__dirname, '../..');
     this.logFile = path.join(this.appRoot, 'logs', 'hybrid-service.log');
     this.pidFile = path.join(this.appRoot, 'logs', 'service.pid');
@@ -85,7 +86,7 @@ class HybridServiceManager {
   async getServiceStatus() {
     try {
       const { stdout } = await execAsync(
-        `${config.commands.SC_COMMAND} query "${this.serviceName}"`
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`
       );
 
       if (stdout.includes('RUNNING')) return 'RUNNING';
@@ -165,7 +166,7 @@ class HybridServiceManager {
   // Start service using sc.exe
   async startService() {
     try {
-      this.log('Starting service using sc.exe...');
+      this.log(`Starting service using ${config.commands.SC_COMMAND}...`);
 
       const status = await this.getServiceStatus();
       if (status === 'RUNNING') {
@@ -181,7 +182,7 @@ class HybridServiceManager {
 
       // Start the service
       await execAsync(
-        `${config.commands.SC_COMMAND} start "${this.serviceName}"`
+        `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(this.serviceName)}"`
       );
 
       // Wait for service to start and track PID
@@ -236,7 +237,7 @@ class HybridServiceManager {
       this.log('Attempting graceful stop...');
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} stop "${this.serviceName}"`
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`
         );
 
         // Wait for graceful stop

@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const config = require('./config');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 class ServiceUpgrader {
   constructor() {
@@ -41,10 +42,13 @@ class ServiceUpgrader {
 
   async checkServiceExists() {
     try {
-      const result = execSync(`sc.exe query "${this.serviceName}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+      const result = execSync(
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      );
       return result.includes('SERVICE_NAME');
     } catch (err) {
       return false;
@@ -53,10 +57,13 @@ class ServiceUpgrader {
 
   async getServiceStatus() {
     try {
-      const result = execSync(`sc.exe query "${this.serviceName}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe',
-      });
+      const result = execSync(
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      );
 
       if (result.includes('RUNNING')) return 'RUNNING';
       if (result.includes('STOPPED')) return 'STOPPED';
@@ -128,7 +135,12 @@ class ServiceUpgrader {
 
     if (status === 'RUNNING') {
       try {
-        execSync(`sc.exe stop "${this.serviceName}"`, { stdio: 'pipe' });
+        execSync(
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`,
+          {
+            stdio: 'pipe',
+          }
+        );
 
         // Wait for service to stop (up to 30 seconds)
         let attempts = 0;
@@ -311,7 +323,12 @@ class ServiceUpgrader {
     console.log('🚀 Starting service...');
 
     try {
-      execSync(`sc.exe start "${this.serviceName}"`, { stdio: 'pipe' });
+      execSync(
+        `${config.commands.SC_COMMAND} start "${buildServiceExpectedName(this.serviceName)}"`,
+        {
+          stdio: 'pipe',
+        }
+      );
 
       // Wait for service to start (up to 30 seconds)
       let attempts = 0;

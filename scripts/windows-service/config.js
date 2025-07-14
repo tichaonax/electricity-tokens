@@ -39,7 +39,7 @@ loadEnvironmentVariables();
 // Service configuration
 const SERVICE_CONFIG = {
   // Service identification
-  name: 'electricitytokenstrackerexe.exe',
+  name: 'ElectricityTokensTracker',
   description:
     'Electricity Tokens Tracker - A web application for tracking electricity token purchases and usage',
 

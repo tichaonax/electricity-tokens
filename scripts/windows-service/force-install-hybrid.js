@@ -4,12 +4,13 @@ const Service = require('node-windows').Service;
 const config = require('./config');
 const path = require('path');
 const fs = require('fs');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 const execAsync = promisify(exec);
 
 class ForceInstallManager {
   constructor() {
-    this.serviceName = 'electricitytokenstrackerexe.exe';
+    this.serviceName = config.name;
     this.daemonPath = path.join(__dirname, 'daemon');
   }
 
@@ -30,7 +31,7 @@ class ForceInstallManager {
   async getServiceStatus() {
     try {
       const { stdout } = await execAsync(
-        `${config.commands.SC_COMMAND} query "${this.serviceName}"`
+        `${config.commands.SC_COMMAND} query "${buildServiceExpectedName(this.serviceName)}"`
       );
 
       if (stdout.includes('RUNNING')) return 'RUNNING';
@@ -65,7 +66,7 @@ class ForceInstallManager {
       // Try to stop the service
       try {
         await execAsync(
-          `${config.commands.SC_COMMAND} stop "${this.serviceName}"`
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`
         );
         this.log('Sent stop command to service');
 

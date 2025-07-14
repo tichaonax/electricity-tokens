@@ -4,12 +4,13 @@ const Service = require('node-windows').Service;
 const config = require('./config');
 const path = require('path');
 const fs = require('fs');
+const buildServiceExpectedName = require('./buildexpectedservicename');
 
 const execAsync = promisify(exec);
 
 class ServiceFixer {
   constructor() {
-    this.serviceName = 'electricitytokenstrackerexe.exe';
+    this.serviceName = config.name;
   }
 
   async log(message, level = 'INFO') {
@@ -32,7 +33,9 @@ class ServiceFixer {
     try {
       // Try to stop the service first
       try {
-        await execAsync(`sc.exe stop "${this.serviceName}"`);
+        await execAsync(
+          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`
+        );
         this.log('Service stopped');
       } catch (err) {
         this.log('Service was not running (expected)');
@@ -40,7 +43,9 @@ class ServiceFixer {
 
       // Try to delete the service
       try {
-        await execAsync(`sc.exe delete "${this.serviceName}"`);
+        await execAsync(
+          `${config.commands.SC_COMMAND} delete "${buildServiceExpectedName(this.serviceName)}"`
+        );
         this.log('✅ Service deleted from Windows registry');
       } catch (err) {
         this.log(`Service deletion error: ${err.message}`, 'WARN');
