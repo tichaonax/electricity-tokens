@@ -118,39 +118,31 @@ class ServiceFinder {
     }
   }
 
-  async testServiceCommands() {
-    this.log('🧪 Testing different service name formats...');
+  async testCurrentServiceName() {
+    this.log('🧪 Testing current configured service name...');
     this.log('');
 
-    const possibleNames = [
-      'electricitytokenstrackerexe.exe',
-      'electricitytokenstracker.exe',
-      'electricitytokenstracker',
-      'ElectricityTokensTracker',
-      'Electricity Tokens Tracker',
-      'nodejs-electricitytokenstracker',
-      'electricitytokenstrackerexe',
-    ];
+    const config = require('./config');
+    const serviceName = config.name;
+    const expectedName = buildServiceExpectedName(serviceName);
 
-    for (const name of possibleNames) {
-      try {
-        this.log(`Testing: "${name}"`);
-        const { stdout } = await execAsync(
-          `${commands.SC_COMMAND} query "${buildServiceExpectedName(name)}"`
-        );
-        this.log(`✅ FOUND: "${name}"`);
-        this.log('Service details:');
-        this.log(stdout);
-        this.log('');
-        return name; // Return the working name
-      } catch (err) {
-        this.log(`❌ Not found: "${name}"`);
-      }
+    try {
+      this.log(`Testing configured service: "${serviceName}"`);
+      this.log(`Expected Windows name: "${expectedName}"`);
+
+      const { stdout } = await execAsync(
+        `${commands.SC_COMMAND} query "${expectedName}"`
+      );
+      this.log(`✅ FOUND: Service is properly registered`);
+      this.log('Service details:');
+      this.log(stdout);
+      this.log('');
+      return serviceName;
+    } catch (err) {
+      this.log(`❌ Service not found: ${err.message}`);
+      this.log('');
+      return null;
     }
-
-    this.log('');
-    this.log('❌ None of the expected service names were found');
-    return null;
   }
 
   async checkServiceFiles() {
@@ -183,8 +175,8 @@ class ServiceFinder {
     // Step 1: Search for services
     const services = await this.findElectricityTokensServices();
 
-    // Step 2: Test service commands
-    const workingName = await this.testServiceCommands();
+    // Step 2: Test current service configuration
+    const workingName = await this.testCurrentServiceName();
 
     // Step 3: Check files
     await this.checkServiceFiles();
@@ -192,16 +184,18 @@ class ServiceFinder {
     // Summary
     this.log('📋 Summary:');
     if (workingName) {
-      this.log(`✅ Working service name: "${workingName}"`);
-      this.log('');
-      this.log('🎯 Recommended actions:');
-      this.log(`   - Update config.js to use: "${workingName}"`);
-      this.log(`   - Test with: ${commands.SC_COMMAND} query "${workingName}"`);
+      this.log(`✅ Service is properly configured and registered`);
+      this.log(`   Configuration name: "${workingName}"`);
       this.log(
-        `   - Start with: ${commands.SC_COMMAND} start "${workingName}"`
+        `   Windows service name: "${buildServiceExpectedName(workingName)}"`
       );
+      this.log('');
+      this.log('🎯 Ready for use:');
+      this.log(`   - Start: npm run service:start`);
+      this.log(`   - Stop: npm run service:stop`);
+      this.log(`   - Diagnose: npm run service:diagnose`);
     } else {
-      this.log('❌ No working service name found');
+      this.log('❌ Service configuration issue detected');
       this.log('');
       this.log('🎯 Recommended actions:');
       this.log('   - Service may not be properly installed');
