@@ -33,7 +33,8 @@
     "service:test-logs": "node scripts/windows-service/test-log-creation.js",
     "service:fix": "node scripts/windows-service/fix-broken-service.js",
     "service:find": "node scripts/windows-service/find-service.js",
-    "service:reset": "node scripts/windows-service/complete-service-reset.js"
+    "service:reset": "node scripts/windows-service/complete-service-reset.js",
+    "service:restore-tokenbroker": "node scripts/windows-service/restore-tokenbroker.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
