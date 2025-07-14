@@ -65,17 +65,39 @@ class CompleteServiceReset {
         services.push(currentService);
       }
 
-      // Filter for electricity services
+      // Filter ONLY for our specific electricity tracker services, exclude Windows system services
       const electricityServices = services.filter((service) => {
         const name = service.name.toLowerCase();
         const displayName = service.displayName.toLowerCase();
+
+        // EXCLUDE Windows system services
+        const systemServices = [
+          'tokenbroker',
+          'web account manager',
+          'windows',
+          'microsoft',
+          'system',
+          'service host',
+          'svchost',
+        ];
+
+        const isSystemService = systemServices.some(
+          (sys) => name.includes(sys) || displayName.includes(sys)
+        );
+
+        if (isSystemService) {
+          return false; // Don't include system services
+        }
+
+        // ONLY include services that clearly belong to our electricity tracker
         return (
-          name.includes('electric') ||
-          name.includes('token') ||
-          name.includes('tracker') ||
-          displayName.includes('electric') ||
-          displayName.includes('token') ||
-          displayName.includes('tracker')
+          (name.includes('electric') &&
+            (name.includes('tracker') || name.includes('token'))) ||
+          (displayName.includes('electric') &&
+            (displayName.includes('tracker') ||
+              displayName.includes('token'))) ||
+          name.startsWith('electricitytokenstracker') ||
+          name.startsWith('electricitytracker')
         );
       });
 
@@ -205,6 +227,13 @@ class CompleteServiceReset {
 
   async completeReset() {
     this.log('🔄 Starting complete service reset...');
+    this.log('');
+    this.log(
+      '⚠️  IMPORTANT: This will ONLY remove electricity tracker services.'
+    );
+    this.log(
+      '⚠️  Windows system services like TokenBroker will NOT be touched.'
+    );
     this.log('');
 
     // Check admin privileges
