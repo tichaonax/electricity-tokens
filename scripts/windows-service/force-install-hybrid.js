@@ -298,31 +298,23 @@ async function forceInstallHybrid() {
 
     await manager.log('Admin privileges confirmed');
 
-    // Step 1: Force stop the service
-    await manager.log('=== Step 1: Force Stop Service ===');
-    await manager.forceStopService();
-
-    // Step 2: Wait for file handles to be released
-    await manager.log('Waiting for file handles to be released...');
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    // Step 3: Clean up daemon files
-    await manager.log('=== Step 2: Clean Up Files ===');
+    // Step 1: Clean up daemon files (service stop handled by uninstall)
+    await manager.log('=== Step 1: Clean Up Files ===');
     await manager.forceCleanupDaemonFiles();
 
-    // Step 4: Additional wait for file system cleanup
+    // Step 2: Wait for file system cleanup
     await manager.log('Waiting for file system cleanup...');
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // Step 5: Uninstall existing service
-    await manager.log('=== Step 3: Uninstall Existing Service ===');
+    // Step 3: Uninstall existing service (this handles service stop automatically)
+    await manager.log('=== Step 2: Uninstall Existing Service ===');
     await manager.uninstallExistingService();
 
-    // Step 6: Wait before installing (allow service registry to stabilize)
+    // Step 3: Wait before installing (allow service registry to stabilize)
     await manager.log('Waiting for service registry to stabilize...');
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // Step 7: Verify service is fully removed from registry
+    // Step 4: Verify service is fully removed from registry
     await manager.log('Verifying service removal from registry...');
     let registryCleared = false;
     let attempts = 0;
@@ -345,8 +337,8 @@ async function forceInstallHybrid() {
       );
     }
 
-    // Step 8: Install hybrid service
-    await manager.log('=== Step 5: Install Hybrid Service ===');
+    // Step 5: Install hybrid service
+    await manager.log('=== Step 3: Install Hybrid Service ===');
     await manager.installHybridService();
 
     console.log('');

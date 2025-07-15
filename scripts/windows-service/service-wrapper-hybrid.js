@@ -126,6 +126,49 @@ class HybridElectricityTokensService {
     });
   }
 
+  async checkIfRebuildNeeded() {
+    try {
+      const buildDir = path.join(this.appRoot, '.next');
+      const buildInfoFile = path.join(buildDir, 'build-info.json');
+
+      // No build directory = rebuild needed
+      if (!fs.existsSync(buildDir)) {
+        return true;
+      }
+
+      // No BUILD_ID = rebuild needed
+      const buildId = path.join(buildDir, 'BUILD_ID');
+      if (!fs.existsSync(buildId)) {
+        return true;
+      }
+
+      // No build info = not necessarily rebuild needed (build might be valid)
+      if (!fs.existsSync(buildInfoFile)) {
+        return false; // Build exists, just missing info
+      }
+
+      // Get commit information
+      const currentCommit = await this.getCurrentGitCommit();
+      const lastBuildCommit = this.getLastBuildCommit(buildInfoFile);
+
+      // If we can't determine current commit, assume no rebuild needed
+      if (!currentCommit) {
+        return false;
+      }
+
+      // If we have both commits and they're different, rebuild needed
+      if (lastBuildCommit && currentCommit !== lastBuildCommit) {
+        return true;
+      }
+
+      // All checks passed - no rebuild needed
+      return false;
+    } catch (err) {
+      this.log(`Error checking rebuild status: ${err.message}`, 'WARN');
+      return false; // Default to no rebuild to avoid unnecessary builds
+    }
+  }
+
   async ensureProductionBuild() {
     this.log('Checking for production build...');
 
@@ -138,19 +181,41 @@ class HybridElectricityTokensService {
       return this.buildApplication();
     }
 
-    // Check if build is stale by comparing git commit hashes
-    const currentCommit = await this.getCurrentGitCommit();
-    const lastBuildCommit = this.getLastBuildCommit(buildInfoFile);
-
-    if (!lastBuildCommit) {
-      this.log(
-        'No build info found. Rebuilding to ensure freshness...',
-        'WARN'
-      );
+    // Verify the existing build is still valid first
+    const buildId = path.join(buildDir, 'BUILD_ID');
+    if (!fs.existsSync(buildId)) {
+      this.log('BUILD_ID missing from existing build. Rebuilding...', 'WARN');
       return this.buildApplication();
     }
 
-    if (currentCommit && currentCommit !== lastBuildCommit) {
+    // Check if build info exists at all
+    if (!fs.existsSync(buildInfoFile)) {
+      this.log(
+        'Build info file missing, but build exists. Assuming build is valid.',
+        'WARN'
+      );
+      // Create a basic build info file to prevent future rebuilds
+      await this.saveBuildInfo();
+      this.log('✅ Build verified and build info created. Ready to use.');
+      return true;
+    }
+
+    // Get commit information
+    const currentCommit = await this.getCurrentGitCommit();
+    const lastBuildCommit = this.getLastBuildCommit(buildInfoFile);
+
+    // If we can't determine current commit, don't rebuild unnecessarily
+    if (!currentCommit) {
+      this.log(
+        'Cannot determine git state. Using existing build to avoid unnecessary rebuild.',
+        'WARN'
+      );
+      this.log('✅ Existing build will be used (git state unknown).');
+      return true;
+    }
+
+    // If we have both commits and they're different, rebuild
+    if (lastBuildCommit && currentCommit !== lastBuildCommit) {
       this.log(
         `Code changes detected: ${lastBuildCommit.substring(0, 8)} → ${currentCommit.substring(0, 8)}`,
         'WARN'
@@ -159,53 +224,166 @@ class HybridElectricityTokensService {
       return this.buildApplication();
     }
 
-    if (!currentCommit) {
-      this.log('Cannot determine git state. Using existing build.', 'WARN');
-    } else {
+    // If we have current commit but no last build commit, update build info but don't rebuild
+    if (!lastBuildCommit) {
       this.log(
-        `✅ Production build is current (commit: ${currentCommit.substring(0, 8)}). No rebuild needed.`
+        'No build commit info found, but build exists. Updating build info...',
+        'WARN'
       );
+      await this.saveBuildInfo();
+      this.log('✅ Build info updated. Using existing build.');
+      return true;
     }
 
-    // Verify the existing build is still valid
-    const buildId = path.join(buildDir, 'BUILD_ID');
-    if (!fs.existsSync(buildId)) {
-      this.log('BUILD_ID missing from existing build. Rebuilding...', 'WARN');
-      return this.buildApplication();
-    }
-
+    // Commits match - build is current
+    this.log(
+      `✅ Production build is current (commit: ${currentCommit.substring(0, 8)}). No rebuild needed.`
+    );
     this.log('Existing build verified and ready to use.');
     return true;
   }
 
   async getCurrentGitCommit() {
     try {
-      const { spawn } = require('child_process');
-      return new Promise((resolve) => {
-        const gitProcess = spawn('git', ['rev-parse', 'HEAD'], {
-          cwd: this.appRoot,
-          stdio: 'pipe',
-        });
-
-        let output = '';
-        gitProcess.stdout.on('data', (data) => {
-          output += data.toString();
-        });
-
-        gitProcess.on('close', (code) => {
-          if (code === 0) {
-            resolve(output.trim());
-          } else {
-            this.log('Could not determine git commit', 'WARN');
-            resolve(null);
+      // Method 1: Try to read from existing build info first
+      const buildInfoFile = path.join(this.appRoot, '.next', 'build-info.json');
+      if (fs.existsSync(buildInfoFile)) {
+        try {
+          const buildInfo = JSON.parse(fs.readFileSync(buildInfoFile, 'utf8'));
+          if (buildInfo.gitCommit && buildInfo.gitCommit !== 'unknown') {
+            this.log(
+              `Using existing git commit from build info: ${buildInfo.gitCommit.substring(0, 8)}`
+            );
+            return buildInfo.gitCommit;
           }
-        });
+        } catch (err) {
+          // Continue to other methods
+        }
+      }
 
-        gitProcess.on('error', () => {
-          this.log('Git not available or not a git repository', 'WARN');
-          resolve(null);
-        });
-      });
+      // Method 2: Try to read from .git/HEAD directly
+      const gitHeadFile = path.join(this.appRoot, '.git', 'HEAD');
+      if (fs.existsSync(gitHeadFile)) {
+        try {
+          const headContent = fs.readFileSync(gitHeadFile, 'utf8').trim();
+          if (headContent.startsWith('ref: ')) {
+            // It's a reference, read the actual commit
+            const refPath = headContent.substring(5);
+            const refFile = path.join(this.appRoot, '.git', refPath);
+            if (fs.existsSync(refFile)) {
+              const commit = fs.readFileSync(refFile, 'utf8').trim();
+              if (commit && commit.length === 40) {
+                this.log(
+                  `Git commit from .git/HEAD: ${commit.substring(0, 8)}`
+                );
+                return commit;
+              }
+            }
+          } else if (headContent.length === 40) {
+            // It's a direct commit hash
+            this.log(
+              `Git commit from .git/HEAD: ${headContent.substring(0, 8)}`
+            );
+            return headContent;
+          }
+        } catch (err) {
+          // Continue to other methods
+        }
+      }
+
+      // Method 3: Try git command with full path detection
+      const { spawn } = require('child_process');
+      const gitPaths = [
+        'git',
+        'C:\\Program Files\\Git\\bin\\git.exe',
+        'C:\\Program Files (x86)\\Git\\bin\\git.exe',
+        'C:\\Git\\bin\\git.exe',
+      ];
+
+      for (const gitPath of gitPaths) {
+        try {
+          const result = await new Promise((resolve) => {
+            const gitProcess = spawn(gitPath, ['rev-parse', 'HEAD'], {
+              cwd: this.appRoot,
+              stdio: 'pipe',
+              shell: true,
+            });
+
+            let output = '';
+            gitProcess.stdout.on('data', (data) => {
+              output += data.toString();
+            });
+
+            gitProcess.on('close', (code) => {
+              if (code === 0 && output.trim().length === 40) {
+                resolve(output.trim());
+              } else {
+                resolve(null);
+              }
+            });
+
+            gitProcess.on('error', () => {
+              resolve(null);
+            });
+
+            // Add timeout
+            setTimeout(() => {
+              gitProcess.kill();
+              resolve(null);
+            }, 5000);
+          });
+
+          if (result) {
+            this.log(`Git commit from ${gitPath}: ${result.substring(0, 8)}`);
+            return result;
+          }
+        } catch (err) {
+          // Continue to next git path
+        }
+      }
+
+      // Method 4: Try to read from package.json build info
+      const packageJsonFile = path.join(this.appRoot, 'package.json');
+      if (fs.existsSync(packageJsonFile)) {
+        try {
+          const packageJson = JSON.parse(
+            fs.readFileSync(packageJsonFile, 'utf8')
+          );
+          if (packageJson.buildInfo && packageJson.buildInfo.gitCommit) {
+            this.log(
+              `Git commit from package.json: ${packageJson.buildInfo.gitCommit.substring(0, 8)}`
+            );
+            return packageJson.buildInfo.gitCommit;
+          }
+        } catch (err) {
+          // Continue
+        }
+      }
+
+      // Method 5: Check for any existing build info files
+      const publicBuildInfo = path.join(
+        this.appRoot,
+        'public',
+        'build-info.json'
+      );
+      if (fs.existsSync(publicBuildInfo)) {
+        try {
+          const buildInfo = JSON.parse(
+            fs.readFileSync(publicBuildInfo, 'utf8')
+          );
+          if (buildInfo.gitCommit && buildInfo.gitCommit !== 'unknown') {
+            this.log(
+              `Git commit from public build info: ${buildInfo.gitCommit.substring(0, 8)}`
+            );
+            return buildInfo.gitCommit;
+          }
+        } catch (err) {
+          // Continue
+        }
+      }
+
+      this.log('Could not determine git commit using any method', 'WARN');
+      return null;
     } catch (err) {
       this.log(`Error getting git commit: ${err.message}`, 'WARN');
       return null;
@@ -601,11 +779,19 @@ class HybridElectricityTokensService {
     try {
       this.log('Starting Electricity Tokens Tracker service (Hybrid Mode)...');
 
-      // Ensure we have a production build
-      await this.ensureProductionBuild();
+      // Check if a rebuild is needed BEFORE doing anything else
+      const needsRebuild = await this.checkIfRebuildNeeded();
 
-      // Additional verification that build is complete and ready
-      await this.verifyBuildCompletion();
+      if (needsRebuild) {
+        this.log('Build is stale or missing. Rebuild required.', 'WARN');
+        // Ensure we have a production build
+        await this.ensureProductionBuild();
+
+        // Additional verification that build is complete and ready
+        await this.verifyBuildCompletion();
+      } else {
+        this.log('✅ Build is current. No rebuild needed.');
+      }
 
       // Verify Next.js binary is available
       await this.verifyNextJsAvailable();
