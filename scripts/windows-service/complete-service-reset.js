@@ -11,6 +11,7 @@ class CompleteServiceReset {
     const buildServiceExpectedName = require('./buildexpectedservicename');
     this.serviceName = config.name; // ElectricityTracker
     this.windowsServiceName = buildServiceExpectedName(this.serviceName); // ElectricityTracker.exe
+    this.scCommand = config.commands.SC_COMMAND; // sc.exe
   }
 
   async log(message, level = 'INFO') {
@@ -33,7 +34,7 @@ class CompleteServiceReset {
     try {
       // Check if our specific service exists
       const { stdout } = await execAsync(
-        `sc.exe query "${this.windowsServiceName}"`
+        `${this.scCommand} query "${this.windowsServiceName}"`
       );
 
       // Parse the service info
@@ -68,24 +69,30 @@ class CompleteServiceReset {
 
     const services = await this.findElectricityService();
 
-    for (const service of services) {
-      try {
-        // Stop the service first
-        this.log(`Stopping service: ${service.name}`);
-        try {
-          await execAsync(`sc.exe stop "${service.name}"`);
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
-        } catch (err) {
-          this.log(`Service was not running: ${service.name}`);
-        }
+    if (services.length === 0) {
+      this.log('ℹ️  No service found to remove.');
+      return;
+    }
 
-        // Delete the service
-        this.log(`Deleting service: ${service.name}`);
-        await execAsync(`sc.exe delete "${service.name}"`);
-        this.log(`✅ Deleted: ${service.name}`);
+    try {
+      // Stop the service first
+      this.log(`Stopping service: ${this.windowsServiceName}`);
+      try {
+        await execAsync(`${this.scCommand} stop "${this.windowsServiceName}"`);
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
       } catch (err) {
-        this.log(`Failed to delete ${service.name}: ${err.message}`, 'WARN');
+        this.log(`Service was not running: ${this.windowsServiceName}`);
       }
+
+      // Delete the service
+      this.log(`Deleting service: ${this.windowsServiceName}`);
+      await execAsync(`${this.scCommand} delete "${this.windowsServiceName}"`);
+      this.log(`✅ Deleted: ${this.windowsServiceName}`);
+    } catch (err) {
+      this.log(
+        `Failed to delete ${this.windowsServiceName}: ${err.message}`,
+        'WARN'
+      );
     }
   }
 
