@@ -610,7 +610,8 @@ function MeterReadingsPage() {
               <div className="flex items-center gap-2">
                 <Gauge className="h-5 w-5 text-blue-600" />
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                  Meter Readings
+                  <span className="hidden sm:inline">Meter Readings</span>
+                  <span className="sm:hidden">Meter</span>
                 </h1>
               </div>
             </div>

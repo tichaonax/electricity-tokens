@@ -162,9 +162,10 @@ export default function DatabasePerformancePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <ResponsiveNav
         title="Database Performance"
+        mobileTitle="DB Performance"
         backPath="/dashboard/admin"
         showBackButton={true}
-        backText="Back to Admin Panel"
+        backText="Admin"
       />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -314,7 +315,9 @@ export default function DatabasePerformancePage() {
                   information
                 </div>
               ) : (
-                <div className="space-y-3">
+                <>
+                  {/* Desktop Layout */}
+                  <div className="hidden lg:block space-y-3">
                   {indexes.map((index, i) => (
                     <div
                       key={i}
@@ -353,6 +356,48 @@ export default function DatabasePerformancePage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Mobile Layout */}
+                <div className="lg:hidden space-y-3">
+                  {indexes.map((index, i) => (
+                    <div
+                      key={i}
+                      className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        {index.exists ? (
+                          <CheckCircle className="h-5 w-5 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertTriangle className="h-5 w-5 text-orange-500 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">
+                            {index.name}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            {index.description}
+                          </div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            Table: {index.tableName}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${getImpactBadge(index.estimatedImpact)}`}
+                        >
+                          {index.estimatedImpact} impact
+                        </span>
+                        <span
+                          className={`text-sm font-medium ${index.exists ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}
+                        >
+                          {index.exists ? 'EXISTS' : 'MISSING'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                </>
               )}
             </CardContent>
           </Card>

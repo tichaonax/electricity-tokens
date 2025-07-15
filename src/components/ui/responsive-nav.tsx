@@ -17,6 +17,7 @@ import {
 
 interface ResponsiveNavProps {
   title: string;
+  mobileTitle?: string;
   backPath?: string;
   showBackButton?: boolean;
   backText?: string;
@@ -30,6 +31,7 @@ interface ResponsiveNavProps {
 
 export function ResponsiveNav({
   title,
+  mobileTitle,
   backPath,
   showBackButton = false,
   backText,
@@ -103,7 +105,8 @@ export function ResponsiveNav({
             {/* Title */}
             <div className="flex items-center gap-3">
               <h1 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden transition-all duration-300 hover:text-blue-600 dark:hover:text-blue-400">
-                {title}
+                <span className="hidden sm:inline">{title}</span>
+                <span className="sm:hidden">{mobileTitle || title}</span>
               </h1>
               {version && (
                 <Badge

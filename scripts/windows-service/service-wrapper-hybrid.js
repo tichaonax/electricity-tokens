@@ -163,10 +163,18 @@ class HybridElectricityTokensService {
       this.log('Cannot determine git state. Using existing build.', 'WARN');
     } else {
       this.log(
-        `Production build current (commit: ${currentCommit.substring(0, 8)})`
+        `✅ Production build is current (commit: ${currentCommit.substring(0, 8)}). No rebuild needed.`
       );
     }
 
+    // Verify the existing build is still valid
+    const buildId = path.join(buildDir, 'BUILD_ID');
+    if (!fs.existsSync(buildId)) {
+      this.log('BUILD_ID missing from existing build. Rebuilding...', 'WARN');
+      return this.buildApplication();
+    }
+
+    this.log('Existing build verified and ready to use.');
     return true;
   }
 
@@ -218,44 +226,185 @@ class HybridElectricityTokensService {
 
   async saveBuildInfo() {
     try {
-      // Use the dedicated build info generation script
-      const { generateBuildInfo } = require('../generate-build-info.js');
-      const buildInfo = generateBuildInfo();
-      this.log(
-        `Build info saved: commit ${buildInfo.gitCommit?.substring(0, 8) || 'unknown'}, version ${buildInfo.version}`
-      );
-    } catch (err) {
-      this.log(`Error saving build info: ${err.message}`, 'WARN');
-      // Fallback to original method
-      try {
-        const buildDir = path.join(this.appRoot, '.next');
-        const buildInfoFile = path.join(buildDir, 'build-info.json');
-        const currentCommit = await this.getCurrentGitCommit();
+      this.log('Saving build information...');
 
-        const buildInfo = {
-          version: '0.1.0',
-          gitCommit: currentCommit,
-          buildTime: new Date().toISOString(),
+      const buildDir = path.join(this.appRoot, '.next');
+      const buildInfoFile = path.join(buildDir, 'build-info.json');
+      const currentCommit = await this.getCurrentGitCommit();
+
+      // First try to use the dedicated build info generation script
+      try {
+        const { generateBuildInfo } = require('../generate-build-info.js');
+        const buildInfo = generateBuildInfo();
+
+        // Also save to .next directory for our service to check
+        const serviceBuildInfo = {
+          version: buildInfo.version,
+          gitCommit: buildInfo.gitCommit,
+          buildTime: buildInfo.buildTime,
           nodeVersion: process.version,
         };
 
-        fs.writeFileSync(buildInfoFile, JSON.stringify(buildInfo, null, 2));
-        this.log(
-          `Fallback build info saved: commit ${currentCommit?.substring(0, 8) || 'unknown'}`
+        fs.writeFileSync(
+          buildInfoFile,
+          JSON.stringify(serviceBuildInfo, null, 2)
         );
-      } catch (fallbackErr) {
         this.log(
-          `Fallback build info also failed: ${fallbackErr.message}`,
-          'ERROR'
+          `Build info saved successfully: commit ${buildInfo.gitCommit?.substring(0, 8) || 'unknown'}, version ${buildInfo.version}`
+        );
+        return;
+      } catch (generateErr) {
+        this.log(
+          `Build info generation script failed: ${generateErr.message}`,
+          'WARN'
         );
       }
+
+      // Fallback to manual build info creation
+      const buildInfo = {
+        version: '0.1.0',
+        gitCommit: currentCommit,
+        buildTime: new Date().toISOString(),
+        nodeVersion: process.version,
+      };
+
+      fs.writeFileSync(buildInfoFile, JSON.stringify(buildInfo, null, 2));
+      this.log(
+        `Fallback build info saved: commit ${currentCommit?.substring(0, 8) || 'unknown'}`
+      );
+    } catch (err) {
+      this.log(`Critical error saving build info: ${err.message}`, 'ERROR');
+      throw err; // Re-throw to indicate build process failed
     }
   }
 
-  buildApplication() {
-    return new Promise((resolve, reject) => {
-      this.log('Starting production build...');
+  async buildApplication() {
+    try {
+      this.log('Starting production build process...');
 
+      // First, ensure dependencies are installed
+      await this.ensureDependencies();
+
+      // Then run the build
+      return await this.runBuild();
+    } catch (err) {
+      this.log(`Build process failed: ${err.message}`, 'ERROR');
+      throw err;
+    }
+  }
+
+  async checkNodeWindows() {
+    try {
+      this.log('Checking for node-windows availability...');
+
+      // First check if it's in local node_modules
+      const localNodeWindows = path.join(
+        this.appRoot,
+        'node_modules',
+        'node-windows'
+      );
+      if (fs.existsSync(localNodeWindows)) {
+        this.log('node-windows found in local node_modules');
+        return;
+      }
+
+      // Check if it's globally available
+      const { spawn } = require('child_process');
+      const checkGlobal = spawn('npm', ['list', '-g', 'node-windows'], {
+        stdio: 'pipe',
+        shell: true,
+      });
+
+      let output = '';
+      checkGlobal.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      const isGloballyInstalled = await new Promise((resolve) => {
+        checkGlobal.on('close', (code) => {
+          resolve(code === 0 && output.includes('node-windows'));
+        });
+      });
+
+      if (isGloballyInstalled) {
+        this.log('node-windows found globally');
+        return;
+      }
+
+      // If not found, provide installation instructions
+      this.log('node-windows not found globally or locally', 'WARN');
+      this.log(
+        'To install node-windows globally, run as Administrator:',
+        'WARN'
+      );
+      this.log('npm install -g node-windows', 'WARN');
+      this.log('Continuing with local installation via npm install...', 'WARN');
+    } catch (err) {
+      this.log(`Error checking node-windows: ${err.message}`, 'WARN');
+      this.log('Continuing with dependency installation...', 'WARN');
+    }
+  }
+
+  async ensureDependencies() {
+    this.log('Ensuring dependencies are installed...');
+
+    // Check if node-windows is globally available first
+    await this.checkNodeWindows();
+
+    // Check if node_modules exists and is recent
+    const nodeModulesDir = path.join(this.appRoot, 'node_modules');
+    const packageJsonFile = path.join(this.appRoot, 'package.json');
+
+    if (fs.existsSync(nodeModulesDir) && fs.existsSync(packageJsonFile)) {
+      const nodeModulesStat = fs.statSync(nodeModulesDir);
+      const packageJsonStat = fs.statSync(packageJsonFile);
+
+      if (nodeModulesStat.mtime > packageJsonStat.mtime) {
+        this.log('Dependencies appear to be up to date. Skipping npm install.');
+        return Promise.resolve(true);
+      }
+    }
+
+    this.log('Running npm install to ensure dependencies are current...');
+
+    return new Promise((resolve, reject) => {
+      const installProcess = spawn('npm', ['install'], {
+        cwd: this.appRoot,
+        stdio: 'pipe',
+        shell: true,
+      });
+
+      let installOutput = '';
+      let installError = '';
+
+      installProcess.stdout.on('data', (data) => {
+        const output = data.toString();
+        installOutput += output;
+        this.log(`Install: ${output.trim()}`);
+      });
+
+      installProcess.stderr.on('data', (data) => {
+        const error = data.toString();
+        installError += error;
+        this.log(`Install Error: ${error.trim()}`, 'ERROR');
+      });
+
+      installProcess.on('close', (code) => {
+        if (code === 0) {
+          this.log('Dependencies installed successfully.');
+          resolve(true);
+        } else {
+          this.log(`npm install failed with code ${code}`, 'ERROR');
+          reject(new Error(`npm install failed: ${installError}`));
+        }
+      });
+    });
+  }
+
+  async runBuild() {
+    this.log('Starting production build...');
+
+    return new Promise((resolve, reject) => {
       const buildProcess = spawn('npm', ['run', 'build'], {
         cwd: this.appRoot,
         stdio: 'pipe',
@@ -279,9 +428,15 @@ class HybridElectricityTokensService {
 
       buildProcess.on('close', async (code) => {
         if (code === 0) {
-          this.log('Production build completed successfully.');
+          this.log('Production build process completed successfully.');
+
+          // Wait a brief moment for filesystem operations to complete
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+
           // Save build info after successful build
           await this.saveBuildInfo();
+
+          this.log('Build artifacts saved and ready.');
           resolve(true);
         } else {
           this.log(`Build failed with code ${code}`, 'ERROR');
@@ -291,6 +446,157 @@ class HybridElectricityTokensService {
     });
   }
 
+  async verifyBuildCompletion() {
+    this.log('Verifying build completion...');
+
+    const buildDir = path.join(this.appRoot, '.next');
+    const requiredFiles = [
+      'BUILD_ID',
+      'static',
+      'server/pages',
+      'server/chunks',
+      'package.json',
+    ];
+
+    // Wait for essential build files to exist
+    const maxRetries = 30; // 30 seconds max wait
+    let retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      let allFilesExist = true;
+
+      // Check if build directory exists
+      if (!fs.existsSync(buildDir)) {
+        this.log(`Build directory ${buildDir} does not exist, waiting...`);
+        allFilesExist = false;
+      } else {
+        // Check for required files/directories
+        for (const file of requiredFiles) {
+          const filePath = path.join(buildDir, file);
+          if (!fs.existsSync(filePath)) {
+            this.log(`Required build file ${file} missing, waiting...`);
+            allFilesExist = false;
+            break;
+          }
+        }
+      }
+
+      if (allFilesExist) {
+        // Additional check: ensure BUILD_ID is not empty
+        const buildIdFile = path.join(buildDir, 'BUILD_ID');
+        try {
+          const buildId = fs.readFileSync(buildIdFile, 'utf8').trim();
+          if (buildId.length === 0) {
+            this.log('BUILD_ID is empty, waiting for build to complete...');
+            allFilesExist = false;
+          }
+        } catch (err) {
+          this.log(
+            'BUILD_ID file unreadable, waiting for build to complete...'
+          );
+          allFilesExist = false;
+        }
+      }
+
+      if (allFilesExist) {
+        this.log('All required build files verified. Build is complete.');
+        return;
+      }
+
+      // Wait 1 second before retry
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      retryCount++;
+    }
+
+    throw new Error(
+      'Build verification failed: Required build files not found after 30 seconds'
+    );
+  }
+
+  async verifyNextJsAvailable() {
+    this.log('Verifying Next.js binary availability...');
+
+    const nextPath = path.join(
+      this.appRoot,
+      'node_modules',
+      'next',
+      'dist',
+      'bin',
+      'next'
+    );
+
+    if (!fs.existsSync(nextPath)) {
+      throw new Error(
+        `Next.js binary not found at ${nextPath}. Please run 'npm install' first.`
+      );
+    }
+
+    // Check if the file is readable
+    try {
+      fs.accessSync(nextPath, fs.constants.R_OK);
+      this.log('Next.js binary verified and accessible.');
+    } catch (err) {
+      throw new Error(
+        `Next.js binary at ${nextPath} is not readable: ${err.message}`
+      );
+    }
+  }
+
+  async verifyNextJsStarted() {
+    this.log('Verifying Next.js is listening on port...');
+
+    const port = process.env.PORT || 3000;
+    const maxRetries = 30; // 30 seconds max wait
+    let retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      try {
+        // Try to connect to the port
+        const net = require('net');
+        const socket = new net.Socket();
+
+        const isListening = await new Promise((resolve) => {
+          socket.setTimeout(1000);
+
+          socket.on('connect', () => {
+            socket.destroy();
+            resolve(true);
+          });
+
+          socket.on('timeout', () => {
+            socket.destroy();
+            resolve(false);
+          });
+
+          socket.on('error', () => {
+            socket.destroy();
+            resolve(false);
+          });
+
+          socket.connect(port, 'localhost');
+        });
+
+        if (isListening) {
+          this.log(`Next.js is successfully listening on port ${port}`);
+          return;
+        }
+
+        this.log(
+          `Port ${port} not ready yet, waiting... (${retryCount + 1}/30)`
+        );
+      } catch (err) {
+        this.log(`Error checking port ${port}: ${err.message}`);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      retryCount++;
+    }
+
+    throw new Error(
+      `Next.js failed to start listening on port ${port} after 30 seconds`
+    );
+  }
+
   async startApplication() {
     try {
       this.log('Starting Electricity Tokens Tracker service (Hybrid Mode)...');
@@ -298,7 +604,15 @@ class HybridElectricityTokensService {
       // Ensure we have a production build
       await this.ensureProductionBuild();
 
-      this.log('Starting Next.js application directly...');
+      // Additional verification that build is complete and ready
+      await this.verifyBuildCompletion();
+
+      // Verify Next.js binary is available
+      await this.verifyNextJsAvailable();
+
+      this.log(
+        'Production build verified. Starting Next.js application directly...'
+      );
 
       // Start Next.js directly using node, not npm
       // This eliminates the npm layer that causes signal propagation issues
@@ -341,6 +655,12 @@ class HybridElectricityTokensService {
         }
       });
 
+      // Wait a moment for Next.js to fully initialize
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      // Verify Next.js actually started by checking if it's listening
+      await this.verifyNextJsStarted();
+
       // Handle application exit
       this.appProcess.on('close', (code, signal) => {
         this.log(
@@ -371,7 +691,7 @@ class HybridElectricityTokensService {
       });
 
       this.log(
-        `Next.js process started with PID ${this.appProcess.pid}. Hybrid service monitoring active.`
+        `🚀 SERVICE STARTUP COMPLETE: Next.js process started with PID ${this.appProcess.pid} and verified listening on port ${process.env.PORT || 3000}. Hybrid service monitoring active.`
       );
     } catch (err) {
       this.log(`Failed to start service: ${err.message}`, 'ERROR');

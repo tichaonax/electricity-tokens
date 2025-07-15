@@ -125,7 +125,7 @@ export default function NewUserPage() {
         title="Add New User"
         backPath="/dashboard/admin/users"
         showBackButton={true}
-        backText="Back to Users"
+        backText="Users"
       >
       </ResponsiveNav>
 
