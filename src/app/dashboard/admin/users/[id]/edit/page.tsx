@@ -22,7 +22,6 @@ import {
   Mail,
   Calendar,
   Settings,
-  ArrowLeft,
   Save,
   RotateCcw,
 } from 'lucide-react';
@@ -307,7 +306,7 @@ export default function EditUser() {
         title={`Edit ${user.name}`}
         backPath="/dashboard/admin/users"
         showBackButton={true}
-        backText="Back to Users"
+        backText="Users"
       />
 
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">

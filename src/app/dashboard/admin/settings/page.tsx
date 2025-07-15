@@ -11,8 +11,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import {
-  ChevronLeft,
   Save,
   RefreshCw,
   Database,
@@ -138,37 +138,16 @@ export default function SystemSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push('/dashboard/admin')}
-                className="mr-4 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                System Settings
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700 dark:text-gray-300">
-                Welcome, {session.user?.name}
-              </span>
-              <span className="text-sm text-gray-500 dark:text-gray-400 bg-red-100 dark:bg-red-900/20 px-2 py-1 rounded">
-                ADMIN
-              </span>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <ResponsiveNav
+        title="System Settings"
+        backPath="/dashboard/admin"
+        showBackButton={true}
+        backText="Admin"
+        mobileBackText="Admin"
+        showBackToDashboard={true}
+        dashboardPath="/dashboard"
+        dashboardText="Back to Dashboard"
+      />
 
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">

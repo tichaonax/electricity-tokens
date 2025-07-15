@@ -272,7 +272,7 @@ function UserManagementContent() {
         title="User Management"
         backPath="/dashboard/admin"
         showBackButton={true}
-        backText="Back to Admin Panel"
+        backText="Admin"
       >
       </ResponsiveNav>
 
@@ -397,52 +397,213 @@ function UserManagementContent() {
                   No users found matching your criteria.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-800">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Role
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Activity
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Joined
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                      {users.map((user) => (
-                        <tr
-                          key={user.id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {user.name}
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            User
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Role
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Activity
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Joined
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        {users.map((user) => (
+                          <tr
+                            key={user.id}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  {user.name}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {user.email}
+                                </div>
                               </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {user.email}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge
+                                variant={user.role === 'ADMIN' ? 'default' : 'secondary'}
+                                className={
+                                  user.role === 'ADMIN'
+                                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold shadow-md border-0'
+                                    : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 dark:from-gray-700 dark:to-gray-600 dark:text-gray-200 font-medium'
+                                }
+                              >
+                                {user.role === 'ADMIN' && (
+                                  <Shield className="h-3 w-3 mr-1" />
+                                )}
+                                {user.role}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge
+                                variant={user.locked ? 'destructive' : 'default'}
+                                className={
+                                  user.locked
+                                    ? ''
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                }
+                              >
+                                {user.locked ? (
+                                  <>
+                                    <Lock className="h-3 w-3 mr-1" />
+                                    Locked
+                                  </>
+                                ) : (
+                                  <>
+                                    <Unlock className="h-3 w-3 mr-1 text-green-600 dark:text-green-400" />
+                                    Active
+                                  </>
+                                )}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              <div>{user._count.contributions} contributions</div>
+                              <div>{user._count.createdPurchases} purchases</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                {/* Edit Button - Available for all users */}
+                                <button
+                                  onClick={() =>
+                                    router.push(
+                                      `/dashboard/admin/users/${user.id}/edit`
+                                    )
+                                  }
+                                  disabled={actionLoading === user.id}
+                                  className="p-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                  title="Edit User"
+                                >
+                                  <Edit3 className="h-4 w-4" />
+                                </button>
+
+                                {user.id !== session.user?.id && (
+                                  <>
+                                    {user.locked ? (
+                                      <button
+                                        onClick={() =>
+                                          handleUserAction(user.id, 'unlock')
+                                        }
+                                        disabled={actionLoading === user.id}
+                                        className="p-1 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                        title="Unlock Account"
+                                      >
+                                        <Unlock className="h-4 w-4" />
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() =>
+                                          handleUserAction(user.id, 'lock')
+                                        }
+                                        disabled={actionLoading === user.id}
+                                        className="p-1 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                        title="Lock Account"
+                                      >
+                                        <Lock className="h-4 w-4" />
+                                      </button>
+                                    )}
+
+                                    {user.role === 'USER' ? (
+                                      <button
+                                        onClick={() =>
+                                          handleUserAction(user.id, 'promote')
+                                        }
+                                        disabled={actionLoading === user.id}
+                                        className="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                        title="Promote to Admin"
+                                      >
+                                        <Shield className="h-4 w-4" />
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() =>
+                                          handleUserAction(user.id, 'demote')
+                                        }
+                                        disabled={actionLoading === user.id}
+                                        className="p-1 text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                        title="Demote to User"
+                                      >
+                                        <Settings className="h-4 w-4" />
+                                      </button>
+                                    )}
+
+                                    {user._count.contributions === 0 &&
+                                      user._count.createdPurchases === 0 && (
+                                        <button
+                                          onClick={() => {
+                                            if (
+                                              confirm(
+                                                `Are you sure you want to delete ${user.name}? This action cannot be undone.`
+                                              )
+                                            ) {
+                                              handleUserAction(user.id, 'delete');
+                                            }
+                                          }}
+                                          disabled={actionLoading === user.id}
+                                          className="p-1 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                          title="Delete User"
+                                        >
+                                          <UserX className="h-4 w-4" />
+                                        </button>
+                                      )}
+                                  </>
+                                )}
+                                {actionLoading === user.id && (
+                                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
+                                )}
                               </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden space-y-4">
+                    {users.map((user) => (
+                      <div
+                        key={user.id}
+                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                              {user.name}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                              {user.email}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 ml-2">
                             <Badge
-                              variant={
+                              variant={user.role === 'ADMIN' ? 'default' : 'secondary'}
+                              className={
                                 user.role === 'ADMIN'
-                                  ? 'destructive'
-                                  : 'secondary'
+                                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold shadow-md border-0'
+                                  : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 dark:from-gray-700 dark:to-gray-600 dark:text-gray-200 font-medium'
                               }
                             >
                               {user.role === 'ADMIN' && (
@@ -450,8 +611,14 @@ function UserManagementContent() {
                               )}
                               {user.role}
                             </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                              Status
+                            </div>
                             <Badge
                               variant={user.locked ? 'destructive' : 'default'}
                               className={
@@ -472,111 +639,126 @@ function UserManagementContent() {
                                 </>
                               )}
                             </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                              Joined
+                            </div>
+                            <div className="text-sm text-gray-900 dark:text-gray-100">
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mb-4">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                            Activity
+                          </div>
+                          <div className="text-sm text-gray-900 dark:text-gray-100">
                             <div>{user._count.contributions} contributions</div>
                             <div>{user._count.createdPurchases} purchases</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex items-center space-x-2">
-                              {/* Edit Button - Available for all users */}
-                              <button
-                                onClick={() =>
-                                  router.push(
-                                    `/dashboard/admin/users/${user.id}/edit`
-                                  )
-                                }
-                                disabled={actionLoading === user.id}
-                                className="p-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                                title="Edit User"
-                              >
-                                <Edit3 className="h-4 w-4" />
-                              </button>
+                          </div>
+                        </div>
 
-                              {user.id !== session.user?.id && (
-                                <>
-                                  {user.locked ? (
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Actions
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {/* Edit Button - Available for all users */}
+                            <button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/admin/users/${user.id}/edit`
+                                )
+                              }
+                              disabled={actionLoading === user.id}
+                              className="p-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 disabled:opacity-50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-colors"
+                              title="Edit User"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+
+                            {user.id !== session.user?.id && (
+                              <>
+                                {user.locked ? (
+                                  <button
+                                    onClick={() =>
+                                      handleUserAction(user.id, 'unlock')
+                                    }
+                                    disabled={actionLoading === user.id}
+                                    className="p-2 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 disabled:opacity-50 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors"
+                                    title="Unlock Account"
+                                  >
+                                    <Unlock className="h-4 w-4" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      handleUserAction(user.id, 'lock')
+                                    }
+                                    disabled={actionLoading === user.id}
+                                    className="p-2 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                                    title="Lock Account"
+                                  >
+                                    <Lock className="h-4 w-4" />
+                                  </button>
+                                )}
+
+                                {user.role === 'USER' ? (
+                                  <button
+                                    onClick={() =>
+                                      handleUserAction(user.id, 'promote')
+                                    }
+                                    disabled={actionLoading === user.id}
+                                    className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 disabled:opacity-50 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                                    title="Promote to Admin"
+                                  >
+                                    <Shield className="h-4 w-4" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      handleUserAction(user.id, 'demote')
+                                    }
+                                    disabled={actionLoading === user.id}
+                                    className="p-2 text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 disabled:opacity-50 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors"
+                                    title="Demote to User"
+                                  >
+                                    <Settings className="h-4 w-4" />
+                                  </button>
+                                )}
+
+                                {user._count.contributions === 0 &&
+                                  user._count.createdPurchases === 0 && (
                                     <button
-                                      onClick={() =>
-                                        handleUserAction(user.id, 'unlock')
-                                      }
+                                      onClick={() => {
+                                        if (
+                                          confirm(
+                                            `Are you sure you want to delete ${user.name}? This action cannot be undone.`
+                                          )
+                                        ) {
+                                          handleUserAction(user.id, 'delete');
+                                        }
+                                      }}
                                       disabled={actionLoading === user.id}
-                                      className="p-1 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                                      title="Unlock Account"
+                                      className="p-2 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                                      title="Delete User"
                                     >
-                                      <Unlock className="h-4 w-4" />
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() =>
-                                        handleUserAction(user.id, 'lock')
-                                      }
-                                      disabled={actionLoading === user.id}
-                                      className="p-1 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                                      title="Lock Account"
-                                    >
-                                      <Lock className="h-4 w-4" />
+                                      <UserX className="h-4 w-4" />
                                     </button>
                                   )}
-
-                                  {user.role === 'USER' ? (
-                                    <button
-                                      onClick={() =>
-                                        handleUserAction(user.id, 'promote')
-                                      }
-                                      disabled={actionLoading === user.id}
-                                      className="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                                      title="Promote to Admin"
-                                    >
-                                      <Shield className="h-4 w-4" />
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() =>
-                                        handleUserAction(user.id, 'demote')
-                                      }
-                                      disabled={actionLoading === user.id}
-                                      className="p-1 text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                                      title="Demote to User"
-                                    >
-                                      <Settings className="h-4 w-4" />
-                                    </button>
-                                  )}
-
-                                  {user._count.contributions === 0 &&
-                                    user._count.createdPurchases === 0 && (
-                                      <button
-                                        onClick={() => {
-                                          if (
-                                            confirm(
-                                              `Are you sure you want to delete ${user.name}? This action cannot be undone.`
-                                            )
-                                          ) {
-                                            handleUserAction(user.id, 'delete');
-                                          }
-                                        }}
-                                        disabled={actionLoading === user.id}
-                                        className="p-1 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                                        title="Delete User"
-                                      >
-                                        <UserX className="h-4 w-4" />
-                                      </button>
-                                    )}
-                                </>
-                              )}
-                              {actionLoading === user.id && (
-                                <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                              </>
+                            )}
+                            {actionLoading === user.id && (
+                              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
 
               {/* Pagination */}
