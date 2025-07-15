@@ -225,7 +225,7 @@ type logs\service.log | findstr /C:"WARN"
 
 1. Open Event Viewer (`eventvwr.msc`)
 2. Navigate to: Windows Logs → Application
-3. Filter by Source: "ElectricityTokensTracker"
+3. Filter by Source: "ElectricityTracker"
 
 ### Application Health Check
 
@@ -247,7 +247,7 @@ start http://localhost:3000
 
 ```bash
 # Force stop via Windows
-sc.exe stop "ElectricityTokensTracker"
+sc.exe stop "ElectricityTracker"
 
 # If still running, find and kill process
 tasklist | findstr node

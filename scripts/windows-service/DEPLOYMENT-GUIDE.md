@@ -78,7 +78,7 @@ npm run service:start
 
 **Confirmed Steps:**
 
-1. **Install:** `npm run service:install` (creates `electricitytokenstracker.exe` service)
+1. **Install:** `npm run service:install` (creates `electricitytracker.exe` service)
 2. **Diagnose:** `npm run service:diagnose` (shows build status and service health)
 3. **Start:** `npm run service:start` (auto-builds if stale, starts Next.js on port 3000)
 4. **Stop:** `npm run service:stop` (graceful shutdown with process cleanup)
@@ -124,15 +124,15 @@ npm run service:start
 
 ### **Service Name Issues**
 
-The actual Windows service name is: `electricitytokenstracker.exe`
+The actual Windows service name is: `electricitytracker.exe`
 
-- **Display Name**: ElectricityTokensTracker
-- **Service Name**: electricitytokenstracker.exe
+- **Display Name**: ElectricityTracker
+- **Service Name**: electricitytracker.exe
 
 If you see "service does not exist" errors, verify with:
 
 ```powershell
-Get-Service | Where-Object {$_.DisplayName -eq "ElectricityTokensTracker"}
+Get-Service | Where-Object {$_.DisplayName -eq "ElectricityTracker"}
 ```
 
 ### **Build Issues**

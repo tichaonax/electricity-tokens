@@ -7,14 +7,10 @@ const execAsync = promisify(exec);
 
 class CompleteServiceReset {
   constructor() {
-    this.possibleServiceNames = [
-      'ElectricityTokensTracker.exe',
-      'electricitytokenstracker.exe',
-      'electricitytokenstrackerexe.exe',
-      'ElectricityTokensTracker',
-      'electricitytokenstracker',
-      'electricitytokenstrackerexe',
-    ];
+    const config = require('./config');
+    const buildServiceExpectedName = require('./buildexpectedservicename');
+    this.serviceName = config.name; // ElectricityTracker
+    this.windowsServiceName = buildServiceExpectedName(this.serviceName); // ElectricityTracker.exe
   }
 
   async log(message, level = 'INFO') {
@@ -31,94 +27,46 @@ class CompleteServiceReset {
     });
   }
 
-  async findAllElectricityServices() {
-    this.log('🔍 Finding ALL electricity-related services...');
+  async findElectricityService() {
+    this.log(`🔍 Looking for service: ${this.windowsServiceName}...`);
 
     try {
-      const { stdout } = await execAsync('sc.exe query state= all');
+      // Check if our specific service exists
+      const { stdout } = await execAsync(
+        `sc.exe query "${this.windowsServiceName}"`
+      );
+
+      // Parse the service info
       const lines = stdout.split('\n');
-      const services = [];
-      let currentService = null;
+      let serviceInfo = {
+        name: this.windowsServiceName,
+        displayName: '',
+        state: '',
+      };
 
       for (const line of lines) {
         const trimmed = line.trim();
-
-        if (trimmed.startsWith('SERVICE_NAME:')) {
-          if (currentService) {
-            services.push(currentService);
-          }
-          currentService = {
-            name: trimmed.replace('SERVICE_NAME:', '').trim(),
-            displayName: '',
-            state: '',
-          };
-        } else if (trimmed.startsWith('DISPLAY_NAME:') && currentService) {
-          currentService.displayName = trimmed
-            .replace('DISPLAY_NAME:', '')
-            .trim();
-        } else if (trimmed.startsWith('STATE:') && currentService) {
-          currentService.state = trimmed.replace('STATE:', '').trim();
+        if (trimmed.startsWith('DISPLAY_NAME:')) {
+          serviceInfo.displayName = trimmed.replace('DISPLAY_NAME:', '').trim();
+        } else if (trimmed.startsWith('STATE:')) {
+          serviceInfo.state = trimmed.replace('STATE:', '').trim();
         }
       }
 
-      if (currentService) {
-        services.push(currentService);
-      }
-
-      // Filter ONLY for our specific electricity tracker services, exclude Windows system services
-      const electricityServices = services.filter((service) => {
-        const name = service.name.toLowerCase();
-        const displayName = service.displayName.toLowerCase();
-
-        // EXCLUDE Windows system services
-        const systemServices = [
-          'tokenbroker',
-          'web account manager',
-          'windows',
-          'microsoft',
-          'system',
-          'service host',
-          'svchost',
-        ];
-
-        const isSystemService = systemServices.some(
-          (sys) => name.includes(sys) || displayName.includes(sys)
-        );
-
-        if (isSystemService) {
-          return false; // Don't include system services
-        }
-
-        // ONLY include services that clearly belong to our electricity tracker
-        return (
-          (name.includes('electric') &&
-            (name.includes('tracker') || name.includes('token'))) ||
-          (displayName.includes('electric') &&
-            (displayName.includes('tracker') ||
-              displayName.includes('token'))) ||
-          name.startsWith('electricitytokenstracker') ||
-          name.startsWith('electricitytracker')
-        );
-      });
-
-      this.log(
-        `Found ${electricityServices.length} electricity-related services:`
-      );
-      electricityServices.forEach((service) => {
-        this.log(`  - ${service.name} (${service.state})`);
-      });
-
-      return electricityServices;
+      this.log(`✅ Found service: ${serviceInfo.name} (${serviceInfo.state})`);
+      return [serviceInfo];
     } catch (err) {
-      this.log(`Error finding services: ${err.message}`, 'ERROR');
+      this.log(
+        `ℹ️  Service ${this.windowsServiceName} not found or not running`
+      );
       return [];
     }
   }
 
-  async removeAllElectricityServices() {
-    this.log('🗑️ Removing ALL electricity-related services...');
+  async removeElectricityService() {
+    this.log('🗑️ Removing electricity service...');
 
-    const services = await this.findAllElectricityServices();
+    const services = await this.findElectricityService();
 
     for (const service of services) {
       try {
@@ -159,21 +107,18 @@ class CompleteServiceReset {
   }
 
   async installCleanService() {
-    this.log('🚀 Installing clean service with simple name...');
+    this.log('🚀 Installing service...');
 
     return new Promise((resolve, reject) => {
       const Service = require('node-windows').Service;
       const config = require('./config');
 
-      // Use a very simple, clean name
-      const cleanServiceName = 'ElectricityTracker';
-
-      this.log(`Installing service with name: "${cleanServiceName}"`);
-      this.log(`This should become: "${cleanServiceName}.exe" in Windows`);
+      this.log(`Installing service with name: "${this.serviceName}"`);
+      this.log(`This should become: "${this.windowsServiceName}" in Windows`);
 
       const svc = new Service({
-        name: cleanServiceName,
-        description: 'Electricity Tokens Tracker Service',
+        name: this.serviceName,
+        description: config.description,
         script: path.resolve(__dirname, 'service-wrapper-hybrid.js'),
         nodeOptions: config.nodeOptions || [],
         env: config.env || {},
@@ -184,13 +129,10 @@ class CompleteServiceReset {
       });
 
       svc.on('install', () => {
-        this.log('✅ Clean service installed successfully!');
-        this.log(`Expected Windows service name: ${cleanServiceName}.exe`);
+        this.log('✅ Service installed successfully!');
+        this.log(`Windows service name: ${this.windowsServiceName}`);
 
-        // Update our config to use this name
-        this.updateConfigFile(cleanServiceName);
-
-        resolve(cleanServiceName);
+        resolve(this.serviceName);
       });
 
       svc.on('error', (err) => {
@@ -205,24 +147,6 @@ class CompleteServiceReset {
 
       svc.install();
     });
-  }
-
-  updateConfigFile(newServiceName) {
-    try {
-      const configPath = path.join(__dirname, 'config.js');
-      let configContent = fs.readFileSync(configPath, 'utf8');
-
-      // Replace the service name in config
-      configContent = configContent.replace(
-        /name: '[^']*'/,
-        `name: '${newServiceName}'`
-      );
-
-      fs.writeFileSync(configPath, configContent);
-      this.log(`✅ Updated config.js with new service name: ${newServiceName}`);
-    } catch (err) {
-      this.log(`Failed to update config: ${err.message}`, 'ERROR');
-    }
   }
 
   async completeReset() {
@@ -245,8 +169,8 @@ class CompleteServiceReset {
     }
     this.log('✅ Admin privileges confirmed');
 
-    // Step 1: Find and remove all existing services
-    await this.removeAllElectricityServices();
+    // Step 1: Find and remove existing service
+    await this.removeElectricityService();
 
     // Step 2: Clean up daemon files
     await this.cleanupDaemonDirectory();
@@ -256,21 +180,21 @@ class CompleteServiceReset {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Step 4: Install clean service
-    const newServiceName = await this.installCleanService();
+    const serviceName = await this.installCleanService();
 
     this.log('');
     this.log('✅ Complete service reset completed successfully!');
     this.log('');
     this.log('🎯 Service Details:');
-    this.log(`   Clean name: ${newServiceName}`);
-    this.log(`   Windows name: ${newServiceName}.exe`);
+    this.log(`   Service name: ${serviceName}`);
+    this.log(`   Windows name: ${this.windowsServiceName}`);
     this.log('');
     this.log('🎯 Next Steps:');
     this.log('   1. Test: npm run service:diagnose');
     this.log('   2. Start: npm run service:start');
     this.log('   3. Check logs: logs/service-wrapper-YYYY-MM-DD.log');
 
-    return newServiceName;
+    return serviceName;
   }
 }
 
