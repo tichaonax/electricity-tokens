@@ -11,63 +11,40 @@ class ServiceFinder {
     console.log(`[${timestamp}] [${level}] ${message}`);
   }
 
-  async findElectricityTokensServices() {
-    this.log('🔍 Searching for Electricity Tokens Tracker services...');
+  async findElectricityService() {
+    const config = require('./config');
+    const serviceName = buildServiceExpectedName(config.name);
+
+    this.log(`🔍 Looking for service: ${serviceName}...`);
     this.log('');
 
     try {
-      // Get all services and filter for our service
+      // Check if our specific service exists
       const { stdout } = await execAsync(
-        `${commands.SC_COMMAND} query state= all`
+        `${commands.SC_COMMAND} query "${serviceName}"`
       );
 
-      // Look for services containing relevant keywords
+      // Parse the service info
       const lines = stdout.split('\n');
-      const services = [];
-      let currentService = null;
+      let serviceInfo = {
+        name: serviceName,
+        displayName: '',
+        state: '',
+        type: '',
+      };
 
       for (const line of lines) {
         const trimmed = line.trim();
-
-        if (trimmed.startsWith('SERVICE_NAME:')) {
-          if (currentService) {
-            services.push(currentService);
-          }
-          currentService = {
-            name: trimmed.replace('SERVICE_NAME:', '').trim(),
-            displayName: '',
-            state: '',
-            type: '',
-          };
-        } else if (trimmed.startsWith('DISPLAY_NAME:') && currentService) {
-          currentService.displayName = trimmed
-            .replace('DISPLAY_NAME:', '')
-            .trim();
-        } else if (trimmed.startsWith('STATE:') && currentService) {
-          currentService.state = trimmed.replace('STATE:', '').trim();
-        } else if (trimmed.startsWith('TYPE:') && currentService) {
-          currentService.type = trimmed.replace('TYPE:', '').trim();
+        if (trimmed.startsWith('DISPLAY_NAME:')) {
+          serviceInfo.displayName = trimmed.replace('DISPLAY_NAME:', '').trim();
+        } else if (trimmed.startsWith('STATE:')) {
+          serviceInfo.state = trimmed.replace('STATE:', '').trim();
+        } else if (trimmed.startsWith('TYPE:')) {
+          serviceInfo.type = trimmed.replace('TYPE:', '').trim();
         }
       }
 
-      // Add the last service
-      if (currentService) {
-        services.push(currentService);
-      }
-
-      // Filter for electricity/tokens related services
-      const relevantServices = services.filter((service) => {
-        const name = service.name.toLowerCase();
-        const displayName = service.displayName.toLowerCase();
-        return (
-          name.includes('electric') ||
-          name.includes('token') ||
-          name.includes('tracker') ||
-          displayName.includes('electric') ||
-          displayName.includes('token') ||
-          displayName.includes('tracker')
-        );
-      });
+      const relevantServices = [serviceInfo];
 
       this.log(`Found ${relevantServices.length} relevant service(s):`);
       this.log('');
@@ -113,7 +90,8 @@ class ServiceFinder {
 
       return relevantServices;
     } catch (err) {
-      this.log(`Error searching services: ${err.message}`, 'ERROR');
+      this.log(`ℹ️  Service ${serviceName} not found or not running`);
+      this.log('This is normal if the service has not been installed yet.');
       return [];
     }
   }
@@ -173,7 +151,7 @@ class ServiceFinder {
     this.log('');
 
     // Step 1: Search for services
-    const services = await this.findElectricityTokensServices();
+    const services = await this.findElectricityService();
 
     // Step 2: Test current service configuration
     const workingName = await this.testCurrentServiceName();

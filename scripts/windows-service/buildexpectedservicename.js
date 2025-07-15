@@ -8,7 +8,7 @@
  * @returns {string} The Windows service name with ".exe" suffix
  *
  * Example:
- *   buildServiceExpectedName("ElectricityTokensTracker") → "ElectricityTokensTracker.exe"
+ *   buildServiceExpectedName("ElectricityTracker") → "ElectricityTracker.exe"
  */
 const buildServiceExpectedName = (serviceName) => `${serviceName}.exe`;
 

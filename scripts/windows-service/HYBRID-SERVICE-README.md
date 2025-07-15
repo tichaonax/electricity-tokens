@@ -153,7 +153,7 @@ graph TD
 ### Service Won't Start
 
 1. Check admin privileges: `npm run service:diagnose`
-2. Verify service installation: `sc query ElectricityTokensTracker`
+2. Verify service installation: `sc query ElectricityTracker`
 3. Check for orphaned processes: `npm run service:stop`
 4. Reinstall if needed: `npm run service:uninstall && npm run service:install`
 5. Force install for errors: `npm run service:force-install`

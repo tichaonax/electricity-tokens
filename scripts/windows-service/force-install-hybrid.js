@@ -317,9 +317,9 @@ async function forceInstallHybrid() {
     console.log('');
     console.log('🔧 Manual Recovery Steps:');
     console.log('   1. Open Services.msc as Administrator');
-    console.log('   2. Find "ElectricityTokensTracker" service');
+    console.log('   2. Find "ElectricityTracker" service');
     console.log('   3. Stop the service manually');
-    console.log('   4. Delete the service: sc delete ElectricityTokensTracker');
+    console.log('   4. Delete the service: sc delete ElectricityTracker');
     console.log('   5. Restart your computer');
     console.log('   6. Try installation again');
 

@@ -108,9 +108,9 @@ npm run service:status
 
 Services created with the hybrid approach are full Windows services and can be managed through:
 
-- **Windows Services Management Console**: `services.msc` (service will be visible as "ElectricityTokensTracker")
-- **SC commands**: `sc.exe start/stop/query "ElectricityTokensTracker"`
-- **NET commands**: `NET START` / `NET STOP "ElectricityTokensTracker"`
+- **Windows Services Management Console**: `services.msc` (service will be visible as "ElectricityTracker")
+- **SC commands**: `sc.exe start/stop/query "ElectricityTracker"`
+- **NET commands**: `NET START` / `NET STOP "ElectricityTracker"`
 - **PowerShell**: `Get-Service`, `Start-Service`, `Stop-Service`
 
 However, it's recommended to use the npm scripts as they provide better error handling and logging.
@@ -129,7 +129,7 @@ Service logs are written to:
 
 1. Open Windows Event Viewer
 2. Navigate to: Windows Logs → Application
-3. Filter by Source: "ElectricityTokensTracker"
+3. Filter by Source: "ElectricityTracker"
 
 ### Log Levels
 
@@ -145,7 +145,7 @@ Edit `scripts/windows-service/config.js` to customize:
 
 ```javascript
 const SERVICE_CONFIG = {
-  name: 'ElectricityTokensTracker',
+  name: 'ElectricityTracker',
   description: 'Your custom description',
 
   // Port configuration
