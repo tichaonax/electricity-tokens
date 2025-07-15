@@ -60,6 +60,9 @@ class ForceInstallManager {
 
       if (status === 'STOPPED') {
         this.log('Service is already stopped');
+        // Even if stopped, give Windows time to fully clean up
+        this.log('Waiting for Windows to complete service cleanup...');
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         return true;
       }
 
@@ -70,16 +73,23 @@ class ForceInstallManager {
         );
         this.log('Sent stop command to service');
 
-        // Wait for it to stop
+        // Wait for it to stop with more generous timing
         let attempts = 0;
-        while (attempts < 15) {
-          // 15 seconds
+        while (attempts < 30) {
+          // 30 seconds total wait
           await new Promise((resolve) => setTimeout(resolve, 1000));
           const currentStatus = await this.getServiceStatus();
 
           if (currentStatus === 'STOPPED') {
             this.log('Service stopped successfully');
+            // Give Windows additional time to release all handles
+            this.log('Waiting for complete service cleanup...');
+            await new Promise((resolve) => setTimeout(resolve, 5000));
             return true;
+          }
+
+          if (attempts % 5 === 0) {
+            this.log(`Still waiting for service to stop... (${attempts}/30)`);
           }
 
           attempts++;
@@ -158,7 +168,7 @@ class ForceInstallManager {
   }
 
   async uninstallExistingService() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       this.log('Uninstalling existing service...');
 
       const svc = new Service({
@@ -172,12 +182,15 @@ class ForceInstallManager {
         return;
       }
 
-      svc.on('uninstall', () => {
+      svc.on('uninstall', async () => {
         this.log('Service uninstalled successfully');
+        // Give Windows time to update service registry
+        this.log('Waiting for service registry cleanup...');
+        await new Promise((resolve) => setTimeout(resolve, 8000));
         resolve(true);
       });
 
-      svc.on('error', (err) => {
+      svc.on('error', async (err) => {
         this.log(`Uninstall error: ${err.message}`, 'ERROR');
 
         // If uninstall fails due to locked files, we'll proceed anyway
@@ -186,6 +199,8 @@ class ForceInstallManager {
           err.message.includes('resource busy')
         ) {
           this.log('Proceeding despite uninstall error (files locked)', 'WARN');
+          // Still wait for potential cleanup
+          await new Promise((resolve) => setTimeout(resolve, 5000));
           resolve(true);
         } else {
           reject(err);
@@ -196,6 +211,8 @@ class ForceInstallManager {
         svc.uninstall();
       } catch (err) {
         this.log(`Exception during uninstall: ${err.message}`, 'ERROR');
+        // Still wait for potential cleanup
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         resolve(true); // Proceed anyway
       }
     });
@@ -285,24 +302,51 @@ async function forceInstallHybrid() {
     await manager.log('=== Step 1: Force Stop Service ===');
     await manager.forceStopService();
 
-    // Step 2: Wait a moment for file handles to be released
+    // Step 2: Wait for file handles to be released
     await manager.log('Waiting for file handles to be released...');
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // Step 3: Clean up daemon files
     await manager.log('=== Step 2: Clean Up Files ===');
     await manager.forceCleanupDaemonFiles();
 
-    // Step 4: Uninstall existing service
+    // Step 4: Additional wait for file system cleanup
+    await manager.log('Waiting for file system cleanup...');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // Step 5: Uninstall existing service
     await manager.log('=== Step 3: Uninstall Existing Service ===');
     await manager.uninstallExistingService();
 
-    // Step 5: Wait before installing
-    await manager.log('Waiting before installation...');
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Step 6: Wait before installing (allow service registry to stabilize)
+    await manager.log('Waiting for service registry to stabilize...');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // Step 6: Install hybrid service
-    await manager.log('=== Step 4: Install Hybrid Service ===');
+    // Step 7: Verify service is fully removed from registry
+    await manager.log('Verifying service removal from registry...');
+    let registryCleared = false;
+    let attempts = 0;
+    while (!registryCleared && attempts < 10) {
+      const status = await manager.getServiceStatus();
+      if (status === 'NOT_INSTALLED') {
+        registryCleared = true;
+        await manager.log('Service successfully removed from registry');
+      } else {
+        await manager.log(`Service still in registry (${status}), waiting...`);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        attempts++;
+      }
+    }
+
+    if (!registryCleared) {
+      await manager.log(
+        'Service registry cleanup may be incomplete, proceeding anyway',
+        'WARN'
+      );
+    }
+
+    // Step 8: Install hybrid service
+    await manager.log('=== Step 5: Install Hybrid Service ===');
     await manager.installHybridService();
 
     console.log('');
