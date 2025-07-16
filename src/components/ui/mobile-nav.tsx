@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import {
   Menu,
@@ -39,7 +39,13 @@ interface MobileNavProps {
 
 export function MobileNav({ isAdmin = false }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { data: session } = useSession();
+
+  // Ensure component is mounted before rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const toggleNav = () => setIsOpen(!isOpen);
   const closeNav = () => setIsOpen(false);
@@ -99,6 +105,18 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
     },
   ];
 
+  // Don't render until component is mounted (prevents hydration issues)
+  if (!isMounted) {
+    return (
+      <button
+        className="md:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-2 rounded-lg text-gray-600 dark:text-gray-400"
+        disabled
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+    );
+  }
+
   return (
     <>
       {/* Mobile menu button - Enhanced touch target */}
@@ -120,17 +138,30 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
         className={`md:hidden fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ height: '100vh', minHeight: '100vh' }}
       >
         {/* Backdrop */}
         <div
           className={`fixed inset-0 bg-black transition-opacity duration-300 ${
             isOpen ? 'opacity-50' : 'opacity-0 pointer-events-none'
           }`}
+          style={{ height: '100vh', width: '100vw' }}
           onClick={closeNav}
         />
 
         {/* Slide-out panel */}
-        <div className="relative flex flex-col w-80 max-w-xs bg-white/95 dark:bg-gray-800/95 backdrop-blur-md h-full shadow-2xl overflow-hidden max-h-screen border-r border-gray-200/50 dark:border-gray-700/50">
+        <div
+          className="relative flex flex-col w-80 max-w-xs bg-white dark:bg-gray-800 backdrop-blur-md h-full shadow-2xl overflow-hidden max-h-screen border-r border-gray-200/50 dark:border-gray-700/50 min-h-screen"
+          style={{
+            height: '100vh',
+            minHeight: '100vh',
+            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+            ...(typeof document !== 'undefined' &&
+            document.documentElement.classList.contains('dark')
+              ? { backgroundColor: 'rgba(31, 41, 55, 0.98)' }
+              : {}),
+          }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3">
@@ -153,7 +184,15 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
           </div>
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+          <div
+            className="flex-1 overflow-y-auto overscroll-contain min-h-0 h-full"
+            style={{
+              flex: '1 1 auto',
+              minHeight: '0px',
+              height: 'auto',
+              display: 'block',
+            }}
+          >
             <div className="pb-6 space-y-0">
               {/* User info */}
               {session?.user && (
@@ -187,12 +226,24 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
               )}
 
               {/* Navigation */}
-              <nav className="py-4">
+              <nav
+                className="py-4"
+                style={{ display: 'block', visibility: 'visible' }}
+              >
                 <div className="space-y-1 px-2">
+                  {/* Debug info */}
+                  <div className="px-3 py-2 text-xs text-red-600 bg-red-50 dark:bg-red-900 dark:text-red-300 rounded mb-2">
+                    Debug: isMounted={isMounted.toString()}, isOpen=
+                    {isOpen.toString()}, session={session?.user?.name || 'none'}
+                  </div>
+
                   {/* Main navigation */}
-                  <div className="mb-6">
+                  <div
+                    className="mb-6"
+                    style={{ display: 'block', visibility: 'visible' }}
+                  >
                     <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                      Main
+                      Main ({mainNavItems.length} items)
                     </p>
                     {mainNavItems.map((item, index) => (
                       <div key={index}>
