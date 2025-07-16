@@ -5,6 +5,7 @@ const config = require('./config');
 const path = require('path');
 const fs = require('fs');
 const buildServiceExpectedName = require('./buildexpectedservicename');
+const HybridServiceManager = require('./hybrid-service-manager');
 
 const execAsync = promisify(exec);
 
@@ -12,6 +13,7 @@ class ForceInstallManager {
   constructor() {
     this.serviceName = config.name;
     this.daemonPath = path.join(__dirname, 'daemon');
+    this.hybridManager = new HybridServiceManager();
   }
 
   async log(message, level = 'INFO') {
@@ -50,114 +52,195 @@ class ForceInstallManager {
 
   async forceStopService() {
     try {
-      this.log('Attempting to stop existing service...');
+      this.log('Attempting comprehensive service stop...');
 
       const status = await this.getServiceStatus();
       if (status === 'NOT_INSTALLED') {
         this.log('Service is not installed');
+        // Still check for orphaned processes
+        await this.ensureNoRelatedProcesses();
         return true;
       }
 
       if (status === 'STOPPED') {
         this.log('Service is already stopped');
-        // Even if stopped, give Windows time to fully clean up
+        // Check for orphaned processes even if service is stopped
+        await this.ensureNoRelatedProcesses();
+        // Give Windows time to fully clean up
         this.log('Waiting for Windows to complete service cleanup...');
         await new Promise((resolve) => setTimeout(resolve, 5000));
         return true;
       }
 
-      // Try to stop the service
+      // Use hybrid service manager for comprehensive stop
       try {
-        await execAsync(
-          `${config.commands.SC_COMMAND} stop "${buildServiceExpectedName(this.serviceName)}"`
-        );
-        this.log('Sent stop command to service');
+        this.log('Using hybrid service manager for comprehensive stop...');
+        await this.hybridManager.stopService();
+        this.log('Hybrid service stop completed');
 
-        // Wait for it to stop with more generous timing
-        let attempts = 0;
-        while (attempts < 30) {
-          // 30 seconds total wait
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const currentStatus = await this.getServiceStatus();
+        // Additional wait for file handle release
+        this.log('Waiting for complete file handle release...');
+        await new Promise((resolve) => setTimeout(resolve, 8000));
 
-          if (currentStatus === 'STOPPED') {
-            this.log('Service stopped successfully');
-            // Give Windows additional time to release all handles
-            this.log('Waiting for complete service cleanup...');
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-            return true;
-          }
-
-          if (attempts % 5 === 0) {
-            this.log(`Still waiting for service to stop... (${attempts}/30)`);
-          }
-
-          attempts++;
-        }
-
-        this.log(
-          'Service did not stop within timeout, will proceed anyway',
-          'WARN'
-        );
+        return true;
       } catch (err) {
-        this.log(`Failed to stop service: ${err.message}`, 'WARN');
-      }
+        this.log(`Hybrid stop failed: ${err.message}`, 'WARN');
 
-      return true;
+        // Fallback to direct process kill
+        this.log('Falling back to direct process cleanup...');
+        await this.ensureNoRelatedProcesses();
+        return true;
+      }
     } catch (err) {
       this.log(`Error during force stop: ${err.message}`, 'ERROR');
       return false;
     }
   }
 
+  async ensureNoRelatedProcesses() {
+    try {
+      this.log('Ensuring no related processes are running...');
+
+      // Check for processes on port 3000
+      const portPID = await this.hybridManager.findProcessByPort(3000);
+      if (portPID) {
+        this.log(`Found process on port 3000: PID ${portPID}`);
+        await this.hybridManager.killPID(portPID);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+
+      // Check for any Node.js processes that might be related
+      const serviceProcesses = await this.hybridManager.findServiceProcesses();
+      if (serviceProcesses.length > 0) {
+        this.log(
+          `Found ${serviceProcesses.length} related processes, terminating...`
+        );
+        for (const proc of serviceProcesses) {
+          const pid = parseInt(proc.PID, 10);
+          if (pid) {
+            await this.hybridManager.killPID(pid);
+          }
+        }
+        // Wait for processes to fully terminate
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+
+      this.log('Process cleanup completed');
+    } catch (err) {
+      this.log(`Error during process cleanup: ${err.message}`, 'WARN');
+    }
+  }
+
   async forceCleanupDaemonFiles() {
     try {
-      this.log('Cleaning up daemon files...');
+      this.log('Cleaning up daemon files with enhanced retry logic...');
 
       if (fs.existsSync(this.daemonPath)) {
         const files = fs.readdirSync(this.daemonPath);
 
         for (const file of files) {
           const filePath = path.join(this.daemonPath, file);
+          let deleted = false;
+          let attempts = 0;
+          const maxAttempts = 5;
 
-          try {
-            // Try to delete the file
-            fs.unlinkSync(filePath);
-            this.log(`Deleted: ${file}`);
-          } catch (err) {
-            if (err.code === 'EBUSY') {
-              this.log(`File locked (will retry): ${file}`, 'WARN');
+          while (!deleted && attempts < maxAttempts) {
+            try {
+              fs.unlinkSync(filePath);
+              this.log(`Deleted: ${file}`);
+              deleted = true;
+            } catch (err) {
+              attempts++;
 
-              // Try again after a short delay
-              await new Promise((resolve) => setTimeout(resolve, 1000));
+              if (err.code === 'EBUSY' || err.code === 'EACCES') {
+                this.log(
+                  `File locked (attempt ${attempts}/${maxAttempts}): ${file}`,
+                  'WARN'
+                );
 
-              try {
-                fs.unlinkSync(filePath);
-                this.log(`Deleted on retry: ${file}`);
-              } catch (retryErr) {
-                this.log(`Still locked: ${file} (${retryErr.code})`, 'WARN');
+                if (attempts < maxAttempts) {
+                  // Exponential backoff: 1s, 2s, 4s, 8s
+                  const delay = Math.pow(2, attempts - 1) * 1000;
+                  this.log(`Waiting ${delay}ms before retry...`);
+                  await new Promise((resolve) => setTimeout(resolve, delay));
+                } else {
+                  this.log(
+                    `File remains locked after ${maxAttempts} attempts: ${file}`,
+                    'ERROR'
+                  );
 
-                // Mark file for deletion on reboot if still locked
-                try {
-                  await execAsync(`move "${filePath}" "${filePath}.delete"`);
-                  this.log(`Marked for deletion: ${file}`);
-                } catch (moveErr) {
-                  this.log(`Could not mark for deletion: ${file}`, 'WARN');
+                  // Try to check what process is holding the file
+                  try {
+                    const { stdout } = await execAsync(
+                      `powershell "Get-Process | Where-Object {$_.Path -like '*${file}*'} | Select-Object Name, Id, Path"`
+                    );
+                    if (stdout.trim()) {
+                      this.log(`Processes using ${file}:\n${stdout}`, 'INFO');
+                    }
+                  } catch (psErr) {
+                    // Ignore PowerShell errors
+                  }
+
+                  // Try to rename file for deletion on reboot
+                  try {
+                    const deleteFile = `${filePath}.delete.${Date.now()}`;
+                    await execAsync(`move "${filePath}" "${deleteFile}"`);
+                    this.log(
+                      `Renamed for deletion: ${file} -> ${path.basename(deleteFile)}`
+                    );
+                  } catch (moveErr) {
+                    this.log(
+                      `Could not rename for deletion: ${file} - ${moveErr.message}`,
+                      'WARN'
+                    );
+                  }
                 }
+              } else {
+                this.log(`Could not delete ${file}: ${err.message}`, 'WARN');
+                break; // Exit retry loop for non-lock errors
               }
-            } else {
-              this.log(`Could not delete ${file}: ${err.message}`, 'WARN');
             }
           }
         }
 
-        // Try to remove the daemon directory
-        try {
-          fs.rmdirSync(this.daemonPath);
-          this.log('Removed daemon directory');
-        } catch (err) {
-          this.log(`Could not remove daemon directory: ${err.message}`, 'WARN');
+        // Try to remove the daemon directory with retries
+        let dirRemoved = false;
+        let dirAttempts = 0;
+        const maxDirAttempts = 3;
+
+        while (!dirRemoved && dirAttempts < maxDirAttempts) {
+          try {
+            // Check if directory is empty or has only .delete files
+            const remainingFiles = fs.readdirSync(this.daemonPath);
+            const nonDeleteFiles = remainingFiles.filter(
+              (f) => !f.includes('.delete')
+            );
+
+            if (nonDeleteFiles.length === 0) {
+              fs.rmdirSync(this.daemonPath);
+              this.log('Removed daemon directory');
+              dirRemoved = true;
+            } else {
+              this.log(
+                `Daemon directory still contains files: ${nonDeleteFiles.join(', ')}`,
+                'WARN'
+              );
+              break;
+            }
+          } catch (err) {
+            dirAttempts++;
+            this.log(
+              `Could not remove daemon directory (attempt ${dirAttempts}/${maxDirAttempts}): ${err.message}`,
+              'WARN'
+            );
+
+            if (dirAttempts < maxDirAttempts) {
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
+          }
         }
+      } else {
+        this.log('Daemon directory does not exist');
       }
 
       return true;
@@ -298,34 +381,38 @@ async function forceInstallHybrid() {
 
     await manager.log('Admin privileges confirmed');
 
-    // Step 1: Clean up daemon files (service stop handled by uninstall)
-    await manager.log('=== Step 1: Clean Up Files ===');
+    // Step 1: Comprehensive service stop (including process cleanup)
+    await manager.log('=== Step 1: Comprehensive Service Stop ===');
+    await manager.forceStopService();
+
+    // Step 2: Clean up daemon files
+    await manager.log('=== Step 2: Clean Up Files ===');
     await manager.forceCleanupDaemonFiles();
 
-    // Step 2: Wait for file system cleanup
+    // Step 3: Wait for file system cleanup
     await manager.log('Waiting for file system cleanup...');
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    // Step 3: Uninstall existing service (this handles service stop automatically)
-    await manager.log('=== Step 2: Uninstall Existing Service ===');
-    await manager.uninstallExistingService();
-
-    // Step 3: Wait before installing (allow service registry to stabilize)
-    await manager.log('Waiting for service registry to stabilize...');
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // Step 4: Verify service is fully removed from registry
+    // Step 4: Uninstall existing service
+    await manager.log('=== Step 3: Uninstall Existing Service ===');
+    await manager.uninstallExistingService();
+
+    // Step 5: Wait before installing (allow service registry to stabilize)
+    await manager.log('Waiting for service registry to stabilize...');
+    await new Promise((resolve) => setTimeout(resolve, 8000));
+
+    // Step 6: Verify service is fully removed from registry
     await manager.log('Verifying service removal from registry...');
     let registryCleared = false;
     let attempts = 0;
-    while (!registryCleared && attempts < 10) {
+    while (!registryCleared && attempts < 15) {
       const status = await manager.getServiceStatus();
       if (status === 'NOT_INSTALLED') {
         registryCleared = true;
         await manager.log('Service successfully removed from registry');
       } else {
         await manager.log(`Service still in registry (${status}), waiting...`);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         attempts++;
       }
     }
@@ -337,8 +424,12 @@ async function forceInstallHybrid() {
       );
     }
 
-    // Step 5: Install hybrid service
-    await manager.log('=== Step 3: Install Hybrid Service ===');
+    // Step 7: Final wait before installation
+    await manager.log('Final wait for complete system cleanup...');
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+
+    // Step 8: Install hybrid service
+    await manager.log('=== Step 4: Install Hybrid Service ===');
     await manager.installHybridService();
 
     console.log('');
