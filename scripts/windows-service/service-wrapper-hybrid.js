@@ -377,11 +377,14 @@ class HybridElectricityTokensService {
         const { generateBuildInfo } = require('../generate-build-info.js');
         const buildInfo = generateBuildInfo();
 
+        // Use current commit if script didn't detect git commit properly
+        const effectiveCommit = buildInfo.gitCommit || currentCommit;
+
         // Also save to .next directory for our service to check
         const serviceBuildInfo = {
-          version: buildInfo.version,
-          gitCommit: buildInfo.gitCommit,
-          buildTime: buildInfo.buildTime,
+          version: buildInfo.version || '0.1.0',
+          gitCommit: effectiveCommit,
+          buildTime: buildInfo.buildTime || new Date().toISOString(),
           nodeVersion: process.version,
         };
 
@@ -390,7 +393,7 @@ class HybridElectricityTokensService {
           JSON.stringify(serviceBuildInfo, null, 2)
         );
         this.log(
-          `Build info saved successfully: commit ${buildInfo.gitCommit?.substring(0, 8) || 'unknown'}, version ${buildInfo.version}`
+          `Build info saved successfully: commit ${effectiveCommit?.substring(0, 8) || 'unknown'}, version ${serviceBuildInfo.version}`
         );
         return;
       } catch (generateErr) {
@@ -412,6 +415,32 @@ class HybridElectricityTokensService {
       this.log(
         `Fallback build info saved: commit ${currentCommit?.substring(0, 8) || 'unknown'}`
       );
+
+      // Also create the public build info for consistency
+      try {
+        const publicDir = path.join(this.appRoot, 'public');
+        const publicBuildInfoFile = path.join(publicDir, 'build-info.json');
+        const publicBuildInfo = {
+          version: buildInfo.version,
+          buildTime: buildInfo.buildTime,
+          gitCommit: currentCommit ? currentCommit.substring(0, 8) : null,
+          gitBranch: null,
+        };
+
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir, { recursive: true });
+        }
+        fs.writeFileSync(
+          publicBuildInfoFile,
+          JSON.stringify(publicBuildInfo, null, 2)
+        );
+        this.log('Public build info file updated');
+      } catch (publicErr) {
+        this.log(
+          `Could not create public build info: ${publicErr.message}`,
+          'WARN'
+        );
+      }
     } catch (err) {
       this.log(`Critical error saving build info: ${err.message}`, 'ERROR');
       throw err; // Re-throw to indicate build process failed
