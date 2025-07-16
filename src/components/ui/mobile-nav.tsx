@@ -231,19 +231,13 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
                 style={{ display: 'block', visibility: 'visible' }}
               >
                 <div className="space-y-1 px-2">
-                  {/* Debug info */}
-                  <div className="px-3 py-2 text-xs text-red-600 bg-red-50 dark:bg-red-900 dark:text-red-300 rounded mb-2">
-                    Debug: isMounted={isMounted.toString()}, isOpen=
-                    {isOpen.toString()}, session={session?.user?.name || 'none'}
-                  </div>
-
                   {/* Main navigation */}
                   <div
                     className="mb-6"
                     style={{ display: 'block', visibility: 'visible' }}
                   >
                     <p className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                      Main ({mainNavItems.length} items)
+                      Main
                     </p>
                     {mainNavItems.map((item, index) => (
                       <div key={index}>
