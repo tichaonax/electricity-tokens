@@ -25,19 +25,19 @@ function generateBuildInfo() {
     console.warn(`Could not read package.json version: ${err.message}`);
   }
 
-  // Get git commit hash
+  // Get git commit hash using multiple methods
   let gitCommit = null;
   try {
-    // Try multiple approaches to get git commit
+    // Method 1: Try git rev-parse HEAD command
     gitCommit = execSync('git rev-parse HEAD', {
       cwd: rootDir,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
   } catch (err) {
-    console.warn(`Could not determine git commit: ${err.message}`);
+    console.warn(`Git rev-parse failed: ${err.message}`);
 
-    // Try alternative approach
+    // Method 2: Try alternative git log command
     try {
       gitCommit = execSync('git log -1 --format="%H"', {
         cwd: rootDir,
@@ -47,7 +47,34 @@ function generateBuildInfo() {
         .trim()
         .replace(/"/g, '');
     } catch (err2) {
-      console.warn(`Alternative git approach also failed: ${err2.message}`);
+      console.warn(`Git log command also failed: ${err2.message}`);
+
+      // Method 3: Try reading from .git/HEAD directly (like service wrapper does)
+      try {
+        const gitHeadFile = path.join(rootDir, '.git', 'HEAD');
+        if (fs.existsSync(gitHeadFile)) {
+          const headContent = fs.readFileSync(gitHeadFile, 'utf8').trim();
+          if (headContent.startsWith('ref: ')) {
+            // It's a reference, read the actual commit
+            const refPath = headContent.substring(5);
+            const refFile = path.join(rootDir, '.git', refPath);
+            if (fs.existsSync(refFile)) {
+              gitCommit = fs.readFileSync(refFile, 'utf8').trim();
+              console.log(
+                `Git commit from .git/HEAD reference: ${gitCommit.substring(0, 8)}`
+              );
+            }
+          } else if (headContent.length === 40) {
+            // It's a direct commit hash
+            gitCommit = headContent;
+            console.log(
+              `Git commit from .git/HEAD direct: ${gitCommit.substring(0, 8)}`
+            );
+          }
+        }
+      } catch (err3) {
+        console.warn(`Direct .git/HEAD read also failed: ${err3.message}`);
+      }
     }
   }
 
