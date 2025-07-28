@@ -73,7 +73,7 @@ export function ResponsiveNav({
   }, []);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
+    await signOut({ callbackUrl: '/?logout=true' });
   };
 
   return (

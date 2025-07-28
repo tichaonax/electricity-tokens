@@ -51,7 +51,7 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
   const closeNav = () => setIsOpen(false);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
+    await signOut({ callbackUrl: '/?logout=true' });
     closeNav();
   };
 

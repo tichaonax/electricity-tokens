@@ -58,10 +58,8 @@ const SERVICE_CONFIG = {
     // Database URL from environment or default
     DATABASE_URL: process.env.DATABASE_URL,
 
-    // NextAuth configuration
-    NEXTAUTH_URL:
-      process.env.NEXTAUTH_URL ||
-      `http://localhost:${process.env.PORT || 3000}`,
+    // NextAuth configuration - URL is dynamically detected by NextAuth
+    // No need to set NEXTAUTH_URL - NextAuth auto-detects from request headers
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
 
     // Other environment variables

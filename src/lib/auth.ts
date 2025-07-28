@@ -14,6 +14,7 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/signin',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Remove hardcoded NEXTAUTH_URL - NextAuth will auto-detect from request headers
   providers: [
     CredentialsProvider({
       name: 'credentials',
