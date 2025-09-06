@@ -237,6 +237,51 @@ class EnvironmentValidator {
     }
   }
 
+  checkDatabaseMigrations() {
+    this.log('Checking database migration status...');
+
+    if (!process.env.DATABASE_URL) {
+      this.addError('DATABASE_URL not configured - cannot check migrations');
+      return false;
+    }
+
+    try {
+      // Check if Prisma is available
+      const prismaCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+      
+      // Run prisma migrate status to check migration state
+      const result = execSync(`${prismaCmd} prisma migrate status`, { 
+        stdio: 'pipe', 
+        timeout: 30000,
+        cwd: this.appRoot,
+        encoding: 'utf8'
+      });
+
+      if (result.includes('Database schema is up to date') || 
+          result.includes('No pending migrations') ||
+          result.includes('All migrations have been applied')) {
+        this.log('Database migrations ✓');
+        return true;
+      } else if (result.includes('migrations have not been applied')) {
+        this.addWarning('Database has pending migrations. They will be applied automatically on service start.');
+        return true; // Not a blocker, service will handle migrations
+      } else {
+        this.log('Migration status: ' + result.replace(/\n/g, ' ').substring(0, 100));
+        return true; // Continue with service install, migrations will run on start
+      }
+    } catch (err) {
+      // Don't fail validation for migration check issues - service will handle them
+      if (err.message.includes('no such file')) {
+        this.addWarning('Prisma CLI not found. Migrations will be attempted during service start.');
+      } else if (err.message.includes('timeout')) {
+        this.addWarning('Migration check timed out. Service will attempt migrations on start.');
+      } else {
+        this.addWarning(`Migration check failed: ${err.message}. Service will attempt migrations on start.`);
+      }
+      return true; // Don't block service installation
+    }
+  }
+
   checkPort() {
     this.log('Checking port availability...');
 
@@ -302,6 +347,7 @@ class EnvironmentValidator {
       () => this.checkDependencies(),
       () => this.checkEnvironmentVariables(),
       () => this.checkDatabaseConnection(),
+      () => this.checkDatabaseMigrations(),
       () => this.checkPort(),
       () => this.checkServiceFiles(),
     ];

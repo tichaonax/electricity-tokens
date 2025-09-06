@@ -73,7 +73,12 @@ export function ResponsiveNav({
   }, []);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/?logout=true' });
+    // Set flag in sessionStorage to show logout message
+    sessionStorage.setItem('justLoggedOut', 'true');
+    // Use redirect: false and manually redirect to avoid NextAuth overrides
+    await signOut({ redirect: false });
+    // Manually redirect to homepage
+    window.location.href = '/';
   };
 
   return (

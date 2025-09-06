@@ -12,8 +12,13 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
+    signOut: '/', // Redirect to homepage after logout
   },
+  // Disable callback URL to prevent parameter pollution
+  useSecureCookies: process.env.NODE_ENV === 'production',
   secret: process.env.NEXTAUTH_SECRET,
+  // Disable automatic callback URL generation
+  trustHost: true,
   // Remove hardcoded NEXTAUTH_URL - NextAuth will auto-detect from request headers
   providers: [
     CredentialsProvider({
@@ -23,21 +28,46 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials, req) {
+        console.log('🔍 AUTH DEBUG: Starting authorization...');
+        console.log('🔍 AUTH DEBUG: prisma object exists:', !!prisma);
+        console.log('🔍 AUTH DEBUG: prisma.user exists:', !!prisma.user);
+        console.log('🔍 AUTH DEBUG: typeof prisma.user:', typeof prisma.user);
+        console.log('🔍 AUTH DEBUG: Available models:', Object.keys(prisma).filter(key => typeof prisma[key] === 'object' && prisma[key] && typeof prisma[key].findUnique === 'function'));
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log('❌ AUTH DEBUG: Missing credentials');
           return null;
         }
 
-        const user = await prisma.user.findUnique({
+        let user;
+        try {
+          console.log('🔍 AUTH DEBUG: Attempting prisma.user.findUnique...');
+          user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
           },
         });
+          console.log('✅ AUTH DEBUG: prisma.user.findUnique completed, user found:', !!user);
+        } catch (error) {
+          console.error('❌ AUTH DEBUG: Error in prisma.user.findUnique:', error);
+          throw error;
+        }
 
         // Extract IP and User Agent for audit logging
         const ipAddress = req?.headers?.['x-forwarded-for'] || req?.headers?.['x-real-ip'] || 'unknown';
         const userAgent = req?.headers?.['user-agent'] || 'unknown';
 
-        if (!user || user.locked || !user.password) {
+        // TEMPORARY DEBUG: Log user state for debugging
+        console.log('AUTH DEBUG - Email:', credentials.email);
+        console.log('AUTH DEBUG - User found:', !!user);
+        if (user) {
+          console.log('AUTH DEBUG - User locked:', user.locked);
+          console.log('AUTH DEBUG - User has password:', !!user.password);
+          console.log('AUTH DEBUG - User isActive:', user.isActive);
+          console.log('AUTH DEBUG - User deactivationReason:', user.deactivationReason);
+        }
+
+        if (!user || user.locked || !user.password || !user.isActive) {
           // Log failed login attempt if user exists
           if (user) {
             try {
@@ -45,8 +75,11 @@ export const authOptions: NextAuthOptions = {
                 user.id,
                 'LOGIN_FAILED',
                 { 
-                  reason: user.locked ? 'account_locked' : 'invalid_credentials',
-                  email: credentials.email 
+                  reason: user.locked ? 'account_locked' : 
+                          !user.isActive ? 'account_deactivated' : 
+                          'invalid_credentials',
+                  email: credentials.email,
+                  deactivationReason: !user.isActive ? user.deactivationReason : undefined
                 },
                 ipAddress as string,
                 userAgent as string
@@ -125,6 +158,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Handle logout - if URL is explicitly set to homepage, respect it
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return baseUrl;
+      }
+      // For login redirects, ignore callback URLs and go to dashboard
+      return `${baseUrl}/dashboard`;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;

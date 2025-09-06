@@ -26,6 +26,10 @@ model User {
   lastLoginAt           DateTime?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  isActive              Boolean  @default(true)
+  deactivatedAt         DateTime?
+  deactivationReason    String?
+  deactivatedBy         String?
 
   // Relations
   contributions     UserContribution[]
@@ -35,6 +39,7 @@ model User {
   accounts          Account[]
   sessions          Session[]
 
+  @@index([isActive])
   @@map("users")
 }
 

@@ -24,6 +24,7 @@ import {
   ChevronRight,
   Settings,
   UserPlus,
+  UserMinus,
 } from 'lucide-react';
 import {
   UserPermissions,
@@ -37,6 +38,10 @@ interface User {
   name: string;
   role: 'ADMIN' | 'USER';
   locked: boolean;
+  isActive: boolean;
+  deactivatedAt: string | null;
+  deactivationReason: string | null;
+  deactivatedBy: string | null;
   permissions: UserPermissions | null;
   createdAt: string;
   updatedAt: string;
@@ -83,6 +88,11 @@ function UserManagementContent() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editingPermissions, setEditingPermissions] =
     useState<UserPermissions | null>(null);
+
+  // User deactivation states
+  const [showDeactivationModal, setShowDeactivationModal] = useState(false);
+  const [deactivatingUser, setDeactivatingUser] = useState<User | null>(null);
+  const [deactivationReason, setDeactivationReason] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -251,6 +261,72 @@ function UserManagementContent() {
         ...editingPermissions,
         [key]: value,
       });
+    }
+  };
+
+  // Deactivation reasons
+  const DEACTIVATION_REASONS = [
+    'User terminated',
+    'Permissions revoked',
+    'Security violation',
+    'Account suspended',
+    'Temporary deactivation',
+    'Other'
+  ];
+
+  const handleDeactivateUser = async () => {
+    if (!deactivatingUser || !deactivationReason.trim()) return;
+
+    try {
+      setActionLoading(deactivatingUser.id);
+      setError(null);
+
+      const response = await fetch(`/api/users/${deactivatingUser.id}/deactivate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: deactivationReason.trim() }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to deactivate user');
+      }
+
+      await fetchUsers();
+      setShowDeactivationModal(false);
+      setDeactivatingUser(null);
+      setDeactivationReason('');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to deactivate user'
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReactivateUser = async (userId: string) => {
+    try {
+      setActionLoading(userId);
+      setError(null);
+
+      const response = await fetch(`/api/users/${userId}/reactivate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reactivate user');
+      }
+
+      await fetchUsers();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to reactivate user'
+      );
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -456,10 +532,16 @@ function UserManagementContent() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <Badge
-                                variant={user.locked ? 'destructive' : 'default'}
+                                variant={
+                                  user.locked ? 'destructive' : 
+                                  !user.isActive ? 'secondary' : 
+                                  'default'
+                                }
                                 className={
                                   user.locked
                                     ? ''
+                                    : !user.isActive
+                                    ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                                     : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                 }
                               >
@@ -467,6 +549,11 @@ function UserManagementContent() {
                                   <>
                                     <Lock className="h-3 w-3 mr-1" />
                                     Locked
+                                  </>
+                                ) : !user.isActive ? (
+                                  <>
+                                    <UserMinus className="h-3 w-3 mr-1" />
+                                    Deactivated
                                   </>
                                 ) : (
                                   <>
@@ -522,6 +609,30 @@ function UserManagementContent() {
                                         title="Lock Account"
                                       >
                                         <Lock className="h-4 w-4" />
+                                      </button>
+                                    )}
+
+                                    {/* User deactivation/reactivation button */}
+                                    {user.isActive ? (
+                                      <button
+                                        onClick={() => {
+                                          setDeactivatingUser(user);
+                                          setShowDeactivationModal(true);
+                                        }}
+                                        disabled={actionLoading === user.id}
+                                        className="p-1 text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                        title="Deactivate User"
+                                      >
+                                        <UserMinus className="h-4 w-4" />
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleReactivateUser(user.id)}
+                                        disabled={actionLoading === user.id}
+                                        className="p-1 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                                        title="Reactivate User"
+                                      >
+                                        <UserPlus className="h-4 w-4" />
                                       </button>
                                     )}
 
@@ -620,10 +731,16 @@ function UserManagementContent() {
                               Status
                             </div>
                             <Badge
-                              variant={user.locked ? 'destructive' : 'default'}
+                              variant={
+                                user.locked ? 'destructive' : 
+                                !user.isActive ? 'secondary' : 
+                                'default'
+                              }
                               className={
                                 user.locked
                                   ? ''
+                                  : !user.isActive
+                                  ? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                                   : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                               }
                             >
@@ -631,6 +748,11 @@ function UserManagementContent() {
                                 <>
                                   <Lock className="h-3 w-3 mr-1" />
                                   Locked
+                                </>
+                              ) : !user.isActive ? (
+                                <>
+                                  <UserMinus className="h-3 w-3 mr-1" />
+                                  Deactivated
                                 </>
                               ) : (
                                 <>
@@ -702,6 +824,30 @@ function UserManagementContent() {
                                     title="Lock Account"
                                   >
                                     <Lock className="h-4 w-4" />
+                                  </button>
+                                )}
+
+                                {/* User deactivation/reactivation button - Mobile */}
+                                {user.isActive ? (
+                                  <button
+                                    onClick={() => {
+                                      setDeactivatingUser(user);
+                                      setShowDeactivationModal(true);
+                                    }}
+                                    disabled={actionLoading === user.id}
+                                    className="p-2 text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 disabled:opacity-50 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors"
+                                    title="Deactivate User"
+                                  >
+                                    <UserMinus className="h-4 w-4" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleReactivateUser(user.id)}
+                                    disabled={actionLoading === user.id}
+                                    className="p-2 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 disabled:opacity-50 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors"
+                                    title="Reactivate User"
+                                  >
+                                    <UserPlus className="h-4 w-4" />
                                   </button>
                                 )}
 
@@ -1037,6 +1183,77 @@ function UserManagementContent() {
                 className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-700 border border-transparent rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50"
               >
                 {actionLoading ? 'Saving...' : 'Save Permissions'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deactivation Modal */}
+      {showDeactivationModal && deactivatingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Deactivate User
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDeactivationModal(false);
+                  setDeactivatingUser(null);
+                  setDeactivationReason('');
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to deactivate{' '}
+                <span className="font-semibold">{deactivatingUser.name}</span>?
+                This will prevent them from logging in.
+              </p>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Reason for deactivation <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={deactivationReason}
+                  onChange={(e) => setDeactivationReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  required
+                >
+                  <option value="">Select a reason...</option>
+                  {DEACTIVATION_REASONS.map((reason) => (
+                    <option key={reason} value={reason}>
+                      {reason}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeactivationModal(false);
+                  setDeactivatingUser(null);
+                  setDeactivationReason('');
+                }}
+                disabled={!!actionLoading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 border border-transparent rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeactivateUser}
+                disabled={!!actionLoading || !deactivationReason.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-700 border border-transparent rounded-md hover:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50"
+              >
+                {actionLoading === deactivatingUser?.id ? 'Deactivating...' : 'Deactivate User'}
               </button>
             </div>
           </div>

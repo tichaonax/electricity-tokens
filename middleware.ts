@@ -8,6 +8,20 @@ import {
 } from './src/lib/security';
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // FIRST PRIORITY: Completely prevent callback URL parameters from appearing anywhere
+  if (request.nextUrl.searchParams.has('callbackUrl')) {
+    const cleanUrl = new URL(pathname, request.url);
+    // Use 302 redirect to prevent caching
+    return NextResponse.redirect(cleanUrl, 302);
+  }
+  
+  // Also handle root redirect to avoid NextAuth callback URL pollution
+  if (pathname === '/' && request.nextUrl.search.includes('callbackUrl')) {
+    return NextResponse.redirect(new URL('/', request.url), 302);
+  }
+
   const response = NextResponse.next();
   
   // Add security headers to all responses
@@ -16,13 +30,12 @@ export async function middleware(request: NextRequest) {
     response.headers.set(key, value);
   });
 
-  const { pathname } = request.nextUrl;
-
-  // Skip middleware for static assets and Next.js internals
+  // Skip middleware for static assets and Next.js internals, and auth pages
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
-    pathname.includes('.') ||
+    pathname.startsWith('/auth/') ||
+    (pathname.includes('.') && !pathname.includes('/auth/')) ||
     pathname === '/favicon.ico'
   ) {
     return response;
@@ -90,9 +103,8 @@ export async function middleware(request: NextRequest) {
       });
 
       if (!token) {
-        // Redirect to sign-in page
+        // Force redirect to clean sign-in page to prevent NextAuth from adding callback URLs
         const signInUrl = new URL('/auth/signin', request.url);
-        signInUrl.searchParams.set('callbackUrl', pathname);
         
         await SecurityLogger.logSecurityEvent(
           SecurityLogger.createSecurityEvent(
@@ -107,6 +119,7 @@ export async function middleware(request: NextRequest) {
           )
         );
 
+        // Use direct redirect without callback URL
         return NextResponse.redirect(signInUrl);
       }
 
@@ -200,8 +213,8 @@ async function detectSuspiciousPatterns(request: NextRequest, pathname: string) 
     /<script|javascript:|on\w+\s*=/i,
     // Path traversal
     /\.\.\//,
-    // Command injection
-    /;|\||\&\&|\|\||`/,
+    // Command injection - refined to avoid false positives with URL parameters
+    /;\s*[a-zA-Z]|[\|&]{2,}|`.*`/,
     // Common bot patterns
     /bot|crawler|spider|scraper/i,
   ];
@@ -272,12 +285,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api/auth (NextAuth routes)
+     * - api/auth (NextAuth routes) - but process signin page and root
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (public folder)
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

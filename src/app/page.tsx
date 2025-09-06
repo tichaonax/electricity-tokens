@@ -1,36 +1,37 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 
 function HomeContent() {
   const { status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutMessage, setShowLogoutMessage] = useState(false);
 
   useEffect(() => {
-    // Check if this is a logout redirect
-    const isLogoutCallback = searchParams.get('logout') === 'true';
-    
-    if (isLogoutCallback) {
-      setIsLoggingOut(true);
-      // Give session cleanup time to complete
+    // Check if we should show logout message from sessionStorage
+    const justLoggedOut = sessionStorage.getItem('justLoggedOut');
+    if (justLoggedOut === 'true') {
+      setShowLogoutMessage(true);
+      sessionStorage.removeItem('justLoggedOut'); // Clean up
+      
+      // Auto-hide logout message after 5 seconds
       const timer = setTimeout(() => {
-        setIsLoggingOut(false);
-      }, 1000);
+        setShowLogoutMessage(false);
+      }, 5000);
+      
       return () => clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
-    // Only redirect to dashboard if authenticated AND not in the process of logging out
-    if (status === 'authenticated' && !isLoggingOut) {
+    // Only redirect to dashboard if authenticated and not showing logout message
+    if (status === 'authenticated' && !showLogoutMessage) {
       router.push('/dashboard');
     }
-  }, [status, router, isLoggingOut]);
+  }, [status, router, showLogoutMessage]);
 
   if (status === 'loading') {
     return (
@@ -40,58 +41,30 @@ function HomeContent() {
     );
   }
 
-  // Show logout success message if coming from logout
-  const isLogoutCallback = searchParams.get('logout') === 'true';
-  if (isLogoutCallback && status !== 'authenticated') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="relative sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full animate-ping"></div>
-            </div>
-          </div>
-
-          <h1 className="mt-6 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Successfully Signed Out
-          </h1>
-          <p className="mt-4 text-center text-lg text-gray-600 dark:text-gray-300">
-            You have been safely logged out of your account.
-          </p>
-
-          <div className="mt-8 space-y-4">
-            <Link
-              href="/auth/signin"
-              className="group w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-[1.02] transition-all duration-200"
-            >
-              Sign In Again
-            </Link>
-            <Link
-              href="/"
-              onClick={() => window.history.replaceState({}, '', '/')}
-              className="group w-full flex justify-center py-3 px-4 border border-gray-300/50 dark:border-gray-600/50 rounded-xl shadow-lg text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform hover:scale-[1.02] transition-all duration-200"
-            >
-              Back to Home
-            </Link>
-          </div>
-
-          <div className="mt-6 bg-green-50/80 dark:bg-green-900/20 backdrop-blur-sm py-4 px-6 rounded-xl border border-green-200/50 dark:border-green-700/50">
-            <p className="text-sm text-green-800 dark:text-green-200 text-center">
-              🔒 Your session has been securely terminated and all tokens have been cleared.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* Logout Success Banner */}
+      {showLogoutMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-300">
+          <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg px-6 py-3 shadow-lg backdrop-blur-sm">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="text-green-800 dark:text-green-200 font-medium">Successfully signed out</p>
+              <button
+                onClick={() => setShowLogoutMessage(false)}
+                className="ml-4 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-20 h-20 bg-blue-200 dark:bg-blue-800 rounded-full opacity-20 animate-pulse"></div>

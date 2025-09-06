@@ -711,6 +711,228 @@ class HybridElectricityTokensService {
     }
   }
 
+  async runDatabaseMigrations() {
+    return new Promise((resolve, reject) => {
+      this.log('Running database migrations...');
+
+      // Check if we should skip migrations based on environment
+      if (process.env.SKIP_MIGRATIONS === 'true') {
+        this.log('Skipping database migrations (SKIP_MIGRATIONS=true)');
+        resolve();
+        return;
+      }
+
+      const { spawn } = require('child_process');
+      
+      // First check migration status to see what needs to be applied
+      this.log('Checking migration status...');
+      const statusProcess = spawn('npx', ['prisma', 'migrate', 'status'], {
+        cwd: this.appRoot,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        shell: true,
+        env: {
+          ...process.env,
+          NODE_ENV: 'development',
+        },
+      });
+
+      let statusOutput = '';
+      statusProcess.stdout.on('data', (data) => {
+        const output = data.toString();
+        statusOutput += output;
+        output.split('\n').forEach((line) => {
+          if (line.trim()) {
+            this.log(`[MIGRATION STATUS] ${line.trim()}`);
+          }
+        });
+      });
+
+      statusProcess.stderr.on('data', (data) => {
+        const output = data.toString();
+        statusOutput += output;
+        output.split('\n').forEach((line) => {
+          if (line.trim()) {
+            this.log(`[MIGRATION STATUS] ${line.trim()}`);
+          }
+        });
+      });
+
+      statusProcess.on('close', (code) => {
+        this.log('Now applying any pending migrations...');
+        this.log('Executing: npx prisma migrate deploy');
+        
+        const migrationProcess = spawn('npx', ['prisma', 'migrate', 'deploy'], {
+          cwd: this.appRoot,
+          stdio: ['ignore', 'pipe', 'pipe'],
+          shell: true, // Use shell for Windows compatibility
+          env: {
+            ...process.env,
+            NODE_ENV: 'development',
+          },
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        migrationProcess.stdout.on('data', (data) => {
+          const output = data.toString();
+          stdout += output;
+          // Log migration output in real-time
+          output.split('\n').forEach((line) => {
+            if (line.trim()) {
+              this.log(`[MIGRATION] ${line.trim()}`);
+            }
+          });
+        });
+
+        migrationProcess.stderr.on('data', (data) => {
+          const output = data.toString();
+          stderr += output;
+          // Log migration errors in real-time
+          output.split('\n').forEach((line) => {
+            if (line.trim()) {
+              this.log(`[MIGRATION ERROR] ${line.trim()}`, 'WARN');
+            }
+          });
+        });
+
+        // Set a timeout for migrations (5 minutes max)
+        const timeout = setTimeout(() => {
+          migrationProcess.kill('SIGTERM');
+          reject(new Error('Database migration timeout after 5 minutes'));
+        }, 5 * 60 * 1000);
+
+        migrationProcess.on('close', (code) => {
+          clearTimeout(timeout);
+          if (code === 0) {
+            this.log('✅ Database migrations completed successfully');
+            this.log('Regenerating Prisma client...');
+            
+            // Generate Prisma client after successful migration
+            const generateProcess = spawn('npx', ['prisma', 'generate'], {
+              cwd: this.appRoot,
+              stdio: ['ignore', 'pipe', 'pipe'],
+              shell: true,
+              env: {
+                ...process.env,
+                NODE_ENV: 'development',
+              },
+            });
+
+            generateProcess.stdout.on('data', (data) => {
+              const output = data.toString();
+              output.split('\n').forEach((line) => {
+                if (line.trim()) {
+                  this.log(`[PRISMA GENERATE] ${line.trim()}`);
+                }
+              });
+            });
+
+            generateProcess.stderr.on('data', (data) => {
+              const output = data.toString();
+              output.split('\n').forEach((line) => {
+                if (line.trim()) {
+                  this.log(`[PRISMA GENERATE ERROR] ${line.trim()}`, 'WARN');
+                }
+              });
+            });
+
+            generateProcess.on('close', (generateCode) => {
+              if (generateCode === 0) {
+                this.log('✅ Prisma client regenerated successfully');
+                resolve();
+              } else {
+                this.log('❌ Prisma client generation failed', 'ERROR');
+                reject(new Error(`Prisma generate failed with code ${generateCode}`));
+              }
+            });
+          } else {
+            // Check if this is a P3005 error (database not empty, needs baseline)
+            if (stderr.includes('P3005') && stderr.includes('migrate-baseline')) {
+              this.log('⚠️  Database needs baselining for existing production data');
+              this.log('🔧 Attempting automatic baseline...');
+              this.handleBaseline().then(() => {
+                this.log('✅ Baseline completed, retrying migration...');
+                // Retry the migration after baseline
+                this.runDatabaseMigrations().then(resolve).catch(reject);
+              }).catch((baselineError) => {
+                this.log('❌ Automatic baseline failed', 'ERROR');
+                reject(new Error(`Baseline failed: ${baselineError.message}`));
+              });
+            } else {
+              this.log('❌ Database migration failed', 'ERROR');
+              reject(new Error(`Database migration failed with code ${code}. STDERR: ${stderr}`));
+            }
+          }
+        });
+
+        migrationProcess.on('error', (err) => {
+          clearTimeout(timeout);
+          const error = `Failed to run database migrations: ${err.message}`;
+          this.log(error, 'ERROR');
+          reject(new Error(error));
+        });
+      });
+    });
+  }
+
+  async handleBaseline() {
+    return new Promise((resolve, reject) => {
+      this.log('Baselining existing database...');
+      
+      const { spawn } = require('child_process');
+      
+      // List of baseline migrations to mark as applied
+      const baselineMigrations = [
+        '20250706132952_init',
+        '20250706215039_add_user_theme_preference', 
+        '20250707201336_add_last_login_at',
+        '20250708004551_add_metadata_to_audit_log',
+        '20250708005417_add_cascade_delete_to_audit_logs',
+        '20250708120000_add_performance_indexes'
+      ];
+      
+      let migrationIndex = 0;
+      
+      const resolveNextMigration = () => {
+        if (migrationIndex >= baselineMigrations.length) {
+          this.log('✅ All baseline migrations resolved');
+          resolve();
+          return;
+        }
+        
+        const migration = baselineMigrations[migrationIndex];
+        this.log(`Marking migration as applied: ${migration}`);
+        
+        const resolveProcess = spawn('npx', ['prisma', 'migrate', 'resolve', '--applied', migration], {
+          cwd: this.appRoot,
+          stdio: ['ignore', 'pipe', 'pipe'],
+          shell: true,
+          env: {
+            ...process.env,
+            NODE_ENV: 'development',
+          },
+        });
+        
+        resolveProcess.on('close', (code) => {
+          if (code === 0) {
+            this.log(`✅ ${migration} marked as applied`);
+            migrationIndex++;
+            resolveNextMigration();
+          } else {
+            reject(new Error(`Failed to resolve migration ${migration} with code ${code}`));
+          }
+        });
+        
+        resolveProcess.on('error', (err) => {
+          reject(new Error(`Failed to resolve migration ${migration}: ${err.message}`));
+        });
+      };
+      
+      resolveNextMigration();
+    });
+  }
+
   async verifyNextJsStarted() {
     this.log('Verifying Next.js is listening on port...');
 
@@ -787,8 +1009,11 @@ class HybridElectricityTokensService {
       // Verify Next.js binary is available
       await this.verifyNextJsAvailable();
 
+      // Run database migrations before starting the application
+      await this.runDatabaseMigrations();
+
       this.log(
-        'Production build verified. Starting Next.js application directly...'
+        'Production build and database verified. Starting Next.js application directly...'
       );
 
       // Start Next.js directly using node, not npm

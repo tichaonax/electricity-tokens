@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 function SignInContent() {
+
   // Dark mode detection and application
   useEffect(() => {
     const applyTheme = () => {
@@ -52,6 +53,13 @@ function SignInContent() {
     if (message === 'password-changed') {
       setSuccess('Password changed successfully. Please sign in with your new password.');
     }
+    
+    // Remove callback URL parameters from the URL
+    if (searchParams.has('callbackUrl')) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('callbackUrl');
+      window.history.replaceState({}, '', newUrl.pathname + newUrl.search);
+    }
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,21 +69,28 @@ function SignInContent() {
     setSuccess('');
 
     try {
+      console.log('FORM DEBUG - Attempting login with email:', email);
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
+        callbackUrl: '/dashboard', // Explicitly set clean callback URL
       });
 
+      console.log('FORM DEBUG - SignIn result:', result);
       if (result?.error) {
+        console.log('FORM DEBUG - Login error:', result.error);
         setError('Invalid credentials');
       } else {
+        console.log('FORM DEBUG - Login successful, checking session');
         // Check if user needs to reset password
         const session = await getSession();
         if (session?.user?.passwordResetRequired) {
-          router.push('/auth/change-password');
+          // Use router.replace to prevent back navigation issues
+          router.replace('/auth/change-password');
         } else {
-          router.push('/dashboard');
+          // Use router.replace to clean up the URL and go to dashboard
+          router.replace('/dashboard');
         }
       }
     } catch {

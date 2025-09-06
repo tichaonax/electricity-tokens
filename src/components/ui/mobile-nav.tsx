@@ -13,6 +13,7 @@ import {
   LogOut,
   User,
   ChevronRight,
+  ChevronDown,
   HelpCircle,
   UserCog,
 } from 'lucide-react';
@@ -40,6 +41,7 @@ interface MobileNavProps {
 export function MobileNav({ isAdmin = false }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const { data: session } = useSession();
 
   // Ensure component is mounted before rendering
@@ -48,11 +50,31 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
   }, []);
 
   const toggleNav = () => setIsOpen(!isOpen);
-  const closeNav = () => setIsOpen(false);
+  const closeNav = () => {
+    setIsOpen(false);
+    setExpandedItems(new Set()); // Reset expanded items when closing nav
+  };
+
+  const toggleSubmenu = (index: number) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/?logout=true' });
+    // Set flag in sessionStorage to show logout message
+    sessionStorage.setItem('justLoggedOut', 'true');
+    // Use redirect: false and manually redirect to avoid NextAuth overrides
+    await signOut({ redirect: false });
     closeNav();
+    // Manually redirect to homepage
+    window.location.href = '/';
   };
 
   const mainNavItems = [
@@ -151,10 +173,11 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
 
         {/* Slide-out panel */}
         <div
-          className="relative flex flex-col w-80 max-w-xs bg-white dark:bg-gray-800 backdrop-blur-md h-full shadow-2xl overflow-hidden max-h-screen border-r border-gray-200/50 dark:border-gray-700/50 min-h-screen"
+          className="relative flex flex-col w-80 max-w-xs bg-white dark:bg-gray-800 backdrop-blur-md shadow-2xl overflow-hidden border-r border-gray-200/50 dark:border-gray-700/50"
           style={{
             height: '100vh',
             minHeight: '100vh',
+            maxHeight: '100vh',
             backgroundColor: 'rgba(255, 255, 255, 0.98)',
             ...(typeof document !== 'undefined' &&
             document.documentElement.classList.contains('dark')
@@ -185,12 +208,11 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
 
           {/* Scrollable content area */}
           <div
-            className="flex-1 overflow-y-auto overscroll-contain min-h-0 h-full"
+            className="flex-1 overflow-y-auto overscroll-contain"
             style={{
-              flex: '1 1 auto',
+              flex: '1 1 0',
               minHeight: '0px',
-              height: 'auto',
-              display: 'block',
+              maxHeight: 'calc(100vh - 140px)',
             }}
           >
             <div className="pb-6 space-y-0">
@@ -215,7 +237,11 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
                               ? 'destructive'
                               : 'secondary'
                           }
-                          className="text-xs"
+                          className={`text-xs font-medium ${
+                            session.user.role === 'ADMIN' 
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 border-red-200 dark:border-red-800' 
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                          }`}
                         >
                           {session.user.role}
                         </Badge>
@@ -241,20 +267,39 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
                     </p>
                     {mainNavItems.map((item, index) => (
                       <div key={index}>
-                        <NavigationFormButton
-                          action={item.action}
-                          className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
-                        >
-                          <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
-                          {item.label}
-                          {item.subItems && (
-                            <ChevronRight className="ml-auto h-4 w-4 text-gray-400 dark:text-gray-500" />
-                          )}
-                        </NavigationFormButton>
+                        {item.subItems ? (
+                          // Items with submenu - use button for toggle
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleSubmenu(index);
+                            }}
+                            className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
+                          >
+                            <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
+                            {item.label}
+                            <ChevronDown 
+                              className={`ml-auto h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+                                expandedItems.has(index) ? 'rotate-180' : ''
+                              }`} 
+                            />
+                          </button>
+                        ) : (
+                          // Items without submenu - use NavigationFormButton
+                          <NavigationFormButton
+                            action={item.action}
+                            className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
+                          >
+                            <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400" />
+                            {item.label}
+                          </NavigationFormButton>
+                        )}
 
                         {/* Sub-navigation */}
-                        {item.subItems && (
-                          <div className="ml-8 mt-1 space-y-1">
+                        {item.subItems && expandedItems.has(index) && (
+                          <div className="ml-8 mt-1 space-y-1 animate-in slide-in-from-top-2 duration-200">
                             {item.subItems.map((subItem, subIndex) => (
                               <NavigationFormButton
                                 key={subIndex}
@@ -302,6 +347,17 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
                 </NavigationFormButton>
               </div>
 
+              {/* Sign Out Button in main area for better visibility */}
+              <div className="px-2 mb-4">
+                <button
+                  onClick={handleSignOut}
+                  className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 rounded-md hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500 active:bg-red-100 dark:active:bg-red-900/30 transition-colors border border-red-200 dark:border-red-700/50"
+                >
+                  <LogOut className="mr-3 h-5 w-5 text-red-500 dark:text-red-400 group-hover:text-red-600 dark:group-hover:text-red-300" />
+                  Sign Out
+                </button>
+              </div>
+
               {/* Theme Toggle */}
               <div className="mt-4">
                 <ThemeToggle />
@@ -313,12 +369,12 @@ export function MobileNav({ isAdmin = false }: MobileNavProps) {
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
+          <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 bg-white dark:bg-gray-800">
             <button
               onClick={handleSignOut}
-              className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:bg-gray-200 dark:active:bg-gray-500 transition-colors"
+              className="group flex items-center w-full min-h-[44px] px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 rounded-md hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500 active:bg-red-100 dark:active:bg-red-900/30 transition-colors border border-red-200 dark:border-red-700/50"
             >
-              <LogOut className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400 dark:text-gray-500" />
+              <LogOut className="mr-3 h-5 w-5 text-red-500 dark:text-red-400 group-hover:text-red-600 dark:group-hover:text-red-300" />
               Sign Out
             </button>
           </div>

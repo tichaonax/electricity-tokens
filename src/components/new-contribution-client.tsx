@@ -37,7 +37,8 @@ export function NewContributionClient() {
   }
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
+    await signOut({ redirect: false });
+    window.location.href = '/';
   };
 
   const handleSubmit = async (data: CreateUserContributionInput) => {
