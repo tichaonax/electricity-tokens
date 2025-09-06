@@ -44,3 +44,16 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Database backups
+/backups/
+*.sql
+
+# Logs
+/logs/
+
+# Windows service daemon files
+/scripts/windows-service/daemon/
+
+# Build info files (environment-specific)
+/public/build-info.json
