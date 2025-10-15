@@ -1,0 +1,40 @@
+#!/bin/bash
+# Git post-checkout hook for Electricity Tokens Tracker
+# Runs when switching branches or checking out commits
+
+# Only run on branch switches, not file checkouts
+if [ "$3" = "1" ]; then
+    echo "🔀 Branch switched - running post-checkout routine..."
+    
+    # Get the root directory of the repository
+    REPO_ROOT=$(git rev-parse --show-toplevel)
+    cd "$REPO_ROOT"
+    
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🔄 Post-checkout: checking dependencies and build..."
+    
+    # Check if package.json or package-lock.json changed
+    if git diff --name-only "$1" "$2" | grep -E "(package\.json|package-lock\.json)" >/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] 📦 Dependencies changed, running npm install..."
+        npm install
+    fi
+    
+    # Check if database schema changed
+    if git diff --name-only "$1" "$2" | grep -E "(prisma/|migrations/)" >/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🗃️  Database schema changed, running migrations..."
+        npm run db:setup-auto || echo "⚠️  Database setup had issues"
+    fi
+    
+    # Check if source code changed significantly
+    if git diff --name-only "$1" "$2" | grep -E "\.(ts|tsx|js|jsx)$" >/dev/null; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🔨 Source code changed, rebuilding..."
+        npm run build
+        
+        # Restart service if it's running and we have admin privileges
+        if net session >/dev/null 2>&1; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ♻️  Restarting service..."
+            npm run sync-service:restart || echo "⚠️  Service restart had issues"
+        fi
+    fi
+    
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✅ Post-checkout routine completed!"
+fi

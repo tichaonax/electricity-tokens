@@ -36,3 +36,20 @@ This project uses a **Hybrid Service Architecture** for reliable Windows service
 
 ### When Making Service Changes:
 Always test on the deployment machine with Administrator privileges. The hybrid service solves the critical issue where `npm run service:stop` would report success but leave Node.js processes running on port 3000.
+
+## Database Management
+**CRITICAL RULE: Never modify the database manually. Always create migrations.**
+
+### Database Change Process:
+1. **Never make manual database changes** - Always use Prisma migrations
+2. **Create migrations for all schema changes** - Use `npx prisma migrate dev --name descriptive_name`
+3. **Test migrations thoroughly** - Ensure they work on clean databases and existing ones
+4. **Consolidate related changes** - Before production deployment, consolidate multiple related migrations into a single migration if needed
+5. **Migrations must be idempotent** - They should handle cases where changes already exist
+
+### Migration Commands:
+- `npx prisma migrate dev --name migration_name` - Create and apply new migration (development)
+- `npx prisma migrate deploy` - Apply pending migrations (production)  
+- `npx prisma migrate status` - Check migration status
+- `npx prisma migrate resolve --applied migration_name` - Mark migration as applied
+- `npx prisma migrate resolve --rolled-back migration_name` - Mark failed migration as rolled back

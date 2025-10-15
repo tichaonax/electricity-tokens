@@ -1,0 +1,118 @@
+#!/bin/bash
+# Git post-merge hook for Electricity Tokens Tracker
+# Automatically runs installation/update routines after git pull/merge
+
+echo "🔄 Post-merge hook triggered - checking for updates..."
+
+# Get the root directory of the repository
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+# Check if this is running on Windows (adjust paths accordingly)
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    NODE_CMD="node.exe"
+    NPM_CMD="npm.cmd"
+else
+    NODE_CMD="node"
+    NPM_CMD="npm"
+fi
+
+# Function to log with timestamp
+log_with_timestamp() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Function to check if running as admin (Windows)
+check_admin() {
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        # Check if running as admin on Windows
+        if ! net session >/dev/null 2>&1; then
+            log_with_timestamp "⚠️  Warning: Not running as Administrator. Some operations may fail."
+            log_with_timestamp "💡 Tip: Run 'git pull' from an Administrator terminal for full functionality."
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# Function to run npm command safely
+run_npm() {
+    log_with_timestamp "Running: $NPM_CMD $*"
+    if ! $NPM_CMD "$@"; then
+        log_with_timestamp "❌ Failed: $NPM_CMD $*"
+        return 1
+    fi
+    return 0
+}
+
+# Main installation routine
+main() {
+    log_with_timestamp "🚀 Starting post-merge installation routine..."
+    
+    # Check admin privileges
+    IS_ADMIN=true
+    if ! check_admin; then
+        IS_ADMIN=false
+    fi
+    
+    # 1. Install/Update dependencies
+    log_with_timestamp "📦 Installing/updating dependencies..."
+    if ! run_npm install; then
+        log_with_timestamp "❌ Dependency installation failed!"
+        exit 1
+    fi
+    
+    # 2. Run database migrations and setup
+    log_with_timestamp "🗃️  Running database setup and migrations..."
+    if ! run_npm run db:setup-auto; then
+        log_with_timestamp "⚠️  Database setup had issues, continuing..."
+    fi
+    
+    # 3. Build the application
+    log_with_timestamp "🔨 Building application..."
+    if ! run_npm run build; then
+        log_with_timestamp "❌ Build failed!"
+        exit 1
+    fi
+    
+    # 4. Service management (only if admin)
+    if [ "$IS_ADMIN" = true ]; then
+        log_with_timestamp "🔧 Managing Windows service..."
+        
+        # Check if service is installed
+        if $NPM_CMD run service:diagnose >/dev/null 2>&1; then
+            log_with_timestamp "♻️  Service exists, performing smart restart..."
+            if ! run_npm run sync-service:restart; then
+                log_with_timestamp "⚠️  Service restart had issues, trying manual restart..."
+                run_npm run service:stop || true
+                sleep 3
+                run_npm run service:start || true
+            fi
+        else
+            log_with_timestamp "📥 Installing service for the first time..."
+            if ! run_npm run setup:complete; then
+                log_with_timestamp "❌ Service installation failed!"
+                exit 1
+            fi
+        fi
+        
+        # Verify service is healthy
+        log_with_timestamp "🏥 Verifying service health..."
+        if ! run_npm run health:check; then
+            log_with_timestamp "⚠️  Service health check failed, but continuing..."
+        fi
+    else
+        log_with_timestamp "⚠️  Skipping service management (requires admin privileges)"
+        log_with_timestamp "💡 Run 'npm run setup:complete' as Administrator to install/update the service"
+    fi
+    
+    log_with_timestamp "✅ Post-merge installation routine completed!"
+    log_with_timestamp "🌐 Application should be available at: http://localhost:3000"
+    
+    if [ "$IS_ADMIN" = true ]; then
+        log_with_timestamp "🔍 Run 'npm run service:diagnose' to check service status"
+    fi
+}
+
+# Run main function
+main "$@"

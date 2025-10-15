@@ -57,3 +57,6 @@ next-env.d.ts
 
 # Build info files (environment-specific)
 /public/build-info.json
+
+# Distribution files
+/dist

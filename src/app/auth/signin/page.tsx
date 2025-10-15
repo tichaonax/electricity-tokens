@@ -6,20 +6,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 function SignInContent() {
-
   // Dark mode detection and application
   useEffect(() => {
     const applyTheme = () => {
       const savedTheme = localStorage.getItem('theme');
       const root = document.documentElement;
-      
+
       // Remove existing theme classes
       root.classList.remove('light', 'dark');
-      
+
       if (savedTheme === 'dark') {
         root.classList.add('dark');
       } else if (savedTheme === 'system' || !savedTheme) {
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const systemDark = window.matchMedia(
+          '(prefers-color-scheme: dark)'
+        ).matches;
         if (systemDark) {
           root.classList.add('dark');
         }
@@ -36,7 +37,7 @@ function SignInContent() {
         applyTheme();
       }
     };
-    
+
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
@@ -51,9 +52,11 @@ function SignInContent() {
   useEffect(() => {
     const message = searchParams.get('message');
     if (message === 'password-changed') {
-      setSuccess('Password changed successfully. Please sign in with your new password.');
+      setSuccess(
+        'Password changed successfully. Please sign in with your new password.'
+      );
     }
-    
+
     // Remove callback URL parameters from the URL
     if (searchParams.has('callbackUrl')) {
       const newUrl = new URL(window.location.href);
@@ -85,12 +88,23 @@ function SignInContent() {
         console.log('FORM DEBUG - Login successful, checking session');
         // Check if user needs to reset password
         const session = await getSession();
+        console.log('FORM DEBUG - Session after login:', session);
         if (session?.user?.passwordResetRequired) {
+          console.log(
+            'FORM DEBUG - Password reset required, redirecting to change-password'
+          );
           // Use router.replace to prevent back navigation issues
           router.replace('/auth/change-password');
         } else {
+          console.log('FORM DEBUG - Redirecting to dashboard');
           // Use router.replace to clean up the URL and go to dashboard
           router.replace('/dashboard');
+
+          // Alternative approach if router.replace fails
+          setTimeout(() => {
+            console.log('FORM DEBUG - Fallback redirect using window.location');
+            window.location.href = '/dashboard';
+          }, 1000);
         }
       }
     } catch {
@@ -154,11 +168,15 @@ function SignInContent() {
           </div>
 
           {error && (
-            <div className="text-red-600 dark:text-red-400 text-sm text-center">{error}</div>
+            <div className="text-red-600 dark:text-red-400 text-sm text-center">
+              {error}
+            </div>
           )}
 
           {success && (
-            <div className="text-green-600 dark:text-green-400 text-sm text-center">{success}</div>
+            <div className="text-green-600 dark:text-green-400 text-sm text-center">
+              {success}
+            </div>
           )}
 
           <div>
@@ -178,7 +196,13 @@ function SignInContent() {
 
 export default function SignIn() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div>
+        </div>
+      }
+    >
       <SignInContent />
     </Suspense>
   );

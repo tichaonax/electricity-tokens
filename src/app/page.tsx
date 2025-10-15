@@ -6,7 +6,7 @@ import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 
 function HomeContent() {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const router = useRouter();
   const [showLogoutMessage, setShowLogoutMessage] = useState(false);
 
@@ -16,22 +16,23 @@ function HomeContent() {
     if (justLoggedOut === 'true') {
       setShowLogoutMessage(true);
       sessionStorage.removeItem('justLoggedOut'); // Clean up
-      
+
       // Auto-hide logout message after 5 seconds
       const timer = setTimeout(() => {
         setShowLogoutMessage(false);
       }, 5000);
-      
+
       return () => clearTimeout(timer);
     }
   }, []);
 
-  useEffect(() => {
-    // Only redirect to dashboard if authenticated and not showing logout message
-    if (status === 'authenticated' && !showLogoutMessage) {
-      router.push('/dashboard');
-    }
-  }, [status, router, showLogoutMessage]);
+  // Removed auto-redirect to allow viewing the welcome page
+  // useEffect(() => {
+  //   // Only redirect to dashboard if authenticated and not showing logout message
+  //   if (status === 'authenticated' && !showLogoutMessage) {
+  //     router.push('/dashboard');
+  //   }
+  // }, [status, router, showLogoutMessage]);
 
   if (status === 'loading') {
     return (
@@ -48,16 +49,38 @@ function HomeContent() {
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-300">
           <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg px-6 py-3 shadow-lg backdrop-blur-sm">
             <div className="flex items-center space-x-2">
-              <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-5 h-5 text-green-600 dark:text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
-              <p className="text-green-800 dark:text-green-200 font-medium">Successfully signed out</p>
+              <p className="text-green-800 dark:text-green-200 font-medium">
+                Successfully signed out
+              </p>
               <button
                 onClick={() => setShowLogoutMessage(false)}
                 className="ml-4 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -114,48 +137,107 @@ function HomeContent() {
       <div className="relative mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-gray-200/50 dark:border-gray-700/50 transform hover:scale-[1.02] transition-all duration-300">
           <div className="space-y-4">
-            <Link
-              href="/auth/signin"
-              className="group w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-700 dark:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transform hover:scale-[1.02] transition-all duration-200"
-            >
-              <span className="flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2 group-hover:animate-pulse"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {status === 'authenticated' ? (
+              // Show dashboard link for authenticated users
+              <>
+                <div className="text-center mb-4">
+                  <p className="text-green-600 dark:text-green-400 font-medium">
+                    ✅ You are signed in!
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Welcome back, {session?.user?.name || session?.user?.email}
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard"
+                  className="group w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-700 dark:to-emerald-700 dark:hover:from-green-600 dark:hover:to-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800 transform hover:scale-[1.02] transition-all duration-200"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                  />
-                </svg>
-                Sign In
-              </span>
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="group w-full flex justify-center py-3 px-4 border border-gray-300/50 dark:border-gray-600/50 rounded-xl shadow-lg text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transform hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm"
-            >
-              <span className="flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2 group-hover:animate-pulse"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  <span className="flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2 group-hover:animate-pulse"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2v0a2 2 0 002-2h14a2 2 0 012 2z"
+                      />
+                    </svg>
+                    Go to Dashboard
+                  </span>
+                </Link>
+                <Link
+                  href="/api/auth/signout"
+                  className="group w-full flex justify-center py-3 px-4 border border-gray-300/50 dark:border-gray-600/50 rounded-xl shadow-lg text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transform hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                  />
-                </svg>
-                Create Account
-              </span>
-            </Link>
+                  <span className="flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2 group-hover:animate-pulse"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      />
+                    </svg>
+                    Sign Out
+                  </span>
+                </Link>
+              </>
+            ) : (
+              // Show sign in/up options for unauthenticated users
+              <>
+                <Link
+                  href="/auth/signin"
+                  className="group w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-700 dark:to-indigo-700 dark:hover:from-blue-600 dark:hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transform hover:scale-[1.02] transition-all duration-200"
+                >
+                  <span className="flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2 group-hover:animate-pulse"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                      />
+                    </svg>
+                    Sign In
+                  </span>
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="group w-full flex justify-center py-3 px-4 border border-gray-300/50 dark:border-gray-600/50 rounded-xl shadow-lg text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-600/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transform hover:scale-[1.02] transition-all duration-200 backdrop-blur-sm"
+                >
+                  <span className="flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2 group-hover:animate-pulse"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                      />
+                    </svg>
+                    Create Account
+                  </span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -278,11 +360,13 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-500"></div>
+        </div>
+      }
+    >
       <HomeContent />
     </Suspense>
   );
