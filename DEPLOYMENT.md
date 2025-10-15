@@ -41,13 +41,28 @@ This comprehensive guide covers fresh installations, upgrades, and deployment op
 
 ### Quick Installation (One Command)
 
-**Run as Administrator:**
+**Prerequisites:**
+
+1. **Run as Administrator** (required for Windows service installation)
+2. **Create `.env` file** with your database configuration (see Step 3 below)
+
+**Installation:**
 
 ```bash
 git clone https://github.com/tichaonax/electricity-tokens.git
 cd electricity-tokens
+# Create and configure .env file (see Step 3 below for details)
 npm run install:auto
 ```
+
+**⚠️ Important**: The `.env` file MUST be created with proper database credentials before running `install:auto`, or the installation will fail.
+
+**Why `.env` is Required First:**
+
+- The installer will create a basic `.env` with placeholder values if none exists
+- However, installation will immediately fail due to invalid database credentials
+- You'll need to edit the `.env` and re-run the installation
+- It's faster to create the correct `.env` file upfront
 
 This automatically handles:
 
@@ -57,6 +72,20 @@ This automatically handles:
 - ✅ **Service**: Windows service installation (silent operation)
 - ✅ **Monitoring**: Health monitoring with auto-restart
 - ✅ **Git Hooks**: Automatic updates on git pull
+
+### Installation Order Summary
+
+**Correct Order:**
+
+1. ✅ Clone repository
+2. ✅ Create database (PostgreSQL/MySQL)
+3. ✅ **Create `.env` file with real credentials**
+4. ✅ Run `npm run install:auto` (as Administrator)
+5. ✅ Verify installation with `npm run service:diagnose`
+
+**Common Mistake:**
+❌ Running `npm run install:auto` without creating `.env` first
+→ Results in installation failure and requires re-running after `.env` creation
 
 ### Detailed Installation Steps
 
@@ -69,7 +98,14 @@ npm --version   # Should be v8.0.0+
 git --version   # Any recent version
 ```
 
-#### Step 2: Database Setup
+#### Step 2: Clone Repository
+
+```bash
+git clone https://github.com/tichaonax/electricity-tokens.git
+cd electricity-tokens
+```
+
+#### Step 3: Database Setup
 
 Create production database:
 
@@ -80,9 +116,9 @@ CREATE USER electricity_user WITH PASSWORD 'secure_password';
 GRANT ALL PRIVILEGES ON DATABASE electricity_tokens TO electricity_user;
 ```
 
-#### Step 3: Environment Configuration
+#### Step 4: Environment Configuration
 
-Create `.env` file in root directory:
+**⚠️ CRITICAL**: Create `.env` file in root directory **BEFORE** running installation:
 
 ```env
 # Database Configuration (REQUIRED)
@@ -108,7 +144,24 @@ AUDIT_USER_AGENT_TRACKING=true
 DB_SCHEMA_VERSION="1.4.0"
 ```
 
-#### Step 4: Installation Verification
+#### Step 5: Run Automated Installation
+
+**Run as Administrator:**
+
+```bash
+npm run install:auto
+```
+
+This will automatically:
+
+- Install all dependencies
+- Set up database schema and run migrations
+- Build the production application
+- Install and configure Windows service
+- Set up health monitoring
+- Install Git hooks for automatic updates
+
+#### Step 6: Installation Verification
 
 ```bash
 # Verify complete installation
@@ -766,6 +819,8 @@ type logs\hybrid-service.log
 
 #### 2. Database Connection Issues
 
+````bash
+#### 2. Database Connection Issues
 ```bash
 # Test database connection
 npm run db:test
@@ -773,7 +828,35 @@ npm run db:test
 # Verify .env configuration
 # Check DATABASE_URL format
 # Ensure database server is running
+````
+
+#### 2a. Missing or Invalid .env File
+
+```bash
+# If installation fails with "DATABASE_URL not found"
+# 1. Check if .env file exists
+ls -la .env
+
+# 2. If missing, create it (see Step 4 above for template)
+# 3. Verify DATABASE_URL format:
+# postgresql://username:password@localhost:5432/database_name
+
+# 4. Test database connection
+npm run db:test
+
+# 5. Retry installation
+npm run install:auto
 ```
+
+**Common .env Issues:**
+
+- Missing `DATABASE_URL` environment variable
+- Incorrect database URL format (should be: `postgresql://user:pass@host:port/dbname`)
+- Database server not running or not accessible
+- Wrong database name, username, or password
+- Missing `NEXTAUTH_SECRET` (must be 32+ characters)
+
+````
 
 #### 3. Build Failures
 
@@ -782,7 +865,7 @@ npm run db:test
 rm -rf .next node_modules
 npm install
 npm run build
-```
+````
 
 #### 4. Port 3000 Already in Use
 
