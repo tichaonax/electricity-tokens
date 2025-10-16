@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model accounts {
+model Account {
   id                String  @id
   userId            String
   type              String
@@ -20,12 +20,13 @@ model accounts {
   scope             String?
   id_token          String?
   session_state     String?
-  users             users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
-model audit_logs {
+model AuditLog {
   id         String   @id
   userId     String
   action     String
@@ -35,10 +36,12 @@ model audit_logs {
   newValues  Json?
   metadata   Json?
   timestamp  DateTime @default(now())
-  users      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
 }
 
-model meter_readings {
+model MeterReading {
   id          String   @id
   userId      String
   reading     Float
@@ -46,79 +49,88 @@ model meter_readings {
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime
-  users       users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readingDate])
+  @@map("meter_readings")
 }
 
-model sessions {
+model Session {
   id           String   @id
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  users        users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
 }
 
-model token_purchases {
-  id                 String              @id
-  totalTokens        Float
-  totalPayment       Float
-  meterReading       Float
-  purchaseDate       DateTime
-  isEmergency        Boolean             @default(false)
-  createdBy          String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime
-  users              users               @relation(fields: [createdBy], references: [id])
-  user_contributions user_contributions?
+model TokenPurchase {
+  id                String             @id
+  totalTokens       Float
+  totalPayment      Float
+  meterReading      Float
+  purchaseDate      DateTime
+  isEmergency       Boolean            @default(false)
+  createdBy         String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  user              User               @relation(fields: [createdBy], references: [id])
+  userContribution  UserContribution?
+
+  @@map("token_purchases")
 }
 
-model user_contributions {
-  id                 String          @id
-  purchaseId         String          @unique
+model UserContribution {
+  id                 String        @id
+  purchaseId         String        @unique
   userId             String
   contributionAmount Float
   meterReading       Float
   tokensConsumed     Float
-  createdAt          DateTime        @default(now())
+  createdAt          DateTime      @default(now())
   updatedAt          DateTime
-  token_purchases    token_purchases @relation(fields: [purchaseId], references: [id])
-  users              users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenPurchase      TokenPurchase @relation(fields: [purchaseId], references: [id])
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_contributions")
 }
 
-model users {
-  id                    String               @id
-  email                 String               @unique
+model User {
+  id                    String             @id
+  email                 String             @unique
   name                  String
   password              String?
-  role                  Role                 @default(USER)
-  locked                Boolean              @default(false)
-  passwordResetRequired Boolean              @default(false)
+  role                  Role               @default(USER)
+  locked                Boolean            @default(false)
+  passwordResetRequired Boolean            @default(false)
   permissions           Json?
-  themePreference       String?              @default("system")
+  themePreference       String?            @default("system")
   lastLoginAt           DateTime?
-  createdAt             DateTime             @default(now())
+  createdAt             DateTime           @default(now())
   updatedAt             DateTime
-  isActive              Boolean              @default(true)
+  isActive              Boolean            @default(true)
   deactivatedAt         DateTime?
   deactivationReason    String?
   deactivatedBy         String?
-  accounts              accounts[]
-  audit_logs            audit_logs[]
-  meter_readings        meter_readings[]
-  sessions              sessions[]
-  token_purchases       token_purchases[]
-  user_contributions    user_contributions[]
+  accounts              Account[]
+  auditLogs             AuditLog[]
+  meterReadings         MeterReading[]
+  sessions              Session[]
+  tokenPurchases        TokenPurchase[]
+  userContributions     UserContribution[]
 
   @@index([isActive])
+  @@map("users")
 }
 
-model verification_tokens {
+model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 enum Role {
