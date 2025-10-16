@@ -35,7 +35,11 @@
       "Bash(git rm:*)",
       "Bash(dir)",
       "WebSearch",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(powershell:*)",
+      "Read(//c/Users/ticha/apps/multi-business-multi-apps/**)",
+      "Read(//c/Users/ticha/apps/multi-business-multi-apps/scripts/**)",
+      "Bash(timeout /t 10)"
     ],
     "deny": []
   }

@@ -195,9 +195,10 @@ node scripts/create-admin.js admin@your-domain.com "SecurePassword123"
 - ✅ **Silent Operation**: No terminal windows
 - ✅ **Auto-Start**: Starts with Windows
 - ✅ **Auto-Recovery**: Restarts on failures
-- ✅ **Health Monitoring**: Continuous monitoring every 30 seconds
-- ✅ **Smart Restart**: Proper shutdown timing
+- ✅ **Built-in Health Monitoring**: Self-monitoring every 30 seconds
+- ✅ **Smart Restart**: Automatic restart on consecutive failures
 - ✅ **Professional Logging**: Comprehensive logs
+- ✅ **Single Service**: No separate monitoring processes needed
 
 ---
 
@@ -739,19 +740,19 @@ npm run health:uninstall        # Remove health monitoring
 
 ### Service Architecture
 
-The application uses a **Hybrid Service Architecture**:
+The application uses a **Single Self-Monitoring Service Architecture**:
 
-1. **Primary Service**: Node.js application as Windows service
-2. **Health Monitor**: Separate monitoring process with auto-restart
+1. **Main Service**: Node.js application as Windows service with built-in health monitoring
+2. **Self-Monitoring**: Built-in health checks and auto-restart capability
 3. **Process Management**: Advanced PID tracking and cleanup
 4. **Logging System**: Comprehensive logging to files
 
 ### Service Logs
 
 - `logs/installation.log` - Installation process logs
+- `logs/service-install.log` - Service installation logs
+- `logs/service-wrapper-YYYY-MM-DD.log` - Daily service logs (includes built-in health monitoring)
 - `logs/hybrid-service.log` - Service management logs
-- `logs/health-monitor.log` - Health monitoring logs
-- `logs/service-wrapper-YYYY-MM-DD.log` - Daily service logs
 - `logs/db-setup.log` - Database setup logs
 
 ---
