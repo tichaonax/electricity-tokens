@@ -332,6 +332,36 @@ LOG_LEVEL="info"
     }
   }
 
+  async checkMigrationStatus() {
+    try {
+      const { stdout } = await execAsync('npx prisma migrate status', {
+        cwd: this.appRoot,
+        timeout: 15000,
+      });
+      return stdout;
+    } catch (error) {
+      // If status check fails, we'll assume migrations need to be handled
+      return null;
+    }
+  }
+
+  async isMigrationApplied(migrationName) {
+    try {
+      const status = await this.checkMigrationStatus();
+      if (status) {
+        // Check if migration is listed as applied or if there are no pending migrations
+        return (
+          status.includes(`✅ ${migrationName}`) ||
+          status.includes('Database schema is up to date!') ||
+          !status.includes(`❌ ${migrationName}`)
+        );
+      }
+      return false;
+    } catch (error) {
+      return false;
+    }
+  }
+
   async markMigrationsAsApplied() {
     this.log('🔧 Marking existing migrations as applied...');
 
@@ -350,6 +380,13 @@ LOG_LEVEL="info"
         .sort();
 
       for (const migration of migrations) {
+        // First check if migration is already applied
+        const isApplied = await this.isMigrationApplied(migration);
+        if (isApplied) {
+          this.log(`✅ Migration already applied: ${migration}`);
+          continue;
+        }
+
         try {
           await execAsync(
             `npx prisma migrate resolve --applied "${migration}"`,
@@ -360,11 +397,19 @@ LOG_LEVEL="info"
           );
           this.log(`✅ Marked migration as applied: ${migration}`);
         } catch (resolveError) {
-          // Non-critical - continue with other migrations
-          this.log(
-            `⚠️ Could not mark migration ${migration}: ${resolveError.message}`,
-            'WARN'
-          );
+          // Check if migration is already applied (P3008 error)
+          if (
+            resolveError.message.includes('P3008') ||
+            resolveError.message.includes('already recorded as applied')
+          ) {
+            this.log(`✅ Migration already applied: ${migration}`);
+          } else {
+            // Other errors are warnings but non-critical
+            this.log(
+              `⚠️ Could not mark migration ${migration}: ${resolveError.message}`,
+              'WARN'
+            );
+          }
         }
       }
     } catch (error) {
@@ -424,10 +469,19 @@ LOG_LEVEL="info"
           );
           this.log(`✅ Marked migration as applied: ${migration}`);
         } catch (resolveError) {
-          this.log(
-            `⚠️ Could not resolve migration ${migration}: ${resolveError.message}`,
-            'WARN'
-          );
+          // Check if migration is already applied (P3008 error)
+          if (
+            resolveError.message.includes('P3008') ||
+            resolveError.message.includes('already recorded as applied')
+          ) {
+            this.log(`✅ Migration already applied: ${migration}`);
+          } else {
+            // Other errors are warnings but non-critical
+            this.log(
+              `⚠️ Could not resolve migration ${migration}: ${resolveError.message}`,
+              'WARN'
+            );
+          }
         }
       }
 
