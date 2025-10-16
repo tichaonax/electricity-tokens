@@ -129,11 +129,9 @@ async function pushDatabaseSchema() {
   }
 
   try {
-    const { stdout, stderr } = await execAsync(
-      'npx prisma db push --force-reset'
-    );
-    log('✅ Database schema pushed successfully!', colors.green);
-    log('Tables created:', colors.green);
+    const { stdout, stderr } = await execAsync('npx prisma migrate deploy');
+    log('✅ Database migrations applied successfully!', colors.green);
+    log('Tables created/updated:', colors.green);
     log('  - users', colors.green);
     log('  - accounts', colors.green);
     log('  - sessions', colors.green);
@@ -147,7 +145,7 @@ async function pushDatabaseSchema() {
     }
     return true;
   } catch (error) {
-    log('❌ Failed to push database schema!', colors.red);
+    log('❌ Failed to apply database migrations!', colors.red);
     log(`Error: ${error.message}`, colors.red);
     return false;
   }

@@ -168,36 +168,23 @@ LOG_LEVEL="info"
   async testDatabaseConnection() {
     this.log('🔌 Testing database connection with multiple strategies...');
 
-    // Strategy 1: Quick connection test with introspection
+    // Strategy 1: Check migration status (safe, doesn't modify schema)
     try {
-      const { stdout, stderr } = await execAsync('npx prisma db pull --force', {
+      const { stdout, stderr } = await execAsync('npx prisma migrate status', {
         cwd: this.appRoot,
         timeout: 30000,
       });
 
-      this.log('✅ Database connection successful (introspection)');
-      return { exists: true, accessible: true, strategy: 'introspection' };
-    } catch (pullError) {
-      this.log(`⚠️ Introspection failed: ${pullError.message}`, 'WARN');
-    }
-
-    // Strategy 2: Test with db push dry run
-    try {
-      const { stdout, stderr } = await execAsync(
-        'npx prisma db push --dry-run',
-        {
-          cwd: this.appRoot,
-          timeout: 20000,
-        }
+      this.log('✅ Database connection successful (migration status)');
+      return { exists: true, accessible: true, strategy: 'migrate-status' };
+    } catch (statusError) {
+      this.log(
+        `⚠️ Migration status check failed: ${statusError.message}`,
+        'WARN'
       );
-
-      this.log('✅ Database connection successful (dry run)');
-      return { exists: true, accessible: true, strategy: 'dry-run' };
-    } catch (dryRunError) {
-      this.log(`⚠️ Dry run failed: ${dryRunError.message}`, 'WARN');
     }
 
-    // Strategy 3: Test basic Prisma generate (validates DATABASE_URL format)
+    // Strategy 2: Test basic Prisma generate (validates DATABASE_URL format)
     try {
       await execAsync('npx prisma generate', {
         cwd: this.appRoot,
@@ -226,78 +213,32 @@ LOG_LEVEL="info"
     this.log('🗃️ Ensuring database exists...');
 
     try {
-      // Try to create database using Prisma's db push (creates DB if not exists)
-      const { stdout, stderr } = await execAsync(
-        'npx prisma db push --accept-data-loss',
-        {
-          cwd: this.appRoot,
-          timeout: 60000,
-        }
-      );
+      // Use migrate deploy (safe, doesn't modify schema)
+      await execAsync('npx prisma migrate deploy', {
+        cwd: this.appRoot,
+        timeout: 60000,
+      });
 
-      this.log('✅ Database created/updated successfully');
+      this.log('✅ Database migrations applied successfully');
       return true;
-    } catch (error) {
-      // If db push fails, try migrate deploy
-      this.log('⚠️ db push failed, trying migrate deploy...', 'WARN');
-
-      try {
-        await execAsync('npx prisma migrate deploy', {
-          cwd: this.appRoot,
-          timeout: 60000,
-        });
-
-        this.log('✅ Database migrations applied successfully');
-        return true;
-      } catch (migrateError) {
-        this.log(
-          `❌ Both db push and migrate failed. Manual intervention required.`,
-          'ERROR'
-        );
-        this.log(
-          `💡 Check your DATABASE_URL and ensure the database server is running.`
-        );
-        throw new Error(`Database creation failed: ${error.message}`);
-      }
+    } catch (migrateError) {
+      this.log(
+        `❌ Database migration failed. Manual intervention required.`,
+        'ERROR'
+      );
+      this.log(
+        `💡 Check your DATABASE_URL and ensure the database server is running.`
+      );
+      throw new Error(`Database creation failed: ${migrateError.message}`);
     }
   }
 
   async runMigrations() {
-    this.log('🔄 Running database migrations with bulletproof strategy...');
+    this.log('🔄 Running database migrations...');
 
-    // Strategy 1: Try direct db push (bypasses migration status issues)
+    // Use migrate deploy (safe, doesn't modify schema)
     try {
-      this.log('🔄 Strategy 1: Direct schema push (bypasses migration issues)');
-
-      const { stdout, stderr } = await execAsync(
-        'npx prisma db push --accept-data-loss --skip-generate',
-        {
-          cwd: this.appRoot,
-          timeout: 120000,
-        }
-      );
-
-      this.log('✅ Database schema pushed successfully');
-
-      const clientGenerated = await this.generatePrismaClient();
-      if (!clientGenerated) {
-        this.log(
-          '⚠️ Prisma client generation skipped due to file locks - continuing anyway',
-          'WARN'
-        );
-      }
-
-      // Mark existing migrations as applied if they exist
-      await this.markMigrationsAsApplied();
-
-      return true;
-    } catch (dbPushError) {
-      this.log(`⚠️ Strategy 1 failed: ${dbPushError.message}`, 'WARN');
-    }
-
-    // Strategy 2: Try migrate deploy without status check
-    try {
-      this.log('🔄 Strategy 2: Direct migrate deploy (skip status check)');
+      this.log('🔄 Applying migrations with migrate deploy');
 
       const { stdout, stderr } = await execAsync('npx prisma migrate deploy', {
         cwd: this.appRoot,
@@ -316,19 +257,8 @@ LOG_LEVEL="info"
 
       return true;
     } catch (migrateError) {
-      this.log(`⚠️ Strategy 2 failed: ${migrateError.message}`, 'WARN');
-    }
-
-    // Strategy 3: Handle as fresh database with baseline
-    try {
-      this.log('🔄 Strategy 3: Fresh database setup with baseline');
-      return await this.handleFreshDatabaseSetup();
-    } catch (freshError) {
-      this.log(
-        `❌ All migration strategies failed: ${freshError.message}`,
-        'ERROR'
-      );
-      throw new Error(`Database migration failed: ${freshError.message}`);
+      this.log(`❌ Migration failed: ${migrateError.message}`, 'ERROR');
+      throw new Error(`Database migration failed: ${migrateError.message}`);
     }
   }
 
@@ -421,22 +351,19 @@ LOG_LEVEL="info"
   }
 
   async handleFreshDatabaseSetup() {
-    this.log('🔧 Setting up fresh database with complete schema...');
+    this.log('🔧 Setting up fresh database with migrations...');
 
     try {
-      // Force push the complete schema
-      await execAsync('npx prisma db push --accept-data-loss --force-reset', {
+      // Apply migrations (safe approach)
+      await execAsync('npx prisma migrate deploy', {
         cwd: this.appRoot,
         timeout: 120000,
       });
 
-      this.log('✅ Fresh database schema created');
+      this.log('✅ Fresh database migrations applied');
 
       // Generate client
       await this.generatePrismaClient();
-
-      // Mark all migrations as applied
-      await this.markMigrationsAsApplied();
 
       return true;
     } catch (error) {

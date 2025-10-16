@@ -121,8 +121,8 @@ class ComprehensiveInstaller {
         return false;
       }
 
-      // Try a simple Prisma command to check DB
-      await execAsync('npx prisma db pull --force', {
+      // Check database status using migration status (safe, doesn't modify schema)
+      await execAsync('npx prisma migrate status', {
         cwd: this.appRoot,
         timeout: 10000,
       });
@@ -572,17 +572,17 @@ class ComprehensiveInstaller {
       return false;
     }
 
-    this.log('🔧 Installing Windows service...');
+    this.log('🔧 Installing single self-monitoring Windows service...');
 
     try {
       return new Promise((resolve, reject) => {
         const serviceScript = path.join(
           __dirname,
           'windows-service',
-          'complete-service-setup.js'
+          'install-hybrid-service.js'
         );
 
-        const serviceProcess = spawn('node', [serviceScript, 'install'], {
+        const serviceProcess = spawn('node', [serviceScript], {
           cwd: this.appRoot,
           stdio: 'pipe',
           shell: true,
@@ -607,7 +607,7 @@ class ComprehensiveInstaller {
 
         serviceProcess.on('close', (code) => {
           if (code === 0) {
-            this.log('✅ Service installation completed');
+            this.log('✅ Self-monitoring service installation completed');
             resolve(true);
           } else {
             this.log('❌ Service installation failed', 'ERROR');
@@ -691,7 +691,7 @@ class ComprehensiveInstaller {
 
     // Check database
     try {
-      await execAsync('npx prisma db pull --force', {
+      await execAsync('npx prisma migrate status', {
         timeout: 10000,
       });
       checks.push({
@@ -1340,10 +1340,10 @@ DB_SCHEMA_VERSION="1.4.0"
     try {
       // Force regenerate Prisma client and try again
       await execAsync('npx prisma generate --force', { cwd: this.appRoot });
-      await execAsync('npx prisma db push --accept-data-loss', {
+      await execAsync('npx prisma migrate deploy', {
         cwd: this.appRoot,
       });
-      this.log('✅ Database setup recovered using force push');
+      this.log('✅ Database setup recovered using migrate deploy');
       return true;
     } catch (recoveryError) {
       this.log(
