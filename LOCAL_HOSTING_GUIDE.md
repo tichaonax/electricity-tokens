@@ -242,10 +242,10 @@ npm install
 
 ```cmd
 # Option 1: Interactive setup (recommended for first-time users)
-npm run db:setup
+npm run db:setup-auto
 
 # Option 2: Automated setup (for experienced users)
-npm run db:init
+npm run db:setup-auto
 
 # Option 3: Manual setup (if above commands fail)
 npx prisma generate

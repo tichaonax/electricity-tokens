@@ -23,14 +23,14 @@ Run the database initialization script:
 cd /path/to/electricity-tokens
 
 # Run the automated database setup
-npm run db:init
+npm run db:setup-auto
 ```
 
 This will:
 
 - Test database connection
 - Generate Prisma client
-- Create all required tables
+- Apply all migrations
 - Verify setup was successful
 
 ### Option 2: Manual Setup
@@ -41,22 +41,12 @@ If the automated script fails, run these commands manually:
 # Generate Prisma client
 npx prisma generate
 
-# Create database tables
-npx prisma db push --accept-data-loss
+# Apply migrations (safe, doesn't modify schema)
+npx prisma migrate deploy
 
 # Verify tables were created
 npm run db:test
 ```
-
-### Option 3: Interactive Setup
-
-For a guided setup with options:
-
-```bash
-npm run db:setup
-```
-
-This provides an interactive experience with explanations and optional sample data seeding.
 
 ## 📊 Required Database Tables
 
@@ -124,7 +114,7 @@ For future deployments, follow this sequence:
 3. **Initialize database**:
 
    ```bash
-   npm run db:init
+   npm run db:setup-auto
    ```
 
 4. **Start application**:
@@ -177,15 +167,14 @@ GRANT ALL PRIVILEGES ON DATABASE electricity_tokens TO your_username;
 
 | Command                             | Purpose                                 |
 | ----------------------------------- | --------------------------------------- |
-| `npm run db:init`                   | Initialize database (production)        |
-| `npm run db:setup`                  | Interactive database setup              |
+| `npm run db:setup-auto`             | Automated database setup                |
+| `npm run db:test`                   | Test database connection                |
 | `npm run db:reset`                  | Clear all data (destructive)            |
 | `npm run db:seed`                   | Add sample test data                    |
 | `npx prisma migrate deploy`         | Apply production migrations             |
 | `npx prisma migrate dev`            | Create and apply development migrations |
 | `npx prisma migrate status`         | Check migration status                  |
-| `node scripts/test-db.js`           | Test database connection                |
-| `node scripts/migrate-to-v1.4.0.js` | Upgrade existing data to v1.4.0         |
+| `npx prisma generate`               | Generate Prisma client                  |
 
 ## 🔄 Schema Updates
 
@@ -234,11 +223,14 @@ psql -U username -d electricity_tokens -c "\d meter_readings"
 psql -U username -d electricity_tokens -c "\d audit_logs"
 ```
 
-#### Step 4: Data Migration (if needed)
+#### Step 4: Verify Migration Success
 
 ```bash
-# Run data migration script if upgrading from pre-1.4.0
-node scripts/migrate-to-v1.4.0.js
+# Check migration status
+npx prisma migrate status
+
+# Verify tables exist
+psql -U username -d electricity_tokens -c "\dt"
 ```
 
 ### Rolling Back

@@ -186,8 +186,9 @@ npm run service:diagnose
 # Test health monitoring
 npm run health:check
 
-# Create admin user
-node scripts/create-admin.js admin@your-domain.com "SecurePassword123"
+# Admin user is automatically created during installation
+# Default credentials: admin@electricity.local / admin123
+# Change password immediately after first login
 ```
 
 ### Windows Service Features
@@ -314,17 +315,15 @@ vercel link
 vercel env pull .env.local
 
 # Initialize database (one time only)
-npm run db:init
-
-# Alternative manual commands if above fails:
-# npx prisma generate
-# npx prisma db push --accept-data-loss
+npx prisma migrate deploy
+npx prisma generate
 ```
 
 **⚠️ Important**: If you get a 500 error on first sign-in, it means the database tables weren't created. Run the database initialization:
 
 ```bash
-npm run db:init
+npx prisma migrate deploy
+npx prisma generate
 ```
 
 **Schema Version**: This deployment uses Database Schema v1.4.0 which includes:

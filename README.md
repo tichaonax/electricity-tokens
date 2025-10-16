@@ -92,17 +92,17 @@ This application helps households manage shared electricity costs by:
 
    ```bash
    # Interactive setup (recommended for first-time setup)
-   npm run db:setup
+   npm run db:setup-auto
 
    # Or automated setup
-   npm run db:init
+   npm run db:setup-auto
 
    # Or manual setup if above fails
    npx prisma generate
    npx prisma db push
    ```
 
-   **⚠️ Important**: If you get a 500 error on first sign-in, run `npm run db:init` to initialize the database tables (includes 8 tables for v1.4.0). See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for troubleshooting and upgrade procedures.
+   **⚠️ Important**: If you get a 500 error on first sign-in, run `npm run db:setup-auto` to initialize the database tables (includes 8 tables for v1.4.0). See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for troubleshooting and upgrade procedures.
 
 5. **Run the development server**
 
