@@ -57,7 +57,15 @@ define(['./workbox-14aa2a4a'], function (a) {
         },
         {
           url: '/_next/app-build-manifest.json',
-          revision: '3864f654d29c9c27d5b79f5de09ea6c2',
+          revision: '35d3c40c459313d5d297a72d2b12b8d7',
+        },
+        {
+          url: '/_next/static/9dyV7lhOrRT0WjzE39BLV/_buildManifest.js',
+          revision: '29166b509c81a6a79411a7b576b00c46',
+        },
+        {
+          url: '/_next/static/9dyV7lhOrRT0WjzE39BLV/_ssgManifest.js',
+          revision: 'b6652df95db52feb4daf4eca35380933',
         },
         {
           url: '/_next/static/chunks/1255-f206d8cb7c37a3ff.js',
@@ -144,6 +152,10 @@ define(['./workbox-14aa2a4a'], function (a) {
           revision: 'd8a017fe57afa0c8',
         },
         {
+          url: '/_next/static/chunks/6740-27c1a4645860ff04.js',
+          revision: '27c1a4645860ff04',
+        },
+        {
           url: '/_next/static/chunks/6783-48257da4d904453c.js',
           revision: '48257da4d904453c',
         },
@@ -170,10 +182,6 @@ define(['./workbox-14aa2a4a'], function (a) {
         {
           url: '/_next/static/chunks/7534-b9c90487d2e03686.js',
           revision: 'b9c90487d2e03686',
-        },
-        {
-          url: '/_next/static/chunks/7747-836842f374c360ad.js',
-          revision: '836842f374c360ad',
         },
         {
           url: '/_next/static/chunks/7908-bb89bc910a09d3a9.js',
@@ -440,100 +448,100 @@ define(['./workbox-14aa2a4a'], function (a) {
           revision: '0676e8733102af32',
         },
         {
-          url: '/_next/static/chunks/app/auth/signup/page-b4c00af938831a04.js',
-          revision: 'b4c00af938831a04',
+          url: '/_next/static/chunks/app/auth/signup/page-8556a04c2ea7b520.js',
+          revision: '8556a04c2ea7b520',
         },
         {
           url: '/_next/static/chunks/app/dashboard/admin/audit-logs/page-7d1c6f15b9866e53.js',
           revision: '7d1c6f15b9866e53',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/audit/page-5bd4cc276ba1f388.js',
-          revision: '5bd4cc276ba1f388',
+          url: '/_next/static/chunks/app/dashboard/admin/audit/page-5c9931d07ddfdaef.js',
+          revision: '5c9931d07ddfdaef',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/database-performance/page-3a793313af6e0544.js',
-          revision: '3a793313af6e0544',
+          url: '/_next/static/chunks/app/dashboard/admin/database-performance/page-d016648ca3721eb1.js',
+          revision: 'd016648ca3721eb1',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/monitoring/page-0726dcbad07672bc.js',
-          revision: '0726dcbad07672bc',
+          url: '/_next/static/chunks/app/dashboard/admin/monitoring/page-a4d20f82ce0de328.js',
+          revision: 'a4d20f82ce0de328',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/page-ac0f8118259621a9.js',
-          revision: 'ac0f8118259621a9',
+          url: '/_next/static/chunks/app/dashboard/admin/page-7eb92cdebabd47ef.js',
+          revision: '7eb92cdebabd47ef',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/reports/page-47901ac73f0ebe1d.js',
-          revision: '47901ac73f0ebe1d',
+          url: '/_next/static/chunks/app/dashboard/admin/reports/page-83f85bdbf8cda6fb.js',
+          revision: '83f85bdbf8cda6fb',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/security-dashboard/page-8911c957ca0113b5.js',
-          revision: '8911c957ca0113b5',
+          url: '/_next/static/chunks/app/dashboard/admin/security-dashboard/page-a960f572786bc21b.js',
+          revision: 'a960f572786bc21b',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/security/page-1eaf416ce2d94812.js',
-          revision: '1eaf416ce2d94812',
+          url: '/_next/static/chunks/app/dashboard/admin/security/page-4f35f81d82a8da2f.js',
+          revision: '4f35f81d82a8da2f',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/settings/page-cbb8473f5b01c8f3.js',
-          revision: 'cbb8473f5b01c8f3',
+          url: '/_next/static/chunks/app/dashboard/admin/settings/page-34aea075cfa34cae.js',
+          revision: '34aea075cfa34cae',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/users/%5Bid%5D/edit/page-ebcb17e71d61a55b.js',
-          revision: 'ebcb17e71d61a55b',
+          url: '/_next/static/chunks/app/dashboard/admin/users/%5Bid%5D/edit/page-c5f351cd58ff215f.js',
+          revision: 'c5f351cd58ff215f',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/users/new/page-1c3bb4fb916b8ab0.js',
-          revision: '1c3bb4fb916b8ab0',
+          url: '/_next/static/chunks/app/dashboard/admin/users/new/page-781223db4ff21abf.js',
+          revision: '781223db4ff21abf',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/admin/users/page-09149c62cdd1b90f.js',
-          revision: '09149c62cdd1b90f',
+          url: '/_next/static/chunks/app/dashboard/admin/users/page-03183519b32b9ac1.js',
+          revision: '03183519b32b9ac1',
         },
         {
           url: '/_next/static/chunks/app/dashboard/contributions/edit/%5Bid%5D/page-15177c1eb32001a6.js',
           revision: '15177c1eb32001a6',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/contributions/new/page-b50452572404a1c1.js',
-          revision: 'b50452572404a1c1',
+          url: '/_next/static/chunks/app/dashboard/contributions/new/page-7bd4054d380967b6.js',
+          revision: '7bd4054d380967b6',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/contributions/page-bfe039eaefc57a77.js',
-          revision: 'bfe039eaefc57a77',
+          url: '/_next/static/chunks/app/dashboard/contributions/page-48a91bf6772d13bf.js',
+          revision: '48a91bf6772d13bf',
         },
         {
           url: '/_next/static/chunks/app/dashboard/cost-analysis/page-a2d228218adedebe.js',
           revision: 'a2d228218adedebe',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/data-management/page-701f65c6baf071fc.js',
-          revision: '701f65c6baf071fc',
+          url: '/_next/static/chunks/app/dashboard/data-management/page-7b4eb5badb73dd51.js',
+          revision: '7b4eb5badb73dd51',
         },
         {
           url: '/_next/static/chunks/app/dashboard/meter-readings/page-586bba6edb27591c.js',
           revision: '586bba6edb27591c',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/page-59e382f54ebefc2f.js',
-          revision: '59e382f54ebefc2f',
+          url: '/_next/static/chunks/app/dashboard/page-497fce712d6d40ed.js',
+          revision: '497fce712d6d40ed',
         },
         {
           url: '/_next/static/chunks/app/dashboard/personal/page-e918abf497467516.js',
           revision: 'e918abf497467516',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/profile/page-cb4f31d65197b9e1.js',
-          revision: 'cb4f31d65197b9e1',
+          url: '/_next/static/chunks/app/dashboard/profile/page-2cbe1b82bdaebdab.js',
+          revision: '2cbe1b82bdaebdab',
         },
         {
           url: '/_next/static/chunks/app/dashboard/purchases/edit/%5Bid%5D/page-2618816be07b03e8.js',
           revision: '2618816be07b03e8',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/purchases/history/page-7a023794d5399ba7.js',
-          revision: '7a023794d5399ba7',
+          url: '/_next/static/chunks/app/dashboard/purchases/history/page-decb256080c74d38.js',
+          revision: 'decb256080c74d38',
         },
         {
           url: '/_next/static/chunks/app/dashboard/purchases/new/page-09a9255e9095504a.js',
@@ -544,8 +552,8 @@ define(['./workbox-14aa2a4a'], function (a) {
           revision: 'd9fe5b7acd678930',
         },
         {
-          url: '/_next/static/chunks/app/dashboard/reports/efficiency/page-4cded65b63524c4b.js',
-          revision: '4cded65b63524c4b',
+          url: '/_next/static/chunks/app/dashboard/reports/efficiency/page-b78fddc4c4745597.js',
+          revision: 'b78fddc4c4745597',
         },
         {
           url: '/_next/static/chunks/app/dashboard/reports/financial/page-6234d3d93136f0ac.js',
@@ -560,8 +568,8 @@ define(['./workbox-14aa2a4a'], function (a) {
           revision: '42d6bf84d3984af1',
         },
         {
-          url: '/_next/static/chunks/app/help/page-991128ea801c4968.js',
-          revision: '991128ea801c4968',
+          url: '/_next/static/chunks/app/help/page-7c772c86ab0601b9.js',
+          revision: '7c772c86ab0601b9',
         },
         {
           url: '/_next/static/chunks/app/layout-724ad55bd73107ac.js',
@@ -648,16 +656,8 @@ define(['./workbox-14aa2a4a'], function (a) {
           revision: '8ea4f719af3312a055caf09f34c89a77',
         },
         {
-          url: '/_next/static/nU9vbTkKPB9gPgVG1e7kN/_buildManifest.js',
-          revision: '29166b509c81a6a79411a7b576b00c46',
-        },
-        {
-          url: '/_next/static/nU9vbTkKPB9gPgVG1e7kN/_ssgManifest.js',
-          revision: 'b6652df95db52feb4daf4eca35380933',
-        },
-        {
           url: '/build-info.json',
-          revision: '289226cc7c901b6ca1458c8e1409d51e',
+          revision: '94587c4ef4bb1d66693a5f4b66178a65',
         },
         {
           url: '/favicon.ico.svg',

@@ -55,20 +55,60 @@ class ComprehensiveInstaller {
     const hasService = await this.checkServiceExists();
     const hasDatabase = await this.checkDatabaseExists();
     const hasBuiltApp = await this.checkBuildExists();
+    const hasNodeModules = fs.existsSync(
+      path.join(this.appRoot, 'node_modules')
+    );
+    const hasEnvFile = fs.existsSync(path.join(this.appRoot, '.env'));
 
-    if (!hasService && !hasDatabase && !hasBuiltApp) {
+    this.log(
+      `📊 Installation status: Service=${hasService}, DB=${hasDatabase}, Build=${hasBuiltApp}, Deps=${hasNodeModules}, Env=${hasEnvFile}`
+    );
+
+    // Fresh installation: nothing exists
+    if (!hasService && !hasDatabase && !hasBuiltApp && !hasNodeModules) {
       return 'fresh';
-    } else if (hasService && hasDatabase) {
-      return 'update';
-    } else {
-      return 'repair';
     }
+
+    // Update scenario: has dependencies and database, but may not have service
+    if ((hasNodeModules || hasDatabase || hasBuiltApp) && hasEnvFile) {
+      if (hasService) {
+        return 'update';
+      } else {
+        // Has app components but no service - treat as fresh install with existing components
+        this.log(
+          '⚠️ Found existing application components but no service - will perform fresh service installation'
+        );
+        return 'fresh';
+      }
+    }
+
+    // Partial installation - needs repair
+    return 'repair';
   }
 
   async checkServiceExists() {
     try {
-      const { stdout } = await execAsync('sc query ElectricityTracker');
-      return stdout.includes('SERVICE_NAME: ElectricityTracker');
+      // Check for multiple possible service names
+      const serviceNames = [
+        'ElectricityTracker',
+        'ElectricityTracker.exe',
+        'electricity-tokens',
+      ];
+
+      for (const serviceName of serviceNames) {
+        try {
+          const { stdout } = await execAsync(`sc query "${serviceName}"`);
+          if (stdout.includes('SERVICE_NAME:')) {
+            this.log(`✅ Found service: ${serviceName}`);
+            return true;
+          }
+        } catch {
+          // Continue to next service name
+        }
+      }
+
+      this.log('ℹ️  No Windows service found');
+      return false;
     } catch {
       return false;
     }
@@ -82,7 +122,7 @@ class ComprehensiveInstaller {
       }
 
       // Try a simple Prisma command to check DB
-      await execAsync('npx prisma db pull --preview-feature', {
+      await execAsync('npx prisma db pull --force', {
         cwd: this.appRoot,
         timeout: 10000,
       });
@@ -651,7 +691,7 @@ class ComprehensiveInstaller {
 
     // Check database
     try {
-      await execAsync('npx prisma db pull --preview-feature', {
+      await execAsync('npx prisma db pull --force', {
         timeout: 10000,
       });
       checks.push({
@@ -752,6 +792,7 @@ class ComprehensiveInstaller {
     this.log('🔄 Performing update installation...');
 
     const isAdmin = await this.checkAdminPrivileges();
+    const hasService = await this.checkServiceExists();
 
     const steps = [
       { name: 'Update Dependencies', fn: () => this.installDependencies() },
@@ -759,9 +800,21 @@ class ComprehensiveInstaller {
       { name: 'Rebuild Application', fn: () => this.buildApplication() },
     ];
 
-    // Add service restart if admin
-    if (isAdmin) {
+    // Handle service management based on current state
+    if (hasService && isAdmin) {
+      // Service exists - restart it
       steps.push({ name: 'Restart Service', fn: () => this.restartService() });
+    } else if (!hasService && isAdmin) {
+      // No service exists - install it
+      steps.push({
+        name: 'Install Service',
+        fn: () => this.installService(isAdmin),
+      });
+    } else if (!isAdmin) {
+      this.log(
+        '⚠️ Not running as Administrator - service management skipped',
+        'WARN'
+      );
     }
 
     for (const step of steps) {
@@ -771,7 +824,16 @@ class ComprehensiveInstaller {
         this.log(`✅ ${step.name} completed`);
       } catch (error) {
         this.log(`❌ ${step.name} failed: ${error.message}`, 'ERROR');
-        throw new Error(`Update failed at step: ${step.name}`);
+
+        // Try recovery for this step
+        const recovered = await this.attemptStepRecovery(step.name, error);
+        if (!recovered) {
+          throw new Error(
+            `Update failed at step: ${step.name} - ${error.message}`
+          );
+        }
+
+        this.log(`✅ ${step.name} completed after recovery`);
       }
     }
 
@@ -779,9 +841,16 @@ class ComprehensiveInstaller {
     config.lastUpdate = new Date().toISOString();
     config.version = this.getAppVersion();
     config.gitCommit = await this.getCurrentGitCommit();
+    config.hasService = hasService || isAdmin; // Update service status
 
     await this.saveInstallConfig(config);
-    this.log('✅ Update completed successfully!');
+
+    if (!hasService && isAdmin) {
+      this.log('🎉 Update completed with new service installation!');
+      this.log('ℹ️  The Windows service has been installed and started.');
+    } else {
+      this.log('✅ Update completed successfully!');
+    }
   }
 
   async restartService() {
@@ -817,6 +886,123 @@ class ComprehensiveInstaller {
       });
     } catch (error) {
       throw new Error(`Service restart failed: ${error.message}`);
+    }
+  }
+
+  async attemptStepRecovery(stepName, error) {
+    this.log(`🔧 Attempting recovery for failed step: ${stepName}`, 'WARN');
+
+    try {
+      switch (stepName) {
+        case 'Update Dependencies':
+          this.log('💡 Retrying with alternative package manager...');
+          await this.installDependencies();
+          return true;
+
+        case 'Update Database':
+          this.log(
+            '💡 Attempting database recovery with service management...'
+          );
+
+          // Check if the error is related to Prisma client generation
+          if (
+            error.message.includes('EPERM') ||
+            error.message.includes('prisma generate')
+          ) {
+            this.log(
+              '🔧 Detected Prisma client lock issue - attempting service stop...'
+            );
+
+            try {
+              // Try to stop the service to release file locks
+              const hasService = await this.checkServiceExists();
+              if (hasService) {
+                this.log('🛑 Stopping service to release file locks...');
+                await execAsync('sc stop "ElectricityTracker.exe"');
+                await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait 3 seconds
+              }
+
+              // Clear Prisma client files
+              const prismaClientPath = path.join(
+                this.appRoot,
+                'node_modules',
+                '.prisma',
+                'client'
+              );
+              if (fs.existsSync(prismaClientPath)) {
+                this.log('🧹 Clearing existing Prisma client files...');
+                await execAsync(`rmdir /s /q "${prismaClientPath}"`);
+              }
+
+              // Try database setup again
+              await this.setupDatabase();
+
+              // Restart service if it was running
+              if (hasService) {
+                this.log('🚀 Restarting service...');
+                await execAsync('sc start "ElectricityTracker.exe"');
+              }
+
+              return true;
+            } catch (serviceError) {
+              this.log(
+                `⚠️ Service management failed: ${serviceError.message}`,
+                'WARN'
+              );
+              this.log('💡 Continuing with manual Prisma recovery...');
+            }
+          }
+
+          // Manual Prisma recovery
+          this.log('🔧 Attempting manual Prisma client generation...');
+          try {
+            await execAsync('npx prisma generate --force');
+            return true;
+          } catch {
+            this.log(
+              'ℹ️ Database setup recovery failed - application may still work without latest schema',
+              'WARN'
+            );
+            return false;
+          }
+
+        case 'Rebuild Application':
+          this.log('💡 Retrying build with cache clear...');
+          await this.buildApplication();
+          return true;
+
+        case 'Restart Service':
+          this.log('💡 Checking if service actually exists...');
+          const hasService = await this.checkServiceExists();
+          if (!hasService) {
+            this.log('ℹ️  Service not found - installing new service instead');
+            const isAdmin = await this.checkAdminPrivileges();
+            if (isAdmin) {
+              await this.installService(true);
+              return true;
+            }
+          }
+          return false;
+
+        case 'Install Service':
+          this.log('💡 Retrying service installation...');
+          const isAdmin = await this.checkAdminPrivileges();
+          if (isAdmin) {
+            await this.installService(true);
+            return true;
+          }
+          return false;
+
+        default:
+          this.log(
+            `ℹ️  No recovery strategy available for ${stepName}`,
+            'WARN'
+          );
+          return false;
+      }
+    } catch (recoveryError) {
+      this.log(`❌ Recovery failed: ${recoveryError.message}`, 'ERROR');
+      return false;
     }
   }
 

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,38 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                    String   @id @default(cuid())
-  email                 String   @unique
-  name                  String
-  password              String?
-  role                  Role     @default(USER)
-  locked                Boolean  @default(false)
-  passwordResetRequired Boolean  @default(false)
-  permissions           Json?
-  themePreference       String?  @default("system")
-  lastLoginAt           DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  isActive              Boolean  @default(true)
-  deactivatedAt         DateTime?
-  deactivationReason    String?
-  deactivatedBy         String?
-
-  // Relations
-  contributions     UserContribution[]
-  createdPurchases  TokenPurchase[]
-  meterReadings     MeterReading[]
-  auditLogs         AuditLog[]
-  accounts          Account[]
-  sessions          Session[]
-
-  @@index([isActive])
-  @@map("users")
-}
-
-model Account {
-  id                String  @id @default(cuid())
+model accounts {
+  id                String  @id
   userId            String
   type              String
   provider          String
@@ -56,70 +20,13 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users             users   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@map("accounts")
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
-model TokenPurchase {
-  id           String   @id @default(cuid())
-  totalTokens  Float
-  totalPayment Float
-  meterReading Float    // Initial meter reading when purchase was made
-  purchaseDate DateTime
-  isEmergency  Boolean  @default(false)
-  createdBy    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  creator      User              @relation(fields: [createdBy], references: [id])
-  contribution UserContribution? // Changed to optional one-to-one relationship
-
-  @@map("token_purchases")
-}
-
-model UserContribution {
-  id                String   @id @default(cuid())
-  purchaseId        String   @unique // Changed to unique to enforce one contribution per purchase
-  userId            String
-  contributionAmount Float
-  meterReading      Float    // Current meter reading at time of contribution
-  tokensConsumed    Float    // Calculated: current - initial meter reading
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  purchase TokenPurchase @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Removed compound unique constraint - now using @unique on purchaseId only
-  @@map("user_contributions")
-}
-
-model AuditLog {
-  id         String    @id @default(cuid())
+model audit_logs {
+  id         String   @id
   userId     String
   action     String
   entityType String
@@ -127,29 +34,91 @@ model AuditLog {
   oldValues  Json?
   newValues  Json?
   metadata   Json?
-  timestamp  DateTime  @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("audit_logs")
+  timestamp  DateTime @default(now())
+  users      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model MeterReading {
-  id           String   @id @default(cuid())
-  userId       String
-  reading      Float
-  readingDate  DateTime
-  notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model meter_readings {
+  id          String   @id
+  userId      String
+  reading     Float
+  readingDate DateTime
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  users       users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Index for efficient querying by user and date
   @@index([userId, readingDate])
-  @@map("meter_readings")
+}
+
+model sessions {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  users        users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model token_purchases {
+  id                 String              @id
+  totalTokens        Float
+  totalPayment       Float
+  meterReading       Float
+  purchaseDate       DateTime
+  isEmergency        Boolean             @default(false)
+  createdBy          String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime
+  users              users               @relation(fields: [createdBy], references: [id])
+  user_contributions user_contributions?
+}
+
+model user_contributions {
+  id                 String          @id
+  purchaseId         String          @unique
+  userId             String
+  contributionAmount Float
+  meterReading       Float
+  tokensConsumed     Float
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime
+  token_purchases    token_purchases @relation(fields: [purchaseId], references: [id])
+  users              users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id                    String               @id
+  email                 String               @unique
+  name                  String
+  password              String?
+  role                  Role                 @default(USER)
+  locked                Boolean              @default(false)
+  passwordResetRequired Boolean              @default(false)
+  permissions           Json?
+  themePreference       String?              @default("system")
+  lastLoginAt           DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime
+  isActive              Boolean              @default(true)
+  deactivatedAt         DateTime?
+  deactivationReason    String?
+  deactivatedBy         String?
+  accounts              accounts[]
+  audit_logs            audit_logs[]
+  meter_readings        meter_readings[]
+  sessions              sessions[]
+  token_purchases       token_purchases[]
+  user_contributions    user_contributions[]
+
+  @@index([isActive])
+}
+
+model verification_tokens {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 enum Role {

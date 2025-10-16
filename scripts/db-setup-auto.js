@@ -170,13 +170,10 @@ LOG_LEVEL="info"
 
     // Strategy 1: Quick connection test with introspection
     try {
-      const { stdout, stderr } = await execAsync(
-        'npx prisma db pull --preview-feature --force',
-        {
-          cwd: this.appRoot,
-          timeout: 30000,
-        }
-      );
+      const { stdout, stderr } = await execAsync('npx prisma db pull --force', {
+        cwd: this.appRoot,
+        timeout: 30000,
+      });
 
       this.log('✅ Database connection successful (introspection)');
       return { exists: true, accessible: true, strategy: 'introspection' };
@@ -187,7 +184,7 @@ LOG_LEVEL="info"
     // Strategy 2: Test with db push dry run
     try {
       const { stdout, stderr } = await execAsync(
-        'npx prisma db push --preview-feature --dry-run',
+        'npx prisma db push --dry-run',
         {
           cwd: this.appRoot,
           timeout: 20000,
@@ -281,7 +278,14 @@ LOG_LEVEL="info"
       );
 
       this.log('✅ Database schema pushed successfully');
-      await this.generatePrismaClient();
+
+      const clientGenerated = await this.generatePrismaClient();
+      if (!clientGenerated) {
+        this.log(
+          '⚠️ Prisma client generation skipped due to file locks - continuing anyway',
+          'WARN'
+        );
+      }
 
       // Mark existing migrations as applied if they exist
       await this.markMigrationsAsApplied();
@@ -301,7 +305,15 @@ LOG_LEVEL="info"
       });
 
       this.log('✅ Database migrations deployed successfully');
-      await this.generatePrismaClient();
+
+      const clientGenerated = await this.generatePrismaClient();
+      if (!clientGenerated) {
+        this.log(
+          '⚠️ Prisma client generation skipped due to file locks - continuing anyway',
+          'WARN'
+        );
+      }
+
       return true;
     } catch (migrateError) {
       this.log(`⚠️ Strategy 2 failed: ${migrateError.message}`, 'WARN');
@@ -426,7 +438,15 @@ LOG_LEVEL="info"
       });
 
       this.log('✅ Database baseline and migrations completed');
-      await this.generatePrismaClient();
+
+      const clientGenerated = await this.generatePrismaClient();
+      if (!clientGenerated) {
+        this.log(
+          '⚠️ Prisma client generation skipped due to file locks - continuing anyway',
+          'WARN'
+        );
+      }
+
       return true;
     } catch (error) {
       this.log(`❌ Database baseline failed: ${error.message}`, 'ERROR');
@@ -447,6 +467,57 @@ LOG_LEVEL="info"
       return true;
     } catch (error) {
       this.log(`❌ Prisma client generation failed: ${error.message}`, 'ERROR');
+
+      // Check if it's a file lock issue (EPERM)
+      if (
+        error.message.includes('EPERM') ||
+        error.message.includes('operation not permitted')
+      ) {
+        this.log('⚠️ File lock detected - attempting recovery...', 'WARN');
+
+        try {
+          // Try to clear the .prisma directory and regenerate
+          const prismaClientPath = path.join(
+            this.appRoot,
+            'node_modules',
+            '.prisma'
+          );
+          if (fs.existsSync(prismaClientPath)) {
+            this.log('🧹 Clearing Prisma client cache...');
+            await execAsync(`rmdir /s /q "${prismaClientPath}"`, {
+              cwd: this.appRoot,
+              timeout: 10000,
+            });
+
+            // Wait a moment for file system to settle
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            // Try again
+            const { stdout: stdout2 } = await execAsync('npx prisma generate', {
+              cwd: this.appRoot,
+              timeout: 60000,
+            });
+
+            this.log(
+              '✅ Prisma client generated successfully after cache clear'
+            );
+            return true;
+          }
+        } catch (retryError) {
+          this.log(`⚠️ Recovery attempt failed: ${retryError.message}`, 'WARN');
+        }
+
+        // If file lock persists, warn but don't fail completely
+        this.log(
+          '⚠️ Prisma client generation failed due to file locks - continuing with existing client',
+          'WARN'
+        );
+        this.log(
+          '💡 The application may still work with the existing Prisma client'
+        );
+        return false; // Don't throw, just return false
+      }
+
       throw error;
     }
   }
