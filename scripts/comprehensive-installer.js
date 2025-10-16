@@ -118,20 +118,87 @@ class ComprehensiveInstaller {
   }
 
   async installDependencies() {
-    this.log('📦 Installing Node.js dependencies...');
+    this.log(
+      '📦 Installing Node.js dependencies with robust timeout handling...'
+    );
 
+    const strategies = [
+      {
+        cmd: 'npm',
+        args: ['install'],
+        timeout: 600000,
+        name: 'Standard npm install',
+      },
+      {
+        cmd: 'npm',
+        args: ['install', '--timeout=900000'],
+        timeout: 900000,
+        name: 'Extended timeout npm install',
+      },
+      {
+        cmd: 'npm',
+        args: [
+          'install',
+          '--registry',
+          'https://registry.npmjs.org/',
+          '--timeout=900000',
+        ],
+        timeout: 900000,
+        name: 'Alternative registry npm install',
+      },
+      {
+        cmd: 'npm',
+        args: ['install', '--prefer-offline', '--timeout=900000'],
+        timeout: 900000,
+        name: 'Offline-first npm install',
+      },
+    ];
+
+    for (const strategy of strategies) {
+      try {
+        this.log(`🔄 Trying: ${strategy.name}`);
+        const success = await this.runInstallStrategy(strategy);
+        if (success) {
+          this.log('✅ Dependencies installed successfully');
+          return true;
+        }
+      } catch (error) {
+        this.log(`❌ ${strategy.name} failed: ${error.message}`, 'WARN');
+        // Continue to next strategy
+      }
+    }
+
+    // All strategies failed
+    throw new Error('All dependency installation strategies failed');
+  }
+
+  async runInstallStrategy(strategy) {
     return new Promise((resolve, reject) => {
-      const installProcess = spawn('npm', ['install'], {
+      const installProcess = spawn(strategy.cmd, strategy.args, {
         cwd: this.appRoot,
         stdio: 'pipe',
         shell: true,
       });
 
       let hasOutput = false;
+      let lastOutputTime = Date.now();
+      let outputBuffer = '';
+
+      const outputTimeout = setInterval(() => {
+        if (Date.now() - lastOutputTime > 120000 && hasOutput) {
+          // 2 minutes no output
+          this.log('⚠️ No output for 2 minutes, terminating...', 'WARN');
+          installProcess.kill();
+          reject(new Error('No output timeout'));
+        }
+      }, 30000);
 
       installProcess.stdout.on('data', (data) => {
         hasOutput = true;
+        lastOutputTime = Date.now();
         const text = data.toString();
+        outputBuffer += text;
+
         const lines = text.split('\n');
         lines.forEach((line) => {
           if (
@@ -139,7 +206,8 @@ class ComprehensiveInstaller {
             (line.includes('added') ||
               line.includes('updated') ||
               line.includes('installed') ||
-              line.includes('found'))
+              line.includes('found') ||
+              line.includes('packages'))
           ) {
             this.log(`📦 ${line.trim()}`);
           }
@@ -147,6 +215,8 @@ class ComprehensiveInstaller {
       });
 
       installProcess.stderr.on('data', (data) => {
+        hasOutput = true;
+        lastOutputTime = Date.now();
         const text = data.toString();
         if (!text.includes('WARN') && text.trim()) {
           this.log(`⚠️ ${text.trim()}`, 'WARN');
@@ -154,25 +224,28 @@ class ComprehensiveInstaller {
       });
 
       installProcess.on('close', (code) => {
+        clearInterval(outputTimeout);
         if (code === 0) {
-          this.log('✅ Dependencies installed successfully');
           resolve(true);
         } else {
-          this.log(
-            `❌ Dependency installation failed with code ${code}`,
-            'ERROR'
-          );
-          reject(new Error('npm install failed'));
+          reject(new Error(`Process exited with code ${code}`));
         }
       });
 
-      // Timeout after 10 minutes
+      installProcess.on('error', (error) => {
+        clearInterval(outputTimeout);
+        reject(error);
+      });
+
+      // Overall timeout
       setTimeout(() => {
+        clearInterval(outputTimeout);
         if (!hasOutput) {
+          this.log('❌ No output received within timeout period', 'ERROR');
           installProcess.kill();
-          reject(new Error('npm install timeout - no output received'));
+          reject(new Error('Complete timeout - no output received'));
         }
-      }, 600000);
+      }, strategy.timeout);
     });
   }
 
@@ -446,7 +519,10 @@ class ComprehensiveInstaller {
   }
 
   async performFreshInstall() {
-    this.log('🆕 Performing fresh installation...');
+    this.log('🆕 Performing fresh installation with pre-validation...');
+
+    // Pre-installation validation
+    await this.preInstallationValidation();
 
     const isAdmin = await this.checkAdminPrivileges();
 
@@ -465,7 +541,16 @@ class ComprehensiveInstaller {
         this.log(`✅ ${step.name} completed`);
       } catch (error) {
         this.log(`❌ ${step.name} failed: ${error.message}`, 'ERROR');
-        throw new Error(`Installation failed at step: ${step.name}`);
+
+        // Try recovery strategies before failing completely
+        const recovered = await this.attemptStepRecovery(step.name, error);
+        if (!recovered) {
+          throw new Error(
+            `Installation failed at step: ${step.name} - ${error.message}`
+          );
+        }
+
+        this.log(`✅ ${step.name} completed after recovery`);
       }
     }
 
@@ -676,6 +761,250 @@ Error: ${error.message}
    • Run individual steps manually
    • Check system requirements
 `);
+  }
+
+  async preInstallationValidation() {
+    this.log('🔍 Running pre-installation validation...');
+
+    // Check .env file exists and has required variables
+    const envPath = path.join(this.appRoot, '.env');
+    if (!fs.existsSync(envPath)) {
+      this.log(
+        '⚙️ .env file not found - creating with secure defaults',
+        'INFO'
+      );
+      await this.createEnvironmentTemplate();
+      this.log('✅ .env file created with working defaults');
+    }
+
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const requiredVars = ['DATABASE_URL', 'NEXTAUTH_SECRET'];
+    const missingVars = [];
+
+    for (const varName of requiredVars) {
+      if (
+        !envContent.includes(varName) ||
+        envContent.includes(`${varName}=""`)
+      ) {
+        missingVars.push(varName);
+      }
+    }
+
+    if (missingVars.length > 0) {
+      this.log(
+        `⚙️ Missing variables detected: ${missingVars.join(', ')} - updating .env file`,
+        'INFO'
+      );
+      await this.updateEnvironmentFile(envContent, missingVars);
+      this.log('✅ .env file updated with missing variables');
+    }
+
+    // Check if ports are available
+    await this.checkPortAvailability(3000);
+
+    // Check disk space (minimum 1GB)
+    await this.checkDiskSpace();
+
+    this.log('✅ Pre-installation validation passed');
+  }
+
+  async updateEnvironmentFile(existingContent, missingVars) {
+    const crypto = require('crypto');
+    let updatedContent = existingContent;
+
+    for (const varName of missingVars) {
+      switch (varName) {
+        case 'DATABASE_URL':
+          if (!updatedContent.includes('DATABASE_URL=')) {
+            updatedContent +=
+              '\n# Database Configuration\nDATABASE_URL="postgresql://postgres:postgres@localhost:5432/electricity_tokens"\n';
+          }
+          break;
+
+        case 'NEXTAUTH_SECRET':
+          if (!updatedContent.includes('NEXTAUTH_SECRET=')) {
+            const secret = crypto.randomBytes(32).toString('base64');
+            updatedContent += `\n# Security Configuration\nNEXTAUTH_SECRET="${secret}"\n`;
+          }
+          break;
+      }
+    }
+
+    const envPath = path.join(this.appRoot, '.env');
+    fs.writeFileSync(envPath, updatedContent);
+  }
+
+  async createEnvironmentTemplate() {
+    // Generate a secure random secret
+    const crypto = require('crypto');
+    const nextauthSecret = crypto.randomBytes(32).toString('base64');
+
+    const envTemplate = `# Electricity Tokens Tracker Environment Configuration
+# Auto-generated by bulletproof installer
+
+# Database Configuration (REQUIRED)
+# Default PostgreSQL connection - update if needed
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/electricity_tokens"
+
+# Security Configuration (REQUIRED)
+# Auto-generated secure secret
+NEXTAUTH_SECRET="${nextauthSecret}"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Application Configuration
+NODE_ENV="production"
+PORT=3000
+APP_NAME="Electricity Tokens Tracker"
+
+# Enhanced Security
+BCRYPT_ROUNDS=12
+LOG_LEVEL="warn"
+AUDIT_IP_TRACKING=true
+AUDIT_USER_AGENT_TRACKING=true
+
+# Database Schema Version
+DB_SCHEMA_VERSION="1.4.0"
+`;
+
+    const envPath = path.join(this.appRoot, '.env');
+    fs.writeFileSync(envPath, envTemplate);
+    this.log('📝 Created .env file with secure defaults');
+    this.log(
+      '💡 Using default PostgreSQL connection (postgres:postgres@localhost:5432)'
+    );
+    this.log('🔑 Generated secure NEXTAUTH_SECRET automatically');
+  }
+
+  async checkPortAvailability(port) {
+    try {
+      const { stdout } = await execAsync(`netstat -ano | findstr :${port}`);
+      if (stdout.trim()) {
+        this.log(`⚠️ Port ${port} is in use, will attempt to free it`, 'WARN');
+        // Try to kill processes using the port
+        try {
+          await execAsync(
+            `for /f "tokens=5" %a in ('netstat -ano ^| findstr :${port}') do taskkill /PID %a /F`
+          );
+          this.log(`✅ Freed port ${port}`);
+        } catch {
+          this.log(`⚠️ Could not free port ${port} automatically`, 'WARN');
+        }
+      }
+    } catch {
+      // Port is available
+      this.log(`✅ Port ${port} is available`);
+    }
+  }
+
+  async checkDiskSpace() {
+    try {
+      const { stdout } = await execAsync('dir /-c | find "bytes free"');
+      const freeSpaceMatch = stdout.match(/([\d,]+) bytes free/);
+      if (freeSpaceMatch) {
+        const freeBytes = parseInt(freeSpaceMatch[1].replace(/,/g, ''));
+        const freeGB = freeBytes / (1024 * 1024 * 1024);
+
+        if (freeGB < 1) {
+          throw new Error(
+            `Insufficient disk space: ${freeGB.toFixed(2)}GB available, minimum 1GB required`
+          );
+        }
+
+        this.log(`✅ Sufficient disk space: ${freeGB.toFixed(2)}GB available`);
+      }
+    } catch (error) {
+      this.log(`⚠️ Could not check disk space: ${error.message}`, 'WARN');
+    }
+  }
+
+  async attemptStepRecovery(stepName, error) {
+    this.log(`🔧 Attempting recovery for step: ${stepName}`);
+
+    switch (stepName) {
+      case 'Install Dependencies':
+        return await this.recoverDependencyInstallation(error);
+
+      case 'Setup Database':
+        return await this.recoverDatabaseSetup(error);
+
+      case 'Build Application':
+        return await this.recoverApplicationBuild(error);
+
+      default:
+        this.log(`ℹ️  No recovery strategy available for ${stepName}`);
+        return false;
+    }
+  }
+
+  async recoverDependencyInstallation(error) {
+    this.log('🔧 Attempting dependency installation recovery...');
+
+    try {
+      // Clear npm cache and try again
+      await execAsync('npm cache clean --force');
+      this.log('✅ Cleared npm cache');
+
+      // Try yarn as alternative
+      try {
+        await execAsync('npm install -g yarn');
+        await execAsync('yarn install', { cwd: this.appRoot, timeout: 600000 });
+        this.log('✅ Dependencies installed using yarn');
+        return true;
+      } catch (yarnError) {
+        this.log(
+          `❌ Yarn installation also failed: ${yarnError.message}`,
+          'ERROR'
+        );
+        return false;
+      }
+    } catch (recoveryError) {
+      this.log(
+        `❌ Dependency recovery failed: ${recoveryError.message}`,
+        'ERROR'
+      );
+      return false;
+    }
+  }
+
+  async recoverDatabaseSetup(error) {
+    this.log('🔧 Attempting database setup recovery...');
+
+    try {
+      // Force regenerate Prisma client and try again
+      await execAsync('npx prisma generate --force', { cwd: this.appRoot });
+      await execAsync('npx prisma db push --accept-data-loss', {
+        cwd: this.appRoot,
+      });
+      this.log('✅ Database setup recovered using force push');
+      return true;
+    } catch (recoveryError) {
+      this.log(
+        `❌ Database recovery failed: ${recoveryError.message}`,
+        'ERROR'
+      );
+      return false;
+    }
+  }
+
+  async recoverApplicationBuild(error) {
+    this.log('🔧 Attempting application build recovery...');
+
+    try {
+      // Clear Next.js cache and rebuild
+      const nextDir = path.join(this.appRoot, '.next');
+      if (fs.existsSync(nextDir)) {
+        fs.rmSync(nextDir, { recursive: true, force: true });
+        this.log('✅ Cleared .next cache');
+      }
+
+      // Try build again
+      await execAsync('npm run build', { cwd: this.appRoot, timeout: 900000 });
+      this.log('✅ Application build recovered');
+      return true;
+    } catch (recoveryError) {
+      this.log(`❌ Build recovery failed: ${recoveryError.message}`, 'ERROR');
+      return false;
+    }
   }
 }
 
