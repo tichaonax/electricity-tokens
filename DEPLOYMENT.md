@@ -888,9 +888,12 @@ The bulletproof installer now handles all these scenarios automatically:
 - Fresh database setup with complete schema deployment
 
 **✅ Build Recovery:**
-- Automatic `.next` cache clearing on build failures
-- Extended timeout handling for complex builds
-- Progressive build strategies with fallback options
+- Multiple build strategies with progressive timeouts (10-25 minutes)
+- Automatic cache clearing for `.next`, `node_modules/.cache`, `.turbo`
+- Dependency reinstallation with force flags for corruption recovery
+- Prisma client regeneration for database-related build issues
+- Minimal build configuration fallback for type checking issues
+- Environment variable optimization for build stability
 
 **✅ Port and Resource Management:**
 - Automatic port 3000 cleanup if in use
