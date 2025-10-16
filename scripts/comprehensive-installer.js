@@ -311,15 +311,17 @@ class ComprehensiveInstaller {
         preclean: true,
       },
       {
-        name: 'Turbo Build',
+        name: 'Debug Build',
         timeout: 1200000,
-        args: ['run', 'build', '--', '--turbo'],
+        args: ['run', 'build'],
+        env: { DEBUG: '1', NEXT_TELEMETRY_DISABLED: '1' },
         preclean: true,
       },
       {
-        name: 'Force Build',
+        name: 'No Lint Build',
         timeout: 1500000,
-        args: ['run', 'build', '--', '--force'],
+        args: ['run', 'build'],
+        env: { SKIP_ENV_VALIDATION: '1', NEXT_TELEMETRY_DISABLED: '1' },
         preclean: true,
       },
     ];
@@ -432,10 +434,18 @@ class ComprehensiveInstaller {
 
   async runBuildStrategy(strategy) {
     return new Promise((resolve, reject) => {
+      // Set up environment variables for this strategy
+      const env = {
+        ...process.env,
+        NODE_ENV: 'production',
+        ...(strategy.env || {}),
+      };
+
       const buildProcess = spawn('npm', strategy.args, {
         cwd: this.appRoot,
         stdio: 'pipe',
         shell: true,
+        env: env,
       });
 
       let hasOutput = false;
