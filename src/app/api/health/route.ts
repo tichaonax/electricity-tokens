@@ -1,26 +1,30 @@
 import { NextResponse } from 'next/server';
-import { SystemMonitor, DatabaseMonitor } from '@/lib/monitoring';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const healthStatus = await SystemMonitor.getHealthStatus();
-    const connectionStats = await DatabaseMonitor.getConnectionStats();
+    // Simple database connectivity check
+    let databaseHealthy = false;
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      databaseHealthy = true;
+    } catch (dbError) {
+      console.error('Database health check failed:', dbError);
+    }
 
     const response = {
-      ...healthStatus,
-      environment: process.env.NODE_ENV,
+      status: databaseHealthy ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
-      version: process.env.VERCEL_GIT_COMMIT_SHA || 'development',
       uptime: process.uptime ? Math.floor(process.uptime()) : undefined,
+      environment: process.env.NODE_ENV,
       database: {
-        ...healthStatus.checks.database,
-        ...connectionStats,
+        connected: databaseHealthy,
       },
     };
 
-    const statusCode = healthStatus.status === 'healthy' ? 200 : 503;
-
-    return NextResponse.json(response, { status: statusCode });
+    // Return 200 even if database is degraded - the app is still running
+    // Only return 503 if the app itself is truly unresponsive
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('Health check failed:', error);
 

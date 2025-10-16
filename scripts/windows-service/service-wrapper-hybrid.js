@@ -10,6 +10,15 @@ class HybridElectricityTokensService {
     this.logFile = this.getDailyLogFile();
     this.pidFile = path.join(this.appRoot, 'logs', 'service.pid');
 
+    // Built-in health monitoring properties
+    this.healthCheckInterval = null;
+    this.consecutiveFailures = 0;
+    this.maxConsecutiveFailures = 3;
+    this.healthCheckFrequency = 30000; // 30 seconds
+    this.lastRestartTime = 0;
+    this.restartCooldown = 300000; // 5 minutes
+    this.isHealthMonitoring = false;
+
     // Ensure logs directory exists
     this.ensureLogsDirectory();
 
@@ -723,7 +732,7 @@ class HybridElectricityTokensService {
       }
 
       const { spawn } = require('child_process');
-      
+
       // First check migration status to see what needs to be applied
       this.log('Checking migration status...');
       const statusProcess = spawn('npx', ['prisma', 'migrate', 'status'], {
@@ -760,7 +769,7 @@ class HybridElectricityTokensService {
       statusProcess.on('close', (code) => {
         this.log('Now applying any pending migrations...');
         this.log('Executing: npx prisma migrate deploy');
-        
+
         const migrationProcess = spawn('npx', ['prisma', 'migrate', 'deploy'], {
           cwd: this.appRoot,
           stdio: ['ignore', 'pipe', 'pipe'],
@@ -797,17 +806,20 @@ class HybridElectricityTokensService {
         });
 
         // Set a timeout for migrations (5 minutes max)
-        const timeout = setTimeout(() => {
-          migrationProcess.kill('SIGTERM');
-          reject(new Error('Database migration timeout after 5 minutes'));
-        }, 5 * 60 * 1000);
+        const timeout = setTimeout(
+          () => {
+            migrationProcess.kill('SIGTERM');
+            reject(new Error('Database migration timeout after 5 minutes'));
+          },
+          5 * 60 * 1000
+        );
 
         migrationProcess.on('close', (code) => {
           clearTimeout(timeout);
           if (code === 0) {
             this.log('✅ Database migrations completed successfully');
             this.log('Regenerating Prisma client...');
-            
+
             // Generate Prisma client after successful migration
             const generateProcess = spawn('npx', ['prisma', 'generate'], {
               cwd: this.appRoot,
@@ -840,28 +852,91 @@ class HybridElectricityTokensService {
             generateProcess.on('close', (generateCode) => {
               if (generateCode === 0) {
                 this.log('✅ Prisma client regenerated successfully');
-                resolve();
+
+                // Seed admin user after successful Prisma client generation
+                this.log('Seeding admin user...');
+                const seedAdminProcess = spawn(
+                  'node',
+                  ['scripts/seed-admin.js'],
+                  {
+                    cwd: this.appRoot,
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    shell: true,
+                  }
+                );
+
+                seedAdminProcess.stdout.on('data', (data) => {
+                  const output = data.toString();
+                  output.split('\n').forEach((line) => {
+                    if (line.trim()) {
+                      this.log(`[ADMIN SEED] ${line.trim()}`);
+                    }
+                  });
+                });
+
+                seedAdminProcess.stderr.on('data', (data) => {
+                  const output = data.toString();
+                  output.split('\n').forEach((line) => {
+                    if (line.trim()) {
+                      this.log(`[ADMIN SEED ERROR] ${line.trim()}`, 'WARN');
+                    }
+                  });
+                });
+
+                seedAdminProcess.on('close', (seedCode) => {
+                  if (seedCode === 0) {
+                    this.log('✅ Admin user seeded successfully');
+                  } else {
+                    this.log(
+                      '⚠️ Admin seed completed with warnings (non-critical)',
+                      'WARN'
+                    );
+                  }
+                  // Always resolve, admin seed is non-critical
+                  resolve();
+                });
+
+                seedAdminProcess.on('error', (err) => {
+                  this.log(`⚠️ Admin seed error: ${err.message}`, 'WARN');
+                  // Non-critical - continue anyway
+                  resolve();
+                });
               } else {
                 this.log('❌ Prisma client generation failed', 'ERROR');
-                reject(new Error(`Prisma generate failed with code ${generateCode}`));
+                reject(
+                  new Error(`Prisma generate failed with code ${generateCode}`)
+                );
               }
             });
           } else {
             // Check if this is a P3005 error (database not empty, needs baseline)
-            if (stderr.includes('P3005') && stderr.includes('migrate-baseline')) {
-              this.log('⚠️  Database needs baselining for existing production data');
+            if (
+              stderr.includes('P3005') &&
+              stderr.includes('migrate-baseline')
+            ) {
+              this.log(
+                '⚠️  Database needs baselining for existing production data'
+              );
               this.log('🔧 Attempting automatic baseline...');
-              this.handleBaseline().then(() => {
-                this.log('✅ Baseline completed, retrying migration...');
-                // Retry the migration after baseline
-                this.runDatabaseMigrations().then(resolve).catch(reject);
-              }).catch((baselineError) => {
-                this.log('❌ Automatic baseline failed', 'ERROR');
-                reject(new Error(`Baseline failed: ${baselineError.message}`));
-              });
+              this.handleBaseline()
+                .then(() => {
+                  this.log('✅ Baseline completed, retrying migration...');
+                  // Retry the migration after baseline
+                  this.runDatabaseMigrations().then(resolve).catch(reject);
+                })
+                .catch((baselineError) => {
+                  this.log('❌ Automatic baseline failed', 'ERROR');
+                  reject(
+                    new Error(`Baseline failed: ${baselineError.message}`)
+                  );
+                });
             } else {
               this.log('❌ Database migration failed', 'ERROR');
-              reject(new Error(`Database migration failed with code ${code}. STDERR: ${stderr}`));
+              reject(
+                new Error(
+                  `Database migration failed with code ${code}. STDERR: ${stderr}`
+                )
+              );
             }
           }
         });
@@ -879,56 +954,68 @@ class HybridElectricityTokensService {
   async handleBaseline() {
     return new Promise((resolve, reject) => {
       this.log('Baselining existing database...');
-      
+
       const { spawn } = require('child_process');
-      
+
       // List of baseline migrations to mark as applied
       const baselineMigrations = [
         '20250706132952_init',
-        '20250706215039_add_user_theme_preference', 
+        '20250706215039_add_user_theme_preference',
         '20250707201336_add_last_login_at',
         '20250708004551_add_metadata_to_audit_log',
         '20250708005417_add_cascade_delete_to_audit_logs',
-        '20250708120000_add_performance_indexes'
+        '20250708120000_add_performance_indexes',
       ];
-      
+
       let migrationIndex = 0;
-      
+
       const resolveNextMigration = () => {
         if (migrationIndex >= baselineMigrations.length) {
           this.log('✅ All baseline migrations resolved');
           resolve();
           return;
         }
-        
+
         const migration = baselineMigrations[migrationIndex];
         this.log(`Marking migration as applied: ${migration}`);
-        
-        const resolveProcess = spawn('npx', ['prisma', 'migrate', 'resolve', '--applied', migration], {
-          cwd: this.appRoot,
-          stdio: ['ignore', 'pipe', 'pipe'],
-          shell: true,
-          env: {
-            ...process.env,
-            NODE_ENV: 'development',
-          },
-        });
-        
+
+        const resolveProcess = spawn(
+          'npx',
+          ['prisma', 'migrate', 'resolve', '--applied', migration],
+          {
+            cwd: this.appRoot,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            shell: true,
+            env: {
+              ...process.env,
+              NODE_ENV: 'development',
+            },
+          }
+        );
+
         resolveProcess.on('close', (code) => {
           if (code === 0) {
             this.log(`✅ ${migration} marked as applied`);
             migrationIndex++;
             resolveNextMigration();
           } else {
-            reject(new Error(`Failed to resolve migration ${migration} with code ${code}`));
+            reject(
+              new Error(
+                `Failed to resolve migration ${migration} with code ${code}`
+              )
+            );
           }
         });
-        
+
         resolveProcess.on('error', (err) => {
-          reject(new Error(`Failed to resolve migration ${migration}: ${err.message}`));
+          reject(
+            new Error(
+              `Failed to resolve migration ${migration}: ${err.message}`
+            )
+          );
         });
       };
-      
+
       resolveNextMigration();
     });
   }
@@ -1093,12 +1180,347 @@ class HybridElectricityTokensService {
       });
 
       this.log(
-        `🚀 SERVICE STARTUP COMPLETE: Next.js process started with PID ${this.appProcess.pid} and verified listening on port ${process.env.PORT || 3000}. Hybrid service monitoring active.`
+        `🚀 SERVICE STARTUP COMPLETE: Next.js process started with PID ${this.appProcess.pid} and verified listening on port ${process.env.PORT || 3000}. Starting built-in health monitoring...`
       );
+
+      // Start built-in health monitoring
+      this.startHealthMonitoring();
     } catch (err) {
       this.log(`Failed to start service: ${err.message}`, 'ERROR');
       process.exit(1);
     }
+  }
+
+  // Built-in health monitoring methods
+  startHealthMonitoring() {
+    if (this.isHealthMonitoring) {
+      return;
+    }
+
+    this.isHealthMonitoring = true;
+    this.log(
+      `🏥 Starting built-in health monitoring (check every ${this.healthCheckFrequency / 1000}s)`
+    );
+
+    // Perform initial health check after a short delay
+    setTimeout(() => {
+      this.performHealthCheck();
+    }, 10000); // 10 seconds delay for initial startup
+
+    // Set up recurring health checks
+    this.healthCheckInterval = setInterval(() => {
+      this.performHealthCheck();
+    }, this.healthCheckFrequency);
+  }
+
+  stopHealthMonitoring() {
+    if (!this.isHealthMonitoring) {
+      return;
+    }
+
+    this.isHealthMonitoring = false;
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+      this.healthCheckInterval = null;
+    }
+    this.log('🛑 Stopped built-in health monitoring');
+  }
+
+  async performHealthCheck() {
+    if (this.isShuttingDown) {
+      return;
+    }
+
+    try {
+      const isHealthy = await this.checkApplicationHealth();
+
+      if (isHealthy) {
+        // Reset failure counter on successful health check
+        if (this.consecutiveFailures > 0) {
+          this.log(
+            `✅ Service recovered after ${this.consecutiveFailures} failures`
+          );
+          this.consecutiveFailures = 0;
+        }
+        // Only log occasionally to avoid log spam
+        const now = Date.now();
+        if (!this.lastHealthyLog || now - this.lastHealthyLog > 300000) {
+          // 5 minutes
+          this.log(`✅ Service is healthy (PID: ${this.appProcess?.pid})`);
+          this.lastHealthyLog = now;
+        }
+      } else {
+        this.consecutiveFailures++;
+        this.log(
+          `❌ Health check failed (${this.consecutiveFailures}/${this.maxConsecutiveFailures})`,
+          'WARN'
+        );
+
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+          await this.handleUnhealthyService();
+        }
+      }
+    } catch (error) {
+      this.consecutiveFailures++;
+      this.log(
+        `❌ Health check error: ${error.message} (${this.consecutiveFailures}/${this.maxConsecutiveFailures})`,
+        'ERROR'
+      );
+
+      if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+        await this.handleUnhealthyService();
+      }
+    }
+  }
+
+  async checkApplicationHealth() {
+    try {
+      // Check 1: Verify the app process is still running
+      if (!this.appProcess || this.appProcess.killed) {
+        this.log('App process is not running', 'WARN');
+        return false;
+      }
+
+      // Check 2: Verify port 3000 is listening
+      const port = process.env.PORT || 3000;
+      const isPortListening = await this.checkPortListening(port);
+      if (!isPortListening) {
+        this.log(`Port ${port} is not listening`, 'WARN');
+        return false;
+      }
+
+      // Check 3: HTTP health endpoint check
+      const httpHealthy = await this.checkHttpHealth();
+      if (!httpHealthy) {
+        this.log('HTTP health endpoint failed', 'WARN');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      this.log(`Health check error: ${error.message}`, 'WARN');
+      return false;
+    }
+  }
+
+  async checkPortListening(port) {
+    return new Promise((resolve) => {
+      const net = require('net');
+      const socket = new net.Socket();
+
+      socket.setTimeout(2000);
+
+      socket.on('connect', () => {
+        socket.destroy();
+        resolve(true);
+      });
+
+      socket.on('timeout', () => {
+        socket.destroy();
+        resolve(false);
+      });
+
+      socket.on('error', () => {
+        socket.destroy();
+        resolve(false);
+      });
+
+      socket.connect(port, 'localhost');
+    });
+  }
+
+  async checkHttpHealth() {
+    return new Promise((resolve) => {
+      const port = process.env.PORT || 3000;
+      const timeout = setTimeout(() => {
+        resolve(false);
+      }, 5000); // 5 second timeout
+
+      // Try curl first (more reliable)
+      const { spawn } = require('child_process');
+      const curlProcess = spawn(
+        'curl',
+        [
+          '-f',
+          '-s',
+          '--connect-timeout',
+          '3',
+          '--max-time',
+          '5',
+          `http://localhost:${port}/api/health`,
+        ],
+        { stdio: 'pipe' }
+      );
+
+      let responseData = '';
+      curlProcess.stdout.on('data', (data) => {
+        responseData += data.toString();
+      });
+
+      curlProcess.on('close', (code) => {
+        clearTimeout(timeout);
+        if (code === 0) {
+          try {
+            const healthData = JSON.parse(responseData);
+            resolve(healthData.status === 'healthy');
+          } catch {
+            resolve(false);
+          }
+        } else {
+          // Fallback to basic port check if curl fails
+          resolve(true); // Port check already passed, so assume healthy
+        }
+      });
+
+      curlProcess.on('error', () => {
+        clearTimeout(timeout);
+        resolve(true); // Port check already passed, so assume healthy
+      });
+    });
+  }
+
+  async handleUnhealthyService() {
+    const now = Date.now();
+
+    // Check cooldown period to prevent restart loops
+    if (now - this.lastRestartTime < this.restartCooldown) {
+      const remainingCooldown = Math.round(
+        (this.restartCooldown - (now - this.lastRestartTime)) / 1000
+      );
+      this.log(
+        `⏳ Service restart on cooldown (${remainingCooldown}s remaining)`,
+        'WARN'
+      );
+      return;
+    }
+
+    this.log('🔄 Service is unhealthy, initiating auto-restart...', 'WARN');
+    this.lastRestartTime = now;
+    this.consecutiveFailures = 0;
+
+    try {
+      // Stop health monitoring temporarily
+      this.stopHealthMonitoring();
+
+      // Kill the unhealthy app process
+      if (this.appProcess && !this.appProcess.killed) {
+        this.log('Terminating unhealthy app process...');
+        this.appProcess.kill('SIGTERM');
+
+        // Wait for graceful shutdown
+        await new Promise((resolve) => {
+          const timeout = setTimeout(() => {
+            if (this.appProcess && !this.appProcess.killed) {
+              this.log('Force killing app process...', 'WARN');
+              this.appProcess.kill('SIGKILL');
+            }
+            resolve();
+          }, 5000);
+
+          if (this.appProcess) {
+            this.appProcess.on('close', () => {
+              clearTimeout(timeout);
+              resolve();
+            });
+          } else {
+            clearTimeout(timeout);
+            resolve();
+          }
+        });
+      }
+
+      // Wait a moment before restart
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Restart the application
+      this.log('🚀 Restarting application...');
+      await this.startApplicationOnly();
+
+      this.log('✅ Application restarted successfully');
+
+      // Resume health monitoring
+      this.startHealthMonitoring();
+    } catch (error) {
+      this.log(`❌ Auto-restart failed: ${error.message}`, 'ERROR');
+      this.log(
+        '🔄 Service will continue attempting restarts on next health check cycle'
+      );
+
+      // Resume health monitoring even if restart failed
+      setTimeout(() => {
+        this.startHealthMonitoring();
+      }, 30000); // Resume monitoring in 30 seconds
+    }
+  }
+
+  async startApplicationOnly() {
+    // Start Next.js directly without all the build/migration checks
+    // (those were already done during initial startup)
+    const nextPath = path.join(
+      this.appRoot,
+      'node_modules',
+      'next',
+      'dist',
+      'bin',
+      'next'
+    );
+
+    this.appProcess = spawn('node', [nextPath, 'start'], {
+      cwd: this.appRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,
+      env: {
+        ...process.env,
+        NODE_ENV: 'production',
+        PORT: process.env.PORT || 3000,
+      },
+    });
+
+    // Save the new PID
+    this.savePID();
+
+    // Log output from the Next.js process
+    this.appProcess.stdout.on('data', (data) => {
+      const output = data.toString().trim();
+      if (output) {
+        this.log(`Next.js: ${output}`);
+      }
+    });
+
+    this.appProcess.stderr.on('data', (data) => {
+      const error = data.toString().trim();
+      if (error) {
+        this.log(`Next.js Error: ${error}`, 'ERROR');
+      }
+    });
+
+    // Handle application exit
+    this.appProcess.on('close', (code, signal) => {
+      this.log(
+        `Next.js process exited with code ${code}, signal ${signal}`,
+        code === 0 ? 'INFO' : 'ERROR'
+      );
+
+      // Clear PID file when process exits
+      try {
+        if (fs.existsSync(this.pidFile)) {
+          fs.unlinkSync(this.pidFile);
+        }
+      } catch (err) {
+        this.log(`Failed to clear PID file: ${err.message}`, 'WARN');
+      }
+
+      if (!this.isShuttingDown) {
+        this.log('Application process exited unexpectedly', 'WARN');
+      }
+    });
+
+    this.appProcess.on('error', (err) => {
+      this.log(`Failed to start Next.js process: ${err.message}`, 'ERROR');
+    });
+
+    // Wait for app to start listening
+    await this.verifyNextJsStarted();
   }
 
   async gracefulShutdown(signal) {
@@ -1106,6 +1528,9 @@ class HybridElectricityTokensService {
 
     this.isShuttingDown = true;
     this.log(`Received ${signal}. Initiating graceful shutdown...`);
+
+    // Stop health monitoring first
+    this.stopHealthMonitoring();
 
     if (this.appProcess) {
       this.log('Sending SIGTERM to Next.js process...');
