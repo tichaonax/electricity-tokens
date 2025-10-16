@@ -567,10 +567,10 @@ npm install @sentry/nextjs
 
 ### Automatic Upgrades (Windows Service)
 
-The Windows service includes **Git hooks** that automatically handle upgrades:
+The Windows service includes **Git hooks** that automatically handle most upgrade tasks:
 
 ```bash
-# Simply pull changes - everything else is automatic
+# Pull changes - automatic build and database updates
 git pull origin main
 ```
 
@@ -579,8 +579,16 @@ git pull origin main
 1. ✅ **Dependency Check**: Updates Node.js packages if needed
 2. ✅ **Database Migration**: Runs new database migrations
 3. ✅ **Build Process**: Rebuilds application with optimizations
-4. ✅ **Service Restart**: Smart restart with proper timing
-5. ✅ **Health Verification**: Confirms successful upgrade
+
+**⚠️ Manual restart required** - After git pull completes, you will see instructions to manually restart the service:
+
+```bash
+npm run service:stop
+npm run service:start
+
+# OR use smart restart:
+npm run sync-service:restart
+```
 
 ### Manual Upgrade Process
 
@@ -599,7 +607,10 @@ npm run db:setup-auto
 # 4. Build application
 npm run build
 
-# 5. Smart service restart
+# 5. Manually restart service (REQUIRED to apply changes)
+npm run service:stop
+npm run service:start
+# OR use smart restart:
 npm run sync-service:restart
 
 # 6. Verify upgrade

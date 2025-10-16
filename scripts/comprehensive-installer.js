@@ -800,11 +800,8 @@ class ComprehensiveInstaller {
       { name: 'Rebuild Application', fn: () => this.buildApplication() },
     ];
 
-    // Handle service management based on current state
-    if (hasService && isAdmin) {
-      // Service exists - restart it
-      steps.push({ name: 'Restart Service', fn: () => this.restartService() });
-    } else if (!hasService && isAdmin) {
+    // Handle service installation ONLY (no automatic restart)
+    if (!hasService && isAdmin) {
       // No service exists - install it
       steps.push({
         name: 'Install Service',
@@ -845,11 +842,22 @@ class ComprehensiveInstaller {
 
     await this.saveInstallConfig(config);
 
-    if (!hasService && isAdmin) {
+    this.log('✅ Update completed successfully!');
+
+    if (hasService) {
+      this.log('');
+      this.log('⚠️  IMPORTANT: Service restart required!');
+      this.log('');
+      this.log('📝 To apply the updates, manually restart the service:');
+      this.log('   npm run service:stop');
+      this.log('   npm run service:start');
+      this.log('');
+      this.log('   OR use smart restart:');
+      this.log('   npm run sync-service:restart');
+      this.log('');
+    } else if (!hasService && isAdmin) {
       this.log('🎉 Update completed with new service installation!');
       this.log('ℹ️  The Windows service has been installed and started.');
-    } else {
-      this.log('✅ Update completed successfully!');
     }
   }
 

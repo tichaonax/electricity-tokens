@@ -77,29 +77,27 @@ main() {
     
     # 4. Service management (only if admin)
     if [ "$IS_ADMIN" = true ]; then
-        log_with_timestamp "🔧 Managing Windows service..."
-        
+        log_with_timestamp "🔧 Checking Windows service status..."
+
         # Check if service is installed
         if $NPM_CMD run service:diagnose >/dev/null 2>&1; then
-            log_with_timestamp "♻️  Service exists, performing smart restart..."
-            if ! run_npm run sync-service:restart; then
-                log_with_timestamp "⚠️  Service restart had issues, trying manual restart..."
-                run_npm run service:stop || true
-                sleep 3
-                run_npm run service:start || true
-            fi
+            log_with_timestamp "✅ Service exists"
+            log_with_timestamp ""
+            log_with_timestamp "⚠️  IMPORTANT: Service restart required to apply updates!"
+            log_with_timestamp ""
+            log_with_timestamp "📝 To apply the updates, manually restart the service:"
+            log_with_timestamp "   npm run service:stop"
+            log_with_timestamp "   npm run service:start"
+            log_with_timestamp ""
+            log_with_timestamp "   OR use smart restart:"
+            log_with_timestamp "   npm run sync-service:restart"
+            log_with_timestamp ""
         else
             log_with_timestamp "📥 Installing service for the first time..."
             if ! run_npm run setup:complete; then
                 log_with_timestamp "❌ Service installation failed!"
                 exit 1
             fi
-        fi
-        
-        # Verify service is healthy
-        log_with_timestamp "🏥 Verifying service health..."
-        if ! run_npm run health:check; then
-            log_with_timestamp "⚠️  Service health check failed, but continuing..."
         fi
     else
         log_with_timestamp "⚠️  Skipping service management (requires admin privileges)"

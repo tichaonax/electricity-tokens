@@ -156,10 +156,10 @@ npm run health:check
 
 ### Automated Updates (Recommended)
 
-The system automatically updates when you pull changes:
+The system automatically handles most update tasks when you pull changes:
 
 ```bash
-# Pull latest changes (Git hooks handle the rest)
+# Pull latest changes (Git hooks handle most tasks)
 git pull origin main
 ```
 
@@ -168,8 +168,16 @@ The post-merge Git hook automatically:
 - ✅ Installs updated dependencies
 - ✅ Runs database migrations
 - ✅ Rebuilds the application
-- ✅ Restarts the service with proper timing
-- ✅ Verifies health after restart
+
+**⚠️ Manual restart required** - After git pull completes, you will see instructions to manually restart the service:
+
+```bash
+npm run service:stop
+npm run service:start
+
+# OR use smart restart:
+npm run sync-service:restart
+```
 
 ### Manual Updates
 
@@ -185,7 +193,10 @@ npm run db:setup-auto
 # Build application
 npm run build
 
-# Smart service restart (waits for proper shutdown)
+# Manually restart service (REQUIRED to apply changes)
+npm run service:stop
+npm run service:start
+# OR use smart restart:
 npm run sync-service:restart
 
 # Verify health

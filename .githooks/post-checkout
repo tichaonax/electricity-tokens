@@ -28,11 +28,21 @@ if [ "$3" = "1" ]; then
     if git diff --name-only "$1" "$2" | grep -E "\.(ts|tsx|js|jsx)$" >/dev/null; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🔨 Source code changed, rebuilding..."
         npm run build
-        
-        # Restart service if it's running and we have admin privileges
+
+        # Check if service needs restart (don't restart automatically)
         if net session >/dev/null 2>&1; then
-            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ♻️  Restarting service..."
-            npm run sync-service:restart || echo "⚠️  Service restart had issues"
+            if npm run service:diagnose >/dev/null 2>&1; then
+                echo ""
+                echo "⚠️  IMPORTANT: Service restart required to apply updates!"
+                echo ""
+                echo "📝 To apply the updates, manually restart the service:"
+                echo "   npm run service:stop"
+                echo "   npm run service:start"
+                echo ""
+                echo "   OR use smart restart:"
+                echo "   npm run sync-service:restart"
+                echo ""
+            fi
         fi
     fi
     
