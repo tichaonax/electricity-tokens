@@ -103,7 +103,7 @@ class HealthMonitor {
         });
       }, this.healthTimeout);
 
-      // Try curl first
+      // Try curl first - use PUBLIC endpoint (no auth required)
       const curlProcess = spawn(
         'curl',
         [
@@ -113,7 +113,7 @@ class HealthMonitor {
           '5',
           '--max-time',
           '8',
-          'http://localhost:3000/api/health',
+          'http://localhost:3000/api/health/public',
         ],
         { stdio: 'pipe' }
       );
@@ -130,10 +130,15 @@ class HealthMonitor {
         if (code === 0) {
           try {
             const healthData = JSON.parse(responseData);
-            if (healthData.status === 'healthy') {
+            // Accept both 'healthy' and 'degraded' as passing
+            // 'degraded' means DB issues but app is still responding
+            if (
+              healthData.status === 'healthy' ||
+              healthData.status === 'degraded'
+            ) {
               resolve({
                 healthy: true,
-                reason: 'HTTP health endpoint returned healthy status',
+                reason: `HTTP health endpoint returned ${healthData.status} status`,
                 healthData: healthData,
               });
             } else {
@@ -177,7 +182,7 @@ class HealthMonitor {
           [
             '-Command',
             `try { 
-            $response = Invoke-RestMethod -Uri 'http://localhost:3000/api/health' -TimeoutSec 8 -UseBasicParsing; 
+            $response = Invoke-RestMethod -Uri 'http://localhost:3000/api/health/public' -TimeoutSec 8 -UseBasicParsing; 
             $response | ConvertTo-Json -Compress
           } catch { 
             Write-Output '{"error": "' + $_.Exception.Message + '"}' 
@@ -203,11 +208,13 @@ class HealthMonitor {
                 reason: `PowerShell health check failed: ${healthData.error}`,
                 critical: false,
               });
-            } else if (healthData.status === 'healthy') {
+            } else if (
+              healthData.status === 'healthy' ||
+              healthData.status === 'degraded'
+            ) {
               resolve({
                 healthy: true,
-                reason:
-                  'HTTP health endpoint returned healthy status (PowerShell)',
+                reason: `HTTP health endpoint returned ${healthData.status} status (PowerShell)`,
                 healthData: healthData,
               });
             } else {

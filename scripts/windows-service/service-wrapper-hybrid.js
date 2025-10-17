@@ -1336,7 +1336,7 @@ class HybridElectricityTokensService {
         resolve(false);
       }, 5000); // 5 second timeout
 
-      // Try curl first (more reliable)
+      // Try curl first (more reliable) - use PUBLIC endpoint (no auth required)
       const { spawn } = require('child_process');
       const curlProcess = spawn(
         'curl',
@@ -1347,7 +1347,7 @@ class HybridElectricityTokensService {
           '3',
           '--max-time',
           '5',
-          `http://localhost:${port}/api/health`,
+          `http://localhost:${port}/api/health/public`,
         ],
         { stdio: 'pipe' }
       );
@@ -1362,7 +1362,12 @@ class HybridElectricityTokensService {
         if (code === 0) {
           try {
             const healthData = JSON.parse(responseData);
-            resolve(healthData.status === 'healthy');
+            // Accept both 'healthy' and 'degraded' as passing
+            // 'degraded' means DB issues but app is still responding
+            const isHealthy =
+              healthData.status === 'healthy' ||
+              healthData.status === 'degraded';
+            resolve(isHealthy);
           } catch {
             resolve(false);
           }
