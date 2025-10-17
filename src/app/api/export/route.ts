@@ -243,7 +243,7 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
     const purchases = await prisma.tokenPurchase.findMany({
     where: whereClause,
     include: {
-      creator: {
+      user: {
         select: {
           name: true,
           email: true,
@@ -277,8 +277,8 @@ async function exportPurchases(dateFilter: Record<string, unknown>) {
       totalPayment: purchase.totalPayment,
       costPerToken: purchase.totalPayment / purchase.totalTokens,
       isEmergency: purchase.isEmergency ? 'Yes' : 'No',
-      createdBy: purchase.creator.name,
-      createdByEmail: purchase.creator.email,
+      createdBy: purchase.user.name,
+      createdByEmail: purchase.user.email,
       hasContribution: contribution ? 'Yes' : 'No',
       contributorName: contribution?.user?.name || 'N/A',
       contributorEmail: contribution?.user?.email || 'N/A',
@@ -316,7 +316,7 @@ async function exportPurchaseData(dateFilter: Record<string, unknown>) {
     const purchases = await prisma.tokenPurchase.findMany({
       where: whereClause,
       include: {
-        creator: {
+        user: {
           select: {
             name: true,
             email: true,
@@ -358,8 +358,8 @@ async function exportPurchaseData(dateFilter: Record<string, unknown>) {
         meterReading: purchase.meterReading,
         costPerToken: costPerToken.toFixed(4),
         isEmergency: purchase.isEmergency ? 'Yes' : 'No',
-        createdBy: purchase.creator.name,
-        createdByEmail: purchase.creator.email,
+        createdBy: purchase.user.name,
+        createdByEmail: purchase.user.email,
         
         // Contribution data (linked one-to-one)
         contributionId: contribution?.id || 'N/A',

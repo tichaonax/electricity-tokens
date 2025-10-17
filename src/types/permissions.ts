@@ -33,6 +33,7 @@ export interface UserPermissions {
   // Data Management
   canExportData: boolean;
   canImportData: boolean;
+  canCreateBackup: boolean;
 }
 
 // Default permissions for new users
@@ -70,6 +71,7 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   // Data Management - No access by default
   canExportData: false,
   canImportData: false,
+  canCreateBackup: false,
 };
 
 // Full permissions for admin users
@@ -94,6 +96,7 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canViewUserContributions: true,
   canExportData: true,
   canImportData: true,
+  canCreateBackup: true,
 };
 
 // Restricted permissions preset (read-only user)
@@ -118,6 +121,7 @@ export const READ_ONLY_PERMISSIONS: UserPermissions = {
   canViewUserContributions: false, // Special permission - not included in read-only
   canExportData: false,
   canImportData: false,
+  canCreateBackup: false,
 };
 
 // Contributor-only permissions preset
@@ -142,6 +146,7 @@ export const CONTRIBUTOR_ONLY_PERMISSIONS: UserPermissions = {
   canViewUserContributions: true, // Allow contributions view for contributors (special grant)
   canExportData: false,
   canImportData: false,
+  canCreateBackup: false,
 };
 
 // Helper function to merge permissions with defaults

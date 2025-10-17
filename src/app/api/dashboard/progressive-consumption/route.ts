@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
+// Helper function to round to 2 decimal places
+const round2 = (num: number): number => Math.round(num * 100) / 100;
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -286,23 +289,23 @@ export async function GET() {
     const response = {
       currentMonth: {
         period: currentPeriod,
-        consumed: currentConsumed,
-        totalContributed: currentContributed,
-        costPerKwh: currentCostPerKwh,
+        consumed: round2(currentConsumed),
+        totalContributed: round2(currentContributed),
+        costPerKwh: round2(currentCostPerKwh),
       },
       previousMonth: {
-        consumed: previousConsumed,
-        totalContributed: previousContributed,
-        costPerKwh: previousCostPerKwh,
+        consumed: round2(previousConsumed),
+        totalContributed: round2(previousContributed),
+        costPerKwh: round2(previousCostPerKwh),
       },
       trend,
-      trendPercentage,
+      trendPercentage: round2(trendPercentage),
       historical: {
-        totalPurchasedTokens,
-        totalPurchasedCost,
-        totalConsumedTokens,
-        totalConsumedCost,
-        averageCostPerKwhAllTime,
+        totalPurchasedTokens: round2(totalPurchasedTokens),
+        totalPurchasedCost: round2(totalPurchasedCost),
+        totalConsumedTokens: round2(totalConsumedTokens),
+        totalConsumedCost: round2(totalConsumedCost),
+        averageCostPerKwhAllTime: round2(averageCostPerKwhAllTime),
       },
     };
 

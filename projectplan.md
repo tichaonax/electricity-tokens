@@ -1,4 +1,46 @@
-# Project Plan: Fix Service Stability & Admin Seeding
+# Project Plan: Fix TokenPurchase API Route Field Name Mismatch
+
+## Problem
+The `/api/purchases` route is trying to include a `creator` field that doesn't exist on the `TokenPurchase` model. According to the Prisma schema, the relation field is named `user` (not `creator`).
+
+## Schema Analysis
+- `TokenPurchase.createdBy` → foreign key to `User.id`
+- `TokenPurchase.user` → relation field (current name in schema)
+- API route incorrectly references `creator` instead of `user` in multiple places
+
+## Solution
+Update the API route to use the correct field name `user` instead of `creator`.
+
+## Todo Items
+- [x] Update GET endpoint include clause to use `user` instead of `creator`
+- [x] Update GET endpoint search filter to use `user` instead of `creator`
+- [x] Update GET endpoint orderBy clause to use `user` instead of `creator`
+- [x] Update POST endpoint include clause to use `user` instead of `creator`
+
+## Review
+
+### Implementation Complete
+
+All 4 instances of the incorrect `creator` field have been updated to use the correct `user` field name.
+
+**Changes made to `src/app/api/purchases/route.ts`:**
+
+1. **Line 132**: GET endpoint include clause - Changed `creator` to `user`
+2. **Line 94**: GET endpoint search filter - Changed `where.creator` to `where.user`
+3. **Line 107-114**: GET endpoint orderBy type and switch case - Changed `creator: { name }` to `user: { name }`
+4. **Line 289**: POST endpoint include clause - Changed `creator` to `user`
+
+**Impact:**
+- The API will now correctly query the `TokenPurchase.user` relation field
+- Purchases can be searched by creator name
+- Purchases can be sorted by creator name
+- Purchase responses will include the creator user details
+
+**Note:** The `sortBy` parameter still accepts `'creator'` as a value (line 109) to maintain API compatibility with the frontend, but it now correctly maps to the `user` relation field internally.
+
+---
+
+# PREVIOUS PROJECT: Fix Service Stability & Admin Seeding (COMPLETED)
 
 ## Problem Analysis
 

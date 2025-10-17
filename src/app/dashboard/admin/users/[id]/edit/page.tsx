@@ -53,8 +53,8 @@ interface User {
   createdAt: string;
   updatedAt: string;
   _count: {
-    contributions: number;
-    createdPurchases: number;
+    userContributions: number;
+    tokenPurchases: number;
   };
 }
 
@@ -97,6 +97,7 @@ export default function EditUser() {
       canViewUserContributions: false,
       canExportData: false,
       canImportData: false,
+      canCreateBackup: false,
       canAddMeterReadings: false,
     },
     resetPassword: false,
@@ -401,7 +402,7 @@ export default function EditUser() {
                       Contributions:
                     </span>
                     <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">
-                      {user._count.contributions}
+                      {user._count.userContributions}
                     </span>
                   </div>
                   <div className="text-sm">
@@ -409,7 +410,7 @@ export default function EditUser() {
                       Purchases Created:
                     </span>
                     <span className="ml-2 font-medium text-gray-900 dark:text-gray-100">
-                      {user._count.createdPurchases}
+                      {user._count.tokenPurchases}
                     </span>
                   </div>
                 </div>
@@ -794,6 +795,7 @@ export default function EditUser() {
                             },
                             { name: 'canExportData', label: 'Export Data' },
                             { name: 'canImportData', label: 'Import Data' },
+                            { name: 'canCreateBackup', label: 'Create Backups' },
                             {
                               name: 'canAddMeterReadings',
                               label: 'Add Meter Readings',

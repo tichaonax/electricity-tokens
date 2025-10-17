@@ -9,6 +9,7 @@ import { DataBackup } from '@/components/data-backup';
 import { ArrowLeft, Download, Upload, Shield, HardDrive } from 'lucide-react';
 import { NavigationFormButton } from '@/components/ui/navigation-form-button';
 import { navigateToDashboard } from '@/app/actions/navigation';
+import type { UserPermissions } from '@/types/permissions';
 
 export function DataManagementClient() {
   const { data: session, status } = useSession();
@@ -16,6 +17,13 @@ export function DataManagementClient() {
   const [activeTab, setActiveTab] = useState<'export' | 'import' | 'backup'>(
     'export'
   );
+
+  // Helper function to check backup permission
+  const hasBackupPermission = () => {
+    if (session?.user?.role === 'ADMIN') return true;
+    const permissions = session?.user?.permissions as UserPermissions | undefined;
+    return permissions?.canCreateBackup === true;
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -36,6 +44,7 @@ export function DataManagementClient() {
   }
 
   const isAdmin = session.user?.role === 'ADMIN';
+  const canBackup = hasBackupPermission();
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -91,7 +100,9 @@ export function DataManagementClient() {
               Export your data for analysis, import bulk data from CSV files, or
               create database backups.
               {!isAdmin &&
-                ' Import and backup functionality requires administrator privileges.'}
+                ' Import functionality requires administrator privileges.'}
+              {!canBackup && isAdmin === false &&
+                ' Backup functionality requires special permission.'}
             </p>
           </div>
 
@@ -129,19 +140,19 @@ export function DataManagementClient() {
                 </button>
                 <button
                   onClick={() => setActiveTab('backup')}
-                  disabled={!isAdmin}
+                  disabled={!canBackup}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'backup' && isAdmin
+                    activeTab === 'backup' && canBackup
                       ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : !isAdmin
+                      : !canBackup
                         ? 'border-transparent text-slate-300 cursor-not-allowed dark:text-slate-600'
                         : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300'
                   }`}
                 >
                   <HardDrive className="h-4 w-4 inline mr-2" />
                   Backup & Restore
-                  {!isAdmin && (
-                    <span className="ml-1 text-xs">(Admin Only)</span>
+                  {!canBackup && (
+                    <span className="ml-1 text-xs">(Permission Required)</span>
                   )}
                 </button>
               </nav>
@@ -176,18 +187,18 @@ export function DataManagementClient() {
 
             {activeTab === 'backup' && (
               <>
-                {isAdmin ? (
-                  <DataBackup />
+                {canBackup ? (
+                  <DataBackup isAdmin={isAdmin} />
                 ) : (
                   <div className="text-center py-12">
                     <Shield className="h-16 w-16 text-slate-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      Administrator Access Required
+                      Permission Required
                     </h3>
                     <p className="text-slate-600 dark:text-slate-400">
-                      Backup and restore functionality is restricted to
-                      administrators only. Please contact your system
-                      administrator for assistance.
+                      Backup and restore functionality requires special
+                      permission. Please contact your system administrator
+                      to request access.
                     </p>
                   </div>
                 )}

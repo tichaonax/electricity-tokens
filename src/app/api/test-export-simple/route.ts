@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (type === 'purchases') {
       const purchases = await prisma.tokenPurchase.findMany({
         include: {
-          creator: {
+          user: {
             select: {
               name: true,
               email: true,
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
           totalPayment: purchase.totalPayment,
           costPerToken: purchase.totalPayment / purchase.totalTokens,
           isEmergency: purchase.isEmergency ? 'Yes' : 'No',
-          createdBy: purchase.creator.name,
-          createdByEmail: purchase.creator.email,
+          createdBy: purchase.user.name,
+          createdByEmail: purchase.user.email,
           contributionCount: purchase.contributions.length,
           totalContributions: totalContributions,
           totalTokensConsumed: totalTokensConsumed,

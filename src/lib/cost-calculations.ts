@@ -3,6 +3,9 @@
  * Handles proportional costs, multiple purchases, emergency rates, and user-specific calculations
  */
 
+// Helper function to round to 2 decimal places
+const round2 = (num: number): number => Math.round(num * 100) / 100;
+
 export interface Purchase {
   id: string;
   totalTokens: number;
@@ -167,15 +170,15 @@ export function calculateUserTrueCost(
       : 0;
 
   return {
-    totalTokensUsed,
-    totalAmountPaid,
-    totalTrueCost,
-    averageCostPerKwh,
-    efficiency,
-    overpayment,
-    emergencyPremium,
-    regularCostPerKwh,
-    emergencyCostPerKwh,
+    totalTokensUsed: round2(totalTokensUsed),
+    totalAmountPaid: round2(totalAmountPaid),
+    totalTrueCost: round2(totalTrueCost),
+    averageCostPerKwh: round2(averageCostPerKwh),
+    efficiency: round2(efficiency),
+    overpayment: round2(overpayment),
+    emergencyPremium: round2(emergencyPremium),
+    regularCostPerKwh: round2(regularCostPerKwh),
+    emergencyCostPerKwh: round2(emergencyCostPerKwh),
   };
 }
 
@@ -314,8 +317,8 @@ export function calculatePeriodCostAnalysis(
     emergencyPurchaseImpact: {
       regularPurchases: regularPurchases.length,
       emergencyPurchases: emergencyPurchases.length,
-      additionalCostDueToEmergency,
-      percentageIncrease,
+      additionalCostDueToEmergency: round2(additionalCostDueToEmergency),
+      percentageIncrease: round2(percentageIncrease),
     },
   };
 }
@@ -350,10 +353,10 @@ export function calculateOptimalContribution(
   const totalOptimalContribution = baseContribution + emergencyPenalty;
 
   return {
-    baseContribution,
-    emergencyPenalty,
-    totalOptimalContribution,
-    costPerKwh,
+    baseContribution: round2(baseContribution),
+    emergencyPenalty: round2(emergencyPenalty),
+    totalOptimalContribution: round2(totalOptimalContribution),
+    costPerKwh: round2(costPerKwh),
   };
 }
 
@@ -456,6 +459,6 @@ export function generateCostRecommendations(userSummary: UserCostSummary): {
   return {
     recommendations,
     efficiency,
-    potentialSavings,
+    potentialSavings: round2(potentialSavings),
   };
 }

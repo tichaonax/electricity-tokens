@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { subDays } from 'date-fns';
 
+// Helper function to round to 2 decimal places
+const round2 = (num: number): number => Math.round(num * 100) / 100;
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -277,24 +280,24 @@ export async function GET() {
     }
 
     const response = {
-      contributionBalance, // Use GLOBAL balance (same as contributions page: -$4.75)
-      totalContributed,
-      totalConsumed,
-      totalFairShareCost: totalTrueCost, // What should have been paid based on consumption
-      averageDaily,
+      contributionBalance: round2(contributionBalance), // Use GLOBAL balance (same as contributions page: -$4.75)
+      totalContributed: round2(totalContributed),
+      totalConsumed: round2(totalConsumed),
+      totalFairShareCost: round2(totalTrueCost), // What should have been paid based on consumption
+      averageDaily: round2(averageDaily),
       status,
-      lastWeekConsumption,
-      lastWeekContributed,
+      lastWeekConsumption: round2(lastWeekConsumption),
+      lastWeekContributed: round2(lastWeekContributed),
       consumptionTrend,
-      trendPercentage,
+      trendPercentage: round2(trendPercentage),
       // New fields for anticipated payment
-      tokensConsumedSinceLastContribution,
-      estimatedCostSinceLastContribution,
-      anticipatedPayment,
-      historicalCostPerKwh: totalConsumed > 0 ? totalTrueCost / totalConsumed : 0,
+      tokensConsumedSinceLastContribution: round2(tokensConsumedSinceLastContribution),
+      estimatedCostSinceLastContribution: round2(estimatedCostSinceLastContribution),
+      anticipatedPayment: round2(anticipatedPayment),
+      historicalCostPerKwh: round2(totalConsumed > 0 ? totalTrueCost / totalConsumed : 0),
       // NEW: Anticipated others payment fields
-      anticipatedOthersPayment,
-      anticipatedTokenPurchase,
+      anticipatedOthersPayment: round2(anticipatedOthersPayment),
+      anticipatedTokenPurchase: round2(anticipatedTokenPurchase),
     };
 
     return NextResponse.json(response);

@@ -55,8 +55,8 @@ export async function GET(
         updatedAt: true,
         _count: {
           select: {
-            contributions: true,
-            createdPurchases: true,
+            userContributions: true,
+            tokenPurchases: true,
           },
         },
       },
@@ -81,6 +81,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  let updateData: UpdateData = {};
   try {
     const session = await getServerSession(authOptions);
 
@@ -126,8 +127,8 @@ export async function PUT(
       );
     }
 
-    // Build update data
-    const updateData: UpdateData = {};
+    // Build update data (initialized outside try block for error logging)
+    // const updateData: UpdateData = {}; // Moved outside try block
 
     // Name can be updated by user or admin
     if (name !== undefined) {
@@ -280,8 +281,8 @@ export async function PUT(
         updatedAt: true,
         _count: {
           select: {
-            contributions: true,
-            createdPurchases: true,
+            userContributions: true,
+            tokenPurchases: true,
           },
         },
       },
@@ -383,8 +384,8 @@ export async function DELETE(
     const existingUser = await prisma.user.findUnique({
       where: { id: id },
       include: {
-        contributions: true,
-        createdPurchases: true,
+        userContributions: true,
+        tokenPurchases: true,
       },
     });
 
@@ -402,8 +403,8 @@ export async function DELETE(
 
     // Prevent deletion if user has contributions or purchases
     if (
-      existingUser.contributions.length > 0 ||
-      existingUser.createdPurchases.length > 0
+      existingUser.userContributions.length > 0 ||
+      existingUser.tokenPurchases.length > 0
     ) {
       return NextResponse.json(
         {

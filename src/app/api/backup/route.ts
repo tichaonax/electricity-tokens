@@ -43,7 +43,7 @@ interface BackupPurchase {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
-  creator: {
+  user: {
     email: string;
     name: string;
   };
@@ -123,15 +123,27 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    // Check authentication and admin permissions
-    const permissionCheck = checkPermissions(
-      session,
-      {},
-      { requireAuth: true, requireAdmin: true }
-    );
-    if (!permissionCheck.success) {
+    // Check authentication
+    if (!session?.user) {
       return NextResponse.json(
-        { message: permissionCheck.error },
+        { message: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Check if user has backup permission
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true, permissions: true },
+    });
+
+    const isAdmin = user?.role === 'ADMIN';
+    const permissions = user?.permissions as { canCreateBackup?: boolean } | null;
+    const canCreateBackup = isAdmin || permissions?.canCreateBackup === true;
+
+    if (!canCreateBackup) {
+      return NextResponse.json(
+        { message: 'You do not have permission to create backups' },
         { status: 403 }
       );
     }
@@ -203,7 +215,7 @@ export async function GET(request: NextRequest) {
       // Get all purchases with their contributions to maintain one-to-one relationship
       const tokenPurchases = await prisma.tokenPurchase.findMany({
         include: {
-          creator: {
+          user: {
             select: {
               email: true,
               name: true,
@@ -256,6 +268,7 @@ export async function GET(request: NextRequest) {
 
       backupData.tokenPurchases = tokenPurchases.map((purchase) => ({
         ...purchase,
+        user: purchase.user, // Preserve user info
         contribution: undefined, // Remove contribution from purchase object to avoid duplication
         purchaseDate: purchase.purchaseDate.toISOString(),
         createdAt: purchase.createdAt.toISOString(),
@@ -364,7 +377,8 @@ export async function GET(request: NextRequest) {
       backupData.metadata.recordCounts.auditLogs = auditLogs.length;
     }
 
-    const filename = `backup_${type}_${new Date().toISOString().split('T')[0]}.json`;
+    const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
+    const filename = `ElectricityTracker-backup_${type}_${timestamp}.json`;
 
     return new NextResponse(JSON.stringify(backupData, null, 2), {
       status: 200,
@@ -533,12 +547,12 @@ export async function POST(request: NextRequest) {
           try {
             // Find creator by email
             const creator = await tx.user.findUnique({
-              where: { email: purchase.creator.email },
+              where: { email: purchase.user.email },
             });
 
             if (!creator) {
               results.errors.push(
-                `Creator not found for purchase ${purchase.id}: ${purchase.creator.email}`
+                `Creator not found for purchase ${purchase.id}: ${purchase.user.email}`
               );
               continue;
             }

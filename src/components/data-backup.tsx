@@ -32,7 +32,11 @@ interface RestoreResult {
   };
 }
 
-export function DataBackup() {
+interface DataBackupProps {
+  isAdmin?: boolean;
+}
+
+export function DataBackup({ isAdmin = false }: DataBackupProps) {
   const [loading, setLoading] = useState(false);
   const [backupOptions, setBackupOptions] = useState<BackupOptions>({
     type: 'full',
@@ -64,7 +68,8 @@ export function DataBackup() {
       a.href = url;
 
       const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = `backup_${backupOptions.type}_${new Date().toISOString().split('T')[0]}.json`;
+      const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
+      let filename = `ElectricityTracker-backup_${backupOptions.type}_${timestamp}.json`;
 
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
@@ -242,31 +247,34 @@ export function DataBackup() {
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-slate-200 dark:border-slate-700"></div>
+      {/* Divider - Only show if admin */}
+      {isAdmin && (
+        <div className="border-t border-slate-200 dark:border-slate-700"></div>
+      )}
 
-      {/* Restore Section */}
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-            Restore from Backup
-          </h3>
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-950 dark:border-red-800">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-red-900 dark:text-red-100">
-                  Warning: Data Overwrite
-                </h4>
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  Restoring from backup will overwrite existing data. This
-                  action cannot be undone. It&apos;s recommended to create a
-                  backup before restoring.
-                </p>
+      {/* Restore Section - Admin Only */}
+      {isAdmin && (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              Restore from Backup
+            </h3>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-950 dark:border-red-800">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-red-900 dark:text-red-100">
+                    Warning: Data Overwrite
+                  </h4>
+                  <p className="text-sm text-red-700 dark:text-red-300">
+                    Restoring from backup will overwrite existing data. This
+                    action cannot be undone. It&apos;s recommended to create a
+                    backup before restoring.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
         {/* File Upload */}
         <div>
@@ -394,7 +402,8 @@ export function DataBackup() {
             )}
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

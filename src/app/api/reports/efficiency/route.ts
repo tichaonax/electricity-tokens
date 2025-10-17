@@ -9,6 +9,11 @@ import {
 } from '@/lib/validation-middleware';
 import { z } from 'zod';
 
+// Helper function to round to 2 decimal places
+const round2 = (num: number): number => Math.round(num * 100) / 100;
+// Helper function to round to 4 decimal places (for rates)
+const round4 = (num: number): number => Math.round(num * 10000) / 10000;
+
 const efficiencyReportQuerySchema = z.object({
   type: z.enum(['token-loss', 'purchase-timing', 'usage-prediction']),
   startDate: z.string().datetime().optional(),
@@ -184,33 +189,33 @@ async function getTokenLossAnalysis(startDate?: string, endDate?: string) {
 
     return {
       ...month,
-      regularRate: Number(monthRegularRate.toFixed(4)),
-      emergencyRate: Number(monthEmergencyRate.toFixed(4)),
-      potentialSavings: Number(month.potentialSavings.toFixed(2)),
-      lossPercentage: Number(month.lossPercentage.toFixed(2)),
+      regularRate: round4(monthRegularRate),
+      emergencyRate: round4(monthEmergencyRate),
+      potentialSavings: round2(month.potentialSavings),
+      lossPercentage: round2(month.lossPercentage),
     };
   });
 
   return {
     summary: {
       totalTokens,
-      totalSpent: Number(totalSpent.toFixed(2)),
+      totalSpent: round2(totalSpent),
       emergencyTokens,
-      emergencySpent: Number(emergencySpent.toFixed(2)),
+      emergencySpent: round2(emergencySpent),
       regularTokens,
-      regularSpent: Number(regularSpent.toFixed(2)),
-      avgRegularRate: Number(avgRegularRate.toFixed(4)),
-      avgEmergencyRate: Number(avgEmergencyRate.toFixed(4)),
-      potentialSavings: Number(potentialSavings.toFixed(2)),
-      tokenLossPercentage: Number(tokenLossPercentage.toFixed(2)),
-      emergencyPremium: Number((avgEmergencyRate - avgRegularRate).toFixed(4)),
+      regularSpent: round2(regularSpent),
+      avgRegularRate: round4(avgRegularRate),
+      avgEmergencyRate: round4(avgEmergencyRate),
+      potentialSavings: round2(potentialSavings),
+      tokenLossPercentage: round2(tokenLossPercentage),
+      emergencyPremium: round4(avgEmergencyRate - avgRegularRate),
     },
     monthlyBreakdown,
     insights: {
       totalEmergencyPurchases: emergencyPurchases.length,
       totalRegularPurchases: regularPurchases.length,
-      emergencyFrequency: purchases.length > 0 ? Number((emergencyPurchases.length / purchases.length * 100).toFixed(1)) : 0,
-      averageSavingsPerEmergency: emergencyPurchases.length > 0 ? Number((potentialSavings / emergencyPurchases.length).toFixed(2)) : 0,
+      emergencyFrequency: purchases.length > 0 ? round2(emergencyPurchases.length / purchases.length * 100) : 0,
+      averageSavingsPerEmergency: emergencyPurchases.length > 0 ? round2(potentialSavings / emergencyPurchases.length) : 0,
     }
   };
 }
@@ -292,8 +297,8 @@ async function getPurchaseTimingRecommendations(startDate?: string, endDate?: st
     
     return {
       ...month,
-      avgUtilization: Number(month.avgUtilization.toFixed(2)),
-      emergencyRate: Number(month.emergencyRate.toFixed(2)),
+      avgUtilization: round2(month.avgUtilization),
+      emergencyRate: round2(month.emergencyRate),
     };
   });
 
@@ -303,8 +308,8 @@ async function getPurchaseTimingRecommendations(startDate?: string, endDate?: st
     
     return {
       ...day,
-      avgTokens: Number(day.avgTokens.toFixed(0)),
-      emergencyRate: Number(day.emergencyRate.toFixed(2)),
+      avgTokens: Math.round(day.avgTokens),
+      emergencyRate: round2(day.emergencyRate),
     };
   });
 
@@ -351,10 +356,10 @@ async function getPurchaseTimingRecommendations(startDate?: string, endDate?: st
     insights: {
       bestPurchaseDay: bestDayToBuy.dayName,
       worstPurchaseDay: worstDayToBuy.dayName,
-      avgMonthlyConsumption: Number(avgMonthlyConsumption.toFixed(0)),
-      avgPurchaseFrequency: Number(avgPurchaseFrequency.toFixed(1)),
-      seasonalVariation: monthlyAnalysis.length > 0 ? 
-        Number((Math.max(...monthlyAnalysis.map(m => m.totalConsumed)) - Math.min(...monthlyAnalysis.map(m => m.totalConsumed))).toFixed(0)) : 0,
+      avgMonthlyConsumption: Math.round(avgMonthlyConsumption),
+      avgPurchaseFrequency: round2(avgPurchaseFrequency),
+      seasonalVariation: monthlyAnalysis.length > 0
+        ? Math.round(Math.max(...monthlyAnalysis.map(m => m.totalConsumed)) - Math.min(...monthlyAnalysis.map(m => m.totalConsumed))) : 0,
     }
   };
 }
@@ -492,15 +497,15 @@ async function getUsagePredictions(startDate?: string, endDate?: string, targetU
       ...user,
       monthlyUsage: monthlyData.map((month: any) => ({
         ...month,
-        tokensConsumed: Number(month.tokensConsumed.toFixed(0)),
-        contributions: Number(month.contributions.toFixed(2)),
-        emergencyTokens: Number(month.emergencyTokens.toFixed(0)),
+        tokensConsumed: Math.round(month.tokensConsumed),
+        contributions: round2(month.contributions),
+        emergencyTokens: Math.round(month.emergencyTokens),
       })),
-      averageMonthlyUsage: Number(user.averageMonthlyUsage.toFixed(0)),
-      usageTrend: Number(user.usageTrend.toFixed(2)),
-      predictedNextMonth: Number(user.predictedNextMonth.toFixed(0)),
-      totalUsage: Number(user.totalUsage.toFixed(0)),
-      totalContributions: Number(user.totalContributions.toFixed(2)),
+      averageMonthlyUsage: Math.round(user.averageMonthlyUsage),
+      usageTrend: round2(user.usageTrend),
+      predictedNextMonth: Math.round(user.predictedNextMonth),
+      totalUsage: Math.round(user.totalUsage),
+      totalContributions: round2(user.totalContributions),
     };
   });
 
@@ -512,10 +517,10 @@ async function getUsagePredictions(startDate?: string, endDate?: string, targetU
   return {
     userPredictions: predictions,
     systemPrediction: {
-      totalPredictedUsage: Number(totalPredictedUsage.toFixed(0)),
-      totalAverageUsage: Number(totalAverageUsage.toFixed(0)),
-      systemTrend: Number(systemTrend.toFixed(2)),
-      recommendedPurchaseAmount: Number((totalPredictedUsage * 1.15).toFixed(0)), // 15% buffer
+      totalPredictedUsage: Math.round(totalPredictedUsage),
+      totalAverageUsage: Math.round(totalAverageUsage),
+      systemTrend: round2(systemTrend),
+      recommendedPurchaseAmount: Math.round(totalPredictedUsage * 1.15), // 15% buffer
       highConfidenceUsers: predictions.filter(u => u.confidenceLevel === 'high').length,
       lowConfidenceUsers: predictions.filter(u => ['low', 'very-low'].includes(u.confidenceLevel)).length,
     },

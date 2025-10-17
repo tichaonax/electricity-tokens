@@ -48,7 +48,7 @@ model MeterReading {
   readingDate DateTime
   notes       String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readingDate])
@@ -66,17 +66,17 @@ model Session {
 }
 
 model TokenPurchase {
-  id                String             @id
-  totalTokens       Float
-  totalPayment      Float
-  meterReading      Float
-  purchaseDate      DateTime
-  isEmergency       Boolean            @default(false)
-  createdBy         String
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime
-  user              User               @relation(fields: [createdBy], references: [id])
-  userContribution  UserContribution?
+  id           String             @id
+  totalTokens  Float
+  totalPayment Float
+  meterReading Float
+  purchaseDate DateTime
+  isEmergency  Boolean            @default(false)
+  createdBy    String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation(fields: [createdBy], references: [id])
+  contribution UserContribution?
 
   @@map("token_purchases")
 }
@@ -89,8 +89,8 @@ model UserContribution {
   meterReading       Float
   tokensConsumed     Float
   createdAt          DateTime      @default(now())
-  updatedAt          DateTime
-  tokenPurchase      TokenPurchase @relation(fields: [purchaseId], references: [id])
+  updatedAt          DateTime      @updatedAt
+  purchase           TokenPurchase @relation(fields: [purchaseId], references: [id])
   user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_contributions")
@@ -108,7 +108,7 @@ model User {
   themePreference       String?            @default("system")
   lastLoginAt           DateTime?
   createdAt             DateTime           @default(now())
-  updatedAt             DateTime
+  updatedAt             DateTime           @updatedAt
   isActive              Boolean            @default(true)
   deactivatedAt         DateTime?
   deactivationReason    String?

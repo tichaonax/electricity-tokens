@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     // Add search filter for creator name
     if (search && search.trim()) {
-      where.creator = {
+      where.user = {
         name: {
           contains: search.trim(),
           mode: 'insensitive', // Case-insensitive search
@@ -104,11 +104,11 @@ export async function GET(request: NextRequest) {
       | { purchaseDate: 'asc' | 'desc' }
       | { totalTokens: 'asc' | 'desc' }
       | { totalPayment: 'asc' | 'desc' }
-      | { creator: { name: 'asc' | 'desc' } };
+      | { user: { name: 'asc' | 'desc' } };
     switch (sortBy) {
       case 'creator':
         orderBy = {
-          creator: {
+          user: {
             name: sortDirection,
           },
         };
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
       prisma.tokenPurchase.findMany({
         where,
         include: {
-          creator: {
+          user: {
             select: {
               id: true,
               name: true,
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
         createdBy: permissionCheck.user!.id,
       },
       include: {
-        creator: {
+        user: {
           select: {
             id: true,
             name: true,

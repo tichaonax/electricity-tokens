@@ -57,7 +57,7 @@ interface Purchase {
   purchaseDate: string;
   isEmergency: boolean;
   canContribute: boolean;
-  creator: {
+  user: {
     id: string;
     name: string;
     email: string;

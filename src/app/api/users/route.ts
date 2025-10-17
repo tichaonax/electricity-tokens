@@ -88,8 +88,8 @@ export async function GET(request: NextRequest) {
           updatedAt: true,
           _count: {
             select: {
-              contributions: true,
-              createdPurchases: true,
+              userContributions: true,
+              tokenPurchases: true,
             },
           },
         },

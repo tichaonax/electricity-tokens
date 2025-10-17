@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
                 },
               },
             },
-            creator: {
+            user: {
               select: {
                 id: true,
                 name: true,

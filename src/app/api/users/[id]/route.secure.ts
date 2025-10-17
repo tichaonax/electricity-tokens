@@ -68,8 +68,8 @@ async function secureGetHandler(
         updatedAt: true,
         _count: {
           select: {
-            contributions: true,
-            createdPurchases: true,
+            userContributions: true,
+            tokenPurchases: true,
           },
         },
       },
@@ -232,8 +232,8 @@ async function securePutHandler(
         updatedAt: true,
         _count: {
           select: {
-            contributions: true,
-            createdPurchases: true,
+            userContributions: true,
+            tokenPurchases: true,
           },
         },
       },
@@ -342,8 +342,8 @@ async function secureDeleteHandler(
       include: {
         _count: {
           select: {
-            contributions: true,
-            createdPurchases: true,
+            userContributions: true,
+            tokenPurchases: true,
           },
         },
       },
@@ -374,7 +374,7 @@ async function secureDeleteHandler(
     }
 
     // Check if user has associated data
-    if (existingUser._count.contributions > 0 || existingUser._count.createdPurchases > 0) {
+    if (existingUser._count.userContributions > 0 || existingUser._count.tokenPurchases > 0) {
       return NextResponse.json(
         { error: 'Cannot delete user with associated contributions or purchases' },
         { status: 409 }

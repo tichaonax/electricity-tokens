@@ -14,7 +14,7 @@ interface Purchase {
   meterReading: number;
   purchaseDate: string;
   isEmergency: boolean;
-  creator: {
+  user: {
     id: string;
     name: string;
   };

@@ -39,7 +39,15 @@
       "Bash(powershell:*)",
       "Read(//c/Users/ticha/apps/multi-business-multi-apps/**)",
       "Read(//c/Users/ticha/apps/multi-business-multi-apps/scripts/**)",
-      "Bash(timeout /t 10)"
+      "Bash(timeout /t 10)",
+      "Bash(sc.exe stop:*)",
+      "Bash(timeout /t 5)",
+      "Bash(sc.exe start \"ElectricityTracker.exe\")",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(deploy-with-restart.bat)",
+      "Bash(cmd //c deploy-with-restart.bat)",
+      "Bash(cmd //c \".\\deploy-with-restart.bat\")"
     ],
     "deny": []
   }

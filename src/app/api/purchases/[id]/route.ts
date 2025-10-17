@@ -257,7 +257,7 @@ export async function GET(
     const purchase = await prisma.tokenPurchase.findUnique({
       where: { id: id },
       include: {
-        creator: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -474,7 +474,7 @@ export async function PUT(
       where: { id: id },
       data: updateData,
       include: {
-        creator: {
+        user: {
           select: {
             id: true,
             name: true,

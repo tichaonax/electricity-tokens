@@ -12,7 +12,7 @@ interface Purchase {
   totalPayment: number;
   purchaseDate: string;
   isEmergency: boolean;
-  creator: {
+  user: {
     id: string;
     name: string;
     email: string;
@@ -193,7 +193,7 @@ export default function PurchasesPage() {
                                 /token
                               </p>
                               <p className="text-sm text-slate-500 dark:text-slate-400">
-                                by {purchase.creator.name}
+                                by {purchase.user.name}
                               </p>
                             </div>
                             {purchase.contribution ? (

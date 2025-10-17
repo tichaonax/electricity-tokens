@@ -45,7 +45,7 @@ interface Purchase {
   isEmergency: boolean;
   createdAt: string;
   canContribute: boolean;
-  creator: {
+  user: {
     id: string;
     name: string;
   };
@@ -965,12 +965,12 @@ export function PurchaseHistoryTable({
               ),
             },
             {
-              key: 'creator',
+              key: 'user',
               label: 'Creator',
               mobileHide: true,
-              render: (creator) => (
+              render: (user) => (
                 <span className="text-sm text-slate-900 dark:text-slate-100">
-                  {creator?.name || 'Unknown'}
+                  {user?.name || 'Unknown'}
                 </span>
               ),
             },
@@ -1394,7 +1394,7 @@ export function PurchaseHistoryTable({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      {purchase.creator.name}
+                      {purchase.user.name}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -1467,7 +1467,7 @@ export function PurchaseHistoryTable({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
-                      {(isAdmin || purchase.creator.id === userId) && (
+                      {(isAdmin || purchase.user.id === userId) && (
                         <>
                           <Button
                             variant="outline"

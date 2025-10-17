@@ -46,8 +46,8 @@ interface User {
   createdAt: string;
   updatedAt: string;
   _count: {
-    contributions: number;
-    createdPurchases: number;
+    userContributions: number;
+    tokenPurchases: number;
   };
 }
 
@@ -564,8 +564,8 @@ function UserManagementContent() {
                               </Badge>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              <div>{user._count.contributions} contributions</div>
-                              <div>{user._count.createdPurchases} purchases</div>
+                              <div>{user._count.userContributions} contributions</div>
+                              <div>{user._count.tokenPurchases} purchases</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                               {new Date(user.createdAt).toLocaleDateString()}
@@ -660,8 +660,8 @@ function UserManagementContent() {
                                       </button>
                                     )}
 
-                                    {user._count.contributions === 0 &&
-                                      user._count.createdPurchases === 0 && (
+                                    {user._count.userContributions === 0 &&
+                                      user._count.tokenPurchases === 0 && (
                                         <button
                                           onClick={() => {
                                             if (
@@ -777,8 +777,8 @@ function UserManagementContent() {
                             Activity
                           </div>
                           <div className="text-sm text-gray-900 dark:text-gray-100">
-                            <div>{user._count.contributions} contributions</div>
-                            <div>{user._count.createdPurchases} purchases</div>
+                            <div>{user._count.userContributions} contributions</div>
+                            <div>{user._count.tokenPurchases} purchases</div>
                           </div>
                         </div>
 
@@ -875,8 +875,8 @@ function UserManagementContent() {
                                   </button>
                                 )}
 
-                                {user._count.contributions === 0 &&
-                                  user._count.createdPurchases === 0 && (
+                                {user._count.userContributions === 0 &&
+                                  user._count.tokenPurchases === 0 && (
                                     <button
                                       onClick={() => {
                                         if (
@@ -1145,6 +1145,7 @@ function UserManagementContent() {
                   {[
                     { key: 'canExportData', label: 'Export Data' },
                     { key: 'canImportData', label: 'Import Data' },
+                    { key: 'canCreateBackup', label: 'Create Backups' },
                   ].map(({ key, label }) => (
                     <label key={key} className="flex items-center">
                       <input

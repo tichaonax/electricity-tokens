@@ -9,6 +9,11 @@ import {
 } from '@/lib/validation-middleware';
 import { z } from 'zod';
 
+// Helper function to round to 2 decimal places
+const round2 = (num: number): number => Math.round(num * 100) / 100;
+// Helper function to round to 4 decimal places (for rates)
+const round4 = (num: number): number => Math.round(num * 10000) / 10000;
+
 const usageReportQuerySchema = z.object({
   type: z.enum(['monthly-trends', 'cost-analysis', 'user-comparison', 'emergency-impact']),
   startDate: z.string().datetime().optional(),
@@ -158,15 +163,15 @@ async function getMonthlyUsageTrends(startDate?: string, endDate?: string) {
   // Convert to array and add calculated fields
   const trends = Object.values(monthlyData).map((month: any) => ({
     ...month,
-    utilizationRate: month.totalTokensPurchased > 0 
-      ? (month.totalTokensConsumed / month.totalTokensPurchased * 100).toFixed(2)
-      : '0.00',
-    averageCostPerToken: month.totalTokensPurchased > 0 
-      ? (month.totalPayment / month.totalTokensPurchased).toFixed(4)
-      : '0.0000',
+    utilizationRate: month.totalTokensPurchased > 0
+      ? round2(month.totalTokensConsumed / month.totalTokensPurchased * 100)
+      : 0,
+    averageCostPerToken: month.totalTokensPurchased > 0
+      ? round4(month.totalPayment / month.totalTokensPurchased)
+      : 0,
     emergencyRate: (month.emergencyPurchases + month.regularPurchases) > 0
-      ? (month.emergencyPurchases / (month.emergencyPurchases + month.regularPurchases) * 100).toFixed(2)
-      : '0.00',
+      ? round2(month.emergencyPurchases / (month.emergencyPurchases + month.regularPurchases) * 100)
+      : 0,
   }));
 
   return trends;

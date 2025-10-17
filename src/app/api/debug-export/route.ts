@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const purchases = await prisma.tokenPurchase.findMany({
       take: 5,
       include: {
-        creator: {
+        user: {
           select: {
             name: true,
             email: true,
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       purchaseDate: purchase.purchaseDate.toISOString().split('T')[0],
       totalTokens: purchase.totalTokens,
       totalPayment: purchase.totalPayment,
-      createdBy: purchase.creator.name,
+      createdBy: purchase.user.name,
     }));
     
     if (format === 'csv') {

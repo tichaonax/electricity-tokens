@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     // Check what data we have in the database
     const purchases = await prisma.tokenPurchase.findMany({
       include: {
-        creator: {
+        user: {
           select: {
             name: true,
             email: true,

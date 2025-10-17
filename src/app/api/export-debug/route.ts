@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Test the exact same query as exportPurchases but without date filtering
     const purchases = await prisma.tokenPurchase.findMany({
       include: {
-        creator: {
+        user: {
           select: {
             name: true,
             email: true,
@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
         totalPayment: purchase.totalPayment,
         costPerToken: purchase.totalPayment / purchase.totalTokens,
         isEmergency: purchase.isEmergency ? 'Yes' : 'No',
-        createdBy: purchase.creator.name,
-        createdByEmail: purchase.creator.email,
+        createdBy: purchase.user.name,
+        createdByEmail: purchase.user.email,
         contributionCount: purchase.contribution.length,
         totalContributions: totalContributions,
         totalTokensConsumed: totalTokensConsumed,

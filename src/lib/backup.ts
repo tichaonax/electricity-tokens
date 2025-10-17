@@ -78,7 +78,7 @@ export class BackupService {
         }),
         prisma.tokenPurchase.findMany({
           include: {
-            creator: {
+            user: {
               select: { id: true, email: true, name: true },
             },
             contribution: true,
@@ -247,7 +247,7 @@ export class BackupService {
             ],
           },
           include: {
-            creator: {
+            user: {
               select: { id: true, email: true, name: true },
             },
             contribution: true,

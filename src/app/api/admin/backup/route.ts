@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(backupData);
     response.headers.set(
       'Content-Disposition',
-      `attachment; filename="backup_${backupData.metadata.id}.json"`
+      `attachment; filename="ElectricityTracker-backup_${backupData.metadata.id}.json"`
     );
     response.headers.set('Content-Type', 'application/json');
 

@@ -9,6 +9,11 @@ import {
 } from '@/lib/validation-middleware';
 import { z } from 'zod';
 
+// Helper function to round to 2 decimal places
+const round2 = (num: number): number => Math.round(num * 100) / 100;
+// Helper function to round to 4 decimal places (for rates)
+const round4 = (num: number): number => Math.round(num * 10000) / 10000;
+
 const financialReportQuerySchema = z.object({
   type: z.enum(['monthly-costs', 'payment-tracking', 'payment-balance', 'annual-overview']),
   startDate: z.string().datetime().optional(),
@@ -196,12 +201,12 @@ async function getMonthlyCostSummaries(startDate?: string, endDate?: string) {
     return {
       ...month,
       contributorCount: month.contributorCount.size,
-      utilizationRate: Number(utilizationRate.toFixed(2)),
-      averageCostPerToken: Number(averageCostPerToken.toFixed(4)),
-      emergencyPercentage: Number(emergencyPercentage.toFixed(2)),
-      overpayment: Number(month.overpayment.toFixed(2)),
-      efficiency: month.totalContributions > 0 
-        ? Number((month.totalSpent / month.totalContributions * 100).toFixed(2))
+      utilizationRate: round2(utilizationRate),
+      averageCostPerToken: round4(averageCostPerToken),
+      emergencyPercentage: round2(emergencyPercentage),
+      overpayment: round2(month.overpayment),
+      efficiency: month.totalContributions > 0
+        ? round2((month.totalSpent / month.totalContributions * 100))
         : 0,
     };
   });
@@ -327,11 +332,11 @@ async function getPaymentContributionTracking(startDate?: string, endDate?: stri
     
     return {
       ...user,
-      averageContribution: Number(user.averageContribution.toFixed(2)),
-      emergencyPercentage: Number(user.emergencyPercentage.toFixed(2)),
-      totalContributions: Number(user.totalContributions.toFixed(2)),
-      emergencyContributions: Number(user.emergencyContributions.toFixed(2)),
-      regularContributions: Number(user.regularContributions.toFixed(2)),
+      averageContribution: round2(user.averageContribution),
+      emergencyPercentage: round2(user.emergencyPercentage),
+      totalContributions: round2(user.totalContributions),
+      emergencyContributions: round2(user.emergencyContributions),
+      regularContributions: round2(user.regularContributions),
     };
   });
 
@@ -408,9 +413,9 @@ async function getPaymentBalanceCalculations(startDate?: string, endDate?: strin
       purchaseDate: contribution.purchase.purchaseDate,
       contributionAmount: contribution.contributionAmount,
       tokensConsumed: contribution.tokensConsumed,
-      costPerToken: Number(costPerToken.toFixed(4)),
-      trueCost: Number(trueCost.toFixed(2)),
-      balance: Number(balance.toFixed(2)),
+      costPerToken: round4(costPerToken),
+      trueCost: round2(trueCost),
+      balance: round2(balance),
       isEmergency: contribution.purchase.isEmergency,
     });
 
@@ -425,11 +430,11 @@ async function getPaymentBalanceCalculations(startDate?: string, endDate?: strin
     
     return {
       ...user,
-      totalContributed: Number(user.totalContributed.toFixed(2)),
-      totalTrueCost: Number(user.totalTrueCost.toFixed(2)),
-      overpayment: Number(user.overpayment.toFixed(2)),
-      underpayment: Number(user.underpayment.toFixed(2)),
-      netBalance: Number(user.netBalance.toFixed(2)),
+      totalContributed: round2(user.totalContributed),
+      totalTrueCost: round2(user.totalTrueCost),
+      overpayment: round2(user.overpayment),
+      underpayment: round2(user.underpayment),
+      netBalance: round2(user.netBalance),
     };
   });
 
@@ -526,33 +531,33 @@ async function getAnnualFinancialOverview(startDate?: string, endDate?: string) 
       endDate: defaultEndDate.toISOString().split('T')[0],
     },
     summary: {
-      totalSpent: Number(yearlyTotals.totalSpent.toFixed(2)),
+      totalSpent: round2(yearlyTotals.totalSpent),
       totalTokensPurchased: yearlyTotals.totalTokensPurchased,
       totalTokensConsumed: yearlyTotals.totalTokensConsumed,
-      totalContributions: Number(yearlyTotals.totalContributions.toFixed(2)),
-      averageCostPerToken: yearlyTotals.totalTokensPurchased > 0 
-        ? Number((yearlyTotals.totalSpent / yearlyTotals.totalTokensPurchased).toFixed(4))
+      totalContributions: round2(yearlyTotals.totalContributions),
+      averageCostPerToken: yearlyTotals.totalTokensPurchased > 0
+        ? round4(yearlyTotals.totalSpent / yearlyTotals.totalTokensPurchased)
         : 0,
       utilizationRate: yearlyTotals.totalTokensPurchased > 0
-        ? Number((yearlyTotals.totalTokensConsumed / yearlyTotals.totalTokensPurchased * 100).toFixed(2))
+        ? round2((yearlyTotals.totalTokensConsumed / yearlyTotals.totalTokensPurchased * 100))
         : 0,
-      overpayment: Number((yearlyTotals.totalContributions - yearlyTotals.totalSpent).toFixed(2)),
+      overpayment: round2(yearlyTotals.totalContributions - yearlyTotals.totalSpent),
       contributorCount: yearlyTotals.uniqueContributors.size,
     },
     emergencyAnalysis: {
-      emergencySpent: Number(yearlyTotals.emergencySpent.toFixed(2)),
-      regularSpent: Number(yearlyTotals.regularSpent.toFixed(2)),
+      emergencySpent: round2(yearlyTotals.emergencySpent),
+      regularSpent: round2(yearlyTotals.regularSpent),
       emergencyPercentage: yearlyTotals.totalSpent > 0
-        ? Number((yearlyTotals.emergencySpent / yearlyTotals.totalSpent * 100).toFixed(2))
+        ? round2((yearlyTotals.emergencySpent / yearlyTotals.totalSpent * 100))
         : 0,
       emergencyPurchases: yearlyTotals.emergencyPurchases,
       regularPurchases: yearlyTotals.regularPurchases,
-      emergencyPremium: Number((yearlyTotals.emergencySpent - (yearlyTotals.emergencyPurchases * 0.25 * (yearlyTotals.totalTokensPurchased / yearlyTotals.purchaseCount))).toFixed(2)),
+      emergencyPremium: round2(yearlyTotals.emergencySpent - (yearlyTotals.emergencyPurchases * 0.25 * (yearlyTotals.totalTokensPurchased / yearlyTotals.purchaseCount))),
     },
     monthlyBreakdown: Object.values(yearlyTotals.monthlyData).map((month: any) => ({
       ...month,
-      spent: Number(month.spent.toFixed(2)),
-      contributions: Number(month.contributions.toFixed(2)),
+      spent: round2(month.spent),
+      contributions: round2(month.contributions),
     })),
   };
 
