@@ -52,6 +52,9 @@ next-env.d.ts
 # Logs
 /logs/
 
+# Installation config (machine-specific)
+.install-config.json
+
 # Windows service daemon files
 /scripts/windows-service/daemon/
 
