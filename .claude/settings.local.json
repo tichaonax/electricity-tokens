@@ -47,7 +47,9 @@
       "Bash(findstr:*)",
       "Bash(deploy-with-restart.bat)",
       "Bash(cmd //c deploy-with-restart.bat)",
-      "Bash(cmd //c \".\\deploy-with-restart.bat\")"
+      "Bash(cmd //c \".\\deploy-with-restart.bat\")",
+      "Bash(taskkill.exe:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

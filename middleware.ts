@@ -30,10 +30,12 @@ export async function middleware(request: NextRequest) {
     response.headers.set(key, value);
   });
 
-  // Skip middleware for static assets and Next.js internals, and auth pages
+  // Skip middleware for static assets and Next.js internals, auth pages, and public health endpoint
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/user') || // Skip user API routes - they handle their own auth
+    pathname.startsWith('/api/health') || // Skip all health endpoints
     pathname.startsWith('/auth/') ||
     (pathname.includes('.') && !pathname.includes('/auth/')) ||
     pathname === '/favicon.ico'
