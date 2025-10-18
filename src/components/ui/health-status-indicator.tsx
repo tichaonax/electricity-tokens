@@ -150,11 +150,11 @@ export function HealthStatusIndicator() {
 
   return (
     <>
-      {/* Mobile View: LED-only with tap to expand */}
+      {/* Mobile View: LED-only with tap to expand - Positioned right side */}
       <div className="sm:hidden">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="fixed top-4 left-4 z-50 p-3 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="fixed top-4 right-4 z-50 p-3 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           aria-label={`Health status: ${getStatusText(status)}. Tap for details.`}
           role="button"
         >
@@ -164,11 +164,11 @@ export function HealthStatusIndicator() {
         </button>
       </div>
 
-      {/* Tablet View: LED + Status Text */}
+      {/* Tablet View: LED + Status Text - Positioned right side */}
       <div className="hidden sm:flex lg:hidden">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="fixed top-4 left-4 z-50 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg"
+          className="fixed top-4 right-4 z-50 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg"
           aria-label={`Health status: ${getStatusText(status)}. Click for details.`}
         >
           <div
@@ -186,9 +186,9 @@ export function HealthStatusIndicator() {
         </button>
       </div>
 
-      {/* Desktop View: Full Display (Current) */}
+      {/* Desktop View: Full Display - Positioned left side (below navbar) */}
       <div
-        className="hidden lg:block fixed top-4 left-4 z-50 transition-all duration-300"
+        className="hidden lg:block fixed top-20 left-4 z-40 transition-all duration-300"
         role="status"
         aria-live="polite"
         aria-label="Application health status"
