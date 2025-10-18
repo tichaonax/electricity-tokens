@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// Track server start time for accurate uptime calculation
+const serverStartTime = Date.now();
+
+/**
+ * Format uptime in seconds to human-readable format
+ * @param seconds - Uptime in seconds
+ * @returns Formatted string like "2d 5h 23m" or "5h 23m" or "23m"
+ */
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+
+  return parts.length > 0 ? parts.join(' ') : 'Just started';
+}
+
 export async function GET() {
   try {
     // Simple database connectivity check
@@ -12,10 +33,14 @@ export async function GET() {
       console.error('Database health check failed:', dbError);
     }
 
+    const uptimeSeconds = process.uptime ? Math.floor(process.uptime()) : 0;
+
     const response = {
       status: databaseHealthy ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
-      uptime: process.uptime ? Math.floor(process.uptime()) : undefined,
+      uptime: uptimeSeconds,
+      uptimeFormatted: formatUptime(uptimeSeconds),
+      startTime: new Date(serverStartTime).toISOString(),
       environment: process.env.NODE_ENV,
       database: {
         connected: databaseHealthy,
@@ -24,7 +49,14 @@ export async function GET() {
 
     // Return 200 even if database is degraded - the app is still running
     // Only return 503 if the app itself is truly unresponsive
-    return NextResponse.json(response, { status: 200 });
+    // Add caching headers to reduce server load (30 second cache)
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, max-age=30, s-maxage=30',
+        'CDN-Cache-Control': 'public, max-age=30',
+      },
+    });
   } catch (error) {
     console.error('Health check failed:', error);
 

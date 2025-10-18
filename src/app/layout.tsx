@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/providers/theme-provider';
 import { UserThemeSync } from '@/components/providers/user-theme-sync';
 import { CSRFProvider } from '@/components/security/CSRFProvider';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
+import { HealthStatusIndicator } from '@/components/ui/health-status-indicator';
 import { ToastProvider } from '@/components/ui/toast';
 import { ConfirmationProvider } from '@/components/ui/confirmation-dialog';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
@@ -93,6 +94,7 @@ export default function RootLayout({
                         <main id="main-content" tabIndex={-1}>
                           {children}
                         </main>
+                        <HealthStatusIndicator />
                         <OfflineIndicator />
                       </ConfirmationProvider>
                     </ToastProvider>
