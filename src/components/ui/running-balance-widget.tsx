@@ -196,12 +196,12 @@ export function RunningBalanceWidget() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* Anticipated Next Payment */}
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className={`text-2xl font-bold mb-1 ${
+              <div className={`text-base font-bold mb-2 whitespace-nowrap ${
                 data.anticipatedPayment < 0 
                   ? 'text-red-700 dark:text-red-400' 
                   : 'text-green-700 dark:text-green-400'
               }`}>
-                {data.anticipatedPayment < 0 ? '-' : ''}${Math.abs(data.anticipatedPayment).toFixed(2)}
+                {data.anticipatedPayment < 0 ? '-$' : '$'}{Math.abs(data.anticipatedPayment).toFixed(2)}
               </div>
               <div className="text-sm text-blue-600 dark:text-blue-300 mb-1">
                 Anticipated Next Payment
@@ -217,12 +217,12 @@ export function RunningBalanceWidget() {
 
             {/* Anticipated Others Payment */}
             <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-              <div className={`text-2xl font-bold mb-1 ${
+              <div className={`text-base font-bold mb-2 whitespace-nowrap ${
                 data.anticipatedOthersPayment < 0 
                   ? 'text-red-700 dark:text-red-400' 
                   : 'text-green-700 dark:text-green-400'
               }`}>
-                {data.anticipatedOthersPayment < 0 ? '-' : ''}${Math.abs(data.anticipatedOthersPayment).toFixed(2)}
+                {data.anticipatedOthersPayment < 0 ? '-$' : '$'}{Math.abs(data.anticipatedOthersPayment).toFixed(2)}
               </div>
               <div className="text-sm text-purple-600 dark:text-purple-300 mb-1">
                 Anticipated Others Payment
@@ -238,12 +238,12 @@ export function RunningBalanceWidget() {
 
             {/* Anticipated Token Purchase */}
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-              <div className={`text-2xl font-bold mb-1 ${
+              <div className={`text-base font-bold mb-2 whitespace-nowrap ${
                 data.anticipatedTokenPurchase < 0 
                   ? 'text-red-700 dark:text-red-400' 
                   : 'text-green-700 dark:text-green-400'
               }`}>
-                {data.anticipatedTokenPurchase < 0 ? '-' : ''}${Math.abs(data.anticipatedTokenPurchase).toFixed(2)}
+                {data.anticipatedTokenPurchase < 0 ? '-$' : '$'}{Math.abs(data.anticipatedTokenPurchase).toFixed(2)}
               </div>
               <div className="text-sm text-orange-600 dark:text-orange-300 mb-1">
                 Anticipated Token Purchase

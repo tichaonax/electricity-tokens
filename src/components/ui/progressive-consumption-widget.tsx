@@ -220,8 +220,9 @@ export function ProgressiveConsumptionWidget() {
           {/* Total Purchased */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-1">
-                {data.historical.totalPurchasedTokens.toLocaleString()} kWh
+              <div className="text-base font-bold text-blue-700 dark:text-blue-400 mb-2">
+                <span className="whitespace-nowrap">{data.historical.totalPurchasedTokens.toLocaleString()}</span>{' '}
+                <span>kWh</span>
               </div>
               <div className="text-sm text-blue-600 dark:text-blue-300 mb-1">
                 Total Purchased
@@ -233,8 +234,9 @@ export function ProgressiveConsumptionWidget() {
 
             {/* Total Consumed */}
             <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-              <div className="text-2xl font-bold text-red-700 dark:text-red-400 mb-1">
-                {data.historical.totalConsumedTokens.toLocaleString()} kWh
+              <div className="text-base font-bold text-red-700 dark:text-red-400 mb-2">
+                <span className="whitespace-nowrap">{data.historical.totalConsumedTokens.toLocaleString()}</span>{' '}
+                <span>kWh</span>
               </div>
               <div className="text-sm text-red-600 dark:text-red-300 mb-1">
                 Total Consumed
@@ -245,8 +247,8 @@ export function ProgressiveConsumptionWidget() {
             </div>
 
             {/* Average Cost */}
-            <div className="text-center py-4 pr-4 pl-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="text-2xl font-bold text-green-700 dark:text-green-400 mb-1 text-center">
+            <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="text-base font-bold text-green-700 dark:text-green-400 mb-2 whitespace-nowrap">
                 ${data.historical.averageCostPerKwhAllTime.toFixed(3)}
               </div>
               <div className="text-sm text-green-600 dark:text-green-300">
