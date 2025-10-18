@@ -3,10 +3,12 @@
 ## Problem Identified
 
 The "smart" dependency detection was **SKIPPING** `npm install` during updates when:
+
 - `node_modules` existed
 - `package.json` hash matched previous install
 
 **This caused build failures** because:
+
 - Dependencies could be corrupted even if `node_modules` exists
 - Previous cleanup operations may have left partial installations
 - npm cache issues aren't detected by directory existence
@@ -21,16 +23,17 @@ The smart detection logic was designed to save time by skipping installs, but it
 Changed `install:update` to **ALWAYS run `npm install`** regardless of detection results.
 
 ### Before (WRONG ❌):
+
 ```javascript
 const needsDepsReinstall = await this.needsDependencyReinstall();
 
 const steps = [];
 
 if (needsDepsReinstall) {
-  steps.push({ 
-    name: 'Update Dependencies', 
+  steps.push({
+    name: 'Update Dependencies',
     fn: () => this.installDependencies(),
-    critical: true 
+    critical: true,
   });
 } else {
   this.log('⏭️  Skipping dependency installation'); // SKIPS INSTALL!
@@ -38,6 +41,7 @@ if (needsDepsReinstall) {
 ```
 
 ### After (CORRECT ✅):
+
 ```javascript
 // Check for diagnostic purposes
 const needsDepsReinstall = await this.needsDependencyReinstall();
@@ -45,15 +49,17 @@ const needsDepsReinstall = await this.needsDependencyReinstall();
 if (needsDepsReinstall) {
   this.log('⚠️ Dependencies need reinstallation (missing or changed)');
 } else {
-  this.log('ℹ️  Dependencies exist but will reinstall to ensure they are current');
+  this.log(
+    'ℹ️  Dependencies exist but will reinstall to ensure they are current'
+  );
 }
 
 // ALWAYS install - no skipping!
 const steps = [
-  { 
-    name: 'Update Dependencies', 
+  {
+    name: 'Update Dependencies',
     fn: () => this.installDependencies(),
-    critical: true 
+    critical: true,
   },
   // ... other steps
 ];
@@ -66,6 +72,7 @@ const steps = [
 **Lines changed:** ~850-870
 
 **Key changes:**
+
 1. Removed conditional logic that would skip npm install
 2. Made `steps` array static with install always included
 3. Detection still runs for diagnostic logging
@@ -78,6 +85,7 @@ npm run install:update
 ```
 
 **Will ALWAYS:**
+
 1. ✅ Stop the service (if running)
 2. 📊 Check dependency status (diagnostic)
 3. 📦 **Run `npm install`** (every time, no exceptions)
@@ -136,10 +144,13 @@ The dependency detection (`needsDependencyReinstall()`) is still valuable for:
 ## Testing
 
 ### Test 1: Normal Update (Most Common)
+
 ```bash
 npm run install:update
 ```
+
 **Expected:**
+
 ```
 📦 Checking dependencies...
 ✅ Dependencies appear up-to-date
@@ -150,11 +161,14 @@ npm run install:update
 ```
 
 ### Test 2: After Cleanup
+
 ```bash
 rm -rf node_modules
 npm run install:update
 ```
+
 **Expected:**
+
 ```
 📦 Checking dependencies...
 ⚠️ node_modules directory missing - reinstall required
@@ -165,11 +179,14 @@ npm run install:update
 ```
 
 ### Test 3: After package.json Change
+
 ```bash
 npm install lodash --save
 npm run install:update
 ```
+
 **Expected:**
+
 ```
 📦 Checking dependencies...
 ⚠️ package.json has changed - reinstall required
@@ -182,12 +199,14 @@ npm run install:update
 ## Impact
 
 ### Before This Fix
+
 - ❌ Updates could skip npm install
 - ❌ Build failures from missing/corrupted dependencies
 - ❌ Confusing error messages about missing packages
 - ❌ Required manual intervention to fix
 
 ### After This Fix
+
 - ✅ Updates ALWAYS run npm install
 - ✅ Dependencies guaranteed fresh and complete
 - ✅ Builds succeed consistently

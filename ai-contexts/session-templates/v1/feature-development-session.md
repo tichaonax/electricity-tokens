@@ -17,10 +17,12 @@ For creating new features, screens, or endpoints with structured planning.
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
+
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Feature-Specific Contexts (Load as needed)
+
 - `ai-contexts/frontend/component-context.md` - For UI component development
 - `ai-contexts/frontend/ui-context.md` - For UI consistency and styling
 - `ai-contexts/backend/backend-api-context.md` - For API endpoint development
@@ -28,6 +30,7 @@ For creating new features, screens, or endpoints with structured planning.
 - `ai-contexts/testing/unit-testing-context.md` - For test coverage
 
 ### Optional Contexts
+
 - Domain-specific contexts based on the module being developed
 
 **How to load:** Use the Read tool to load each relevant context document before beginning work.
@@ -38,23 +41,17 @@ For creating new features, screens, or endpoints with structured planning.
 
 <!-- Fill in your specific feature requirements before starting -->
 
-**Feature Name:**  
+**Feature Name:**
 
+**Feature Description:**
 
-**Feature Description:**  
+**Target Module/Component:**
 
+**API Endpoints (if applicable):**
 
-**Target Module/Component:**  
+**UI/UX Requirements:**
 
-
-**API Endpoints (if applicable):**  
-
-
-**UI/UX Requirements:**  
-
-
-**Acceptance Criteria:**  
-
+**Acceptance Criteria:**
 
 ---
 
@@ -62,17 +59,13 @@ For creating new features, screens, or endpoints with structured planning.
 
 <!-- Add technical details, architecture notes, or design patterns -->
 
-**Technologies:**  
+**Technologies:**
 
+**Dependencies:**
 
-**Dependencies:**  
+**Data Models:**
 
-
-**Data Models:**  
-
-
-**Integration Points:**  
-
+**Integration Points:**
 
 ---
 
@@ -80,14 +73,11 @@ For creating new features, screens, or endpoints with structured planning.
 
 <!-- Define test coverage expectations -->
 
-**Unit Tests:**  
+**Unit Tests:**
 
+**Integration Tests:**
 
-**Integration Tests:**  
-
-
-**E2E Tests:**  
-
+**E2E Tests:**
 
 ---
 
@@ -100,6 +90,7 @@ For creating new features, screens, or endpoints with structured planning.
 ## ✅ Start Session
 
 Ready to begin feature development. Please:
+
 1. Review the feature requirements
 2. Propose an implementation plan
 3. Identify technical challenges or considerations

@@ -17,11 +17,13 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
+
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 - `ai-contexts/general-problem-solving-context.md` - Debugging methodology
 
 ### Module-Specific Contexts (Load based on bug location)
+
 - `ai-contexts/frontend/component-context.md` - For UI/component bugs
 - `ai-contexts/frontend/ui-context.md` - For styling/layout issues
 - `ai-contexts/backend/backend-api-context.md` - For API/endpoint bugs
@@ -29,6 +31,7 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 - `ai-contexts/testing/unit-testing-context.md` - For test failures
 
 ### Optional Contexts
+
 - Domain-specific contexts for the affected module
 
 **How to load:** Use the Read tool to load each relevant context document before beginning debugging.
@@ -46,6 +49,7 @@ Dashboard Stats Showing Incorrect Revenue Total After Project Transaction Create
 When a user creates a new income transaction for a construction project, the dashboard total revenue stat updates correctly. However, when they create an expense transaction for the same project, the total revenue number incorrectly increases instead of remaining the same (only expenses should increase, not revenue). This happens consistently but only for construction project transactions - personal finance transactions work correctly.
 
 **Steps to Reproduce:**
+
 1. Log in as admin user (admin@business.local)
 2. Navigate to dashboard - note current "Total Revenue" value (e.g., $50,000)
 3. Go to active construction project (e.g., "Office Building Renovation")
@@ -59,16 +63,19 @@ When a user creates a new income transaction for a construction project, the das
 6. Observe "Total Revenue" incorrectly shows $55,000 (increased by expense amount)
 
 **Expected Behavior:**
+
 - Creating an expense transaction should NOT increase the "Total Revenue" stat
 - Total Revenue should only include income transactions, not expenses
 - In this example, Total Revenue should remain $50,000
 
 **Actual Behavior:**
+
 - Total Revenue increases by the expense amount ($5,000)
 - Dashboard shows $55,000 instead of $50,000
 - The stat is double-counting expenses as both expenses AND revenue
 
 **Environment:**
+
 - OS: Windows 10
 - Browser/Runtime: Chrome 120, Firefox 121 (both affected)
 - Version: Latest from main branch (commit: 865e36d)
@@ -76,6 +83,7 @@ When a user creates a new income transaction for a construction project, the das
 - Node.js: v20.10.0
 
 **Error Messages/Logs:**
+
 ```
 No console errors displayed to user.
 
@@ -103,6 +111,7 @@ No error stack traces, operation appears to succeed incorrectly.
 <!-- Add debugging observations, hypotheses, or findings -->
 
 **Potential Causes:**
+
 1. **Dashboard stats API query bug**: The `/api/dashboard/stats` endpoint might be using wrong SQL query that doesn't filter by transaction type
 2. **Database model confusion**: Possible confusion between `ConstructionTransaction` and `PersonalExpense` models
 3. **Frontend calculation error**: Dashboard component might be calculating total incorrectly on client-side
@@ -110,12 +119,14 @@ No error stack traces, operation appears to succeed incorrectly.
 5. **Aggregation logic error**: Prisma aggregation might be summing all amounts regardless of type
 
 **Related Code/Files:**
+
 - `/src/app/api/dashboard/stats/route.ts` - Dashboard stats calculation endpoint (MOST LIKELY)
 - `/src/app/dashboard/page.tsx` - Dashboard component that displays stats
 - `/prisma/schema.prisma` - Database models for ConstructionTransaction
 - `/src/app/api/construction/projects/[projectId]/transactions/route.ts` - Transaction creation endpoint
 
 **Recent Changes:**
+
 - Commit 865e36d: "Fix all API field name mismatches across entire codebase"
   - This changed many field names from snake_case to camelCase
   - May have introduced a bug in field references
@@ -124,6 +135,7 @@ No error stack traces, operation appears to succeed incorrectly.
   - Possible that some queries weren't updated to match new field names
 
 **Debugging Steps Taken:**
+
 1. ✅ Verified issue reproduces consistently (tested 3 times)
 2. ✅ Checked browser console - no JavaScript errors
 3. ✅ Checked server logs - no error logs, operation completes
@@ -134,6 +146,7 @@ No error stack traces, operation appears to succeed incorrectly.
 8. ⏳ Need to check if transaction `type` field is being saved correctly
 
 **Hypotheses Ranked by Likelihood:**
+
 1. **HIGH**: Dashboard stats query not filtering by transaction type properly
 2. **MEDIUM**: Field name mismatch after recent camelCase refactor (e.g., `transactionType` vs `transaction_type`)
 3. **LOW**: Frontend calculation error (unlikely since personal finance works)
@@ -146,6 +159,7 @@ No error stack traces, operation appears to succeed incorrectly.
 <!-- Define how to verify the fix -->
 
 **Test Cases:**
+
 1. **Verify fix for construction expense**:
    - Create construction expense transaction
    - Check dashboard revenue remains unchanged
@@ -167,11 +181,13 @@ No error stack traces, operation appears to succeed incorrectly.
    - Test with very large amounts
 
 **Regression Tests:**
+
 - Run existing dashboard stats tests (if they exist)
 - Add new test case specifically for this scenario
 - Test all transaction types across all modules
 
 **Manual Verification:**
+
 ```sql
 -- Check database records after creating expense
 SELECT id, type, amount, description
@@ -194,24 +210,28 @@ curl http://localhost:8080/api/dashboard/stats
 <!-- Add any additional context or constraints -->
 
 **Additional Context:**
+
 - This bug was discovered by user during normal operations (not found by tests)
 - Affects production data accuracy - HIGH PRIORITY
 - Users have been creating transactions for 2 weeks, so multiple records may be affected
 - Need to verify if bug affects only display or if it corrupts balance calculations
 
 **Impact Assessment:**
+
 - **Severity**: HIGH - Shows incorrect financial data to users
 - **Scope**: Affects all construction project transactions
 - **Data Integrity**: Unknown - need to check if balances are corrupted or just display bug
 - **User Impact**: Multiple users affected, financial reporting inaccurate
 
 **Constraints:**
+
 - Must fix without data migration if possible
 - Cannot break existing working features (personal finance)
 - Need to verify historical data wasn't corrupted
 - Fix should be backward compatible with existing transactions
 
 **Related Issues:**
+
 - No similar issues reported for other transaction types
 - Dashboard stats work correctly for other metrics (active projects, team members)
 - This appears isolated to revenue calculation for construction transactions
@@ -221,6 +241,7 @@ curl http://localhost:8080/api/dashboard/stats
 ## ✅ Start Session
 
 Ready to begin debugging. Please:
+
 1. Load all required context documents (code-workflow.md, backend-api-context.md, database-context.md, general-problem-solving-context.md)
 2. Analyze the bug report and formulate hypotheses about the root cause
 3. Read `/src/app/api/dashboard/stats/route.ts` to examine revenue calculation logic
@@ -232,6 +253,7 @@ Ready to begin debugging. Please:
 9. Create test cases to verify fix and prevent regression
 
 **Expected Debugging Workflow:**
+
 1. Read dashboard stats API code
 2. Identify incorrect query/filter logic
 3. Propose fix (likely add WHERE clause for type='income')

@@ -17,15 +17,18 @@ For creating new REST API endpoints with proper request/response handling, valid
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
+
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 - `ai-contexts/backend/backend-api-context.md` - API design patterns and conventions
 
 ### Backend-Specific Contexts (Always Load)
+
 - `ai-contexts/backend/database-context.md` - Database operations and Prisma usage
 - `ai-contexts/backend/error-handling-context.md` - Error handling patterns (if exists)
 
 ### Optional Contexts
+
 - `ai-contexts/testing/unit-testing-context.md` - For API test coverage
 - Domain-specific contexts for business logic
 
@@ -38,18 +41,20 @@ For creating new REST API endpoints with proper request/response handling, valid
 <!-- Define the API endpoint requirements -->
 
 **Endpoint Path:**
+
 ```
 [HTTP_METHOD] /api/[path]
 ```
 
 **Description:**
 
-
 **Authentication Required:**
+
 - [ ] Yes - Specify roles/permissions:
 - [ ] No - Public endpoint
 
 **Rate Limiting:**
+
 - [ ] Yes - Specify limits:
 - [ ] No
 
@@ -58,6 +63,7 @@ For creating new REST API endpoints with proper request/response handling, valid
 ## 📥 Request Specification
 
 **HTTP Method:**
+
 - [ ] GET
 - [ ] POST
 - [ ] PUT
@@ -65,22 +71,25 @@ For creating new REST API endpoints with proper request/response handling, valid
 - [ ] DELETE
 
 **Query Parameters:**
+
 ```typescript
 // Example:
 // ?page=1&limit=10&sortBy=createdAt
 ```
 
 **Request Body Schema:**
+
 ```typescript
 // Example:
 interface RequestBody {
-  name: string
-  email: string
+  name: string;
+  email: string;
   // ...
 }
 ```
 
 **Headers:**
+
 ```
 Content-Type: application/json
 Authorization: Bearer <token>
@@ -92,22 +101,24 @@ Authorization: Bearer <token>
 ## 📤 Response Specification
 
 **Success Response (2xx):**
+
 ```typescript
 // Example:
 interface SuccessResponse {
-  status: 'success'
+  status: 'success';
   data: {
     // ...
-  }
+  };
   metadata?: {
-    total: number
-    page: number
+    total: number;
+    page: number;
     // ...
-  }
+  };
 }
 ```
 
 **Error Responses:**
+
 ```typescript
 // 400 Bad Request
 // 401 Unauthorized
@@ -122,8 +133,8 @@ interface SuccessResponse {
 
 **Models Involved:**
 
-
 **Operations:**
+
 - [ ] Create
 - [ ] Read
 - [ ] Update
@@ -131,10 +142,12 @@ interface SuccessResponse {
 - [ ] List/Query
 
 **Transactions Required:**
+
 - [ ] Yes - Describe:
 - [ ] No
 
 **Performance Considerations:**
+
 - Indexing requirements:
 - Query optimization needed:
 - Expected load:
@@ -144,6 +157,7 @@ interface SuccessResponse {
 ## ✅ Validation Rules
 
 **Request Validation:**
+
 ```typescript
 // Example validation rules:
 // - email: valid email format, required
@@ -153,22 +167,21 @@ interface SuccessResponse {
 
 **Business Logic Validation:**
 
-
 ---
 
 ## 🔒 Security Considerations
 
 **Authorization Checks:**
 
-
 **Data Sanitization:**
 
-
 **SQL Injection Prevention:**
+
 - [ ] Using Prisma parameterized queries
 - [ ] Input validation in place
 
 **XSS Prevention:**
+
 - [ ] Response data sanitized
 - [ ] Content-Type headers set correctly
 
@@ -177,16 +190,19 @@ interface SuccessResponse {
 ## 🧪 Testing Requirements
 
 **Unit Tests:**
+
 - [ ] Request validation
 - [ ] Business logic
 - [ ] Error handling
 
 **Integration Tests:**
+
 - [ ] Database operations
 - [ ] Authentication/Authorization
 - [ ] End-to-end flow
 
 **Test Cases:**
+
 1. Success case with valid data
 2. Invalid request body
 3. Unauthorized access
@@ -199,13 +215,14 @@ interface SuccessResponse {
 
 **Expected Response Time:**
 
-
 **Caching Strategy:**
+
 - [ ] No caching needed
-- [ ] Cache responses for: _____ seconds
-- [ ] Cache invalidation on: _____
+- [ ] Cache responses for: **\_** seconds
+- [ ] Cache invalidation on: **\_**
 
 **Pagination:**
+
 - [ ] Required
 - [ ] Not needed
 - Default page size:
@@ -215,11 +232,13 @@ interface SuccessResponse {
 ## 📝 Documentation
 
 **API Documentation (OpenAPI/Swagger):**
+
 - [ ] Add endpoint to API docs
 - [ ] Include request/response examples
 - [ ] Document error codes
 
 **Code Comments:**
+
 - [ ] Add JSDoc/TSDoc comments
 - [ ] Document complex business logic
 
@@ -229,11 +248,10 @@ interface SuccessResponse {
 
 **Related Endpoints:**
 
-
 **External Services:**
 
-
 **Event Triggers:**
+
 - [ ] Send notifications
 - [ ] Update cache
 - [ ] Trigger webhooks
@@ -250,6 +268,7 @@ interface SuccessResponse {
 ## ✅ Start Session
 
 Ready to begin API endpoint development. Please:
+
 1. Review the endpoint specification
 2. Analyze database schema and relationships
 3. Propose implementation approach with error handling

@@ -17,10 +17,12 @@ For creating new features, screens, or endpoints with structured planning.
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
+
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Feature-Specific Contexts (Load as needed)
+
 - `ai-contexts/frontend/component-context.md` - For UI component development
 - `ai-contexts/frontend/ui-context.md` - For UI consistency and styling
 - `ai-contexts/backend/backend-api-context.md` - For API endpoint development
@@ -28,6 +30,7 @@ For creating new features, screens, or endpoints with structured planning.
 - `ai-contexts/testing/unit-testing-context.md` - For test coverage
 
 ### Optional Contexts
+
 - Domain-specific contexts based on the module being developed
 
 **How to load:** Use the Read tool to load each relevant context document before beginning work.
@@ -45,12 +48,14 @@ Employee Leave Request Management System
 Implement a complete leave request system that allows employees to submit leave requests (vacation, sick leave, personal days), managers to approve/reject requests, and admins to view leave balances and generate reports. The system should track different leave types, validate against available balances, prevent conflicts with existing leave, and send notifications.
 
 **Target Module/Component:**
+
 - Backend: `/api/employees/[employeeId]/leave-requests`
 - Frontend: `/src/app/employees/[employeeId]/leave/page.tsx`
 - Component: `/src/components/employees/leave-request-form.tsx`
 - Component: `/src/components/employees/leave-request-list.tsx`
 
 **API Endpoints (if applicable):**
+
 1. `POST /api/employees/[employeeId]/leave-requests` - Submit new leave request
 2. `GET /api/employees/[employeeId]/leave-requests` - List employee's leave requests
 3. `GET /api/leave-requests/[requestId]` - Get single leave request details
@@ -60,6 +65,7 @@ Implement a complete leave request system that allows employees to submit leave 
 7. `GET /api/employees/[employeeId]/leave-balance` - Get current leave balance
 
 **UI/UX Requirements:**
+
 - **Leave Request Form:**
   - Date range picker (start date, end date)
   - Leave type dropdown (vacation, sick, personal)
@@ -82,6 +88,7 @@ Implement a complete leave request system that allows employees to submit leave 
   - Link to request history
 
 **Acceptance Criteria:**
+
 1. ✅ Employee can submit leave request with date range and type
 2. ✅ System validates request doesn't exceed available balance
 3. ✅ System prevents overlapping leave requests for same employee
@@ -100,6 +107,7 @@ Implement a complete leave request system that allows employees to submit leave 
 <!-- Add technical details, architecture notes, or design patterns -->
 
 **Technologies:**
+
 - Frontend: Next.js 14 (App Router), React, TypeScript, Tailwind CSS
 - Backend: Next.js API Routes, NextAuth for authentication
 - Database: Prisma ORM with PostgreSQL
@@ -108,12 +116,14 @@ Implement a complete leave request system that allows employees to submit leave 
 - Notifications: In-app notification system (existing)
 
 **Dependencies:**
+
 - `date-fns` - Date manipulation and validation
 - `react-hook-form` - Form state management
 - `zod` - Request validation
 - Existing: `@prisma/client`, `next-auth`, `tailwindcss`
 
 **Data Models:**
+
 ```prisma
 model LeaveRequest {
   id          String   @id @default(cuid())
@@ -175,6 +185,7 @@ model LeaveBalance {
 ```
 
 **Integration Points:**
+
 1. **Employee Module**: Link from employee detail page to leave management
 2. **Notification System**: Send notifications on request submit/approve/reject
 3. **Activity Feed**: Log leave request events to recent activity
@@ -188,6 +199,7 @@ model LeaveBalance {
 <!-- Define test coverage expectations -->
 
 **Unit Tests:**
+
 - Date validation logic (no past dates, no overlaps)
 - Leave balance calculation
 - Business days calculation (exclude weekends)
@@ -195,12 +207,14 @@ model LeaveBalance {
 - Leave request status transitions
 
 **Integration Tests:**
+
 - API endpoint authentication/authorization
 - Database transaction handling (balance updates)
 - Notification triggering on status changes
 - Conflict detection across multiple requests
 
 **E2E Tests:**
+
 - Employee submits leave request and sees success message
 - Manager approves request and employee receives notification
 - Employee tries to request more days than available balance (should fail)
@@ -214,6 +228,7 @@ model LeaveBalance {
 <!-- Add any additional notes, constraints, or context here -->
 
 **Business Rules:**
+
 - Employees can only submit requests for future dates (minimum 1 day advance notice)
 - Weekend days don't count toward leave balance
 - Overlapping requests for same employee are not allowed
@@ -222,12 +237,14 @@ model LeaveBalance {
 - Leave balance resets annually (future enhancement: pro-rated for mid-year hires)
 
 **Design Decisions:**
+
 - Using enum for leave types (easier to extend in future)
 - Separate LeaveBalance table for performance (avoid calculating from all requests)
 - Soft delete pattern (keep rejected/cancelled requests for audit trail)
 - Manager approval required (no auto-approval based on balance)
 
 **Future Enhancements:**
+
 - Calendar view showing team's leave schedule
 - Export leave reports to CSV/PDF
 - Email notifications (currently only in-app)
@@ -235,6 +252,7 @@ model LeaveBalance {
 - Public holidays integration
 
 **Known Constraints:**
+
 - Business days calculation is basic (doesn't account for company holidays yet)
 - No support for half-day leave (all requests are full days)
 - Single approver model (no multi-level approval workflow)
@@ -244,6 +262,7 @@ model LeaveBalance {
 ## ✅ Start Session
 
 Ready to begin feature development. Please:
+
 1. Review the feature requirements and acceptance criteria
 2. Load all required context documents (code-workflow.md, backend-api-context.md, database-context.md, component-context.md)
 3. Propose an implementation plan with phases:

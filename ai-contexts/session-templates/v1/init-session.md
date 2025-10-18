@@ -15,6 +15,7 @@ Generic initialization for new AI sessions; establishes scope and expectations.
 ## 📋 Recommended Contexts
 
 > **AI: Before proceeding, read these context files from `ai-contexts/` directory:**
+>
 > - `master-context.md`
 > - `code-workflow.md`
 > - `general-problem-solving-context.md`
@@ -27,14 +28,11 @@ Generic initialization for new AI sessions; establishes scope and expectations.
 
 <!-- Fill in your specific goal before starting the session -->
 
-**Goal:**  
+**Goal:**
 
+**Expected Outcome:**
 
-**Expected Outcome:**  
-
-
-**Success Criteria:**  
-
+**Success Criteria:**
 
 ---
 
@@ -47,6 +45,7 @@ Generic initialization for new AI sessions; establishes scope and expectations.
 ## ✅ Start Session
 
 **AI Instructions:**
+
 1. Read the recommended context files listed above
 2. Confirm context loading: "✅ Contexts loaded: master-context, code-workflow, general-problem-solving"
 3. Restate the session objective in your own words

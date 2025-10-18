@@ -17,15 +17,18 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
+
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Security-Relevant Contexts
+
 - `ai-contexts/backend/backend-api-context.md` - API security patterns
 - `ai-contexts/backend/database-context.md` - Database security (SQL injection, etc.)
 - `ai-contexts/frontend/component-context.md` - Frontend security (XSS, CSRF)
 
 ### Optional Contexts
+
 - Domain-specific contexts for the module under review
 
 **How to load:** Use the Read tool to load each relevant context document before beginning security review.
@@ -37,6 +40,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 <!-- Define what's being reviewed -->
 
 **Review Type:**
+
 - [ ] Authentication System
 - [ ] Authorization & Permissions
 - [ ] Data Validation & Sanitization
@@ -49,8 +53,8 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 
 **Target Area:**
 
-
 **Priority Level:**
+
 - [ ] Critical - Production security issue
 - [ ] High - Potential vulnerability
 - [ ] Medium - Security improvement
@@ -63,6 +67,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ### Authentication & Authorization
 
 **Authentication:**
+
 - [ ] Secure password storage (hashing with salt)
 - [ ] Session management secure
 - [ ] Token expiration implemented
@@ -71,6 +76,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 - [ ] Password complexity requirements
 
 **Authorization:**
+
 - [ ] Role-based access control (RBAC) implemented
 - [ ] Permission checks on all sensitive endpoints
 - [ ] User data isolation (users can't access others' data)
@@ -80,6 +86,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ### Input Validation & Sanitization
 
 **Backend Validation:**
+
 - [ ] All user inputs validated
 - [ ] Type checking enforced
 - [ ] Length limits applied
@@ -88,6 +95,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 - [ ] NoSQL injection prevented
 
 **Frontend Validation:**
+
 - [ ] Client-side validation present (UX)
 - [ ] Server-side validation enforced (security)
 - [ ] XSS prevention (sanitize outputs)
@@ -97,6 +105,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ### Data Security
 
 **Data Storage:**
+
 - [ ] Sensitive data encrypted at rest
 - [ ] Passwords hashed (bcrypt, argon2, etc.)
 - [ ] API keys/secrets not in code
@@ -105,6 +114,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 - [ ] PII data handling compliant
 
 **Data Transmission:**
+
 - [ ] HTTPS enforced
 - [ ] Secure cookies (HttpOnly, Secure, SameSite)
 - [ ] Sensitive data not in URLs
@@ -113,6 +123,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ### API Security
 
 **Endpoint Protection:**
+
 - [ ] Authentication required for sensitive endpoints
 - [ ] Rate limiting implemented
 - [ ] CORS properly configured
@@ -121,6 +132,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 - [ ] Proper HTTP methods used (GET/POST/PUT/DELETE)
 
 **API Keys & Tokens:**
+
 - [ ] API keys rotated regularly
 - [ ] JWT tokens have expiration
 - [ ] Refresh token strategy secure
@@ -129,12 +141,14 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ### Frontend Security
 
 **Cross-Site Scripting (XSS):**
+
 - [ ] User input sanitized before rendering
 - [ ] React escapes content by default (verify)
 - [ ] Dangerous HTML avoided (dangerouslySetInnerHTML)
 - [ ] Content Security Policy (CSP) headers
 
 **Cross-Site Request Forgery (CSRF):**
+
 - [ ] CSRF tokens on state-changing requests
 - [ ] SameSite cookie attribute set
 - [ ] Origin/Referer header validation
@@ -142,6 +156,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ### Dependency Security
 
 **Third-Party Packages:**
+
 - [ ] Dependencies up to date
 - [ ] No known vulnerabilities (npm audit)
 - [ ] Unnecessary packages removed
@@ -154,8 +169,8 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 
 **Known Vulnerabilities:**
 
-
 **OWASP Top 10 Review:**
+
 1. **Broken Access Control** -
 2. **Cryptographic Failures** -
 3. **Injection** -
@@ -172,12 +187,14 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ## 🔐 Secrets Management
 
 **Environment Variables:**
+
 - [ ] .env file in .gitignore
 - [ ] No secrets in codebase
 - [ ] Production secrets different from dev
 - [ ] Secret rotation process documented
 
 **API Keys:**
+
 - [ ] Third-party API keys secured
 - [ ] Database credentials secured
 - [ ] OAuth client secrets protected
@@ -187,12 +204,14 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ## 📊 Logging & Monitoring
 
 **Audit Logging:**
+
 - [ ] Failed login attempts logged
 - [ ] Sensitive operations logged
 - [ ] User actions auditable
 - [ ] Logs don't contain sensitive data
 
 **Security Monitoring:**
+
 - [ ] Anomaly detection in place
 - [ ] Alerts for suspicious activity
 - [ ] Error tracking configured
@@ -203,6 +222,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ## 🧪 Security Testing
 
 **Testing Methods:**
+
 - [ ] Static analysis (linters, security scanners)
 - [ ] Dependency vulnerability scanning (npm audit)
 - [ ] Authentication/authorization tests
@@ -210,6 +230,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 - [ ] Penetration testing (if applicable)
 
 **Test Cases:**
+
 1. SQL injection attempts
 2. XSS injection attempts
 3. CSRF attacks
@@ -222,16 +243,19 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ## 🔧 Remediation Plan
 
 **High Priority Fixes:**
+
 1.
 2.
 3.
 
 **Medium Priority Fixes:**
+
 1.
 2.
 3.
 
 **Best Practice Improvements:**
+
 1.
 2.
 3.
@@ -241,13 +265,15 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ## 📋 Compliance Requirements
 
 **Regulations:**
+
 - [ ] GDPR (if handling EU data)
 - [ ] CCPA (if handling CA data)
 - [ ] HIPAA (if handling health data)
 - [ ] PCI DSS (if handling payment data)
-- [ ] Other: _____
+- [ ] Other: **\_**
 
 **Privacy Considerations:**
+
 - [ ] Privacy policy present
 - [ ] User consent for data collection
 - [ ] Data deletion process
@@ -264,6 +290,7 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 ## ✅ Start Session
 
 Ready to begin security review. Please:
+
 1. Review the target scope and security checklist
 2. Analyze code for common vulnerabilities (OWASP Top 10)
 3. Check authentication and authorization implementation

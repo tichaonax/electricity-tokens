@@ -17,16 +17,19 @@ For creating or updating technical documentation, API docs, README files, and co
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
+
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Documentation-Specific Contexts (Load based on doc type)
+
 - `ai-contexts/backend/backend-api-context.md` - For API documentation
 - `ai-contexts/frontend/component-context.md` - For component documentation
 - `ai-contexts/backend/database-context.md` - For database schema docs
 - `ai-contexts/testing/unit-testing-context.md` - For testing documentation
 
 ### Optional Contexts
+
 - Domain-specific contexts for the module being documented
 
 **How to load:** Use the Read tool to load each relevant context document before beginning documentation work.
@@ -38,6 +41,7 @@ For creating or updating technical documentation, API docs, README files, and co
 <!-- Select the type of documentation needed -->
 
 **Documentation Category:**
+
 - [x] API Documentation (OpenAPI/Swagger)
 - [x] README File
 - [x] Code Comments (JSDoc/TSDoc)
@@ -50,6 +54,7 @@ For creating or updating technical documentation, API docs, README files, and co
 - [ ] Contributing Guidelines
 
 **Target Audience:**
+
 - [x] Developers (internal team)
 - [ ] External contributors
 - [ ] End users
@@ -64,6 +69,7 @@ For creating or updating technical documentation, API docs, README files, and co
 The Payroll Module API endpoints and components need comprehensive documentation. Currently has minimal code comments and no API documentation. New team members struggle to understand how payroll calculations work and how to use the endpoints.
 
 **Files/Modules Affected:**
+
 - `/src/app/api/payroll/**` - All payroll API endpoints (8 endpoints)
 - `/src/components/payroll/**` - Payroll UI components (5 components)
 - `/src/lib/payroll-calculations.ts` - Core calculation logic (critical)
@@ -72,12 +78,14 @@ The Payroll Module API endpoints and components need comprehensive documentation
 - `/docs/guides/payroll-system.md` - New developer guide (to create)
 
 **Current State:**
+
 - [x] No documentation exists - API endpoints have zero documentation
 - [ ] Documentation outdated
 - [ ] Documentation incomplete
 - [ ] Documentation needs restructuring
 
 **Pain Points:**
+
 - New developers don't understand payroll calculation logic
 - No examples of how to use payroll APIs
 - Unclear what business rules are enforced
@@ -103,6 +111,7 @@ The Payroll Module API endpoints and components need comprehensive documentation
 8. `PUT /api/payroll/periods/[periodId]` - Update period status
 
 **Required Information:**
+
 - [x] Endpoint URL and HTTP method
 - [x] Request parameters (query, path, body)
 - [x] Request/response examples (realistic data)
@@ -112,6 +121,7 @@ The Payroll Module API endpoints and components need comprehensive documentation
 - [ ] Versioning details (not implemented yet)
 
 **Additional Requirements:**
+
 - Explain payroll calculation formulas (gross pay, net pay)
 - Document benefits and deductions handling
 - Explain payroll period lifecycle (draft → open → finalized → paid)
@@ -121,6 +131,7 @@ The Payroll Module API endpoints and components need comprehensive documentation
 ### For README Files
 
 **Sections Required:**
+
 - [x] Project title and description - "Payroll Management System"
 - [x] Features list - Entry management, period tracking, calculations
 - [ ] Installation instructions - Not needed (part of main app)
@@ -136,6 +147,7 @@ The Payroll Module API endpoints and components need comprehensive documentation
 
 **README Purpose:**
 Onboarding guide for developers joining payroll team. Should explain:
+
 - What the payroll system does
 - How payroll calculations work
 - How to test payroll features
@@ -145,6 +157,7 @@ Onboarding guide for developers joining payroll team. Should explain:
 ### For Code Comments
 
 **Documentation Standards:**
+
 - [x] JSDoc/TSDoc format
 - [x] Function descriptions
 - [x] Parameter descriptions with types
@@ -154,6 +167,7 @@ Onboarding guide for developers joining payroll team. Should explain:
 - [x] Related functions/dependencies
 
 **Priority Files for Comments:**
+
 1. `/src/lib/payroll-calculations.ts` - CRITICAL (complex formulas)
 2. `/src/app/api/payroll/entries/route.ts` - HIGH (main entry creation)
 3. `/src/app/api/payroll/periods/[periodId]/route.ts` - HIGH (status updates)
@@ -161,7 +175,8 @@ Onboarding guide for developers joining payroll team. Should explain:
 5. `/src/components/payroll/payroll-calculation-display.tsx` - MEDIUM (display logic)
 
 **Example for payroll-calculations.ts:**
-```typescript
+
+````typescript
 /**
  * Calculates the gross pay for a payroll entry including base salary,
  * overtime pay, bonuses, and commissions.
@@ -210,24 +225,24 @@ export function calculateGrossPay(
 ): number {
   // Validate inputs
   if (baseSalary < 0 || isNaN(baseSalary)) {
-    throw new ValidationError('Base salary must be a positive number')
+    throw new ValidationError('Base salary must be a positive number');
   }
 
   if (overtimeHours < 0) {
-    throw new ValidationError('Overtime hours cannot be negative')
+    throw new ValidationError('Overtime hours cannot be negative');
   }
 
   // Calculate overtime pay
-  const overtimePay = overtimeHours * overtimeRate
+  const overtimePay = overtimeHours * overtimeRate;
 
   // Sum bonuses and commissions
-  const totalBonuses = bonuses.reduce((sum, bonus) => sum + bonus, 0)
-  const totalCommissions = commissions.reduce((sum, comm) => sum + comm, 0)
+  const totalBonuses = bonuses.reduce((sum, bonus) => sum + bonus, 0);
+  const totalCommissions = commissions.reduce((sum, comm) => sum + comm, 0);
 
   // Calculate gross pay
-  const grossPay = baseSalary + overtimePay + totalBonuses + totalCommissions
+  const grossPay = baseSalary + overtimePay + totalBonuses + totalCommissions;
 
-  return grossPay
+  return grossPay;
 }
 
 /**
@@ -268,7 +283,7 @@ export function calculateNetPay(
 ): number {
   // Implementation...
 }
-```
+````
 
 ### For Architecture Documentation
 
@@ -279,6 +294,7 @@ Not required for this session (focusing on API and code docs).
 ## 🖼️ Visual Documentation
 
 **Diagrams Needed:**
+
 - [x] Flowcharts - Payroll calculation workflow
 - [x] Sequence diagrams - Entry creation flow with validations
 - [ ] Entity-relationship diagrams (ERD) - Already in database docs
@@ -286,6 +302,7 @@ Not required for this session (focusing on API and code docs).
 - [ ] Architecture diagrams
 
 **Format:**
+
 - [x] Mermaid diagrams (inline) - For easy maintenance in markdown
 - [ ] Draw.io/Lucidchart
 - [ ] Screenshots
@@ -360,6 +377,7 @@ sequenceDiagram
 ## 📋 Documentation Checklist
 
 **Content Quality:**
+
 - [x] Clear and concise language
 - [x] No jargon (or jargon explained) - Define "gross pay", "net pay", etc.
 - [x] Examples provided - Multiple examples per endpoint
@@ -369,6 +387,7 @@ sequenceDiagram
 - [x] Search-friendly headings
 
 **Technical Accuracy:**
+
 - [x] Information is up to date - Documenting current implementation
 - [x] Code examples match current API
 - [ ] Version numbers accurate - Not versioned yet
@@ -376,13 +395,15 @@ sequenceDiagram
 - [x] Configuration values correct
 
 **Formatting:**
+
 - [x] Markdown properly formatted
-- [x] Code blocks have language specified (```typescript, ```json)
+- [x] Code blocks have language specified (`typescript, `json)
 - [x] Headings follow hierarchy (h1, h2, h3)
 - [x] Lists are properly formatted
 - [x] Tables used where appropriate
 
 **Accessibility:**
+
 - [x] Alt text for images - N/A (using mermaid diagrams)
 - [x] Clear heading structure
 - [x] Descriptive link text
@@ -393,6 +414,7 @@ sequenceDiagram
 ## 🔄 Maintenance Plan
 
 **Update Triggers:**
+
 - [x] API changes - Update docs immediately with code changes
 - [x] Feature additions - Add new endpoint docs
 - [x] Breaking changes - Highlight in docs with migration guide
@@ -400,12 +422,14 @@ sequenceDiagram
 - [x] Configuration changes - Update environment variable docs
 
 **Review Schedule:**
+
 - [x] Quarterly - Review all payroll docs for accuracy
 - [x] On each major release - Update changelog
 - [ ] On significant changes - Immediate updates
 - [x] As needed - When confusion reported
 
 **Ownership:**
+
 - Primary: Payroll module lead developer
 - Secondary: Technical writer (if available)
 - Reviews: Senior developers during PR reviews
@@ -415,6 +439,7 @@ sequenceDiagram
 ## 📊 Documentation Structure
 
 **Proposed Outline for `/docs/api/payroll-api.md`:**
+
 ```
 # Payroll Management API Documentation
 
@@ -498,6 +523,7 @@ sequenceDiagram
 ```
 
 **Proposed Outline for `/docs/guides/payroll-system.md`:**
+
 ```
 # Payroll System Developer Guide
 
@@ -565,24 +591,25 @@ sequenceDiagram
    - Mark as paid
 
 **Code Examples:**
+
 ```typescript
 // Example 1: Create simple payroll entry
 const response = await fetch('/api/payroll/entries', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_TOKEN'
+    Authorization: 'Bearer YOUR_TOKEN',
   },
   body: JSON.stringify({
     payrollPeriodId: 'period-123',
     employeeId: 'emp-456',
     baseSalary: 5000,
-    notes: 'Standard monthly salary'
-  })
-})
+    notes: 'Standard monthly salary',
+  }),
+});
 
-const entry = await response.json()
-console.log('Created entry:', entry.data)
+const entry = await response.json();
+console.log('Created entry:', entry.data);
 // Output:
 // {
 //   id: 'entry-789',
@@ -595,22 +622,20 @@ console.log('Created entry:', entry.data)
 // Example 2: Create entry with overtime and benefits
 const complexEntry = await fetch('/api/payroll/entries', {
   method: 'POST',
-  headers: { /* ... */ },
+  headers: {
+    /* ... */
+  },
   body: JSON.stringify({
     payrollPeriodId: 'period-123',
     employeeId: 'emp-456',
     baseSalary: 5000,
     overtimeHours: 10,
     overtimeRate: 50,
-    benefits: [
-      { benefitId: 'benefit-health', amount: 200 }
-    ],
-    deductions: [
-      { deductionId: 'deduction-tax', amount: 750 }
-    ],
-    notes: 'Includes overtime for project deadline'
-  })
-})
+    benefits: [{ benefitId: 'benefit-health', amount: 200 }],
+    deductions: [{ deductionId: 'deduction-tax', amount: 750 }],
+    notes: 'Includes overtime for project deadline',
+  }),
+});
 
 // Calculation breakdown:
 // Base Salary: $5,000
@@ -627,21 +652,22 @@ try {
     body: JSON.stringify({
       payrollPeriodId: 'invalid-period',
       employeeId: 'emp-456',
-      baseSalary: 5000
-    })
-  })
+      baseSalary: 5000,
+    }),
+  });
 
   if (!response.ok) {
-    const error = await response.json()
-    console.error('Error:', error)
+    const error = await response.json();
+    console.error('Error:', error);
     // Output: { error: 'Not found', message: 'Payroll period not found' }
   }
 } catch (err) {
-  console.error('Network error:', err)
+  console.error('Network error:', err);
 }
 ```
 
 **Curl Examples:**
+
 ```bash
 # Create payroll entry
 curl -X POST http://localhost:8080/api/payroll/entries \
@@ -669,6 +695,7 @@ curl -X GET http://localhost:8080/api/payroll/entries/entry-789 \
 ## 🎨 Style Guide
 
 **Documentation Standards:**
+
 - **Tone:** Professional, clear, helpful, encouraging
 - **Code Style:** Follow TypeScript style guide
 - **Naming:** Use exact API field names (camelCase)
@@ -676,6 +703,7 @@ curl -X GET http://localhost:8080/api/payroll/entries/entry-789 \
 - **Line Length:** 100 characters max for readability
 
 **Terminology:**
+
 - "Payroll entry" not "payroll record"
 - "Gross pay" not "total salary"
 - "Net pay" not "take-home"
@@ -683,6 +711,7 @@ curl -X GET http://localhost:8080/api/payroll/entries/entry-789 \
 - "Benefit" not "addition" (use consistently)
 
 **Acronyms:**
+
 - Define on first use: "Gross pay (total before deductions)"
 - Link to glossary when available
 
@@ -693,6 +722,7 @@ curl -X GET http://localhost:8080/api/payroll/entries/entry-789 \
 <!-- Add any additional context, references, or special requirements -->
 
 **Context:**
+
 - Payroll module is 6 months old, no docs written yet
 - New developer spent 3 days figuring out calculation logic
 - Several bugs due to misunderstanding of business rules
@@ -700,18 +730,21 @@ curl -X GET http://localhost:8080/api/payroll/entries/entry-789 \
 - Planning to hire 2 new developers next month
 
 **Stakeholder Requirements:**
+
 - CTO: "Make it easy for new devs to contribute"
 - Payroll lead: "Document WHY decisions were made, not just HOW"
 - QA team: "Need testing examples for each edge case"
 - Product manager: "Explain business rules clearly"
 
 **Resources Available:**
+
 - 2 days allocated for documentation work
 - Can interview senior developer for domain knowledge
 - Access to accounting team for formula validation
 - Existing payroll period management docs (partial)
 
 **Success Metrics:**
+
 - New developer can create payroll entry within 2 hours (vs. 3 days currently)
 - Documentation prevents at least 5 support questions per month
 - Code review comments about "add documentation" decrease by 80%
@@ -721,6 +754,7 @@ curl -X GET http://localhost:8080/api/payroll/entries/entry-789 \
 ## ✅ Start Session
 
 Ready to begin documentation work. Please:
+
 1. Load required context documents (backend-api-context.md, code-workflow.md, database-context.md)
 2. Review the documentation scope and requirements
 3. Analyze existing code in payroll module:
@@ -750,6 +784,7 @@ Ready to begin documentation work. Please:
    - Match tone/style of other docs
 
 **Deliverables:**
+
 1. `/docs/api/payroll-api.md` - Complete API documentation (estimate: 1000+ lines)
 2. `/docs/guides/payroll-system.md` - Developer guide (estimate: 500+ lines)
 3. JSDoc comments in `/lib/payroll-calculations.ts` (estimate: 300+ lines)
@@ -757,6 +792,7 @@ Ready to begin documentation work. Please:
 5. Mermaid diagrams (2-3 diagrams)
 
 **Timeline:**
+
 - Day 1 Morning: API documentation + diagrams
 - Day 1 Afternoon: JSDoc comments in calculation file
 - Day 2 Morning: JSDoc comments in API files
