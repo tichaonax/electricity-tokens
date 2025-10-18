@@ -1,0 +1,1258 @@
+{
+  "metadata": {
+    "timestamp": "2025-10-18T00:31:43.969Z",
+    "version": "1.0",
+    "type": "full",
+    "recordCounts": {
+      "users": 5,
+      "tokenPurchases": 12,
+      "userContributions": 12,
+      "meterReadings": 91,
+      "accounts": 0,
+      "sessions": 0,
+      "verificationTokens": 0
+    }
+  },
+  "users": [
+    {
+      "id": "cmcti9pi90002tm6agin29tbn",
+      "email": "maryhwandazasenior@gmail.com",
+      "name": "Mary Hwandaza",
+      "password": "$2b$12$kpI1vh/ex9m7jnl6V14B4uW7JNW25QLZWJN9smh6lND79ilbO.Nym",
+      "role": "USER",
+      "locked": false,
+      "passwordResetRequired": false,
+      "permissions": {
+        "canExportData": true,
+        "canImportData": false,
+        "canAddPurchases": true,
+        "canEditPurchases": true,
+        "canDeletePurchases": false,
+        "canAddContributions": true,
+        "canAddMeterReadings": true,
+        "canViewCostAnalysis": true,
+        "canViewUsageReports": true,
+        "canAccessNewPurchase": true,
+        "canEditContributions": true,
+        "canViewAccountBalance": true,
+        "canDeleteContributions": false,
+        "canViewPurchaseHistory": true,
+        "canViewFinancialReports": true,
+        "canViewEfficiencyReports": true,
+        "canViewPersonalDashboard": true,
+        "canViewUserContributions": true,
+        "canViewMaximumDailyConsumption": false,
+        "canViewProgressiveTokenConsumption": true
+      },
+      "themePreference": "dark",
+      "lastLoginAt": "2025-09-11T15:15:39.658Z",
+      "createdAt": "2025-07-07T19:40:03.298Z",
+      "updatedAt": "2025-10-11T09:31:57.002Z"
+    },
+    {
+      "id": "cmctjcfye001jtmns8f5j4wjp",
+      "email": "chiposhanga@hxi.com",
+      "name": "Chipo Shanga",
+      "password": "$2b$12$pawS778vntMKSPDE9G5w3ehT5atR5F0mMY1hW./GAb6EuXXndlN/a",
+      "role": "USER",
+      "locked": false,
+      "passwordResetRequired": false,
+      "permissions": {
+        "canExportData": false,
+        "canImportData": false,
+        "canAddPurchases": true,
+        "canEditPurchases": false,
+        "canDeletePurchases": false,
+        "canAddContributions": true,
+        "canAddMeterReadings": true,
+        "canViewCostAnalysis": false,
+        "canViewUsageReports": false,
+        "canAccessNewPurchase": false,
+        "canEditContributions": true,
+        "canViewAccountBalance": false,
+        "canDeleteContributions": false,
+        "canViewPurchaseHistory": false,
+        "canViewFinancialReports": false,
+        "canViewEfficiencyReports": false,
+        "canViewPersonalDashboard": true,
+        "canViewUserContributions": false,
+        "canViewMaximumDailyConsumption": false,
+        "canViewProgressiveTokenConsumption": false
+      },
+      "themePreference": "dark",
+      "lastLoginAt": "2025-08-11T10:56:23.974Z",
+      "createdAt": "2025-07-07T20:10:10.502Z",
+      "updatedAt": "2025-10-11T09:31:57.056Z"
+    },
+    {
+      "id": "cmctj94z3001atmnsafrxp3be",
+      "email": "rachelhwandazajunior@gmail.com",
+      "name": "Rachel Hwandaza",
+      "password": "$2b$12$DHW9zrWtq7jizeTEz.GtYukX8QQSF2kZKVdRtBqNSMDu8RoxbrAUK",
+      "role": "USER",
+      "locked": false,
+      "passwordResetRequired": false,
+      "permissions": {
+        "canExportData": true,
+        "canImportData": false,
+        "canAddPurchases": true,
+        "canEditPurchases": true,
+        "canDeletePurchases": false,
+        "canAddContributions": true,
+        "canAddMeterReadings": true,
+        "canViewCostAnalysis": true,
+        "canViewUsageReports": true,
+        "canAccessNewPurchase": true,
+        "canEditContributions": true,
+        "canViewAccountBalance": true,
+        "canDeleteContributions": false,
+        "canViewPurchaseHistory": true,
+        "canViewFinancialReports": true,
+        "canViewEfficiencyReports": true,
+        "canViewPersonalDashboard": true,
+        "canViewUserContributions": true,
+        "canViewMaximumDailyConsumption": false,
+        "canViewProgressiveTokenConsumption": true
+      },
+      "themePreference": "system",
+      "lastLoginAt": "2025-10-17T07:49:19.921Z",
+      "createdAt": "2025-07-07T20:07:36.303Z",
+      "updatedAt": "2025-10-17T08:54:15.075Z"
+    },
+    {
+      "id": "cmcv5yaay0000vancad1gut6b",
+      "email": "hwandaenterprises@gmail.com",
+      "name": "HXI Admin",
+      "password": "$2b$12$yZwReqL/7Qlv459kYPyKY.fz6aD3xcIPFWgV3pSBtsT6WTNfgIzZK",
+      "role": "ADMIN",
+      "locked": false,
+      "passwordResetRequired": false,
+      "permissions": null,
+      "themePreference": "dark",
+      "lastLoginAt": "2025-10-11T10:01:51.391Z",
+      "createdAt": "2025-07-08T23:30:47.338Z",
+      "updatedAt": "2025-10-11T10:03:17.765Z"
+    },
+    {
+      "id": "cmcrrgqo20001tmojyxorbc68",
+      "email": "tichaona@yahoo.com",
+      "name": "Tichaona Hwandaza",
+      "password": "$2b$12$jOjdyr1pnP2KwZWEXLenMeiJN562ea9llf9ZaLS34EtiInFSG0/MO",
+      "role": "ADMIN",
+      "locked": false,
+      "passwordResetRequired": false,
+      "permissions": {
+        "canExportData": false,
+        "canImportData": false,
+        "canAddPurchases": true,
+        "canEditPurchases": false,
+        "canDeletePurchases": false,
+        "canAddContributions": true,
+        "canAddMeterReadings": false,
+        "canViewCostAnalysis": false,
+        "canViewUsageReports": false,
+        "canAccessNewPurchase": false,
+        "canEditContributions": true,
+        "canViewAccountBalance": false,
+        "canDeleteContributions": false,
+        "canViewPurchaseHistory": false,
+        "canViewFinancialReports": false,
+        "canViewEfficiencyReports": false,
+        "canViewPersonalDashboard": true,
+        "canViewUserContributions": false,
+        "canViewMaximumDailyConsumption": false,
+        "canViewProgressiveTokenConsumption": false
+      },
+      "themePreference": "dark",
+      "lastLoginAt": "2025-10-18T00:31:15.280Z",
+      "createdAt": "2025-07-06T14:21:55.586Z",
+      "updatedAt": "2025-10-18T00:31:33.586Z"
+    }
+  ],
+  "tokenPurchases": [
+    {
+      "id": "cmcsuf1tk0005tm79sb3b5eey",
+      "totalTokens": 67.6,
+      "totalPayment": 15,
+      "meterReading": 0.01,
+      "purchaseDate": "2025-05-04T05:00:00.000Z",
+      "isEmergency": false,
+      "createdBy": "cmcrrgqo20001tmojyxorbc68",
+      "createdAt": "2025-07-07T08:32:21.752Z",
+      "updatedAt": "2025-10-11T09:31:57.208Z",
+      "creator": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsuj5pf000dtm792272qraa",
+      "totalTokens": 50.94,
+      "totalPayment": 12,
+      "meterReading": 53.73,
+      "purchaseDate": "2025-05-15T05:00:00.000Z",
+      "isEmergency": true,
+      "createdBy": "cmcrrgqo20001tmojyxorbc68",
+      "createdAt": "2025-07-07T08:35:33.412Z",
+      "updatedAt": "2025-10-11T09:31:57.292Z",
+      "creator": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsuoc5w000ltm792e9p3bk4",
+      "totalTokens": 40.69,
+      "totalPayment": 10,
+      "meterReading": 93.46,
+      "purchaseDate": "2025-05-25T05:00:00.000Z",
+      "isEmergency": true,
+      "createdBy": "cmcrrgqo20001tmojyxorbc68",
+      "createdAt": "2025-07-07T08:39:35.061Z",
+      "updatedAt": "2025-10-11T09:31:57.339Z",
+      "creator": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsurgdi000ttm79sae74h1i",
+      "totalTokens": 67,
+      "totalPayment": 17,
+      "meterReading": 124.18,
+      "purchaseDate": "2025-06-03T05:00:00.000Z",
+      "isEmergency": false,
+      "createdBy": "cmcrrgqo20001tmojyxorbc68",
+      "createdAt": "2025-07-07T08:42:00.486Z",
+      "updatedAt": "2025-10-11T09:31:57.375Z",
+      "creator": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsuvwmq0011tm799z5atruk",
+      "totalTokens": 80,
+      "totalPayment": 20,
+      "meterReading": 166.03,
+      "purchaseDate": "2025-06-14T05:00:00.000Z",
+      "isEmergency": true,
+      "createdBy": "cmcrrgqo20001tmojyxorbc68",
+      "createdAt": "2025-07-07T08:45:28.179Z",
+      "updatedAt": "2025-10-11T09:31:57.520Z",
+      "creator": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsv4tje0001tmg1t8lrw59u",
+      "totalTokens": 70,
+      "totalPayment": 10,
+      "meterReading": 209.75,
+      "purchaseDate": "2025-06-24T05:00:00.000Z",
+      "isEmergency": true,
+      "createdBy": "cmcrrgqo20001tmojyxorbc68",
+      "createdAt": "2025-07-07T08:52:24.075Z",
+      "updatedAt": "2025-10-11T09:31:57.655Z",
+      "creator": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcvw3iad000dvauce22d7xzq",
+      "totalTokens": 165.29,
+      "totalPayment": 41,
+      "meterReading": 297.44,
+      "purchaseDate": "2025-07-09T00:00:00.000Z",
+      "isEmergency": false,
+      "createdBy": "cmcti9pi90002tm6agin29tbn",
+      "createdAt": "2025-07-09T11:42:40.981Z",
+      "updatedAt": "2025-10-11T09:31:57.738Z",
+      "creator": {
+        "email": "maryhwandazasenior@gmail.com",
+        "name": "Mary Hwandaza"
+      }
+    },
+    {
+      "id": "cme2n19sm0049vahoceuahlop",
+      "totalTokens": 20.76,
+      "totalPayment": 5,
+      "meterReading": 429.48,
+      "purchaseDate": "2025-08-08T00:00:00.000Z",
+      "isEmergency": false,
+      "createdBy": "cmctj94z3001atmnsafrxp3be",
+      "createdAt": "2025-08-08T09:43:05.685Z",
+      "updatedAt": "2025-10-11T09:31:57.757Z",
+      "creator": {
+        "email": "rachelhwandazajunior@gmail.com",
+        "name": "Rachel Hwandaza"
+      }
+    },
+    {
+      "id": "cme4dvqwe005lvahoh07lpt47",
+      "totalTokens": 62.28,
+      "totalPayment": 15,
+      "meterReading": 431.53,
+      "purchaseDate": "2025-08-08T00:00:00.000Z",
+      "isEmergency": true,
+      "createdBy": "cmcv5yaay0000vancad1gut6b",
+      "createdAt": "2025-08-09T15:02:23.726Z",
+      "updatedAt": "2025-10-11T09:31:57.804Z",
+      "creator": {
+        "email": "hwandaenterprises@gmail.com",
+        "name": "HXI Admin"
+      }
+    },
+    {
+      "id": "cmf2a086m0007var82eunjo36",
+      "totalTokens": 66.43,
+      "totalPayment": 16,
+      "meterReading": 539.79,
+      "purchaseDate": "2025-08-22T00:00:00.000Z",
+      "isEmergency": true,
+      "createdBy": "cmcv5yaay0000vancad1gut6b",
+      "createdAt": "2025-09-02T08:18:04.270Z",
+      "updatedAt": "2025-10-11T09:31:57.859Z",
+      "creator": {
+        "email": "hwandaenterprises@gmail.com",
+        "name": "HXI Admin"
+      }
+    },
+    {
+      "id": "cmf5i9jqj0003vao4mql84k21",
+      "totalTokens": 205.44,
+      "totalPayment": 51,
+      "meterReading": 544.77,
+      "purchaseDate": "2025-09-03T00:00:00.000Z",
+      "isEmergency": false,
+      "createdBy": "cmcrrgqo20001tmojyxorbc68",
+      "createdAt": "2025-09-04T14:32:34.603Z",
+      "updatedAt": "2025-10-11T09:31:57.942Z",
+      "creator": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmgujxja00003vads71r2wp7x",
+      "totalTokens": 203.21,
+      "totalPayment": 51,
+      "meterReading": 712.16,
+      "purchaseDate": "2025-10-16T00:00:00.000Z",
+      "isEmergency": false,
+      "createdBy": "cmctj94z3001atmnsafrxp3be",
+      "createdAt": "2025-10-17T07:53:10.104Z",
+      "updatedAt": "2025-10-17T07:53:10.104Z",
+      "creator": {
+        "email": "rachelhwandazajunior@gmail.com",
+        "name": "Rachel Hwandaza"
+      }
+    }
+  ],
+  "userContributions": [
+    {
+      "id": "cmcsufwwj0009tm79a600zatq",
+      "purchaseId": "cmcsuf1tk0005tm79sb3b5eey",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "contributionAmount": 15,
+      "meterReading": 0.01,
+      "tokensConsumed": 0,
+      "createdAt": "2025-07-07T08:33:02.035Z",
+      "updatedAt": "2025-10-11T09:31:57.237Z",
+      "user": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsuk2iv000htm79gzbnuj8g",
+      "purchaseId": "cmcsuj5pf000dtm792272qraa",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "contributionAmount": 0,
+      "meterReading": 53.73,
+      "tokensConsumed": 53.72,
+      "createdAt": "2025-07-07T08:36:15.943Z",
+      "updatedAt": "2025-10-11T09:31:57.311Z",
+      "user": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsuol0j000ptm79frb0iynf",
+      "purchaseId": "cmcsuoc5w000ltm792e9p3bk4",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "contributionAmount": 0,
+      "meterReading": 93.46,
+      "tokensConsumed": 39.73,
+      "createdAt": "2025-07-07T08:39:46.531Z",
+      "updatedAt": "2025-10-11T09:31:57.354Z",
+      "user": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsus035000xtm799wfi3t44",
+      "purchaseId": "cmcsurgdi000ttm79sae74h1i",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "contributionAmount": 15,
+      "meterReading": 124.18,
+      "tokensConsumed": 30.72000000000001,
+      "createdAt": "2025-07-07T08:42:26.033Z",
+      "updatedAt": "2025-10-11T09:31:57.402Z",
+      "user": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsuwrc20015tm7911rolpfs",
+      "purchaseId": "cmcsuvwmq0011tm799z5atruk",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "contributionAmount": 10,
+      "meterReading": 166.03,
+      "tokensConsumed": 41.84999999999999,
+      "createdAt": "2025-07-07T08:46:07.970Z",
+      "updatedAt": "2025-10-11T09:31:57.526Z",
+      "user": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcsv5a230005tmg17ay00yfp",
+      "purchaseId": "cmcsv4tje0001tmg1t8lrw59u",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "contributionAmount": 0,
+      "meterReading": 209.75,
+      "tokensConsumed": 43.72,
+      "createdAt": "2025-07-07T08:52:45.483Z",
+      "updatedAt": "2025-10-11T09:31:57.685Z",
+      "user": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmcvw5fz1000hvauc3opf5e1f",
+      "purchaseId": "cmcvw3iad000dvauce22d7xzq",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "contributionAmount": 23,
+      "meterReading": 297.44,
+      "tokensConsumed": 87.69,
+      "createdAt": "2025-07-09T11:44:11.293Z",
+      "updatedAt": "2025-10-11T09:31:57.743Z",
+      "user": {
+        "email": "maryhwandazasenior@gmail.com",
+        "name": "Mary Hwandaza"
+      }
+    },
+    {
+      "id": "cme4dswjc005hvahoedadsmt4",
+      "purchaseId": "cme2n19sm0049vahoceuahlop",
+      "userId": "cmcv5yaay0000vancad1gut6b",
+      "contributionAmount": 0,
+      "meterReading": 429.48,
+      "tokensConsumed": 132.04,
+      "createdAt": "2025-08-09T15:00:11.064Z",
+      "updatedAt": "2025-10-11T09:31:57.766Z",
+      "user": {
+        "email": "hwandaenterprises@gmail.com",
+        "name": "HXI Admin"
+      }
+    },
+    {
+      "id": "cme4dwkkk005pvahop23tjnl6",
+      "purchaseId": "cme4dvqwe005lvahoh07lpt47",
+      "userId": "cmcv5yaay0000vancad1gut6b",
+      "contributionAmount": 23,
+      "meterReading": 431.53,
+      "tokensConsumed": 134.09,
+      "createdAt": "2025-08-09T15:03:02.180Z",
+      "updatedAt": "2025-10-11T09:31:57.811Z",
+      "user": {
+        "email": "hwandaenterprises@gmail.com",
+        "name": "HXI Admin"
+      }
+    },
+    {
+      "id": "cmf2a14k7000bvar8ve9b687r",
+      "purchaseId": "cmf2a086m0007var82eunjo36",
+      "userId": "cmcv5yaay0000vancad1gut6b",
+      "contributionAmount": 0,
+      "meterReading": 539.79,
+      "tokensConsumed": 110.31,
+      "createdAt": "2025-09-02T08:18:46.231Z",
+      "updatedAt": "2025-10-11T09:31:57.917Z",
+      "user": {
+        "email": "hwandaenterprises@gmail.com",
+        "name": "HXI Admin"
+      }
+    },
+    {
+      "id": "cmf5k5oth0007vao43weakwh8",
+      "purchaseId": "cmf5i9jqj0003vao4mql84k21",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "contributionAmount": 26,
+      "meterReading": 544.77,
+      "tokensConsumed": 4.98,
+      "createdAt": "2025-09-04T15:25:33.795Z",
+      "updatedAt": "2025-10-11T09:31:57.959Z",
+      "user": {
+        "email": "tichaona@yahoo.com",
+        "name": "Tichaona Hwandaza"
+      }
+    },
+    {
+      "id": "cmgujzv390007vads65bhnca0",
+      "purchaseId": "cmgujxja00003vads71r2wp7x",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "contributionAmount": 26,
+      "meterReading": 712.16,
+      "tokensConsumed": 167.39,
+      "createdAt": "2025-10-17T07:54:58.725Z",
+      "updatedAt": "2025-10-17T07:54:58.725Z",
+      "user": {
+        "email": "rachelhwandazajunior@gmail.com",
+        "name": "Rachel Hwandaza"
+      }
+    }
+  ],
+  "meterReadings": [
+    {
+      "id": "cmcsv905l0009tmg1gb0kso7k",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 124.18,
+      "readingDate": "2025-06-03T00:00:00.000Z",
+      "notes": "Token purchase",
+      "createdAt": "2025-07-07T08:55:39.274Z",
+      "updatedAt": "2025-10-11T09:31:58.025Z"
+    },
+    {
+      "id": "cmcsxalcw0005tm8elm3uimsb",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 250.13,
+      "readingDate": "2025-06-30T00:00:00.000Z",
+      "createdAt": "2025-07-07T09:52:52.641Z",
+      "updatedAt": "2025-10-11T09:31:58.091Z"
+    },
+    {
+      "id": "cmcsxa59t0001tm8ewdbl2wze",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 254.92,
+      "readingDate": "2025-07-01T00:00:00.000Z",
+      "createdAt": "2025-07-07T09:52:31.793Z",
+      "updatedAt": "2025-10-11T09:31:58.124Z"
+    },
+    {
+      "id": "cmcsvby4m000dtmg14iw9nikz",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 259.71,
+      "readingDate": "2025-07-02T00:00:00.000Z",
+      "createdAt": "2025-07-07T08:57:56.614Z",
+      "updatedAt": "2025-10-11T09:31:58.202Z"
+    },
+    {
+      "id": "cmcsvd7rf000htmg12kkbas6p",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 277.57,
+      "readingDate": "2025-07-05T00:00:00.000Z",
+      "createdAt": "2025-07-07T08:58:55.756Z",
+      "updatedAt": "2025-10-11T09:31:58.236Z"
+    },
+    {
+      "id": "cmcsvdlkk000ltmg1p2xai9k4",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 282.36,
+      "readingDate": "2025-07-06T00:00:00.000Z",
+      "createdAt": "2025-07-07T08:59:13.653Z",
+      "updatedAt": "2025-10-11T09:31:58.254Z"
+    },
+    {
+      "id": "cmcsvglai000ptmg17sw6os6n",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 287.42,
+      "readingDate": "2025-07-07T00:00:00.000Z",
+      "createdAt": "2025-07-07T09:01:33.259Z",
+      "updatedAt": "2025-10-11T09:31:58.286Z"
+    },
+    {
+      "id": "cmct7xjzq0001tmo4aqpnllrp",
+      "userId": "cmcrrgqo20001tmojyxorbc68",
+      "reading": 288.98,
+      "readingDate": "2025-07-07T00:00:00.000Z",
+      "createdAt": "2025-07-07T14:50:40.118Z",
+      "updatedAt": "2025-10-11T09:31:58.366Z"
+    },
+    {
+      "id": "cmcuwnl6f0005tm0r92mnfsb2",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 294.42,
+      "readingDate": "2025-07-08T00:00:00.000Z",
+      "createdAt": "2025-07-08T19:10:31.672Z",
+      "updatedAt": "2025-10-11T09:31:58.422Z"
+    },
+    {
+      "id": "cmcuwoq9i000dtm0rx1h90op5",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 296.42,
+      "readingDate": "2025-07-08T00:00:00.000Z",
+      "createdAt": "2025-07-08T19:11:24.918Z",
+      "updatedAt": "2025-10-11T09:31:58.542Z"
+    },
+    {
+      "id": "cmcvvd73d0001vaucvvidq7tu",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 297.44,
+      "readingDate": "2025-07-09T11:22:13.386Z",
+      "createdAt": "2025-07-09T11:22:13.415Z",
+      "updatedAt": "2025-10-11T09:31:58.849Z"
+    },
+    {
+      "id": "cmcx3u5a70009va8goeix1cem",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 304.34,
+      "readingDate": "2025-07-10T08:07:07.297Z",
+      "createdAt": "2025-07-10T08:07:07.327Z",
+      "updatedAt": "2025-10-11T09:31:58.975Z"
+    },
+    {
+      "id": "cmcxepwg5000bvauw9zmimct0",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 305.22,
+      "readingDate": "2025-07-10T13:11:45.004Z",
+      "createdAt": "2025-07-10T13:11:45.029Z",
+      "updatedAt": "2025-10-11T09:31:59.003Z"
+    },
+    {
+      "id": "cmcxjtdv9000hvauwofi3t55j",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 306.15,
+      "readingDate": "2025-07-10T15:34:25.634Z",
+      "createdAt": "2025-07-10T15:34:25.653Z",
+      "updatedAt": "2025-10-11T09:31:59.016Z"
+    },
+    {
+      "id": "cmcxjueyx000lvauw93a9zsia",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 306.15,
+      "readingDate": "2025-07-10T15:35:13.714Z",
+      "createdAt": "2025-07-10T15:35:13.738Z",
+      "updatedAt": "2025-10-11T09:31:59.025Z"
+    },
+    {
+      "id": "cmczujt5r000zvauwhfbsj75c",
+      "userId": "cmcv5yaay0000vancad1gut6b",
+      "reading": 315.24,
+      "readingDate": "2025-07-12T06:10:27.000Z",
+      "createdAt": "2025-07-12T06:10:27.038Z",
+      "updatedAt": "2025-10-11T09:31:59.037Z"
+    },
+    {
+      "id": "cmdcqeykp000bvahowlkfdqou",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 345.56,
+      "readingDate": "2025-07-21T06:35:42.571Z",
+      "createdAt": "2025-07-21T06:35:42.600Z",
+      "updatedAt": "2025-10-11T09:31:59.056Z"
+    },
+    {
+      "id": "cmde9osrj000fvahoi4letknu",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 351.26,
+      "readingDate": "2025-07-22T08:23:00.478Z",
+      "createdAt": "2025-07-22T08:23:00.511Z",
+      "updatedAt": "2025-10-11T09:31:59.086Z"
+    },
+    {
+      "id": "cmdfr34kd000jvahovlni267u",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 356.56,
+      "readingDate": "2025-07-23T09:17:48.608Z",
+      "createdAt": "2025-07-23T09:17:48.637Z",
+      "updatedAt": "2025-10-11T09:31:59.118Z"
+    },
+    {
+      "id": "cmdh2mlv9000nvahosmlgpbll",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 360.24,
+      "readingDate": "2025-07-24T07:28:39.446Z",
+      "createdAt": "2025-07-24T07:28:39.475Z",
+      "updatedAt": "2025-10-11T09:31:59.135Z"
+    },
+    {
+      "id": "cmdhkceyu000vvahouqg92zw8",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 362.46,
+      "readingDate": "2025-07-24T15:44:37.036Z",
+      "createdAt": "2025-07-24T15:44:37.061Z",
+      "updatedAt": "2025-10-11T09:31:59.156Z"
+    },
+    {
+      "id": "cmdihbq3n001fvahoxnhk7ogk",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 365.94,
+      "readingDate": "2025-07-25T07:07:52.136Z",
+      "createdAt": "2025-07-25T07:07:52.162Z",
+      "updatedAt": "2025-10-11T09:31:59.175Z"
+    },
+    {
+      "id": "cmdiyttjr001jvahohuplu37a",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 367.89,
+      "readingDate": "2025-07-25T15:17:49.881Z",
+      "createdAt": "2025-07-25T15:17:49.910Z",
+      "updatedAt": "2025-10-11T09:31:59.214Z"
+    },
+    {
+      "id": "cmdjusao8001nvaho8ftbedmt",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 371.79,
+      "readingDate": "2025-07-26T06:12:26.475Z",
+      "createdAt": "2025-07-26T06:12:26.504Z",
+      "updatedAt": "2025-10-11T09:31:59.234Z"
+    },
+    {
+      "id": "cmdkdq916001rvaho57wa51yj",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 372.99,
+      "readingDate": "2025-07-26T15:02:43.744Z",
+      "createdAt": "2025-07-26T15:02:43.770Z",
+      "updatedAt": "2025-10-11T09:31:59.251Z"
+    },
+    {
+      "id": "cmdldcjdi0023vahoky6g1f4g",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 376.4,
+      "readingDate": "2025-07-27T07:39:50.140Z",
+      "createdAt": "2025-07-27T07:39:50.167Z",
+      "updatedAt": "2025-10-11T09:31:59.285Z"
+    },
+    {
+      "id": "cmdlo89hd0027vahoas8vqnto",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 377.27,
+      "readingDate": "2025-07-27T12:44:26.474Z",
+      "createdAt": "2025-07-27T12:44:26.497Z",
+      "updatedAt": "2025-10-11T09:31:59.303Z"
+    },
+    {
+      "id": "cmdmt59dz002bvahodmabgewk",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 380.23,
+      "readingDate": "2025-07-28T07:49:50.639Z",
+      "createdAt": "2025-07-28T07:49:50.663Z",
+      "updatedAt": "2025-10-11T09:31:59.332Z"
+    },
+    {
+      "id": "cmdoc2qd3002nvahopwuyvn51",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 386,
+      "readingDate": "2025-07-29T09:27:31.548Z",
+      "createdAt": "2025-07-29T09:27:31.574Z",
+      "updatedAt": "2025-10-11T09:31:59.342Z"
+    },
+    {
+      "id": "cmdpl2w6m002rvahosraxr8ek",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 390.76,
+      "readingDate": "2025-07-30T06:27:21.809Z",
+      "createdAt": "2025-07-30T06:27:21.839Z",
+      "updatedAt": "2025-10-11T09:31:59.358Z"
+    },
+    {
+      "id": "cmdq3rlpj002vvahowg3dfv4o",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 392.5,
+      "readingDate": "2025-07-30T15:10:27.724Z",
+      "createdAt": "2025-07-30T15:10:27.751Z",
+      "updatedAt": "2025-10-11T09:31:59.386Z"
+    },
+    {
+      "id": "cmdr07huz002zvaho1vvvdprl",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 396.29,
+      "readingDate": "2025-07-31T06:18:36.948Z",
+      "createdAt": "2025-07-31T06:18:36.971Z",
+      "updatedAt": "2025-10-11T09:31:59.406Z"
+    },
+    {
+      "id": "cmdrizt270033vahoowdf3qlp",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 397.91,
+      "readingDate": "2025-07-31T15:04:30.915Z",
+      "createdAt": "2025-07-31T15:04:30.943Z",
+      "updatedAt": "2025-10-11T09:31:59.425Z"
+    },
+    {
+      "id": "cmdsg9fr50037vahojjuyxv7e",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 401.1,
+      "readingDate": "2025-08-01T06:35:47.555Z",
+      "createdAt": "2025-08-01T06:35:47.585Z",
+      "updatedAt": "2025-10-11T09:31:59.448Z"
+    },
+    {
+      "id": "cmdsynndx003bvahojo1krltz",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 402.83,
+      "readingDate": "2025-08-01T15:10:43.721Z",
+      "createdAt": "2025-08-01T15:10:43.748Z",
+      "updatedAt": "2025-10-11T09:31:59.458Z"
+    },
+    {
+      "id": "cmdtzzduo003fvahokeidipjn",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 406.19,
+      "readingDate": "2025-08-02T08:35:37.027Z",
+      "createdAt": "2025-08-02T08:35:37.054Z",
+      "updatedAt": "2025-10-11T09:31:59.470Z"
+    },
+    {
+      "id": "cmduds9jq003jvahozkkp5dwh",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 407.99,
+      "readingDate": "2025-08-02T15:01:59.480Z",
+      "createdAt": "2025-08-02T15:01:59.510Z",
+      "updatedAt": "2025-10-11T09:31:59.483Z"
+    },
+    {
+      "id": "cme2lseen003zvahoq8esbncf",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 429.48,
+      "readingDate": "2025-08-08T09:08:12.115Z",
+      "createdAt": "2025-08-08T09:08:12.142Z",
+      "updatedAt": "2025-10-11T09:31:59.493Z"
+    },
+    {
+      "id": "cme2z5cf4004jvahovdxf4ray",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 431.53,
+      "readingDate": "2025-08-08T15:22:11.075Z",
+      "createdAt": "2025-08-08T15:22:11.103Z",
+      "updatedAt": "2025-10-11T09:31:59.508Z"
+    },
+    {
+      "id": "cme3wqez10055vaho083wdpdg",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 435.51,
+      "readingDate": "2025-08-09T07:02:21.486Z",
+      "createdAt": "2025-08-09T07:02:21.515Z",
+      "updatedAt": "2025-10-11T09:31:59.520Z"
+    },
+    {
+      "id": "cme4ecasg005xvahoad6uolyh",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 437.46,
+      "readingDate": "2025-08-09T15:15:15.970Z",
+      "createdAt": "2025-08-09T15:15:16.000Z",
+      "updatedAt": "2025-10-11T09:31:59.533Z"
+    },
+    {
+      "id": "cme700gyi0063vaho5pi96zpm",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 439.93,
+      "readingDate": "2025-08-11T10:57:27.995Z",
+      "createdAt": "2025-08-11T10:57:28.026Z",
+      "updatedAt": "2025-10-11T09:31:59.551Z"
+    },
+    {
+      "id": "cme861chu0067vahotz5bw0lj",
+      "userId": "cmctjcfye001jtmns8f5j4wjp",
+      "reading": 446.68,
+      "readingDate": "2025-08-12T06:33:52.732Z",
+      "createdAt": "2025-08-12T06:33:52.770Z",
+      "updatedAt": "2025-10-11T09:31:59.568Z"
+    },
+    {
+      "id": "cme9rzqac006hvahoqp14mwpr",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 447.53,
+      "readingDate": "2025-08-13T09:36:15.034Z",
+      "createdAt": "2025-08-13T09:36:15.060Z",
+      "updatedAt": "2025-10-11T09:31:59.584Z"
+    },
+    {
+      "id": "cmechh4xd000dvawwz9v3ls5y",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 458.26,
+      "readingDate": "2025-08-15T07:05:09.909Z",
+      "createdAt": "2025-08-15T07:05:09.937Z",
+      "updatedAt": "2025-10-11T09:31:59.601Z"
+    },
+    {
+      "id": "cmejnm3vq0001var08zhj2rn8",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 477.32,
+      "readingDate": "2025-08-19T07:31:22.757Z",
+      "createdAt": "2025-08-20T07:31:22.785Z",
+      "updatedAt": "2025-10-11T09:31:59.618Z"
+    },
+    {
+      "id": "cmejnmpdt0005var0m20tu01i",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 478.9,
+      "readingDate": "2025-08-19T07:31:50.631Z",
+      "createdAt": "2025-08-20T07:31:50.657Z",
+      "updatedAt": "2025-10-11T09:31:59.635Z"
+    },
+    {
+      "id": "cmesabfod000bvar0oy7yyahi",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 485.52,
+      "readingDate": "2025-08-21T08:29:05.408Z",
+      "createdAt": "2025-08-26T08:29:05.437Z",
+      "updatedAt": "2025-10-11T09:31:59.653Z"
+    },
+    {
+      "id": "cmesac6t2000fvar0e497w46z",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 490.29,
+      "readingDate": "2025-08-22T08:29:40.568Z",
+      "createdAt": "2025-08-26T08:29:40.598Z",
+      "updatedAt": "2025-10-11T09:31:59.686Z"
+    },
+    {
+      "id": "cmesacvm8000jvar0u15r39ap",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 495.18,
+      "readingDate": "2025-08-23T08:30:12.721Z",
+      "createdAt": "2025-08-26T08:30:12.752Z",
+      "updatedAt": "2025-10-11T09:31:59.705Z"
+    },
+    {
+      "id": "cmesadxjl000nvar0een5cdl6",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 504.88,
+      "readingDate": "2025-08-25T08:31:01.879Z",
+      "createdAt": "2025-08-26T08:31:01.906Z",
+      "updatedAt": "2025-10-11T09:31:59.722Z"
+    },
+    {
+      "id": "cmesafr2p000rvar0wvfmq2uy",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 510.29,
+      "readingDate": "2025-08-26T08:32:26.756Z",
+      "createdAt": "2025-08-26T08:32:26.833Z",
+      "updatedAt": "2025-10-11T09:31:59.738Z"
+    },
+    {
+      "id": "cmeuyjvex0001vaicekep9fdy",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 519.94,
+      "readingDate": "2025-08-28T05:23:02.186Z",
+      "createdAt": "2025-08-28T05:23:02.213Z",
+      "updatedAt": "2025-10-11T09:31:59.767Z"
+    },
+    {
+      "id": "cmewfvciy0001vatgpk87lf39",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 524.14,
+      "readingDate": "2025-08-29T06:15:37.229Z",
+      "createdAt": "2025-08-29T06:15:37.256Z",
+      "updatedAt": "2025-10-11T09:31:59.789Z"
+    },
+    {
+      "id": "cmewyhdtn0005vatg4kuyro5s",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 526.16,
+      "readingDate": "2025-08-29T14:56:38.433Z",
+      "createdAt": "2025-08-29T14:56:38.459Z",
+      "updatedAt": "2025-10-11T09:31:59.833Z"
+    },
+    {
+      "id": "cmextfa2g0001vafws2jk1r9w",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 529.46,
+      "readingDate": "2025-08-30T05:22:48.343Z",
+      "createdAt": "2025-08-30T05:22:48.374Z",
+      "updatedAt": "2025-10-11T09:31:59.850Z"
+    },
+    {
+      "id": "cmextgadp0005vafw0j2do14m",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 529.46,
+      "readingDate": "2025-08-30T05:23:35.408Z",
+      "createdAt": "2025-08-30T05:23:35.437Z",
+      "updatedAt": "2025-10-11T09:31:59.874Z"
+    },
+    {
+      "id": "cmextvezp0009vafw6dp9c7yv",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 529.46,
+      "readingDate": "2025-08-30T05:35:21.221Z",
+      "createdAt": "2025-08-30T05:35:21.252Z",
+      "updatedAt": "2025-10-11T09:31:59.890Z"
+    },
+    {
+      "id": "cmeyfdmnj000dvafwrwv8qe03",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 531.94,
+      "readingDate": "2025-08-30T15:37:22.900Z",
+      "createdAt": "2025-08-30T15:37:22.927Z",
+      "updatedAt": "2025-10-11T09:31:59.905Z"
+    },
+    {
+      "id": "cmf15jlnq0001va5sozfb7y87",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 539.79,
+      "readingDate": "2025-09-01T13:25:23.913Z",
+      "createdAt": "2025-09-01T13:25:23.939Z",
+      "updatedAt": "2025-10-11T09:31:59.936Z"
+    },
+    {
+      "id": "cmf6hxjen0003vahkba1dow1p",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 544.77,
+      "readingDate": "2025-09-03T07:11:00.444Z",
+      "createdAt": "2025-09-05T07:11:00.479Z",
+      "updatedAt": "2025-10-11T09:31:59.950Z"
+    },
+    {
+      "id": "cmf6hy7l10007vahkn5jgr73d",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 551.8,
+      "readingDate": "2025-09-04T07:11:31.781Z",
+      "createdAt": "2025-09-05T07:11:31.813Z",
+      "updatedAt": "2025-10-11T09:31:59.966Z"
+    },
+    {
+      "id": "cmf6hyrys000bvahkoammaleh",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 554.69,
+      "readingDate": "2025-09-05T07:11:58.191Z",
+      "createdAt": "2025-09-05T07:11:58.228Z",
+      "updatedAt": "2025-10-11T09:31:59.985Z"
+    },
+    {
+      "id": "cmf7wum8b0001vanwys95utc2",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 557.07,
+      "readingDate": "2025-09-06T06:56:24.547Z",
+      "createdAt": "2025-09-06T06:56:24.583Z",
+      "updatedAt": "2025-10-11T09:32:00.007Z"
+    },
+    {
+      "id": "cmfaruemh0003vagc4bx5poni",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 558.78,
+      "readingDate": "2025-09-06T06:59:35.147Z",
+      "createdAt": "2025-09-08T06:59:35.177Z",
+      "updatedAt": "2025-10-11T09:32:00.032Z"
+    },
+    {
+      "id": "cmfaruz8c0007vagcx41dc02i",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 565.37,
+      "readingDate": "2025-09-08T07:00:01.857Z",
+      "createdAt": "2025-09-08T07:00:01.884Z",
+      "updatedAt": "2025-10-11T09:32:00.046Z"
+    },
+    {
+      "id": "cmfb9b8zw000bvagc6xv8vzlf",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 567.19,
+      "readingDate": "2025-09-08T15:08:34.439Z",
+      "createdAt": "2025-09-08T15:08:34.508Z",
+      "updatedAt": "2025-10-11T09:32:00.082Z"
+    },
+    {
+      "id": "cmffjuft20001vajscf0mr2li",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 578.43,
+      "readingDate": "2025-09-11T15:14:30.628Z",
+      "createdAt": "2025-09-11T15:14:30.659Z",
+      "updatedAt": "2025-10-11T09:32:00.104Z"
+    },
+    {
+      "id": "cmffjwpzz0009vajs8puommr7",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 580.14,
+      "readingDate": "2025-09-11T15:16:17.153Z",
+      "createdAt": "2025-09-11T15:16:17.183Z",
+      "updatedAt": "2025-10-11T09:32:00.115Z"
+    },
+    {
+      "id": "cmfghmynp0003vacsv85m6g30",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 583.46,
+      "readingDate": "2025-09-12T07:00:28.748Z",
+      "createdAt": "2025-09-12T07:00:28.788Z",
+      "updatedAt": "2025-10-11T09:32:00.124Z"
+    },
+    {
+      "id": "cmfgzp4hd0009vacszy0f7r7g",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 585.22,
+      "readingDate": "2025-09-12T15:26:02.706Z",
+      "createdAt": "2025-09-12T15:26:02.736Z",
+      "updatedAt": "2025-10-11T09:32:00.136Z"
+    },
+    {
+      "id": "cmfifk4ii0003vau4enykf2vt",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 589.06,
+      "readingDate": "2025-09-13T15:37:49.501Z",
+      "createdAt": "2025-09-13T15:37:49.529Z",
+      "updatedAt": "2025-10-11T09:32:00.149Z"
+    },
+    {
+      "id": "cmfkq9g640007vau478t3s928",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 597.38,
+      "readingDate": "2025-09-15T06:12:59.520Z",
+      "createdAt": "2025-09-15T06:12:59.548Z",
+      "updatedAt": "2025-10-11T09:32:00.158Z"
+    },
+    {
+      "id": "cmfpkthij000bvau4l2c64rwj",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 604.32,
+      "readingDate": "2025-09-18T15:39:27.567Z",
+      "createdAt": "2025-09-18T15:39:27.593Z",
+      "updatedAt": "2025-10-11T09:32:00.171Z"
+    },
+    {
+      "id": "cmfpktv73000fvau42zy1qqzl",
+      "userId": "cmcti9pi90002tm6agin29tbn",
+      "reading": 605.29,
+      "readingDate": "2025-09-18T15:39:45.298Z",
+      "createdAt": "2025-09-18T15:39:45.327Z",
+      "updatedAt": "2025-10-11T09:32:00.197Z"
+    },
+    {
+      "id": "cmg1xmycr0003va9wqdye85d7",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 610.51,
+      "readingDate": "2025-09-20T07:11:31.916Z",
+      "createdAt": "2025-09-27T07:11:31.948Z",
+      "updatedAt": "2025-09-27T07:11:31.948Z"
+    },
+    {
+      "id": "cmg1xnhql0007va9w0ltnbm9f",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 622.59,
+      "readingDate": "2025-09-23T07:11:57.036Z",
+      "createdAt": "2025-09-27T07:11:57.069Z",
+      "updatedAt": "2025-09-27T07:11:57.069Z"
+    },
+    {
+      "id": "cmg1xo3on000bva9wibvlrzst",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 641.77,
+      "readingDate": "2025-09-27T07:12:25.480Z",
+      "createdAt": "2025-09-27T07:12:25.511Z",
+      "updatedAt": "2025-09-27T07:12:25.511Z"
+    },
+    {
+      "id": "cmgm34kqd0009va7441v1p6a0",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 650.34,
+      "readingDate": "2025-09-29T09:40:35.672Z",
+      "createdAt": "2025-10-11T09:40:35.701Z",
+      "updatedAt": "2025-10-11T09:40:35.701Z"
+    },
+    {
+      "id": "cmgm36lcv000dva74iue3shdt",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 651.76,
+      "readingDate": "2025-09-29T09:42:09.792Z",
+      "createdAt": "2025-10-11T09:42:09.823Z",
+      "updatedAt": "2025-10-11T09:42:09.823Z"
+    },
+    {
+      "id": "cmgm37qal000hva74abnkkiis",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 661.68,
+      "readingDate": "2025-10-02T09:43:02.843Z",
+      "createdAt": "2025-10-11T09:43:02.877Z",
+      "updatedAt": "2025-10-11T09:43:02.877Z"
+    },
+    {
+      "id": "cmgm38qrb000lva74nq8wc32a",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 667.85,
+      "readingDate": "2025-10-04T09:43:50.104Z",
+      "createdAt": "2025-10-11T09:43:50.135Z",
+      "updatedAt": "2025-10-11T09:43:50.135Z"
+    },
+    {
+      "id": "cmgm39aas000pva74mk2c2pk5",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 676.12,
+      "readingDate": "2025-10-06T09:44:15.430Z",
+      "createdAt": "2025-10-11T09:44:15.460Z",
+      "updatedAt": "2025-10-11T09:44:15.460Z"
+    },
+    {
+      "id": "cmgm39vm3000tva74532ldnn7",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 681.97,
+      "readingDate": "2025-10-08T09:44:43.051Z",
+      "createdAt": "2025-10-11T09:44:43.083Z",
+      "updatedAt": "2025-10-11T09:44:43.083Z"
+    },
+    {
+      "id": "cmgm3aemw000xva74po494ivj",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 685.15,
+      "readingDate": "2025-10-09T09:45:07.706Z",
+      "createdAt": "2025-10-11T09:45:07.737Z",
+      "updatedAt": "2025-10-11T09:45:07.737Z"
+    },
+    {
+      "id": "cmgm3b0e60011va74v3wlrrgw",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 689.84,
+      "readingDate": "2025-10-10T09:45:35.908Z",
+      "createdAt": "2025-10-11T09:45:35.934Z",
+      "updatedAt": "2025-10-11T09:45:35.934Z"
+    },
+    {
+      "id": "cmgm3binp0015va74sfc5f3ev",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 693.21,
+      "readingDate": "2025-10-11T09:45:59.576Z",
+      "createdAt": "2025-10-11T09:45:59.605Z",
+      "updatedAt": "2025-10-11T09:45:59.605Z"
+    },
+    {
+      "id": "cmgrltm88001hva740nt7csvv",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 702.84,
+      "readingDate": "2025-10-13T06:22:47.975Z",
+      "createdAt": "2025-10-15T06:22:48.008Z",
+      "updatedAt": "2025-10-15T06:22:48.008Z"
+    },
+    {
+      "id": "cmgrlug72001lva74amlvks0d",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 712.16,
+      "readingDate": "2025-10-15T06:23:26.819Z",
+      "createdAt": "2025-10-15T06:23:26.846Z",
+      "updatedAt": "2025-10-15T06:23:26.846Z"
+    },
+    {
+      "id": "cmgt7ldua0003vabkt97np6vb",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 712.16,
+      "readingDate": "2025-10-16T09:20:01.588Z",
+      "createdAt": "2025-10-16T09:20:01.618Z",
+      "updatedAt": "2025-10-16T09:20:01.618Z"
+    },
+    {
+      "id": "cmgum4kfj000fvads1ktaizr3",
+      "userId": "cmctj94z3001atmnsafrxp3be",
+      "reading": 721.16,
+      "readingDate": "2025-10-17T08:54:37.396Z",
+      "createdAt": "2025-10-17T08:54:37.423Z",
+      "updatedAt": "2025-10-17T08:54:37.423Z"
+    }
+  ],
+  "accounts": [],
+  "sessions": [],
+  "verificationTokens": []
+}
