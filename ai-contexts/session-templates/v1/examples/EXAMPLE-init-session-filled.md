@@ -54,6 +54,7 @@ Visual indicator on the homepage showing real-time health status of the applicat
 **Key Requirements:**
 
 - Must be visible on public homepage (no auth required)
+- Must show also on the signin and homepage
 - Real-time or near-real-time updates (polling every 30-60 seconds)
 - Simple, non-intrusive visual design
 - Should not impact page load performance

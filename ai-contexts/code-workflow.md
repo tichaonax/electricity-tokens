@@ -2,14 +2,18 @@
 
 ## In this article
 
-- [Standard Workflow](#standard-workflow)
-  - [Phase 1: Planning (MANDATORY - Before Any Code Changes)](#phase-1-planning-mandatory---before-any-code-changes)
-  - [Phase 2: Execution (Only After Plan Approval)](#phase-2-execution-only-after-plan-approval)
-  - [Phase 3: Documentation (Completion)](#phase-3-documentation-completion)
-- [Task Tracking and Status Updates](#task-tracking-and-status-updates)
-- [Project Plan Naming Convention](#project-plan-naming-convention)
-  - [Why This Is Critical (Especially for Team Projects)](#why-this-is-critical-especially-for-team-projects)
-  - [Plan Document Structure (Required Sections)](#plan-document-structure-required-sections)
+- [Code Workflow Context](#code-workflow-context)
+  - [In this article](#in-this-article)
+  - [Standard Workflow](#standard-workflow)
+    - [Phase 1: Planning (MANDATORY - Before Any Code Changes)](#phase-1-planning-mandatory---before-any-code-changes)
+    - [Phase 2: Execution (Only After Plan Approval)](#phase-2-execution-only-after-plan-approval)
+    - [Phase 3: Documentation (Completion)](#phase-3-documentation-completion)
+  - [Task Tracking and Status Updates](#task-tracking-and-status-updates)
+  - [Project Plan Naming Convention](#project-plan-naming-convention)
+    - [🚨 MANDATORY REQUIREMENT: Task-Specific Plan Documents](#-mandatory-requirement-task-specific-plan-documents)
+    - [Why This Is Critical (Especially for Team Projects)](#why-this-is-critical-especially-for-team-projects)
+    - [Plan Document Structure (Required Sections)](#plan-document-structure-required-sections)
+    - [Legacy Note](#legacy-note)
 
 ---
 
