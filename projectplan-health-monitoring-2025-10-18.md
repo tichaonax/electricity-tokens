@@ -415,6 +415,346 @@ Implement a health monitoring system that provides visual feedback about the app
 - SLA tracking and compliance reporting
 - Webhook notifications for status changes
 
+---
+
+## 📱 Mobile UX Improvements (NEW PRIORITY)
+
+> **Issue Identified:** Current health indicator blocks content on mobile devices
+> **Status:** Planning Phase
+> **Priority:** HIGH
+
+### Problem Statement
+
+The current health status indicator displays full information (status text + uptime) on all screen sizes, which creates issues on mobile devices:
+
+- Takes up ~15-20% of mobile viewport height
+- Blocks important content in top-left corner
+- Text can wrap awkwardly on small screens (320px width)
+- Always visible even when users don't need constant monitoring
+
+### Proposed Mobile-First Solution
+
+Implement a responsive health indicator with three distinct display modes:
+
+#### **1. Mobile (<640px): LED-Only with Tap-to-Expand**
+
+**Default State:**
+- Show only colored LED dot (10-12px diameter)
+- Minimal space footprint (44x44px tap target for accessibility)
+- Subtle pulsing animation to indicate "alive" status
+- Colors: 🟢 Green (Healthy) | 🟡 Yellow (Degraded) | 🔴 Red (Offline)
+
+**Expanded State (On Tap):**
+- Modal/popover showing full details
+- Status text, uptime, database status, last check timestamp
+- Close button or tap-outside-to-dismiss
+- Smooth slide-in animation
+
+**Benefits:**
+- ✅ Minimal intrusion on mobile screens
+- ✅ Information available on demand
+- ✅ Touch-friendly interaction (44x44px WCAG compliant)
+- ✅ Reduces clutter while maintaining functionality
+
+#### **2. Tablet (640px-1024px): LED + Status Text**
+
+- Show LED indicator + status text only
+- Omit uptime to save space
+- Click/tap to expand for full details
+- Slightly larger than mobile LED (balanced for tablet screens)
+
+#### **3. Desktop (>1024px): Full Display (Current)**
+
+- Keep existing full badge display
+- LED + Status text + Uptime always visible
+- No changes needed (works well on desktop)
+
+### Implementation Checklist
+
+#### Phase 1: Responsive LED Component (Priority: HIGH) ✅ COMPLETED
+
+- [x] **Update `health-status-indicator.tsx`**
+  - [x] Add responsive display logic with Tailwind breakpoints (`sm:`, `md:`, `lg:`)
+  - [x] Create compact LED component (10-12px pulsing circle)
+  - [x] Implement state management for expanded/collapsed view
+  - [x] Add touch-friendly tap target (44x44px minimum with invisible padding)
+  - [x] Add click/tap handler with proper event handling
+  
+- [x] **Update `health-utils.ts`**
+  - [x] Add `getLEDColors()` function for LED-specific styling
+  - [x] Add `getPulseAnimation()` function for animated LED
+  - [x] Add `formatLastChecked()` helper function for relative timestamps
+  - [x] Add animation utilities respecting `prefers-reduced-motion`
+
+#### Phase 2: Expandable Details Modal (Priority: HIGH) ✅ COMPLETED
+
+- [x] **Create `health-status-detail-modal.tsx` (NEW)**
+  - [x] Build modal/popover component for expanded details
+  - [x] Include: Status, uptime, database status, last check time
+  - [x] Add close button (X icon) and backdrop click-to-dismiss
+  - [x] Implement smooth enter/exit animations (slide up from bottom on mobile)
+  - [x] Prevent body scroll when modal is open
+  - [x] Add escape key handler to close modal
+
+- [x] **Accessibility Features**
+  - [x] Add ARIA labels (`role="dialog"`, `aria-labelledby`, `aria-describedby`)
+  - [x] Add keyboard navigation (Tab, Shift+Tab, Escape)
+  - [x] Ensure screen reader announces state changes
+  - [x] Add live region for status updates (`aria-live="polite"`)
+  - [x] Added button accessibility labels for tap targets
+
+#### Phase 3: Polish & Testing (Priority: MEDIUM) ✅ READY FOR TESTING
+
+- [x] **Animation Refinement**
+  - [x] Add smooth transitions between collapsed/expanded states
+  - [x] Implement pulse animation for LED (respecting `prefers-reduced-motion`)
+  - [x] Add fade-in for modal backdrop
+  - [x] Add slide-up animation for modal content (using Tailwind `animate-in`)
+  - [ ] Test animations on various devices (iOS, Android, desktop)
+
+- [ ] **Cross-Device Testing** (User Testing Required)
+  - [ ] Test on iOS Safari (iPhone SE, iPhone 12, iPhone 14 Pro)
+  - [ ] Test on Chrome Mobile (Pixel, Samsung)
+  - [ ] Test on Firefox Mobile
+  - [ ] Test on tablets (iPad, Android tablets)
+  - [ ] Test on various screen sizes (320px - 1920px)
+  - [ ] Verify no content blocking issues at any breakpoint
+
+- [ ] **Accessibility Compliance** (User Testing Required)
+  - [ ] Test with screen readers (NVDA, JAWS, VoiceOver)
+  - [ ] Ensure keyboard-only navigation works perfectly
+  - [ ] Verify focus management (no focus traps, proper order)
+  - [ ] Test with high contrast mode enabled
+  - [ ] Verify color contrast ratios meet WCAG AAA standards
+  - [ ] Test with browser zoom up to 200%
+
+---
+
+### 📝 Implementation Notes
+
+**Files Created:**
+1. `src/components/ui/health-status-detail-modal.tsx` - Modal component for expanded details
+
+**Files Modified:**
+1. `src/components/ui/health-status-indicator.tsx` - Added responsive breakpoints and LED view
+2. `src/lib/health-utils.ts` - Added LED color utilities and helper functions
+3. `src/app/globals.css` - Added custom LED pulse animation
+
+**Key Features Implemented:**
+- ✅ **Mobile (<640px):** Shows only pulsing LED dot (3x3 pixels with 44x44px tap target)
+- ✅ **Tablet (640px-1024px):** Shows LED + status text
+- ✅ **Desktop (>1024px):** Full display with LED + status + uptime (unchanged)
+- ✅ **Tap to Expand:** Mobile/tablet users can tap to see full details in modal
+- ✅ **Accessibility:** ARIA labels, keyboard navigation, reduced motion support
+- ✅ **Smooth Animations:** Pulse effect for LED, slide-in for modal
+- ✅ **Database Status:** Modal shows database connection status
+- ✅ **Last Checked:** Modal displays relative time since last health check
+
+**Responsive Breakpoints:**
+```
+<640px   → LED only (mobile)
+640-1024px → LED + Status (tablet)
+>1024px  → Full display (desktop)
+```
+
+**Technical Decisions:**
+- Used Tailwind's responsive classes (`sm:`, `lg:`) for breakpoint management
+- Implemented custom `led-pulse` keyframe animation in globals.css
+- Respects `prefers-reduced-motion` for accessibility
+- Modal prevents body scroll when open
+- Escape key and backdrop click both close modal
+- Database status extracted from health API response
+
+### Design Specifications
+
+#### LED Indicator (Mobile Default State)
+
+```
+┌─────────┐
+│    ●    │  <- 10px colored circle with 17px padding
+└─────────┘
+   44x44px total tap target
+```
+
+**Styling:**
+- Circle diameter: 10-12px
+- Padding: 16px (to achieve 44x44px tap target)
+- Colors:
+  - Green: `bg-green-500 shadow-green-500/50` with pulse
+  - Yellow: `bg-yellow-500 shadow-yellow-500/50` with pulse
+  - Red: `bg-red-500 shadow-red-500/50` with pulse
+- Animation: Pulse effect (1.5s duration, infinite, ease-in-out)
+
+#### Expanded Modal (Mobile)
+
+```
+┌────────────────────────────────┐
+│  Health Status Details    [✕] │
+├────────────────────────────────┤
+│                                │
+│  Status:    ● Healthy         │
+│  Uptime:    2d 5h 23m         │
+│  Database:  ✓ Connected       │
+│  Checked:   Just now          │
+│                                │
+└────────────────────────────────┘
+```
+
+**Styling:**
+- Width: 90vw (max 400px)
+- Position: Centered, slide up from bottom
+- Backdrop: Dark overlay with blur (`bg-black/50 backdrop-blur-sm`)
+- Border radius: `rounded-t-2xl` (top corners only)
+- Padding: 20px
+- Shadow: `shadow-2xl`
+
+#### Tablet View (640px-1024px)
+
+```
+┌──────────────────┐
+│  ● Healthy       │
+└──────────────────┘
+```
+
+**Styling:**
+- LED + Status text only
+- Omit uptime information
+- Slightly larger LED (14px)
+- Font: `text-sm font-semibold`
+
+### Technical Implementation Details
+
+#### Responsive Breakpoints (Tailwind)
+
+```tsx
+// Mobile: LED only
+<div className="flex sm:hidden">
+  <LEDIndicator />
+</div>
+
+// Tablet: LED + Status
+<div className="hidden sm:flex lg:hidden">
+  <LEDIndicator />
+  <StatusText />
+</div>
+
+// Desktop: Full display (current)
+<div className="hidden lg:flex">
+  <LEDIndicator />
+  <StatusText />
+  <UptimeDisplay />
+</div>
+```
+
+#### Pulse Animation CSS
+
+```css
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 8px 2px currentColor;
+  }
+}
+
+.animate-pulse-led {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-led {
+    animation: none;
+  }
+}
+```
+
+### Testing Scenarios
+
+1. **Mobile LED Interaction:**
+   - Tap LED → Modal opens with details
+   - Tap backdrop → Modal closes
+   - Tap close button → Modal closes
+   - Press Escape → Modal closes
+
+2. **Responsive Breakpoints:**
+   - 320px width → LED only, modal on tap
+   - 640px width → LED + Status text
+   - 1024px width → Full display (current)
+
+3. **Accessibility:**
+   - Screen reader announces LED status on load
+   - Modal opens with proper focus management
+   - Keyboard navigation works (Tab, Shift+Tab, Escape)
+   - High contrast mode shows clear LED colors
+
+4. **Performance:**
+   - No janky animations on low-end devices
+   - Modal opens/closes smoothly (<100ms)
+   - Pulse animation doesn't cause repaints/reflows
+   - Memory usage stable with modal open/close cycles
+
+### Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Modal blocks critical content | Low | Medium | Position modal in center, add backdrop dismiss |
+| Pulse animation causes performance issues | Low | Low | Use CSS animations, respect `prefers-reduced-motion` |
+| Touch target too small on mobile | Medium | High | Enforce 44x44px minimum with invisible padding |
+| Accessibility issues with modal | Medium | High | Follow ARIA best practices, test with screen readers |
+| Breakpoint conflicts with other responsive elements | Low | Medium | Test thoroughly on all screen sizes |
+
+### Success Metrics
+
+- ✅ LED tap target is at least 44x44px (WCAG 2.1 Level AAA)
+- ✅ Modal opens/closes smoothly on all tested devices
+- ✅ No content blocking on any screen size
+- ✅ Screen reader announces all state changes correctly
+- ✅ Keyboard navigation works without mouse
+- ✅ Pulse animation respects `prefers-reduced-motion`
+- ✅ No console errors or warnings
+- ✅ Memory usage remains stable
+
+### Rollback Plan
+
+If mobile improvements cause issues:
+
+1. **Quick Rollback (CSS only):**
+   - Add `@media (max-width: 640px) { display: none; }` to hide on mobile
+   - Users won't see indicator on mobile until fix is deployed
+
+2. **Partial Rollback (Remove modal):**
+   - Keep LED-only view but disable tap interaction
+   - Revert to always-visible full badge on mobile
+
+3. **Full Rollback (Git):**
+   ```bash
+   git revert <commit-hash>
+   git push origin main
+   ```
+
+### Timeline Estimate
+
+- **Phase 1 (LED Component):** 2-3 hours
+- **Phase 2 (Modal):** 3-4 hours
+- **Phase 3 (Testing & Polish):** 2-3 hours
+- **Total:** 7-10 hours (1-2 days)
+
+### Deployment Plan
+
+1. Implement changes in feature branch (`feature/mobile-health-indicator`)
+2. Test locally on multiple devices
+3. Deploy to staging environment
+4. Conduct user testing with 5-10 mobile users
+5. Gather feedback and iterate
+6. Deploy to production with rollback plan ready
+
+---
+
+**Status:** Awaiting approval to begin Phase 1 implementation
+
 ### Performance Impact Assessment:
 
 - **Page Load Time:** No measurable impact (component lazy-loads after first render)

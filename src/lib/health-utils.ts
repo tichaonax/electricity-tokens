@@ -140,3 +140,57 @@ export function calculateBackoffDelay(
   const delay = Math.min(baseDelay * Math.pow(2, failureCount - 1), maxDelay);
   return delay;
 }
+
+/**
+ * Get LED indicator color classes for mobile/compact view
+ * @param status - Current health status
+ * @returns Tailwind CSS classes for LED indicator
+ */
+export function getLEDColors(status: HealthStatusType): string {
+  switch (status) {
+    case 'healthy':
+      return 'bg-green-500 shadow-green-500/50';
+    case 'degraded':
+      return 'bg-yellow-500 shadow-yellow-500/50';
+    case 'offline':
+      return 'bg-red-500 shadow-red-500/50';
+    default:
+      return 'bg-gray-500 shadow-gray-500/50';
+  }
+}
+
+/**
+ * Get pulse animation classes based on status and motion preferences
+ * @param status - Current health status
+ * @returns Tailwind CSS animation classes
+ */
+export function getPulseAnimation(status: HealthStatusType): string {
+  // Only animate healthy status for "alive" indication
+  if (status === 'healthy') {
+    return 'animate-pulse';
+  }
+  return '';
+}
+
+/**
+ * Format last checked timestamp to relative time
+ * @param date - Last checked date
+ * @returns Relative time string like "Just now", "2m ago", "5h ago"
+ */
+export function formatLastChecked(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+
+  if (diffSec < 10) return 'Just now';
+  if (diffSec < 60) return `${diffSec}s ago`;
+
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}h ago`;
+
+  const diffDay = Math.floor(diffHour / 24);
+  return `${diffDay}d ago`;
+}

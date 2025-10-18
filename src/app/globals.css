@@ -728,6 +728,30 @@ input[type='time']::-webkit-time-picker-indicator {
   }
 }
 
+/* LED pulse animation for health indicator */
+@keyframes led-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 8px 2px currentColor;
+  }
+}
+
+.animate-pulse {
+  animation: led-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+}
+
 /* High contrast mode improvements */
 @media (prefers-contrast: high) {
   .dark {

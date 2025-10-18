@@ -15,14 +15,18 @@ import {
   getStatusColors,
   getStatusText,
   calculateBackoffDelay,
+  getLEDColors,
+  getPulseAnimation,
 } from '@/lib/health-utils';
+import { HealthStatusDetailModal } from './health-status-detail-modal';
 
 /**
  * HealthStatusIndicator Component
  *
  * Displays a real-time health status badge showing:
- * - Application status (healthy/degraded/offline)
- * - Uptime in human-readable format
+ * - Mobile (<640px): LED-only with tap-to-expand modal
+ * - Tablet (640px-1024px): LED + status text
+ * - Desktop (>1024px): Full badge with LED + status + uptime
  * - Auto-updates via polling every 30 seconds
  * - Visible on all pages without authentication
  */
@@ -32,6 +36,11 @@ export function HealthStatusIndicator() {
   const [isLoading, setIsLoading] = useState(true);
   const [consecutiveFailures, setConsecutiveFailures] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date>(new Date());
+  const [databaseStatus, setDatabaseStatus] = useState<
+    'connected' | 'disconnected' | 'unknown'
+  >('unknown');
 
   /**
    * Fetch health status from API with error handling
@@ -56,6 +65,16 @@ export function HealthStatusIndicator() {
       setStatus(data.status);
       setUptimeFormatted(data.uptimeFormatted || 'Unknown');
       setIsLoading(false);
+      setLastChecked(new Date());
+
+      // Update database status
+      if (data.database?.connected) {
+        setDatabaseStatus('connected');
+      } else if (data.database?.connected === false) {
+        setDatabaseStatus('disconnected');
+      } else {
+        setDatabaseStatus('unknown');
+      }
 
       // Show indicator after first successful load
       if (!isVisible) {
@@ -73,6 +92,8 @@ export function HealthStatusIndicator() {
       setStatus(newStatus);
       setUptimeFormatted('Unknown');
       setIsLoading(false);
+      setLastChecked(new Date());
+      setDatabaseStatus('unknown');
 
       // Show indicator even on failure (so users know it's offline)
       if (!isVisible) {
@@ -128,49 +149,96 @@ export function HealthStatusIndicator() {
   }
 
   return (
-    <div
-      className="fixed top-4 left-4 z-50 transition-all duration-300"
-      role="status"
-      aria-live="polite"
-      aria-label="Application health status"
-    >
-      <div
-        className={`
-          flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm
-          ${getStatusColors(status)}
-          ${isLoading ? 'opacity-70' : 'opacity-100'}
-        `}
-      >
-        {/* Status Icon */}
-        <div className="flex-shrink-0">{renderStatusIcon()}</div>
+    <>
+      {/* Mobile View: LED-only with tap to expand */}
+      <div className="sm:hidden">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="fixed top-4 left-4 z-50 p-3 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          aria-label={`Health status: ${getStatusText(status)}. Tap for details.`}
+          role="button"
+        >
+          <div
+            className={`h-3 w-3 rounded-full shadow-lg ${getLEDColors(status)} ${getPulseAnimation(status)}`}
+          />
+        </button>
+      </div>
 
-        {/* Status Text & Uptime */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-          <div className="flex items-center gap-1.5">
+      {/* Tablet View: LED + Status Text */}
+      <div className="hidden sm:flex lg:hidden">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="fixed top-4 left-4 z-50 transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg"
+          aria-label={`Health status: ${getStatusText(status)}. Click for details.`}
+        >
+          <div
+            className={`
+              flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm
+              ${getStatusColors(status)}
+              ${isLoading ? 'opacity-70' : 'opacity-100'}
+            `}
+          >
+            <div className="flex-shrink-0">{renderStatusIcon()}</div>
             <span className="text-xs font-semibold">
               {getStatusText(status)}
             </span>
           </div>
-
-          {status !== 'offline' && uptimeFormatted !== 'Unknown' && (
-            <>
-              <span className="hidden sm:inline text-xs opacity-50">•</span>
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3 opacity-70" />
-                <span className="text-xs font-normal">{uptimeFormatted}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Screen reader text for accessibility */}
-        <span className="sr-only">
-          Application is {getStatusText(status).toLowerCase()}
-          {status !== 'offline' &&
-            uptimeFormatted !== 'Unknown' &&
-            `, running for ${uptimeFormatted}`}
-        </span>
+        </button>
       </div>
-    </div>
+
+      {/* Desktop View: Full Display (Current) */}
+      <div
+        className="hidden lg:block fixed top-4 left-4 z-50 transition-all duration-300"
+        role="status"
+        aria-live="polite"
+        aria-label="Application health status"
+      >
+        <div
+          className={`
+            flex items-center gap-2 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm
+            ${getStatusColors(status)}
+            ${isLoading ? 'opacity-70' : 'opacity-100'}
+          `}
+        >
+          {/* Status Icon */}
+          <div className="flex-shrink-0">{renderStatusIcon()}</div>
+
+          {/* Status Text & Uptime */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold">
+              {getStatusText(status)}
+            </span>
+
+            {status !== 'offline' && uptimeFormatted !== 'Unknown' && (
+              <>
+                <span className="text-xs opacity-50">•</span>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 opacity-70" />
+                  <span className="text-xs font-normal">{uptimeFormatted}</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Screen reader text for accessibility */}
+          <span className="sr-only">
+            Application is {getStatusText(status).toLowerCase()}
+            {status !== 'offline' &&
+              uptimeFormatted !== 'Unknown' &&
+              `, running for ${uptimeFormatted}`}
+          </span>
+        </div>
+      </div>
+
+      {/* Detail Modal (Mobile & Tablet) */}
+      <HealthStatusDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        status={status}
+        uptimeFormatted={uptimeFormatted}
+        lastChecked={lastChecked}
+        databaseStatus={databaseStatus}
+      />
+    </>
   );
 }
