@@ -17,18 +17,15 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
-
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Security-Relevant Contexts
-
 - `ai-contexts/backend/backend-api-context.md` - API security patterns
 - `ai-contexts/backend/database-context.md` - Database security (SQL injection, etc.)
 - `ai-contexts/frontend/component-context.md` - Frontend security (XSS, CSRF)
 
 ### Optional Contexts
-
 - Domain-specific contexts for the module under review
 
 **How to load:** Use the Read tool to load each relevant context document before beginning security review.
@@ -40,7 +37,6 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 <!-- Define what's being reviewed -->
 
 **Review Type:**
-
 - [x] Authentication System
 - [x] Authorization & Permissions
 - [x] Data Validation & Sanitization
@@ -55,14 +51,12 @@ For conducting security reviews, identifying vulnerabilities, and implementing s
 Personal Finance API Endpoints (`/api/personal/**`)
 
 **Concerns Reported:**
-
 - User reported seeing another user's expense transaction in their list
 - Concerned about data isolation between users
 - Want to ensure users cannot access/modify other users' financial data
 - Need to verify permission checks are working correctly
 
 **Priority Level:**
-
 - [x] Critical - Production security issue (data leakage suspected)
 - [ ] High - Potential vulnerability
 - [ ] Medium - Security improvement
@@ -75,7 +69,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ### Authentication & Authorization
 
 **Authentication:**
-
 - [x] Secure password storage (hashing with salt) - Using bcrypt
 - [x] Session management secure - NextAuth manages sessions
 - [x] Token expiration implemented - Session expires after 30 days
@@ -84,7 +77,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - [x] Password complexity requirements - Min 8 chars (could be stronger)
 
 **Authorization:**
-
 - [ ] Role-based access control (RBAC) implemented - ⚠️ NEEDS REVIEW
 - [ ] Permission checks on all sensitive endpoints - ⚠️ NEEDS REVIEW
 - [ ] User data isolation (users can't access others' data) - ⚠️ SUSPECTED ISSUE
@@ -92,7 +84,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - [ ] API endpoints check user permissions - ⚠️ NEEDS VERIFICATION
 
 **Specific Issues to Investigate:**
-
 1. `/api/personal/expenses` endpoint - Does it filter by authenticated user?
 2. `/api/personal/expenses/[expenseId]` - Can user access any expense by ID?
 3. Permission checking in personal finance module - Is it consistent?
@@ -101,7 +92,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ### Input Validation & Sanitization
 
 **Backend Validation:**
-
 - [x] All user inputs validated - Using Zod schemas
 - [x] Type checking enforced - TypeScript + Zod
 - [x] Length limits applied - Zod max length validators
@@ -110,7 +100,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - [x] NoSQL injection prevented - Not using NoSQL
 
 **Frontend Validation:**
-
 - [x] Client-side validation present (UX) - React Hook Form
 - [x] Server-side validation enforced (security) - ✅ Validated
 - [ ] XSS prevention (sanitize outputs) - ⚠️ NEEDS REVIEW
@@ -120,7 +109,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ### Data Security
 
 **Data Storage:**
-
 - [ ] Sensitive data encrypted at rest - ⚠️ Financial data not encrypted
 - [x] Passwords hashed (bcrypt, argon2, etc.) - ✅ bcrypt used
 - [x] API keys/secrets not in code - ✅ Environment variables
@@ -129,7 +117,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - [ ] PII data handling compliant - ⚠️ NEEDS REVIEW (GDPR considerations)
 
 **Data Transmission:**
-
 - [x] HTTPS enforced - ✅ Production uses HTTPS
 - [ ] Secure cookies (HttpOnly, Secure, SameSite) - ⚠️ NEEDS VERIFICATION
 - [x] Sensitive data not in URLs - ✅ Using POST/body for sensitive data
@@ -138,7 +125,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ### API Security
 
 **Endpoint Protection:**
-
 - [ ] Authentication required for sensitive endpoints - ⚠️ PRIMARY CONCERN
 - [ ] Rate limiting implemented - ⚠️ NOT IMPLEMENTED (risk: DoS)
 - [x] CORS properly configured - ✅ Restricted origins
@@ -147,7 +133,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - [x] Proper HTTP methods used (GET/POST/PUT/DELETE) - ✅ Correct usage
 
 **API Keys & Tokens:**
-
 - [x] API keys rotated regularly - N/A (using session-based auth)
 - [x] JWT tokens have expiration - NextAuth handles expiration
 - [x] Refresh token strategy secure - NextAuth manages refresh
@@ -156,14 +141,12 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ### Frontend Security
 
 **Cross-Site Scripting (XSS):**
-
 - [x] User input sanitized before rendering - React escapes by default
 - [x] React escapes content by default (verify) - ✅ Using JSX
 - [x] Dangerous HTML avoided (dangerouslySetInnerHTML) - ✅ Not used
 - [ ] Content Security Policy (CSP) headers - ⚠️ NOT IMPLEMENTED
 
 **Cross-Site Request Forgery (CSRF):**
-
 - [ ] CSRF tokens on state-changing requests - ⚠️ NOT IMPLEMENTED
 - [ ] SameSite cookie attribute set - ⚠️ NEEDS VERIFICATION
 - [ ] Origin/Referer header validation - ⚠️ NOT IMPLEMENTED
@@ -171,7 +154,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ### Dependency Security
 
 **Third-Party Packages:**
-
 - [ ] Dependencies up to date - ⚠️ NEEDS CHECK (npm audit)
 - [ ] No known vulnerabilities (npm audit) - ⚠️ NEEDS CHECK
 - [x] Unnecessary packages removed - Recently cleaned up
@@ -265,14 +247,12 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ## 🔐 Secrets Management
 
 **Environment Variables:**
-
 - [x] .env file in .gitignore - ✅ Verified
 - [x] No secrets in codebase - ✅ Checked (grep for passwords/keys)
 - [x] Production secrets different from dev - ✅ Separate .env files
 - [ ] Secret rotation process documented - ⚠️ NOT DOCUMENTED
 
 **API Keys:**
-
 - [x] Third-party API keys secured - ✅ In environment variables
 - [x] Database credentials secured - ✅ In DATABASE_URL env var
 - [x] OAuth client secrets protected - ✅ NEXTAUTH_SECRET in .env
@@ -282,14 +262,12 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ## 📊 Logging & Monitoring
 
 **Audit Logging:**
-
 - [ ] Failed login attempts logged - ⚠️ NOT IMPLEMENTED
 - [ ] Sensitive operations logged - ⚠️ NOT IMPLEMENTED
 - [ ] User actions auditable - ⚠️ PARTIAL (recent activity feed)
 - [ ] Logs don't contain sensitive data - ⚠️ NEEDS REVIEW
 
 **Security Monitoring:**
-
 - [ ] Anomaly detection in place - ⚠️ NOT IMPLEMENTED
 - [ ] Alerts for suspicious activity - ⚠️ NOT IMPLEMENTED
 - [ ] Error tracking configured - ⚠️ NOT IMPLEMENTED
@@ -300,7 +278,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ## 🧪 Security Testing
 
 **Testing Methods:**
-
 - [ ] Static analysis (linters, security scanners) - ⚠️ NEEDS SETUP
 - [x] Dependency vulnerability scanning (npm audit) - ⚠️ NEEDS RUN
 - [ ] Authentication/authorization tests - ⚠️ NO TESTS EXIST
@@ -308,7 +285,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - [ ] Penetration testing (if applicable) - ⚠️ NOT PERFORMED
 
 **Test Cases:**
-
 1. **IDOR Test - Access Other User's Expense**
    - User A creates expense (ID: expense-123)
    - User B tries: `GET /api/personal/expenses/expense-123`
@@ -350,17 +326,16 @@ Personal Finance API Endpoints (`/api/personal/**`)
    - File: `/api/personal/expenses/[expenseId]/route.ts`
    - Issue: Verify expense belongs to requesting user
    - Fix:
-
    ```typescript
    // Add user ID check
    const expense = await prisma.personalExpense.findFirst({
      where: {
        id: expenseId,
-       userId: session.user.id, // CRITICAL: Add this check
-     },
-   });
+       userId: session.user.id  // CRITICAL: Add this check
+     }
+   })
    if (!expense) {
-     return NextResponse.json({ error: 'Not found' }, { status: 404 });
+     return NextResponse.json({ error: "Not found" }, { status: 404 })
    }
    ```
 
@@ -368,14 +343,13 @@ Personal Finance API Endpoints (`/api/personal/**`)
    - File: `/api/personal/expenses/route.ts`
    - Issue: Ensure queries filter by authenticated user
    - Fix:
-
    ```typescript
    const expenses = await prisma.personalExpense.findMany({
      where: {
-       userId: session.user.id, // CRITICAL: Add this
+       userId: session.user.id,  // CRITICAL: Add this
        // ... other filters
-     },
-   });
+     }
+   })
    ```
 
 3. **HIGH - Audit All Personal Finance Endpoints**
@@ -421,7 +395,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ## 📋 Compliance Requirements
 
 **Regulations:**
-
 - [ ] GDPR (if handling EU data) - ⚠️ NEEDS COMPLIANCE REVIEW
   - Right to access - Need export feature
   - Right to erasure - Need delete account feature
@@ -436,7 +409,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - [ ] Other: Financial data privacy laws - ⚠️ NEEDS RESEARCH
 
 **Privacy Considerations:**
-
 - [ ] Privacy policy present - ⚠️ NOT FOUND
 - [ ] User consent for data collection - ⚠️ NOT IMPLEMENTED
 - [ ] Data deletion process - ⚠️ NOT IMPLEMENTED (soft delete exists)
@@ -449,14 +421,12 @@ Personal Finance API Endpoints (`/api/personal/**`)
 <!-- Add any additional context, constraints, or findings -->
 
 **Context:**
-
 - User reported seeing another user's expense in their list
 - This is a CRITICAL security issue if confirmed
 - Affects trust in the application
 - Must be fixed immediately before user data is compromised
 
 **Investigation Priority:**
-
 1. Reproduce the reported issue (critical)
 2. Verify IDOR vulnerability exists
 3. Audit all personal finance endpoints
@@ -464,7 +434,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 5. Review user data isolation strategy
 
 **Impact if Vulnerability Confirmed:**
-
 - Users can access other users' financial data
 - Users can potentially modify/delete others' data
 - Privacy breach - GDPR violation possible
@@ -472,7 +441,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 - Potential legal liability
 
 **Testing Approach:**
-
 1. Create two test users (User A, User B)
 2. User A creates expense
 3. User B tries to access User A's expense by ID
@@ -484,7 +452,6 @@ Personal Finance API Endpoints (`/api/personal/**`)
 ## ✅ Start Session
 
 Ready to begin security review. Please:
-
 1. Load all required context documents (backend-api-context.md, database-context.md, code-workflow.md)
 2. Review the target scope (personal finance APIs) and security checklist
 3. Investigate reported issue:
@@ -517,7 +484,6 @@ Ready to begin security review. Please:
    - Low: Strengthen password policy (within 1 month)
 
 **Expected Findings:**
-
 - Likely to find IDOR vulnerability in expense detail endpoint
 - Likely to find missing user ID filtering in some queries
 - May find inconsistent permission checking
@@ -525,7 +491,6 @@ Ready to begin security review. Please:
 - Will find no rate limiting
 
 **Immediate Actions if Vulnerability Confirmed:**
-
 1. Fix IDOR vulnerability immediately
 2. Add user filtering to all personal finance queries
 3. Deploy hotfix to production

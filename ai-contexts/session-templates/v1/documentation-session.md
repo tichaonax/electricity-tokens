@@ -17,19 +17,16 @@ For creating or updating technical documentation, API docs, README files, and co
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
-
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Documentation-Specific Contexts (Load based on doc type)
-
 - `ai-contexts/backend/backend-api-context.md` - For API documentation
 - `ai-contexts/frontend/component-context.md` - For component documentation
 - `ai-contexts/backend/database-context.md` - For database schema docs
 - `ai-contexts/testing/unit-testing-context.md` - For testing documentation
 
 ### Optional Contexts
-
 - Domain-specific contexts for the module being documented
 
 **How to load:** Use the Read tool to load each relevant context document before beginning documentation work.
@@ -41,7 +38,6 @@ For creating or updating technical documentation, API docs, README files, and co
 <!-- Select the type of documentation needed -->
 
 **Documentation Category:**
-
 - [ ] API Documentation (OpenAPI/Swagger)
 - [ ] README File
 - [ ] Code Comments (JSDoc/TSDoc)
@@ -54,7 +50,6 @@ For creating or updating technical documentation, API docs, README files, and co
 - [ ] Contributing Guidelines
 
 **Target Audience:**
-
 - [ ] Developers (internal team)
 - [ ] External contributors
 - [ ] End users
@@ -67,10 +62,11 @@ For creating or updating technical documentation, API docs, README files, and co
 
 **What needs to be documented:**
 
+
 **Files/Modules Affected:**
 
-**Current State:**
 
+**Current State:**
 - [ ] No documentation exists
 - [ ] Documentation outdated
 - [ ] Documentation incomplete
@@ -84,8 +80,8 @@ For creating or updating technical documentation, API docs, README files, and co
 
 **Endpoints to Document:**
 
-**Required Information:**
 
+**Required Information:**
 - [ ] Endpoint URL and HTTP method
 - [ ] Request parameters (query, path, body)
 - [ ] Request/response examples
@@ -97,7 +93,6 @@ For creating or updating technical documentation, API docs, README files, and co
 ### For README Files
 
 **Sections Required:**
-
 - [ ] Project title and description
 - [ ] Features list
 - [ ] Installation instructions
@@ -111,7 +106,6 @@ For creating or updating technical documentation, API docs, README files, and co
 ### For Code Comments
 
 **Documentation Standards:**
-
 - [ ] JSDoc/TSDoc format
 - [ ] Function descriptions
 - [ ] Parameter descriptions with types
@@ -121,8 +115,7 @@ For creating or updating technical documentation, API docs, README files, and co
 - [ ] Related functions/dependencies
 
 **Example:**
-
-````typescript
+```typescript
 /**
  * Calculates the total cost of a project including all transactions
  *
@@ -150,12 +143,11 @@ async function calculateProjectCost(
 ): Promise<number> {
   // Implementation
 }
-````
+```
 
 ### For Architecture Documentation
 
 **Sections Required:**
-
 - [ ] System overview
 - [ ] Architecture diagrams
 - [ ] Component relationships
@@ -170,7 +162,6 @@ async function calculateProjectCost(
 ## 🖼️ Visual Documentation
 
 **Diagrams Needed:**
-
 - [ ] Architecture diagrams
 - [ ] Flowcharts
 - [ ] Entity-relationship diagrams (ERD)
@@ -178,14 +169,12 @@ async function calculateProjectCost(
 - [ ] Component diagrams
 
 **Format:**
-
 - [ ] Mermaid diagrams (inline)
 - [ ] Draw.io/Lucidchart
 - [ ] Screenshots
 - [ ] Wireframes
 
 **Example Mermaid Diagram:**
-
 ````markdown
 ```mermaid
 graph TD
@@ -203,7 +192,6 @@ graph TD
 ## 📋 Documentation Checklist
 
 **Content Quality:**
-
 - [ ] Clear and concise language
 - [ ] No jargon (or jargon explained)
 - [ ] Examples provided
@@ -213,7 +201,6 @@ graph TD
 - [ ] Search-friendly headings
 
 **Technical Accuracy:**
-
 - [ ] Information is up to date
 - [ ] Code examples match current API
 - [ ] Version numbers accurate
@@ -221,7 +208,6 @@ graph TD
 - [ ] Configuration values correct
 
 **Formatting:**
-
 - [ ] Markdown properly formatted
 - [ ] Code blocks have language specified
 - [ ] Headings follow hierarchy (h1, h2, h3)
@@ -229,7 +215,6 @@ graph TD
 - [ ] Tables used where appropriate
 
 **Accessibility:**
-
 - [ ] Alt text for images
 - [ ] Clear heading structure
 - [ ] Descriptive link text
@@ -240,7 +225,6 @@ graph TD
 ## 🔄 Maintenance Plan
 
 **Update Triggers:**
-
 - [ ] API changes
 - [ ] Feature additions
 - [ ] Breaking changes
@@ -248,7 +232,6 @@ graph TD
 - [ ] Configuration changes
 
 **Review Schedule:**
-
 - [ ] Quarterly
 - [ ] On each major release
 - [ ] On significant changes
@@ -259,7 +242,6 @@ graph TD
 ## 📊 Documentation Structure
 
 **Proposed Outline:**
-
 ```
 1. Introduction
    - Purpose
@@ -287,13 +269,11 @@ graph TD
 ## ✅ Examples to Include
 
 **Use Cases:**
-
 1.
 2.
 3.
 
 **Code Examples:**
-
 ```typescript
 // Example 1: Basic usage
 
@@ -307,7 +287,6 @@ graph TD
 ## 🎨 Style Guide
 
 **Documentation Standards:**
-
 - **Tone:** Professional, clear, helpful
 - **Code Style:** Follow project conventions
 - **Naming:** Consistent with codebase
@@ -315,7 +294,6 @@ graph TD
 - **Line Length:** 100 characters max for readability
 
 **Terminology:**
-
 - Use consistent terms throughout
 - Define acronyms on first use
 - Link to glossary when available
@@ -331,7 +309,6 @@ graph TD
 ## ✅ Start Session
 
 Ready to begin documentation work. Please:
-
 1. Review the documentation scope and requirements
 2. Analyze existing documentation (if any)
 3. Identify gaps and areas for improvement

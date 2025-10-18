@@ -412,9 +412,16 @@ export async function POST(request: NextRequest) {
     }
 
 
+    // Generate a CUID for the meter reading
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 15);
+    const randomPart2 = Math.random().toString(36).substring(2, 15);
+    const meterReadingId = `c${timestamp}${randomPart}${randomPart2}`;
+
     // Create meter reading
     const meterReading = await prisma.meterReading.create({
       data: {
+        id: meterReadingId,
         userId,
         reading,
         readingDate: dateObj,

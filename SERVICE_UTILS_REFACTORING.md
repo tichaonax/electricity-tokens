@@ -1,7 +1,6 @@
 # Service Utils Refactoring
 
 ## Problem
-
 The comprehensive installer was directly calling Windows `sc` commands with multiple issues:
 
 1. **Wrong Command**: Used `sc stop` instead of `sc.exe stop`
@@ -20,7 +19,6 @@ The comprehensive installer was directly calling Windows `sc` commands with mult
 ## Solution
 
 ### Created `scripts/windows-service/service-utils.js`
-
 A shared utility module that centralizes all Windows service operations:
 
 ```javascript

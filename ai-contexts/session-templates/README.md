@@ -1,10 +1,10 @@
+
 # Session Templates Index
 
 ## Purpose
-
 It explains the purpose of each session type and when to use it, helping you choose the right initialization template quickly.
 
----
+***
 
 This directory contains modular templates for initiating focused AI-assisted development sessions.  
 Each template defines its own purpose, recommended contexts, and collaboration flow to maintain clarity and consistency across different types of coding work.
@@ -13,26 +13,26 @@ Each template defines its own purpose, recommended contexts, and collaboration f
 
 ## 🧭 How to Use
 
-1. Choose the session template that best matches your goal.
-2. Load it along with `master-context.md` and `code-workflow.md` from the main `contexts/` directory.
-3. Fill in the **Session Objective** field before starting.
+1. Choose the session template that best matches your goal.  
+2. Load it along with `master-context.md` and `code-workflow.md` from the main `contexts/` directory.  
+3. Fill in the **Session Objective** field before starting.  
 4. Send **Start Session** to formally begin, prompting the AI to summarize the goal and suggest a plan.
 
 ---
 
 ## 📂 Available Session Templates (v1)
 
-| File                                 | Purpose                                                                                                | Typical Contexts Loaded                                                                               |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| **init-session.md**                  | Generic initialization for new AI sessions; establishes scope and expectations.                        | `master-context.md`, `code-workflow.md`, `general-problem-solving-context.md`                         |
-| **feature-development-session.md**   | For creating new features, screens, or endpoints with structured planning.                             | `code-workflow.md`, `component-context.md`, `backend-api-context.md`, `unit-testing-context.md`       |
-| **debugging-session.md**             | For analyzing bugs, identifying causes, and proposing safe fixes.                                      | `code-workflow.md`, `general-problem-solving-context.md`, optional front/back-end modules             |
-| **design-review-session.md**         | To review UI layouts, architectures, or theme organization before implementation.                      | `ui-context.md`, `styling-context.md`, `code-workflow.md`                                             |
-| **refactor-optimization-session.md** | For improving or simplifying existing code while preserving function and tests.                        | `code-workflow.md`, `general-problem-solving-context.md`, optional domain-specific contexts           |
-| **api-endpoint-session.md**          | For creating new REST API endpoints with proper validation and error handling.                         | `code-workflow.md`, `backend-api-context.md`, `database-context.md`                                   |
-| **database-schema-session.md**       | For adding, modifying, or removing database tables, columns, or relationships.                         | `code-workflow.md`, `database-context.md`, `backend-api-context.md`, `CLAUDE.md` (naming conventions) |
-| **security-review-session.md**       | For conducting security audits, identifying vulnerabilities, and implementing security best practices. | `code-workflow.md`, `backend-api-context.md`, `database-context.md`, `component-context.md`           |
-| **documentation-session.md**         | For creating or updating technical documentation, API docs, README files, and code comments.           | `code-workflow.md`, `backend-api-context.md`, `component-context.md`, `database-context.md`           |
+| File | Purpose | Typical Contexts Loaded |
+|------|----------|-------------------------|
+| **init-session.md** | Generic initialization for new AI sessions; establishes scope and expectations. | `master-context.md`, `code-workflow.md`, `general-problem-solving-context.md` |
+| **feature-development-session.md** | For creating new features, screens, or endpoints with structured planning. | `code-workflow.md`, `component-context.md`, `backend-api-context.md`, `unit-testing-context.md` |
+| **debugging-session.md** | For analyzing bugs, identifying causes, and proposing safe fixes. | `code-workflow.md`, `general-problem-solving-context.md`, optional front/back-end modules |
+| **design-review-session.md** | To review UI layouts, architectures, or theme organization before implementation. | `ui-context.md`, `styling-context.md`, `code-workflow.md` |
+| **refactor-optimization-session.md** | For improving or simplifying existing code while preserving function and tests. | `code-workflow.md`, `general-problem-solving-context.md`, optional domain-specific contexts |
+| **api-endpoint-session.md** | For creating new REST API endpoints with proper validation and error handling. | `code-workflow.md`, `backend-api-context.md`, `database-context.md` |
+| **database-schema-session.md** | For adding, modifying, or removing database tables, columns, or relationships. | `code-workflow.md`, `database-context.md`, `backend-api-context.md`, `CLAUDE.md` (naming conventions) |
+| **security-review-session.md** | For conducting security audits, identifying vulnerabilities, and implementing security best practices. | `code-workflow.md`, `backend-api-context.md`, `database-context.md`, `component-context.md` |
+| **documentation-session.md** | For creating or updating technical documentation, API docs, README files, and code comments. | `code-workflow.md`, `backend-api-context.md`, `component-context.md`, `database-context.md` |
 
 ---
 
@@ -40,20 +40,19 @@ Each template defines its own purpose, recommended contexts, and collaboration f
 
 Each template has a corresponding filled example showing realistic usage:
 
-| Example File                                        | Demonstrates                      | Scenario                                                                    |
-| --------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------- |
-| **EXAMPLE-init-session-filled.md**                  | Generic session initialization    | Starting a new coding task with proper context setup                        |
-| **EXAMPLE-feature-development-session-filled.md**   | Complete feature development      | Employee Leave Request Management System with backend + frontend            |
-| **EXAMPLE-debugging-session-filled.md**             | Bug investigation and resolution  | Dashboard revenue calculation bug with detailed investigation plan          |
-| **EXAMPLE-design-review-session-filled.md**         | UI/UX design review process       | Employee Detail Page redesign with accessibility and mobile considerations  |
-| **EXAMPLE-refactor-optimization-session-filled.md** | Performance optimization          | Fixing N+1 query problem in dashboard activity API (3-5s → <500ms)          |
-| **EXAMPLE-api-endpoint-session-filled.md**          | REST API development              | Creating POST /api/payroll/entries endpoint with validation and tests       |
-| **EXAMPLE-database-schema-session-filled.md**       | Database schema changes           | Adding Asset Management System with 3 new tables and relationships          |
-| **EXAMPLE-security-review-session-filled.md**       | Security vulnerability assessment | Reviewing personal finance APIs for IDOR vulnerabilities and access control |
-| **EXAMPLE-documentation-session-filled.md**         | Technical documentation creation  | Documenting Payroll Module APIs with JSDoc comments and developer guides    |
+| Example File | Demonstrates | Scenario |
+|--------------|--------------|----------|
+| **EXAMPLE-init-session-filled.md** | Generic session initialization | Starting a new coding task with proper context setup |
+| **EXAMPLE-feature-development-session-filled.md** | Complete feature development | Employee Leave Request Management System with backend + frontend |
+| **EXAMPLE-debugging-session-filled.md** | Bug investigation and resolution | Dashboard revenue calculation bug with detailed investigation plan |
+| **EXAMPLE-design-review-session-filled.md** | UI/UX design review process | Employee Detail Page redesign with accessibility and mobile considerations |
+| **EXAMPLE-refactor-optimization-session-filled.md** | Performance optimization | Fixing N+1 query problem in dashboard activity API (3-5s → <500ms) |
+| **EXAMPLE-api-endpoint-session-filled.md** | REST API development | Creating POST /api/payroll/entries endpoint with validation and tests |
+| **EXAMPLE-database-schema-session-filled.md** | Database schema changes | Adding Asset Management System with 3 new tables and relationships |
+| **EXAMPLE-security-review-session-filled.md** | Security vulnerability assessment | Reviewing personal finance APIs for IDOR vulnerabilities and access control |
+| **EXAMPLE-documentation-session-filled.md** | Technical documentation creation | Documenting Payroll Module APIs with JSDoc comments and developer guides |
 
 **How to use examples:**
-
 1. Review the example before filling your own template
 2. Understand the level of detail expected
 3. Use similar structure and formatting
@@ -64,34 +63,28 @@ Each template has a corresponding filled example showing realistic usage:
 ## 🧩 Recommended Usage Scenarios
 
 ### New Feature
-
 Use `feature-development-session.md`  
-Focus on planning, implementing, and validating new logic or UI sections.
+Focus on planning, implementing, and validating new logic or UI sections.  
 
 ### Bug or Regression
-
 Use `debugging-session.md`  
-Follow a hypothesis–test–verify cycle.
+Follow a hypothesis–test–verify cycle.  
 
 ### Design Review
-
 Use `design-review-session.md`  
-Ideal before major visual or structural updates.
+Ideal before major visual or structural updates.  
 
 ### System Optimization or Cleanup
-
 Use `refactor-optimization-session.md`  
-Safely analyze and refine codebases without breaking behavior.
+Safely analyze and refine codebases without breaking behavior.  
 
 ### Multi-Domain Projects
-
 Start with `init-session.md`  
 Add or remove active contexts manually for hybrid goals that don’t fit neatly into one template.
 
 ---
 
 ## 🪄 Tip
-
 These session templates can be mixed if the task spans multiple stages —
 for example, start with a **design review**, evolve into a **feature development**, then conclude with **refactor optimization** using chained sessions.
 
@@ -104,7 +97,6 @@ When you complete one session and want to start a new one with fresh context, it
 ### ✅ Recommended Methods
 
 #### **Method 1: Use `/clear` Command (Best)**
-
 ```
 /clear
 
@@ -124,7 +116,6 @@ Load fresh contexts:
 ```
 
 #### **Method 2: Explicit Reset Message**
-
 ```
 ---
 ## 🔄 NEW SESSION - PREVIOUS CONTEXT IRRELEVANT
@@ -142,7 +133,6 @@ Load the following contexts:
 ```
 
 #### **Method 3: Start New Chat/Conversation**
-
 - If your interface supports it, start a completely new chat
 - This guarantees zero context bleed from previous session
 - Load your new session template from the start
@@ -161,7 +151,6 @@ Use these explicit phrases to ensure the AI understands this is a fresh start:
 ### ⚠️ Common Mistakes to Avoid
 
 ❌ **DON'T:**
-
 - Continue in same conversation without clear reset
 - Assume AI will automatically forget previous context
 - Say vague things like "forget the health monitoring stuff"
@@ -169,7 +158,6 @@ Use these explicit phrases to ensure the AI understands this is a fresh start:
 - Reference files from previous session without re-loading context
 
 ✅ **DO:**
-
 - Use explicit reset markers and visual separators
 - State clearly what the NEW task is
 - List NEW context documents to load
@@ -180,7 +168,6 @@ Use these explicit phrases to ensure the AI understands this is a fresh start:
 ### 📋 Best Practice: Session Transition Workflow
 
 **End Current Session:**
-
 ```
 Current session is complete.
 
@@ -194,7 +181,6 @@ Session ended.
 ```
 
 **Start New Session:**
-
 ```
 /clear
 
@@ -236,7 +222,6 @@ This makes it crystal clear to the AI that this is a fresh start with no relatio
 ---
 
 ## ✅ Versioning
-
 Maintain version tags for large teams or multiple projects. Example:
 
 ```
@@ -250,4 +235,5 @@ This folder acts as the bridge between your **context library** (how the AI shou
 
 ---
 
----
+***
+

@@ -3,11 +3,9 @@
 Handles modular and reusable UI logic creation within front-end frameworks (e.g., React).
 
 ## Purpose
-
 To build and maintain well-structured, reusable, and testable components.
 
 ## Guidelines
-
 1. Every component must be **pure**, predictable, and follow React’s best practices.
 2. Use **functional components** with hooks; avoid mixing patterns.
 3. Prop types and interfaces must be documented within the file.

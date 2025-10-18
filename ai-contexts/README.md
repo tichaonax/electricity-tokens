@@ -4,7 +4,7 @@
 
 This directory contains context documentation for AI assistants working on this codebase. This strategic idea is a simple concept that creates a set of reusable **context files** and is an effective way to work around short-term memory constraints in AI agents. You can think of them as modular “instruction sets” that you load into a conversation as needed. Below is a **hierarchical Markdown template system** that you can expand with task-specific modules.
 
----
+***
 
 ## Structure
 
@@ -13,25 +13,21 @@ This directory contains context documentation for AI assistants working on this 
 - `general-problem-solving-context.md` - General problem-solving approaches
 
 ### Frontend
-
 - `ui-context.md` - UI/UX patterns and conventions
 - `component-context.md` - Component architecture and patterns
 - `styling-context.md` - Styling system and conventions
 - `unit-testing-context.md` - Frontend testing patterns
 
 ### Backend
-
 - `backend-api-context.md` - API design patterns and conventions
 - `database-context.md` - Database schema, Prisma conventions, and data models
 
 ### Session Templates
-
 Session templates help initialize focused AI-assisted development sessions with proper context loading.
 
 **Location:** `session-templates/v1/`
 
 **Available Templates:**
-
 - `init-session.md` - Generic session initialization
 - `feature-development-session.md` - New feature development with structured planning
 - `debugging-session.md` - Bug analysis and resolution
@@ -46,7 +42,6 @@ Session templates help initialize focused AI-assisted development sessions with 
 Each template has a corresponding filled example (e.g., `EXAMPLE-feature-development-session-filled.md`) showing realistic usage with detailed scenarios.
 
 **Usage:**
-
 1. Choose the template matching your task
 2. Review the corresponding example for guidance
 3. Fill in your specific requirements
@@ -55,4 +50,4 @@ Each template has a corresponding filled example (e.g., `EXAMPLE-feature-develop
 
 **See:** `session-templates/README.md` for complete guide including session reset procedures.
 
----
+***

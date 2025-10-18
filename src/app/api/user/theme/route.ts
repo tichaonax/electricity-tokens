@@ -36,8 +36,9 @@ export async function PUT(request: NextRequest) {
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
+      // Return 401 without redirect - let client handle gracefully
       return NextResponse.json(
-        { message: 'Unauthorized' },
+        { message: 'Unauthorized - please sign in first', fallback: true },
         { status: 401 }
       );
     }
@@ -64,8 +65,10 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating user theme:', error);
     // Return success even if DB update fails to prevent blocking theme changes
+    // Client will use localStorage as fallback
     return NextResponse.json({
-      message: 'Theme preference updated (local storage fallback)'
+      message: 'Theme preference saved locally (database unavailable)',
+      fallback: true
     });
   }
 }

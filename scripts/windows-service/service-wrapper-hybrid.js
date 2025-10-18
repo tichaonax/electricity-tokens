@@ -1198,7 +1198,7 @@ class HybridElectricityTokensService {
     }
 
     this.isHealthMonitoring = true;
-
+    
     // Wait 5 minutes (300 seconds) after service starts before beginning health checks
     // This gives Next.js plenty of time to:
     // - Complete initialization
@@ -1207,21 +1207,17 @@ class HybridElectricityTokensService {
     // - Build runtime caches
     // - Stabilize all services
     const initialDelay = 300000; // 5 minutes in milliseconds
-
+    
     this.log(
       `🏥 Health monitoring will begin in ${initialDelay / 1000} seconds (${initialDelay / 60000} minutes)`
     );
-    this.log(
-      `   This delay ensures Next.js is fully initialized before health checks start`
-    );
+    this.log(`   This delay ensures Next.js is fully initialized before health checks start`);
 
     // Perform initial health check after 5 minutes
     setTimeout(() => {
-      this.log(
-        `🏥 Starting built-in health monitoring (check every ${this.healthCheckFrequency / 1000}s)`
-      );
+      this.log(`🏥 Starting built-in health monitoring (check every ${this.healthCheckFrequency / 1000}s)`);
       this.performHealthCheck();
-
+      
       // Set up recurring health checks AFTER the initial successful check
       this.healthCheckInterval = setInterval(() => {
         this.performHealthCheck();

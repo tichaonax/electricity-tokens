@@ -17,17 +17,14 @@ To review UI layouts, architectures, or theme organization before implementation
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
-
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Design-Specific Contexts (Always Load)
-
 - `ai-contexts/frontend/ui-context.md` - UI consistency and design system
 - `ai-contexts/frontend/styling-context.md` - Styling patterns and theme
 
 ### Additional Contexts (Load as needed)
-
 - `ai-contexts/frontend/component-context.md` - Component architecture patterns
 - `ai-contexts/general-problem-solving-context.md` - Problem analysis methodology
 
@@ -39,8 +36,7 @@ To review UI layouts, architectures, or theme organization before implementation
 
 <!-- Define what's being reviewed -->
 
-**Review Type:**
-
+**Review Type:**  
 - [ ] UI Layout
 - [ ] Component Architecture
 - [ ] Theme/Styling System
@@ -48,11 +44,12 @@ To review UI layouts, architectures, or theme organization before implementation
 - [ ] Responsive Design
 - [ ] Accessibility
 
-**Target Area:**
+**Target Area:**  
 
-**Design Assets:**
 
+**Design Assets:**  
 <!-- Link to Figma, screenshots, mockups, etc. -->
+
 
 ---
 
@@ -60,17 +57,23 @@ To review UI layouts, architectures, or theme organization before implementation
 
 <!-- What aspects need evaluation -->
 
-**Functionality:**
+**Functionality:**  
 
-**Usability:**
 
-**Accessibility:**
+**Usability:**  
 
-**Performance:**
 
-**Maintainability:**
+**Accessibility:**  
 
-**Consistency:**
+
+**Performance:**  
+
+
+**Maintainability:**  
+
+
+**Consistency:**  
+
 
 ---
 
@@ -78,9 +81,9 @@ To review UI layouts, architectures, or theme organization before implementation
 
 <!-- List any particular areas of concern or questions -->
 
-1.
-2.
-3.
+1. 
+2. 
+3. 
 
 ---
 
@@ -93,7 +96,6 @@ To review UI layouts, architectures, or theme organization before implementation
 ## ✅ Start Session
 
 Ready to begin design review. Please:
-
 1. Analyze the design scope
 2. Evaluate against review criteria
 3. Identify potential issues or improvements

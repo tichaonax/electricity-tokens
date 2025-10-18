@@ -1,6 +1,16 @@
 import { prisma } from './prisma';
 import crypto from 'crypto';
 
+/**
+ * Generate a CUID for database records
+ */
+function generateCuid(): string {
+  const timestamp = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).substring(2, 15);
+  const randomPart2 = Math.random().toString(36).substring(2, 15);
+  return `c${timestamp}${randomPart}${randomPart2}`;
+}
+
 export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'LOGIN_FAILED' | 'SESSION_CREATED' | 'SESSION_DESTROYED' | 'PERMISSION_CHANGED' | 'ACCOUNT_LOCKED' | 'ACCOUNT_UNLOCKED';
 
 export type AuditEntityType = 'User' | 'TokenPurchase' | 'UserContribution' | 'MeterReading' | 'Session' | 'Authentication' | 'Permission' | 'SystemConfig';
@@ -42,9 +52,10 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
   try {
     const timestamp = new Date();
     const hash = generateAuditHash(entry, timestamp);
-    
+
     await prisma.auditLog.create({
       data: {
+        id: generateCuid(),
         userId: entry.userId,
         action: entry.action,
         entityType: entry.entityType,

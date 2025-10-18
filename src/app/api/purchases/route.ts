@@ -276,8 +276,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate a CUID for the token purchase
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 15);
+    const randomPart2 = Math.random().toString(36).substring(2, 15);
+    const purchaseId = `c${timestamp}${randomPart}${randomPart2}`;
+
     const purchase = await prisma.tokenPurchase.create({
       data: {
+        id: purchaseId,
         totalTokens: parseFloat(totalTokens.toString()),
         totalPayment: parseFloat(totalPayment.toString()),
         meterReading: parseFloat(meterReading.toString()),
@@ -296,9 +303,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Generate a CUID for the audit log
+    const auditTimestamp = Date.now().toString(36);
+    const auditRandomPart = Math.random().toString(36).substring(2, 15);
+    const auditRandomPart2 = Math.random().toString(36).substring(2, 15);
+    const auditLogId = `c${auditTimestamp}${auditRandomPart}${auditRandomPart2}`;
+
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
+        id: auditLogId,
         userId: permissionCheck.user!.id,
         action: 'CREATE',
         entityType: 'TokenPurchase',

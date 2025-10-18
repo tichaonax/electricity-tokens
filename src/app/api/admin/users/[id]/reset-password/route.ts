@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,6 +16,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const params = await context.params;
     const userId = params.id;
     const body = await request.json();
     const { generateTemporary, temporaryPassword } = body;
@@ -49,9 +50,16 @@ export async function POST(
       },
     });
 
+    // Generate a CUID for the audit log
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 15);
+    const randomPart2 = Math.random().toString(36).substring(2, 15);
+    const auditLogId = `c${timestamp}${randomPart}${randomPart2}`;
+
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
+        id: auditLogId,
         userId: session.user.id,
         action: 'UPDATE',
         entityType: 'User',

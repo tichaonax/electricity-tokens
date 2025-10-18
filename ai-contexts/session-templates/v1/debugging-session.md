@@ -17,13 +17,11 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
-
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 - `ai-contexts/general-problem-solving-context.md` - Debugging methodology
 
 ### Module-Specific Contexts (Load based on bug location)
-
 - `ai-contexts/frontend/component-context.md` - For UI/component bugs
 - `ai-contexts/frontend/ui-context.md` - For styling/layout issues
 - `ai-contexts/backend/backend-api-context.md` - For API/endpoint bugs
@@ -31,7 +29,6 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 - `ai-contexts/testing/unit-testing-context.md` - For test failures
 
 ### Optional Contexts
-
 - Domain-specific contexts for the affected module
 
 **How to load:** Use the Read tool to load each relevant context document before beginning debugging.
@@ -42,28 +39,29 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 
 <!-- Document the bug details before starting -->
 
-**Bug Title:**
+**Bug Title:**  
 
-**Description:**
 
-**Steps to Reproduce:**
+**Description:**  
 
-1.
-2.
-3.
 
-**Expected Behavior:**
+**Steps to Reproduce:**  
+1. 
+2. 
+3. 
 
-**Actual Behavior:**
+**Expected Behavior:**  
 
-**Environment:**
 
-- OS:
-- Browser/Runtime:
-- Version:
+**Actual Behavior:**  
 
-**Error Messages/Logs:**
 
+**Environment:**  
+- OS: 
+- Browser/Runtime: 
+- Version: 
+
+**Error Messages/Logs:**  
 ```
 
 
@@ -75,11 +73,14 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 
 <!-- Add debugging observations, hypotheses, or findings -->
 
-**Potential Causes:**
+**Potential Causes:**  
 
-**Related Code/Files:**
 
-**Recent Changes:**
+**Related Code/Files:**  
+
+
+**Recent Changes:**  
+
 
 ---
 
@@ -87,9 +88,11 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 
 <!-- Define how to verify the fix -->
 
-**Test Cases:**
+**Test Cases:**  
 
-**Regression Tests:**
+
+**Regression Tests:**  
+
 
 ---
 
@@ -102,7 +105,6 @@ For analyzing bugs, identifying causes, and proposing safe fixes.
 ## ✅ Start Session
 
 Ready to begin debugging. Please:
-
 1. Analyze the bug report
 2. Formulate hypotheses about the root cause
 3. Suggest investigation steps

@@ -136,18 +136,9 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      console.log('=== GLOBAL ACCOUNT BALANCE DEBUG ===');
-      console.log('Total contributions found:', balanceContributions.length);
-
       // Use the same calculation logic as the cost calculations library for ALL contributions
       const costBreakdown = calculateUserTrueCost(balanceContributions);
       runningBalance = costBreakdown.overpayment;
-
-      console.log(
-        '\n=== FINAL GLOBAL ACCOUNT BALANCE: $',
-        runningBalance.toFixed(2),
-        '===\n'
-      );
     }
 
     const response = {
@@ -318,8 +309,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate a CUID for the user contribution
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 15);
+    const randomPart2 = Math.random().toString(36).substring(2, 15);
+    const contributionId = `c${timestamp}${randomPart}${randomPart2}`;
+
     const contribution = await prisma.userContribution.create({
       data: {
+        id: contributionId,
         purchaseId,
         userId: targetUserId,
         contributionAmount: parseFloat(contributionAmount.toString()),
@@ -346,9 +344,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Generate a CUID for the audit log
+    const auditTimestamp = Date.now().toString(36);
+    const auditRandomPart = Math.random().toString(36).substring(2, 15);
+    const auditRandomPart2 = Math.random().toString(36).substring(2, 15);
+    const auditLogId = `c${auditTimestamp}${auditRandomPart}${auditRandomPart2}`;
+
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
+        id: auditLogId,
         userId: permissionCheck.user!.id,
         action: 'CREATE',
         entityType: 'UserContribution',

@@ -17,18 +17,15 @@ For creating new REST API endpoints with proper request/response handling, valid
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
-
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 - `ai-contexts/backend/backend-api-context.md` - API design patterns and conventions
 
 ### Backend-Specific Contexts (Always Load)
-
 - `ai-contexts/backend/database-context.md` - Database operations and Prisma usage
 - `ai-contexts/backend/error-handling-context.md` - Error handling patterns (if exists)
 
 ### Optional Contexts
-
 - `ai-contexts/testing/unit-testing-context.md` - For API test coverage
 - Domain-specific contexts for business logic
 
@@ -41,7 +38,6 @@ For creating new REST API endpoints with proper request/response handling, valid
 <!-- Define the API endpoint requirements -->
 
 **Endpoint Path:**
-
 ```
 POST /api/payroll/entries
 ```
@@ -50,7 +46,6 @@ POST /api/payroll/entries
 Create a new payroll entry for an employee within a specific payroll period. The endpoint should validate that the employee has an active contract during the period and calculate the base salary, benefits, deductions, and net pay.
 
 **Authentication Required:**
-
 - [x] Yes - Specify roles/permissions:
   - User must be authenticated
   - Must have `canManagePayroll` permission
@@ -58,7 +53,6 @@ Create a new payroll entry for an employee within a specific payroll period. The
   - System admins can access all payroll entries
 
 **Rate Limiting:**
-
 - [x] Yes - Specify limits:
   - 100 requests per minute per user
   - 1000 requests per hour per business
@@ -68,7 +62,6 @@ Create a new payroll entry for an employee within a specific payroll period. The
 ## 📥 Request Specification
 
 **HTTP Method:**
-
 - [ ] GET
 - [x] POST
 - [ ] PUT
@@ -76,36 +69,31 @@ Create a new payroll entry for an employee within a specific payroll period. The
 - [ ] DELETE
 
 **Query Parameters:**
-
 ```typescript
 // None required
 ```
 
 **Request Body Schema:**
-
 ```typescript
 interface CreatePayrollEntryRequest {
-  payrollPeriodId: string; // Required - UUID of the payroll period
-  employeeId: string; // Required - UUID of the employee
-  baseSalary: number; // Required - Base salary amount for this period
-  overtimeHours?: number; // Optional - Hours of overtime worked
-  overtimeRate?: number; // Optional - Hourly rate for overtime
-  benefits?: {
-    // Optional - Array of benefits to include
-    benefitId: string; // UUID of the benefit type
-    amount: number; // Amount for this benefit
-  }[];
-  deductions?: {
-    // Optional - Array of deductions to apply
-    deductionId: string; // UUID of the deduction type
-    amount: number; // Amount for this deduction
-  }[];
-  notes?: string; // Optional - Additional notes
+  payrollPeriodId: string      // Required - UUID of the payroll period
+  employeeId: string            // Required - UUID of the employee
+  baseSalary: number            // Required - Base salary amount for this period
+  overtimeHours?: number        // Optional - Hours of overtime worked
+  overtimeRate?: number         // Optional - Hourly rate for overtime
+  benefits?: {                  // Optional - Array of benefits to include
+    benefitId: string           // UUID of the benefit type
+    amount: number              // Amount for this benefit
+  }[]
+  deductions?: {                // Optional - Array of deductions to apply
+    deductionId: string         // UUID of the deduction type
+    amount: number              // Amount for this deduction
+  }[]
+  notes?: string                // Optional - Additional notes
 }
 ```
 
 **Headers:**
-
 ```
 Content-Type: application/json
 Authorization: Bearer <token>
@@ -116,52 +104,50 @@ Authorization: Bearer <token>
 ## 📤 Response Specification
 
 **Success Response (201 Created):**
-
 ```typescript
 interface PayrollEntrySuccessResponse {
-  status: 'success';
+  status: 'success'
   data: {
-    id: string;
-    payrollPeriodId: string;
-    employeeId: string;
+    id: string
+    payrollPeriodId: string
+    employeeId: string
     employee: {
-      id: string;
-      name: string;
-      email: string;
-    };
-    baseSalary: number;
-    overtimeHours: number;
-    overtimePay: number;
-    totalBenefits: number;
-    totalDeductions: number;
-    grossPay: number;
-    netPay: number;
+      id: string
+      name: string
+      email: string
+    }
+    baseSalary: number
+    overtimeHours: number
+    overtimePay: number
+    totalBenefits: number
+    totalDeductions: number
+    grossPay: number
+    netPay: number
     benefits: {
-      id: string;
-      benefitId: string;
-      benefitName: string;
-      amount: number;
-    }[];
+      id: string
+      benefitId: string
+      benefitName: string
+      amount: number
+    }[]
     deductions: {
-      id: string;
-      deductionId: string;
-      deductionName: string;
-      amount: number;
-    }[];
-    status: 'draft' | 'approved' | 'paid';
-    notes: string | null;
-    createdAt: string;
-    updatedAt: string;
+      id: string
+      deductionId: string
+      deductionName: string
+      amount: number
+    }[]
+    status: 'draft' | 'approved' | 'paid'
+    notes: string | null
+    createdAt: string
+    updatedAt: string
     createdBy: {
-      id: string;
-      name: string;
-    };
-  };
+      id: string
+      name: string
+    }
+  }
 }
 ```
 
 **Error Responses:**
-
 ```typescript
 // 400 Bad Request - Invalid input
 {
@@ -214,7 +200,6 @@ interface PayrollEntrySuccessResponse {
 ## 🗄️ Database Operations
 
 **Models Involved:**
-
 - PayrollEntry (main model being created)
 - PayrollPeriod (must exist and be in 'draft' or 'open' status)
 - Employee (must exist and have active contract)
@@ -224,7 +209,6 @@ interface PayrollEntrySuccessResponse {
 - PayrollDeduction (optional - for deduction lookups)
 
 **Operations:**
-
 - [x] Create - New PayrollEntry record
 - [x] Read - Fetch PayrollPeriod, Employee, EmployeeContract
 - [ ] Update
@@ -232,7 +216,6 @@ interface PayrollEntrySuccessResponse {
 - [x] List/Query - Check for existing entry, validate contract
 
 **Transactions Required:**
-
 - [x] Yes - Describe:
   - All operations must be wrapped in a Prisma transaction
   - Create PayrollEntry
@@ -241,7 +224,6 @@ interface PayrollEntrySuccessResponse {
   - Rollback all if any operation fails
 
 **Performance Considerations:**
-
 - Indexing requirements:
   - Index on `payrollPeriodId` + `employeeId` (for uniqueness check)
   - Index on `payrollPeriodId` (for batch queries)
@@ -258,7 +240,6 @@ interface PayrollEntrySuccessResponse {
 ## ✅ Validation Rules
 
 **Request Validation:**
-
 ```typescript
 // Validation rules:
 // - payrollPeriodId: valid UUID, required
@@ -276,7 +257,6 @@ interface PayrollEntrySuccessResponse {
 ```
 
 **Business Logic Validation:**
-
 1. **Payroll Period Exists**: Verify payrollPeriodId exists in database
 2. **Period Status**: Payroll period must be in 'draft' or 'open' status (not 'finalized' or 'paid')
 3. **Employee Exists**: Verify employeeId exists in database
@@ -294,27 +274,23 @@ interface PayrollEntrySuccessResponse {
 ## 🔒 Security Considerations
 
 **Authorization Checks:**
-
 - Verify user is authenticated via NextAuth session
 - Check user has `canManagePayroll` permission for the business
 - System admins bypass business-specific checks but still need permission
 - Log all payroll entry creations with user ID for audit trail
 
 **Data Sanitization:**
-
 - Trim whitespace from string fields (notes)
 - Validate numeric fields are actual numbers (not strings)
 - Ensure UUIDs match valid UUID format
 - Strip any HTML/script tags from notes field
 
 **SQL Injection Prevention:**
-
 - [x] Using Prisma parameterized queries
 - [x] Input validation in place
 - No raw SQL queries used
 
 **XSS Prevention:**
-
 - [x] Response data sanitized
 - [x] Content-Type headers set correctly
 - Notes field should be sanitized if displayed in UI
@@ -324,19 +300,16 @@ interface PayrollEntrySuccessResponse {
 ## 🧪 Testing Requirements
 
 **Unit Tests:**
-
 - [x] Request validation - Test all validation rules
 - [x] Business logic - Test payroll calculation formulas
 - [x] Error handling - Test all error scenarios
 
 **Integration Tests:**
-
 - [x] Database operations - Test transaction rollback on error
 - [x] Authentication/Authorization - Test permission checks
 - [x] End-to-end flow - Test complete payroll entry creation
 
 **Test Cases:**
-
 1. **Success case with valid data**
    - Create entry with all required fields
    - Verify entry created with correct calculations
@@ -386,18 +359,15 @@ interface PayrollEntrySuccessResponse {
 ## 📊 Performance Requirements
 
 **Expected Response Time:**
-
 - Target: < 500ms for 95th percentile
 - Maximum: < 2 seconds including DB transaction
 
 **Caching Strategy:**
-
 - [ ] No caching needed (data changes frequently)
 - [x] Cache benefit/deduction lookups for 5 minutes (read-heavy reference data)
 - [x] Cache invalidation on benefit/deduction updates
 
 **Pagination:**
-
 - [ ] Required - This is a POST endpoint (create single entry)
 - [x] Not needed
 - Note: For bulk operations, consider separate batch endpoint
@@ -407,19 +377,16 @@ interface PayrollEntrySuccessResponse {
 ## 📝 Documentation
 
 **API Documentation (OpenAPI/Swagger):**
-
 - [x] Add endpoint to API docs with path, method, auth requirements
 - [x] Include request/response examples with realistic data
 - [x] Document error codes with descriptions
 
 **Code Comments:**
-
 - [x] Add JSDoc/TSDoc comments for the route handler
 - [x] Document complex business logic (payroll calculations)
 - [x] Explain permission checking logic
 
 **Example Documentation:**
-
 ```typescript
 /**
  * POST /api/payroll/entries
@@ -462,7 +429,6 @@ interface PayrollEntrySuccessResponse {
 ## 🔄 Integration Points
 
 **Related Endpoints:**
-
 - GET /api/payroll/entries - List payroll entries (for viewing created entry)
 - GET /api/payroll/entries/[id] - Get single entry details
 - PUT /api/payroll/entries/[id] - Update payroll entry (if status is 'draft')
@@ -471,11 +437,9 @@ interface PayrollEntrySuccessResponse {
 - GET /api/employees/[id]/contracts - View employee contract history
 
 **External Services:**
-
 - None currently (future: tax calculation service integration)
 
 **Event Triggers:**
-
 - [x] Send notifications
   - Notify payroll admin when entry created
   - Notify employee when entry status changes to 'approved' or 'paid'
@@ -493,7 +457,6 @@ interface PayrollEntrySuccessResponse {
 ## 📝 Session Notes
 
 **Additional Context:**
-
 - This is a critical financial operation - extra care needed for accuracy
 - Payroll calculations must match business expectations (tested with accounting team)
 - Consider audit logging for compliance (tax regulations, labor laws)
@@ -502,13 +465,11 @@ interface PayrollEntrySuccessResponse {
 - Future enhancement: Tax calculation integration (currently manual)
 
 **Constraints:**
-
 - Must complete within single database transaction
 - Cannot modify payroll entries once period is finalized
 - Must preserve historical data (no hard deletes)
 
 **Related Work:**
-
 - Similar endpoints exist for expenses, invoices (reference for patterns)
 - Payroll module is relatively new, may need refinement based on usage
 
@@ -517,7 +478,6 @@ interface PayrollEntrySuccessResponse {
 ## ✅ Start Session
 
 Ready to begin API endpoint development. Please:
-
 1. Review the endpoint specification and understand business requirements
 2. Analyze database schema and relationships (PayrollEntry, Employee, Contract models)
 3. Propose implementation approach with error handling strategy
@@ -527,7 +487,6 @@ Ready to begin API endpoint development. Please:
 7. Implement the endpoint following the specification above
 
 **Key Implementation Steps:**
-
 1. Load required context documents (backend-api-context.md, database-context.md, code-workflow.md)
 2. Read existing payroll-related models and endpoints for consistency
 3. Create route handler at `src/app/api/payroll/entries/route.ts`

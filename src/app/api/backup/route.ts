@@ -43,7 +43,7 @@ interface BackupPurchase {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
-  user: {
+  creator: {
     email: string;
     name: string;
   };
@@ -267,21 +267,36 @@ export async function GET(request: NextRequest) {
       }
 
       backupData.tokenPurchases = tokenPurchases.map((purchase) => ({
-        ...purchase,
-        user: purchase.user, // Preserve user info
-        contribution: undefined, // Remove contribution from purchase object to avoid duplication
+        id: purchase.id,
+        totalTokens: purchase.totalTokens,
+        totalPayment: purchase.totalPayment,
+        meterReading: purchase.meterReading,
         purchaseDate: purchase.purchaseDate.toISOString(),
+        isEmergency: purchase.isEmergency,
+        createdBy: purchase.createdBy,
         createdAt: purchase.createdAt.toISOString(),
         updatedAt: purchase.updatedAt.toISOString(),
+        creator: {
+          email: purchase.user.email,
+          name: purchase.user.name,
+        },
       }));
 
       backupData.userContributions = tokenPurchases
         .filter((p) => p.contribution)
         .map((purchase) => ({
-          ...purchase.contribution!,
-          purchase: undefined, // Remove purchase from contribution object to avoid duplication
+          id: purchase.contribution!.id,
+          purchaseId: purchase.contribution!.purchaseId,
+          userId: purchase.contribution!.userId,
+          contributionAmount: purchase.contribution!.contributionAmount,
+          meterReading: purchase.contribution!.meterReading,
+          tokensConsumed: purchase.contribution!.tokensConsumed,
           createdAt: purchase.contribution!.createdAt.toISOString(),
           updatedAt: purchase.contribution!.updatedAt.toISOString(),
+          user: {
+            email: purchase.contribution!.user.email,
+            name: purchase.contribution!.user.name,
+          },
         }));
 
       backupData.metadata.recordCounts.tokenPurchases = tokenPurchases.length;
@@ -547,12 +562,12 @@ export async function POST(request: NextRequest) {
           try {
             // Find creator by email
             const creator = await tx.user.findUnique({
-              where: { email: purchase.user.email },
+              where: { email: purchase.creator?.email },
             });
 
             if (!creator) {
               results.errors.push(
-                `Creator not found for purchase ${purchase.id}: ${purchase.user.email}`
+                `Creator not found for purchase ${purchase.id}: ${purchase.creator?.email || 'unknown'}`
               );
               continue;
             }

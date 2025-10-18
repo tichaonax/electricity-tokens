@@ -17,17 +17,14 @@ To review UI layouts, architectures, or theme organization before implementation
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
-
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 
 ### Design-Specific Contexts (Always Load)
-
 - `ai-contexts/frontend/ui-context.md` - UI consistency and design system
 - `ai-contexts/frontend/styling-context.md` - Styling patterns and theme
 
 ### Additional Contexts (Load as needed)
-
 - `ai-contexts/frontend/component-context.md` - Component architecture patterns
 - `ai-contexts/general-problem-solving-context.md` - Problem analysis methodology
 
@@ -40,7 +37,6 @@ To review UI layouts, architectures, or theme organization before implementation
 <!-- Define what's being reviewed -->
 
 **Review Type:**
-
 - [x] UI Layout
 - [x] Component Architecture
 - [ ] Theme/Styling System
@@ -52,7 +48,6 @@ To review UI layouts, architectures, or theme organization before implementation
 Employee Detail Page Redesign (`/employees/[employeeId]`)
 
 **Current Issues with Existing Design:**
-
 - Information is scattered across multiple tabs, requiring too many clicks
 - Contract history is buried in a separate section
 - No visual indication of employee status (active/inactive)
@@ -61,13 +56,11 @@ Employee Detail Page Redesign (`/employees/[employeeId]`)
 - Action buttons (Edit, Deactivate, etc.) are inconsistent with other pages
 
 **Design Assets:**
-
 - Figma mockup: https://figma.com/file/employee-detail-redesign (not real URL - example)
 - Screenshots of current design: `/docs/screenshots/employee-detail-before.png`
 - Wireframes for proposed layout: `/docs/wireframes/employee-detail-v2.png`
 
 **Proposed Changes:**
-
 1. **Hero Section**: Employee photo, name, role, status badge prominently at top
 2. **Info Cards Layout**: Replace tabs with card-based grid layout
 3. **Quick Stats**: Show key metrics (tenure, salary, leave balance) in dashboard-style cards
@@ -82,7 +75,6 @@ Employee Detail Page Redesign (`/employees/[employeeId]`)
 <!-- What aspects need evaluation -->
 
 **Functionality:**
-
 - ✅ All current features must remain accessible
 - ✅ Quick access to critical information (contact, salary, contracts)
 - ✅ Clear path to edit employee details
@@ -91,7 +83,6 @@ Employee Detail Page Redesign (`/employees/[employeeId]`)
 - ⚠️ Concern: Card layout might not scale well with many contracts
 
 **Usability:**
-
 - ✅ Reduces clicks to access key information (removes tab navigation)
 - ✅ Visual hierarchy guides user attention to important data
 - ✅ Clear call-to-action buttons
@@ -100,7 +91,6 @@ Employee Detail Page Redesign (`/employees/[employeeId]`)
 - ❓ Question: Should we add a floating action button for quick edit?
 
 **Accessibility:**
-
 - ⚠️ Needs review: Color contrast for status badges
 - ⚠️ Needs review: Focus states for interactive cards
 - ⚠️ Needs review: Screen reader navigation order
@@ -108,21 +98,18 @@ Employee Detail Page Redesign (`/employees/[employeeId]`)
 - ❓ Question: ARIA labels needed for icon-only buttons?
 
 **Performance:**
-
 - ✅ Card layout should render faster than tabs (all content loaded once)
 - ⚠️ Concern: Loading all data at once might slow initial page load
 - ❓ Question: Should we lazy-load contract history timeline?
 - ❓ Question: Should we paginate salary history or show last 5 only?
 
 **Maintainability:**
-
 - ✅ Card components can be reused across other detail pages
 - ✅ Timeline component is generic and reusable
 - ⚠️ Concern: Complex grid layout might be harder to maintain than simple tabs
 - ✅ Responsive grid uses Tailwind utilities (consistent with codebase)
 
 **Consistency:**
-
 - ⚠️ Different from project detail page (still uses tabs)
 - ⚠️ Different from contractor detail page (uses accordion)
 - ❓ Question: Should we standardize all detail pages to use this new layout?
@@ -181,35 +168,30 @@ Employee Detail Page Redesign (`/employees/[employeeId]`)
 <!-- Add any additional context, constraints, or references -->
 
 **Design Goals:**
-
 - Reduce time to find key employee information by 50%
 - Improve mobile usability (current mobile experience is poor)
 - Create reusable card components for other detail pages
 - Maintain accessibility standards (WCAG 2.1 AA)
 
 **User Feedback on Current Design:**
-
 - "I have to click through 3 tabs to see contract and salary info" - Manager
 - "Mobile view is unusable, I always switch to desktop" - HR Admin
 - "Hard to tell if employee is active or terminated at a glance" - Admin
 - "I want to see leave balance without opening separate page" - Manager
 
 **Technical Constraints:**
-
 - Must use existing component library (can create new components)
 - Must work with existing API endpoints (no backend changes)
 - Must support all current permissions (role-based access)
 - Must maintain URL structure (/employees/[employeeId])
 
 **Browser Support:**
-
 - Chrome/Edge (latest 2 versions) - Primary
 - Firefox (latest 2 versions) - Primary
 - Safari (latest 2 versions) - Secondary
 - Mobile browsers (iOS Safari, Chrome Mobile) - Critical
 
 **Design System References:**
-
 - Existing card component: `/src/components/ui/card.tsx`
 - Existing badge component: `/src/components/ui/badge.tsx`
 - Grid layout examples: Dashboard page uses 4-column grid
@@ -220,7 +202,6 @@ Employee Detail Page Redesign (`/employees/[employeeId]`)
 ## ✅ Start Session
 
 Ready to begin design review. Please:
-
 1. Load all required context documents (ui-context.md, styling-context.md, component-context.md)
 2. Review the design scope and proposed changes
 3. Analyze each review criterion (functionality, usability, accessibility, performance, maintainability, consistency)
@@ -245,7 +226,6 @@ Ready to begin design review. Please:
    - Implementation notes for developers
 
 **Key Questions to Answer:**
-
 1. Should we proceed with card-based layout or stick with tabs?
 2. How do we handle information density without overwhelming users?
 3. What's the best approach for mobile responsiveness?

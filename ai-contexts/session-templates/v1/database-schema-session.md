@@ -17,18 +17,15 @@ For adding, modifying, or removing database tables, columns, relationships, or i
 **IMPORTANT:** Before starting this session, load the following context documents:
 
 ### Core Contexts (Always Load)
-
 - `ai-contexts/code-workflow.md` - Standard workflow and task tracking
 - `ai-contexts/master-context.md` - General principles and conventions
 - `ai-contexts/backend/database-context.md` - Database patterns and Prisma conventions
 
 ### Backend-Specific Contexts (Always Load)
-
 - `ai-contexts/backend/backend-api-context.md` - API integration impacts
 - `CLAUDE.md` - Naming conventions (PascalCase models, camelCase fields, snake_case tables)
 
 ### Optional Contexts
-
 - `ai-contexts/testing/unit-testing-context.md` - For testing database changes
 - Domain-specific contexts for business logic
 
@@ -41,7 +38,6 @@ For adding, modifying, or removing database tables, columns, relationships, or i
 <!-- Select the type of schema change -->
 
 **Change Category:**
-
 - [ ] New Table/Model
 - [ ] Modify Existing Table
 - [ ] Add Relationship
@@ -52,8 +48,8 @@ For adding, modifying, or removing database tables, columns, relationships, or i
 
 **Affected Models:**
 
-**Database:**
 
+**Database:**
 - [ ] PostgreSQL
 - [ ] MySQL
 - [ ] SQLite
@@ -66,7 +62,6 @@ For adding, modifying, or removing database tables, columns, relationships, or i
 <!-- Document the current state -->
 
 **Existing Model(s):**
-
 ```prisma
 // Paste current Prisma schema if modifying existing
 model ExistingModel {
@@ -77,7 +72,9 @@ model ExistingModel {
 
 **Existing Relationships:**
 
+
 **Current Indexes:**
+
 
 ---
 
@@ -86,7 +83,6 @@ model ExistingModel {
 <!-- Define the new/modified schema -->
 
 **New/Modified Model:**
-
 ```prisma
 model NewModel {
   id        String   @id @default(cuid())
@@ -101,7 +97,6 @@ model NewModel {
 ```
 
 **Naming Conventions Check:**
-
 - [ ] Model name is PascalCase
 - [ ] Field names are camelCase
 - [ ] Table name (@map) is snake_case
@@ -109,7 +104,6 @@ model NewModel {
 - [ ] Foreign key fields follow convention (e.g., `userId` not `user_id`)
 
 **Relationships:**
-
 ```prisma
 // Example:
 // user       User     @relation(fields: [userId], references: [id])
@@ -117,7 +111,6 @@ model NewModel {
 ```
 
 **Indexes:**
-
 ```prisma
 // Example:
 // @@index([email])
@@ -125,7 +118,6 @@ model NewModel {
 ```
 
 **Constraints:**
-
 ```prisma
 // Example:
 // @@unique([email])
@@ -137,21 +129,19 @@ model NewModel {
 ## 🔄 Migration Strategy
 
 **Migration Type:**
-
 - [ ] Additive (Safe - adds new tables/columns)
 - [ ] Destructive (Breaking - removes/renames columns)
 - [ ] Data Transformation (Requires data migration)
 
 **Migration Steps:**
-
 1.
 2.
 3.
 
 **Rollback Plan:**
 
-**Data Migration Required:**
 
+**Data Migration Required:**
 - [ ] Yes - Describe:
 - [ ] No
 
@@ -161,15 +151,15 @@ model NewModel {
 
 **Affected API Endpoints:**
 
+
 **Affected Components:**
 
-**Breaking Changes:**
 
+**Breaking Changes:**
 - [ ] None
 - [ ] Yes - List:
 
 **Performance Impact:**
-
 - Query performance:
 - Storage impact:
 - Index requirements:
@@ -179,7 +169,6 @@ model NewModel {
 ## 🔒 Data Integrity
 
 **Constraints to Add:**
-
 - [ ] NOT NULL
 - [ ] UNIQUE
 - [ ] CHECK constraints
@@ -187,8 +176,8 @@ model NewModel {
 
 **Default Values:**
 
-**Cascading Behavior:**
 
+**Cascading Behavior:**
 - [ ] CASCADE on delete
 - [ ] SET NULL on delete
 - [ ] RESTRICT on delete
@@ -199,19 +188,16 @@ model NewModel {
 ## 🧪 Testing Requirements
 
 **Schema Validation:**
-
 - [ ] Prisma migration generates successfully
 - [ ] All existing tests still pass
 - [ ] New relationships work correctly
 
 **Data Validation:**
-
 - [ ] Existing data compatible with changes
 - [ ] Migration script tested on staging data
 - [ ] Rollback tested
 
 **Test Data:**
-
 ```typescript
 // Sample test data for new schema
 ```
@@ -221,12 +207,10 @@ model NewModel {
 ## 📦 Seed Data Changes
 
 **Seed Script Updates Required:**
-
 - [ ] Yes - Describe:
 - [ ] No
 
 **Test Data:**
-
 - [ ] Add new test records
 - [ ] Modify existing test data
 - [ ] Remove obsolete test data
@@ -236,7 +220,6 @@ model NewModel {
 ## 🚨 Risk Assessment
 
 **Data Loss Risk:**
-
 - [ ] None
 - [ ] Low
 - [ ] Medium
@@ -244,8 +227,8 @@ model NewModel {
 
 **Mitigation:**
 
-**Backup Strategy:**
 
+**Backup Strategy:**
 - [ ] Database backup before migration
 - [ ] Export critical data
 - [ ] Snapshot environment
@@ -274,7 +257,6 @@ model NewModel {
 ## ✅ Start Session
 
 Ready to begin database schema changes. Please:
-
 1. Review current schema and proposed changes
 2. Verify naming conventions are followed
 3. Analyze impact on existing code and APIs

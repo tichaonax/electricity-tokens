@@ -105,32 +105,6 @@ export async function POST(request: NextRequest) {
       ],
     });
 
-    // DEBUG: Log what we found
-    console.log('VALIDATION DEBUG:', {
-      reading,
-      readingDate,
-      dateObj: dateObj.toISOString(),
-      maxOnSameDate: maxReadingOnSameDate ? `${maxReadingOnSameDate.reading} on ${maxReadingOnSameDate.readingDate.toISOString().split('T')[0]}` : 'none',
-      mostRecentBefore: mostRecentBeforeDate ? `${mostRecentBeforeDate.reading} on ${mostRecentBeforeDate.readingDate.toISOString().split('T')[0]}` : 'none',
-      earliestAfter: earliestAfterDate ? `${earliestAfterDate.reading} on ${earliestAfterDate.readingDate.toISOString().split('T')[0]}` : 'none',
-      userId: userId
-    });
-    
-    // DEBUG: Check all readings after this date - GLOBAL
-    const allAfterReadings = await prisma.meterReading.findMany({
-      where: {
-        readingDate: {
-          gt: dateObj,
-        },
-      },
-      orderBy: [
-        { readingDate: 'asc' },
-        { reading: 'asc' },
-      ],
-      take: 5
-    });
-    console.log('All readings after date (GLOBAL):', allAfterReadings.map(r => `${r.reading} on ${r.readingDate.toISOString().split('T')[0]}`));
-
     // Validation Rule 1: Must be >= maximum reading on the same date
     if (maxReadingOnSameDate && reading < maxReadingOnSameDate.reading) {
       result.valid = false;
