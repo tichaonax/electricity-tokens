@@ -2,6 +2,7 @@ const { spawn, exec } = require('child_process');
 const { promisify } = require('util');
 const path = require('path');
 const fs = require('fs');
+const serviceUtils = require('./windows-service/service-utils');
 
 const execAsync = promisify(exec);
 
@@ -88,28 +89,19 @@ class ComprehensiveInstaller {
 
   async checkServiceExists() {
     try {
-      // Check for multiple possible service names
-      const serviceNames = [
-        'ElectricityTracker',
-        'ElectricityTracker.exe',
-        'electricity-tokens',
-      ];
+      const isInstalled = await serviceUtils.isServiceInstalled((msg) => {
+        // Silent logging - we'll log the result ourselves
+      });
 
-      for (const serviceName of serviceNames) {
-        try {
-          const { stdout } = await execAsync(`sc query "${serviceName}"`);
-          if (stdout.includes('SERVICE_NAME:')) {
-            this.log(`✅ Found service: ${serviceName}`);
-            return true;
-          }
-        } catch {
-          // Continue to next service name
-        }
+      if (isInstalled) {
+        this.log('✅ Windows service is installed');
+      } else {
+        this.log('ℹ️  No Windows service found');
       }
 
-      this.log('ℹ️  No Windows service found');
-      return false;
-    } catch {
+      return isInstalled;
+    } catch (error) {
+      this.log(`⚠️ Could not check service status: ${error.message}`, 'WARN');
       return false;
     }
   }
@@ -136,6 +128,47 @@ class ComprehensiveInstaller {
     const buildDir = path.join(this.appRoot, '.next');
     const buildId = path.join(buildDir, 'BUILD_ID');
     return fs.existsSync(buildDir) && fs.existsSync(buildId);
+  }
+
+  async needsDependencyReinstall() {
+    // Check if node_modules exists
+    const nodeModulesPath = path.join(this.appRoot, 'node_modules');
+    if (!fs.existsSync(nodeModulesPath)) {
+      this.log('⚠️ node_modules directory missing - reinstall required');
+      return true;
+    }
+
+    // Check if package.json has changed since last install
+    const packageJsonPath = path.join(this.appRoot, 'package.json');
+    const config = await this.loadInstallConfig();
+
+    if (!config || !config.packageJsonHash) {
+      this.log('ℹ️  No previous package.json hash - will install dependencies');
+      return true;
+    }
+
+    try {
+      const currentHash = await this.getFileHash(packageJsonPath);
+      if (currentHash !== config.packageJsonHash) {
+        this.log('⚠️ package.json has changed - reinstall required');
+        return true;
+      }
+    } catch (error) {
+      this.log(
+        `⚠️ Could not check package.json hash: ${error.message}`,
+        'WARN'
+      );
+      return true; // Err on the side of caution
+    }
+
+    this.log('✅ Dependencies appear up-to-date');
+    return false;
+  }
+
+  async getFileHash(filePath) {
+    const crypto = require('crypto');
+    const content = fs.readFileSync(filePath, 'utf8');
+    return crypto.createHash('sha256').update(content).digest('hex');
   }
 
   async saveInstallConfig(config) {
@@ -165,13 +198,13 @@ class ComprehensiveInstaller {
     const strategies = [
       {
         cmd: 'npm',
-        args: ['install'],
+        args: ['install', '--include=dev'],
         timeout: 600000,
         name: 'Standard npm install',
       },
       {
         cmd: 'npm',
-        args: ['install', '--timeout=900000'],
+        args: ['install', '--include=dev', '--timeout=900000'],
         timeout: 900000,
         name: 'Extended timeout npm install',
       },
@@ -179,6 +212,7 @@ class ComprehensiveInstaller {
         cmd: 'npm',
         args: [
           'install',
+          '--include=dev',
           '--registry',
           'https://registry.npmjs.org/',
           '--timeout=900000',
@@ -188,7 +222,12 @@ class ComprehensiveInstaller {
       },
       {
         cmd: 'npm',
-        args: ['install', '--prefer-offline', '--timeout=900000'],
+        args: [
+          'install',
+          '--include=dev',
+          '--prefer-offline',
+          '--timeout=900000',
+        ],
         timeout: 900000,
         name: 'Offline-first npm install',
       },
@@ -784,6 +823,14 @@ class ComprehensiveInstaller {
       gitCommit: await this.getCurrentGitCommit(),
     };
 
+    // Save package.json hash for future comparison
+    try {
+      const packageJsonPath = path.join(this.appRoot, 'package.json');
+      config.packageJsonHash = await this.getFileHash(packageJsonPath);
+    } catch (error) {
+      this.log(`⚠️ Could not save package.json hash: ${error.message}`, 'WARN');
+    }
+
     await this.saveInstallConfig(config);
     this.log('✅ Fresh installation completed successfully!');
   }
@@ -794,10 +841,54 @@ class ComprehensiveInstaller {
     const isAdmin = await this.checkAdminPrivileges();
     const hasService = await this.checkServiceExists();
 
+    // CRITICAL: Stop service FIRST to release file locks
+    if (hasService) {
+      this.log('🛑 Stopping service to release file locks...');
+      try {
+        await this.stopServiceAndWait();
+        this.log('✅ Service stopped successfully');
+      } catch (error) {
+        this.log(`❌ FATAL: Could not stop service: ${error.message}`, 'ERROR');
+        this.log(
+          '❌ Cannot proceed with update while service is running',
+          'ERROR'
+        );
+        throw new Error(
+          'Service stop failed - update aborted to prevent corruption'
+        );
+      }
+    }
+
+    // ALWAYS install dependencies during updates to ensure everything is current
+    // This is critical after cleanups or when dependencies may be corrupted
+    this.log('📦 Checking dependencies...');
+    const needsDepsReinstall = await this.needsDependencyReinstall();
+
+    if (needsDepsReinstall) {
+      this.log('⚠️ Dependencies need reinstallation (missing or changed)');
+    } else {
+      this.log(
+        'ℹ️  Dependencies exist but will reinstall to ensure they are current'
+      );
+    }
+
+    // Define critical steps that MUST succeed
     const steps = [
-      { name: 'Update Dependencies', fn: () => this.installDependencies() },
-      { name: 'Update Database', fn: () => this.setupDatabase() },
-      { name: 'Rebuild Application', fn: () => this.buildApplication() },
+      {
+        name: 'Update Dependencies',
+        fn: () => this.installDependencies(),
+        critical: true,
+      },
+      {
+        name: 'Update Database',
+        fn: () => this.setupDatabase(),
+        critical: true,
+      },
+      {
+        name: 'Rebuild Application',
+        fn: () => this.buildApplication(),
+        critical: true,
+      },
     ];
 
     // Handle service installation ONLY (no automatic restart)
@@ -806,6 +897,7 @@ class ComprehensiveInstaller {
       steps.push({
         name: 'Install Service',
         fn: () => this.installService(isAdmin),
+        critical: false, // Service install is optional
       });
     } else if (!isAdmin) {
       this.log(
@@ -814,6 +906,7 @@ class ComprehensiveInstaller {
       );
     }
 
+    // Execute steps with HALT on critical failures
     for (const step of steps) {
       this.log(`⏳ ${step.name}...`);
       try {
@@ -822,15 +915,21 @@ class ComprehensiveInstaller {
       } catch (error) {
         this.log(`❌ ${step.name} failed: ${error.message}`, 'ERROR');
 
-        // Try recovery for this step
-        const recovered = await this.attemptStepRecovery(step.name, error);
-        if (!recovered) {
-          throw new Error(
-            `Update failed at step: ${step.name} - ${error.message}`
-          );
+        // HALT immediately on critical failures - no false positives!
+        if (step.critical) {
+          this.log(`❌ CRITICAL FAILURE - Installation aborted`, 'ERROR');
+          this.log(`❌ Failed at: ${step.name}`, 'ERROR');
+          this.log(`❌ Error: ${error.message}`, 'ERROR');
+          throw new Error(`CRITICAL: ${step.name} failed - ${error.message}`);
         }
 
-        this.log(`✅ ${step.name} completed after recovery`);
+        // For non-critical steps, try recovery
+        const recovered = await this.attemptStepRecovery(step.name, error);
+        if (!recovered) {
+          this.log(`⚠️ ${step.name} failed but continuing...`, 'WARN');
+        } else {
+          this.log(`✅ ${step.name} completed after recovery`);
+        }
       }
     }
 
@@ -840,25 +939,33 @@ class ComprehensiveInstaller {
     config.gitCommit = await this.getCurrentGitCommit();
     config.hasService = hasService || isAdmin; // Update service status
 
+    // Save package.json hash for future comparison
+    try {
+      const packageJsonPath = path.join(this.appRoot, 'package.json');
+      config.packageJsonHash = await this.getFileHash(packageJsonPath);
+    } catch (error) {
+      this.log(`⚠️ Could not save package.json hash: ${error.message}`, 'WARN');
+    }
+
     await this.saveInstallConfig(config);
 
     this.log('✅ Update completed successfully!');
+    this.log('');
+    this.log('⚠️  IMPORTANT: Manual service restart required!');
+    this.log('');
+    this.log('📝 To apply the updates, restart the service:');
+    this.log('   npm run service:start');
+    this.log('');
+    this.log('   OR for verification before start:');
+    this.log('   npm run service:diagnose');
+    this.log('   npm run service:start');
+    this.log('');
+  }
 
-    if (hasService) {
-      this.log('');
-      this.log('⚠️  IMPORTANT: Service restart required!');
-      this.log('');
-      this.log('📝 To apply the updates, manually restart the service:');
-      this.log('   npm run service:stop');
-      this.log('   npm run service:start');
-      this.log('');
-      this.log('   OR use smart restart:');
-      this.log('   npm run sync-service:restart');
-      this.log('');
-    } else if (!hasService && isAdmin) {
-      this.log('🎉 Update completed with new service installation!');
-      this.log('ℹ️  The Windows service has been installed and started.');
-    }
+  async stopServiceAndWait() {
+    // Use the shared service utility that has the correct implementation
+    // This uses sc.exe (not PowerShell alias) and proper error handling
+    return await serviceUtils.stopServiceAndWait(this.log.bind(this));
   }
 
   async restartService() {
@@ -908,89 +1015,32 @@ class ComprehensiveInstaller {
           return true;
 
         case 'Update Database':
+          // For EPERM errors during update, service should already be stopped
+          // This shouldn't happen if performUpdate() stopped service properly
           this.log(
-            '💡 Attempting database recovery with service management...'
+            '❌ Database setup failed even with service stopped',
+            'ERROR'
           );
+          this.log('❌ This indicates a critical system issue', 'ERROR');
 
           // Check if the error is related to Prisma client generation
           if (
             error.message.includes('EPERM') ||
             error.message.includes('prisma generate')
           ) {
-            this.log(
-              '🔧 Detected Prisma client lock issue - attempting service stop...'
-            );
-
-            try {
-              // Try to stop the service to release file locks
-              const hasService = await this.checkServiceExists();
-              if (hasService) {
-                this.log('🛑 Stopping service to release file locks...');
-                await execAsync('sc stop "ElectricityTracker.exe"');
-                await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait 3 seconds
-              }
-
-              // Clear Prisma client files
-              const prismaClientPath = path.join(
-                this.appRoot,
-                'node_modules',
-                '.prisma',
-                'client'
-              );
-              if (fs.existsSync(prismaClientPath)) {
-                this.log('🧹 Clearing existing Prisma client files...');
-                await execAsync(`rmdir /s /q "${prismaClientPath}"`);
-              }
-
-              // Try database setup again
-              await this.setupDatabase();
-
-              // Restart service if it was running
-              if (hasService) {
-                this.log('🚀 Restarting service...');
-                await execAsync('sc start "ElectricityTracker.exe"');
-              }
-
-              return true;
-            } catch (serviceError) {
-              this.log(
-                `⚠️ Service management failed: ${serviceError.message}`,
-                'WARN'
-              );
-              this.log('💡 Continuing with manual Prisma recovery...');
-            }
+            this.log('⚠️ File permission error detected', 'WARN');
+            this.log('⚠️ Possible causes:', 'WARN');
+            this.log('   - Another process has files locked', 'WARN');
+            this.log('   - Antivirus software blocking access', 'WARN');
+            this.log('   - Insufficient permissions', 'WARN');
           }
 
-          // Manual Prisma recovery
-          this.log('🔧 Attempting manual Prisma client generation...');
-          try {
-            await execAsync('npx prisma generate --force');
-            return true;
-          } catch {
-            this.log(
-              'ℹ️ Database setup recovery failed - application may still work without latest schema',
-              'WARN'
-            );
-            return false;
-          }
+          return false; // Do NOT recover from this - it's critical
 
         case 'Rebuild Application':
           this.log('💡 Retrying build with cache clear...');
           await this.buildApplication();
           return true;
-
-        case 'Restart Service':
-          this.log('💡 Checking if service actually exists...');
-          const hasService = await this.checkServiceExists();
-          if (!hasService) {
-            this.log('ℹ️  Service not found - installing new service instead');
-            const isAdmin = await this.checkAdminPrivileges();
-            if (isAdmin) {
-              await this.installService(true);
-              return true;
-            }
-          }
-          return false;
 
         case 'Install Service':
           this.log('💡 Retrying service installation...');
@@ -1323,7 +1373,10 @@ DB_SCHEMA_VERSION="1.4.0"
       // Try yarn as alternative
       try {
         await execAsync('npm install -g yarn');
-        await execAsync('yarn install', { cwd: this.appRoot, timeout: 600000 });
+        await execAsync('yarn install --production=false', {
+          cwd: this.appRoot,
+          timeout: 600000,
+        });
         this.log('✅ Dependencies installed using yarn');
         return true;
       } catch (yarnError) {
@@ -1373,7 +1426,7 @@ DB_SCHEMA_VERSION="1.4.0"
       await this.deepCleanBuildArtifacts();
 
       // Reinstall dependencies to fix corruption
-      await execAsync('npm install --force', {
+      await execAsync('npm install --include=dev --force', {
         cwd: this.appRoot,
         timeout: 600000,
       });
