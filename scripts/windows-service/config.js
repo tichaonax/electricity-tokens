@@ -113,6 +113,7 @@ const SERVICE_CONFIG = {
   commands: {
     SC_COMMAND: 'sc.exe',
     TASKKILL_COMMAND: 'taskkill.exe',
+    TASKLIST_COMMAND: 'tasklist.exe',
     NETSTAT_COMMAND: 'netstat.exe',
   },
 };

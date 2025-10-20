@@ -103,17 +103,19 @@ class HealthMonitor {
         });
       }, this.healthTimeout);
 
-      // Try curl first - use PUBLIC endpoint (no auth required)
+      // Try curl first - use main health endpoint
       const curlProcess = spawn(
         'curl',
         [
           '-f', // fail on HTTP errors
           '-s', // silent
+          '-A', // User-Agent header to avoid middleware warnings
+          'ElectricityTracker-HealthMonitor/1.0',
           '--connect-timeout',
           '5',
           '--max-time',
           '8',
-          'http://localhost:3000/api/health/public',
+          'http://localhost:3000/api/health',
         ],
         { stdio: 'pipe' }
       );
@@ -182,7 +184,7 @@ class HealthMonitor {
           [
             '-Command',
             `try { 
-            $response = Invoke-RestMethod -Uri 'http://localhost:3000/api/health/public' -TimeoutSec 8 -UseBasicParsing; 
+            $response = Invoke-RestMethod -Uri 'http://localhost:3000/api/health' -TimeoutSec 8 -UseBasicParsing; 
             $response | ConvertTo-Json -Compress
           } catch { 
             Write-Output '{"error": "' + $_.Exception.Message + '"}' 

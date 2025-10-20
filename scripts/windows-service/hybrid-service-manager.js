@@ -105,23 +105,48 @@ class HybridServiceManager {
 
   // Find processes related to our service
   async findServiceProcesses() {
-    return new Promise((resolve) => {
-      wincmd.list((processes) => {
-        const serviceProcesses = processes.filter((proc) => {
-          const imageName = proc.ImageName?.toLowerCase() || '';
-          const windowTitle = proc.WindowTitle?.toLowerCase() || '';
+    try {
+      // Use Windows tasklist command instead of node-windows (more reliable)
+      const { stdout } = await execAsync(
+        `${config.commands.TASKLIST_COMMAND} /FO CSV /NH /FI "IMAGENAME eq node.exe"`
+      );
 
-          return (
-            imageName === 'node.exe' &&
-            (windowTitle.includes('next') ||
-              windowTitle.includes('electricity') ||
-              proc.PID === this.getSavedPID()?.toString())
-          );
-        });
+      const processes = [];
+      const lines = stdout.split('\n').filter((line) => line.trim());
 
-        resolve(serviceProcesses);
-      }, true); // verbose output
-    });
+      for (const line of lines) {
+        // CSV format: "Image Name","PID","Session Name","Session#","Mem Usage"
+        const match = line.match(/"([^"]+)","([^"]+)","([^"]+)","([^"]+)","([^"]+)"/);
+        if (match) {
+          processes.push({
+            ImageName: match[1],
+            PID: match[2],
+            SessionName: match[3],
+            Session: match[4],
+            MemUsage: match[5],
+            // Check if this is our service process
+            isService:
+              match[3].includes('Services') ||
+              parseInt(match[2], 10) === this.getSavedPID(),
+          });
+        }
+      }
+
+      // Filter to only service-related node processes
+      // Either running in Services session or matching saved PID
+      const serviceProcesses = processes.filter((proc) => proc.isService);
+
+      this.log(
+        `Found ${serviceProcesses.length} service-related node.exe processes`
+      );
+      return serviceProcesses;
+    } catch (err) {
+      this.log(
+        `Error finding service processes: ${err.message}`,
+        'WARN'
+      );
+      return [];
+    }
   }
 
   // Find processes by port (Next.js typically runs on 3000)
@@ -224,12 +249,33 @@ class HybridServiceManager {
       const status = await this.getServiceStatus();
       if (status === 'STOPPED') {
         this.log('Service is already stopped');
+        // Still check for orphaned processes even if service is stopped
+        const portPID = await this.findProcessByPort(3000);
+        if (portPID) {
+          this.log(
+            'Found orphaned process on port 3000, cleaning up...',
+            'WARN'
+          );
+          await this.forceKillServiceProcesses();
+        }
         this.clearPID();
         return true;
       }
 
       if (status === 'NOT_INSTALLED') {
         this.log('Service is not installed');
+        // Still check for orphaned processes even if service is not installed
+        const portPID = await this.findProcessByPort(3000);
+        const serviceProcs = await this.findServiceProcesses();
+
+        if (portPID || serviceProcs.length > 0) {
+          this.log(
+            'Found orphaned processes even though service is not installed, cleaning up...',
+            'WARN'
+          );
+          await this.forceKillServiceProcesses();
+        }
+        this.clearPID();
         return true;
       }
 
@@ -265,15 +311,32 @@ class HybridServiceManager {
       // Step 2: Force kill processes if graceful stop failed
       await this.forceKillServiceProcesses();
 
-      // Step 3: Verify service is stopped
+      // Step 3: Verify service is stopped or not installed
       const finalStatus = await this.getServiceStatus();
-      if (finalStatus === 'STOPPED') {
-        this.log('Service stopped successfully (force killed)');
+      if (finalStatus === 'STOPPED' || finalStatus === 'NOT_INSTALLED') {
+        this.log(
+          `Service stopped successfully (force killed, status: ${finalStatus})`
+        );
         this.clearPID();
         return true;
       }
 
-      throw new Error('Failed to stop service even with force kill');
+      // If service is in any other state, check if processes are actually killed
+      const portPID = await this.findProcessByPort(3000);
+      const serviceProcs = await this.findServiceProcesses();
+
+      if (!portPID && serviceProcs.length === 0) {
+        this.log(
+          `Service processes cleared successfully (service status: ${finalStatus})`,
+          'WARN'
+        );
+        this.clearPID();
+        return true;
+      }
+
+      throw new Error(
+        `Failed to stop service - status: ${finalStatus}, port PID: ${portPID}, service processes: ${serviceProcs.length}`
+      );
     } catch (err) {
       this.log(`Failed to stop service: ${err.message}`, 'ERROR');
       throw err;

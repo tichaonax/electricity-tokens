@@ -1220,13 +1220,49 @@ class HybridElectricityTokensService {
       this.log(
         `🏥 Starting built-in health monitoring (check every ${this.healthCheckFrequency / 1000}s)`
       );
-      this.performHealthCheck();
 
-      // Set up recurring health checks AFTER the initial successful check
+      // Perform initial check with retry logic
+      this.performInitialHealthCheck();
+
+      // Set up recurring health checks
       this.healthCheckInterval = setInterval(() => {
         this.performHealthCheck();
       }, this.healthCheckFrequency);
     }, initialDelay);
+  }
+
+  async performInitialHealthCheck() {
+    // The first health check after the delay should be more forgiving
+    // Try multiple times before considering it a failure
+    const maxInitialRetries = 5;
+    let retryCount = 0;
+
+    while (retryCount < maxInitialRetries) {
+      const isHealthy = await this.checkApplicationHealth();
+
+      if (isHealthy) {
+        this.log('✅ Initial health check passed - service is ready');
+        this.consecutiveFailures = 0;
+        return;
+      }
+
+      retryCount++;
+      this.log(
+        `⏳ Initial health check attempt ${retryCount}/${maxInitialRetries} failed, retrying in 10s...`,
+        'WARN'
+      );
+
+      if (retryCount < maxInitialRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10s between retries
+      }
+    }
+
+    // If all initial retries failed, start counting as regular failures
+    this.consecutiveFailures = 1;
+    this.log(
+      `❌ Initial health check failed after ${maxInitialRetries} attempts (1/${this.maxConsecutiveFailures})`,
+      'WARN'
+    );
   }
 
   stopHealthMonitoring() {
@@ -1349,28 +1385,37 @@ class HybridElectricityTokensService {
     return new Promise((resolve) => {
       const port = process.env.PORT || 3000;
       const timeout = setTimeout(() => {
+        this.log('HTTP health check timeout', 'WARN');
         resolve(false);
-      }, 5000); // 5 second timeout
+      }, 8000); // 8 second timeout (increased from 5)
 
       // Try curl first (more reliable) - use PUBLIC endpoint (no auth required)
       const { spawn } = require('child_process');
       const curlProcess = spawn(
         'curl',
         [
-          '-f',
-          '-s',
+          '-f', // Fail on HTTP errors
+          '-s', // Silent mode
+          '-A', // User-Agent header to avoid middleware warnings
+          'ElectricityTracker-HealthMonitor/1.0',
           '--connect-timeout',
-          '3',
+          '5', // Increased from 3
           '--max-time',
-          '5',
-          `http://localhost:${port}/api/health/public`,
+          '8', // Increased from 5
+          `http://localhost:${port}/api/health`,
         ],
         { stdio: 'pipe' }
       );
 
       let responseData = '';
+      let errorData = '';
+
       curlProcess.stdout.on('data', (data) => {
         responseData += data.toString();
+      });
+
+      curlProcess.stderr.on('data', (data) => {
+        errorData += data.toString();
       });
 
       curlProcess.on('close', (code) => {
@@ -1383,19 +1428,53 @@ class HybridElectricityTokensService {
             const isHealthy =
               healthData.status === 'healthy' ||
               healthData.status === 'degraded';
+
+            if (isHealthy) {
+              // Only log status changes or periodically
+              const now = Date.now();
+              if (
+                !this.lastHealthCheckLog ||
+                now - this.lastHealthCheckLog > 300000
+              ) {
+                // 5 minutes
+                this.log(
+                  `✅ HTTP health check passed: ${healthData.status}`,
+                  'INFO'
+                );
+                this.lastHealthCheckLog = now;
+              }
+            } else {
+              this.log(
+                `❌ HTTP health check failed: unexpected status ${healthData.status}`,
+                'WARN'
+              );
+            }
             resolve(isHealthy);
-          } catch {
+          } catch (parseError) {
+            this.log(
+              `❌ HTTP health check failed: invalid JSON response: ${responseData.substring(0, 100)}`,
+              'WARN'
+            );
             resolve(false);
           }
         } else {
-          // Fallback to basic port check if curl fails
-          resolve(true); // Port check already passed, so assume healthy
+          this.log(
+            `❌ HTTP health check failed: curl exit code ${code}${errorData ? ', error: ' + errorData.substring(0, 100) : ''}`,
+            'WARN'
+          );
+          resolve(false);
         }
       });
 
-      curlProcess.on('error', () => {
+      curlProcess.on('error', (err) => {
         clearTimeout(timeout);
-        resolve(true); // Port check already passed, so assume healthy
+        this.log(
+          `❌ HTTP health check error: curl command failed: ${err.message}`,
+          'WARN'
+        );
+        // If curl itself fails to execute, fallback to basic port check
+        // Port check already passed, so assume healthy
+        resolve(true);
       });
     });
   }

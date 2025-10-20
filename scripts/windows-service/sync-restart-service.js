@@ -127,7 +127,7 @@ class SyncServiceRestart {
 
       // Use curl if available, otherwise use PowerShell
       return new Promise((resolve) => {
-        // Try curl first - use PUBLIC endpoint (no auth required)
+        // Try curl first - use main health endpoint
         const curlProcess = spawn(
           'curl',
           [
@@ -137,7 +137,7 @@ class SyncServiceRestart {
             '5',
             '--max-time',
             '10',
-            'http://localhost:3000/api/health/public',
+            'http://localhost:3000/api/health',
           ],
           { stdio: 'pipe' }
         );
@@ -158,7 +158,7 @@ class SyncServiceRestart {
             [
               '-Command',
               `try { 
-              $response = Invoke-WebRequest -Uri 'http://localhost:3000/api/health/public' -TimeoutSec 10 -UseBasicParsing; 
+              $response = Invoke-WebRequest -Uri 'http://localhost:3000/api/health' -TimeoutSec 10 -UseBasicParsing; 
               if ($response.StatusCode -eq 200) { exit 0 } else { exit 1 } 
             } catch { exit 1 }`,
             ],
