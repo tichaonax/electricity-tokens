@@ -6,6 +6,7 @@ import type { PurchaseWhereInput } from '@/types/api';
 import {
   createTokenPurchaseSchema,
   purchaseQuerySchema,
+  createReceiptDataWithPurchaseSchema,
 } from '@/lib/validations';
 import {
   validateRequest,
@@ -16,6 +17,7 @@ import {
 } from '@/lib/validation-middleware';
 import { validateMeterReadingChronology } from '@/lib/meter-reading-validation';
 import { findOldestPurchaseWithoutContribution } from '@/lib/sequential-contributions';
+import type { CreateReceiptDataWithPurchaseInput } from '@/lib/validations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -147,6 +149,7 @@ export async function GET(request: NextRequest) {
               },
             },
           },
+          receiptData: true,
         },
         orderBy,
         skip,
@@ -210,13 +213,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate request body
-    const validation = await validateRequest(request, {
-      body: createTokenPurchaseSchema,
-    });
+    // Parse request body
+    const requestBody = await request.json();
+    const { receiptData, ...purchaseData } = requestBody;
+
+    // Validate purchase data
+    const validation = await validateRequest(
+      new NextRequest(request.url, {
+        method: 'POST',
+        body: JSON.stringify(purchaseData),
+        headers: request.headers,
+      }),
+      {
+        body: createTokenPurchaseSchema,
+      }
+    );
 
     if (!validation.success) {
       return createValidationErrorResponse(validation);
+    }
+
+    // Validate receipt data if provided
+    let validatedReceiptData: CreateReceiptDataWithPurchaseInput | null = null;
+    if (receiptData) {
+      const receiptValidation = createReceiptDataWithPurchaseSchema.safeParse(receiptData);
+      if (!receiptValidation.success) {
+        return NextResponse.json(
+          {
+            message: 'Invalid receipt data',
+            errors: receiptValidation.error.errors,
+          },
+          { status: 400 }
+        );
+      }
+      validatedReceiptData = receiptValidation.data;
     }
 
     const { body } = validation.data as {
@@ -282,46 +312,69 @@ export async function POST(request: NextRequest) {
     const randomPart2 = Math.random().toString(36).substring(2, 15);
     const purchaseId = `c${timestamp}${randomPart}${randomPart2}`;
 
-    const purchase = await prisma.tokenPurchase.create({
-      data: {
-        id: purchaseId,
-        totalTokens: parseFloat(totalTokens.toString()),
-        totalPayment: parseFloat(totalPayment.toString()),
-        meterReading: parseFloat(meterReading.toString()),
-        purchaseDate: new Date(purchaseDate),
-        isEmergency: Boolean(isEmergency),
-        createdBy: permissionCheck.user!.id,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    // Use transaction to create purchase and receipt data atomically
+    const result = await prisma.$transaction(async (tx) => {
+      // Create purchase
+      const purchase = await tx.tokenPurchase.create({
+        data: {
+          id: purchaseId,
+          totalTokens: parseFloat(totalTokens.toString()),
+          totalPayment: parseFloat(totalPayment.toString()),
+          meterReading: parseFloat(meterReading.toString()),
+          purchaseDate: new Date(purchaseDate),
+          isEmergency: Boolean(isEmergency),
+          createdBy: permissionCheck.user!.id,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
-      },
+      });
+
+      // Create receipt data if provided
+      let receipt = null;
+      if (validatedReceiptData) {
+        receipt = await tx.receiptData.create({
+          data: {
+            ...validatedReceiptData,
+            purchaseId: purchase.id, // Override with actual purchase ID
+          },
+        });
+      }
+
+      // Generate a CUID for the audit log
+      const auditTimestamp = Date.now().toString(36);
+      const auditRandomPart = Math.random().toString(36).substring(2, 15);
+      const auditRandomPart2 = Math.random().toString(36).substring(2, 15);
+      const auditLogId = `c${auditTimestamp}${auditRandomPart}${auditRandomPart2}`;
+
+      // Create audit log entry
+      await tx.auditLog.create({
+        data: {
+          id: auditLogId,
+          userId: permissionCheck.user!.id,
+          action: 'CREATE',
+          entityType: 'TokenPurchase',
+          entityId: purchase.id,
+          newValues: { purchase, receipt },
+        },
+      });
+
+      return { purchase, receipt };
     });
 
-    // Generate a CUID for the audit log
-    const auditTimestamp = Date.now().toString(36);
-    const auditRandomPart = Math.random().toString(36).substring(2, 15);
-    const auditRandomPart2 = Math.random().toString(36).substring(2, 15);
-    const auditLogId = `c${auditTimestamp}${auditRandomPart}${auditRandomPart2}`;
+    // Return purchase with receipt data if created
+    const responseData = {
+      ...result.purchase,
+      receiptData: result.receipt,
+    };
 
-    // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        id: auditLogId,
-        userId: permissionCheck.user!.id,
-        action: 'CREATE',
-        entityType: 'TokenPurchase',
-        entityId: purchase.id,
-        newValues: purchase,
-      },
-    });
-
-    return NextResponse.json(purchase, { status: 201 });
+    return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
     console.error('Error creating purchase:', error);
     return NextResponse.json(

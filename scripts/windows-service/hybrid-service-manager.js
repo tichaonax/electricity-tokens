@@ -106,40 +106,48 @@ class HybridServiceManager {
   // Find processes related to our service
   async findServiceProcesses() {
     try {
-      // Use Windows tasklist command instead of node-windows (more reliable)
+      const processes = [];
+
+      // CRITICAL FIX: Use WMIC to get command line info to identify ONLY our service processes
+      // This prevents killing other node-windows services (e.g., multi-business service)
       const { stdout } = await execAsync(
-        `${config.commands.TASKLIST_COMMAND} /FO CSV /NH /FI "IMAGENAME eq node.exe"`
+        `wmic process where "name='node.exe'" get ProcessId,CommandLine,Name /format:csv`
       );
 
-      const processes = [];
-      const lines = stdout.split('\n').filter((line) => line.trim());
+      const lines = stdout.split('\n').filter(line => line.trim() && !line.startsWith('Node'));
 
       for (const line of lines) {
-        // CSV format: "Image Name","PID","Session Name","Session#","Mem Usage"
-        const match = line.match(/"([^"]+)","([^"]+)","([^"]+)","([^"]+)","([^"]+)"/);
-        if (match) {
-          processes.push({
-            ImageName: match[1],
-            PID: match[2],
-            SessionName: match[3],
-            Session: match[4],
-            MemUsage: match[5],
-            // Check if this is our service process
-            isService:
-              match[3].includes('Services') ||
-              parseInt(match[2], 10) === this.getSavedPID(),
-          });
+        const parts = line.split(',');
+        if (parts.length >= 3) {
+          const commandLine = parts[1] || '';
+          const name = parts[2] || '';
+          const pid = parts[3] || '';
+
+          // Only identify processes that belong to THIS service (electricity-tokens)
+          // Check for unique identifiers in command line:
+          // 1. electricity-app or electricity-tokens path (unique to this service)
+          // 2. ElectricityTracker (service name)
+          // 3. Saved PID match
+          if (commandLine.includes('electricity-app') ||
+              commandLine.includes('electricity-tokens') ||
+              commandLine.includes('ElectricityTracker') ||
+              parseInt(pid, 10) === this.getSavedPID()) {
+            processes.push({
+              PID: pid.trim(),
+              Name: name.trim(),
+              CommandLine: commandLine.trim(),
+              ImageName: name.trim(),
+              SessionName: 'Services',
+              MemUsage: 'N/A'
+            });
+          }
         }
       }
 
-      // Filter to only service-related node processes
-      // Either running in Services session or matching saved PID
-      const serviceProcesses = processes.filter((proc) => proc.isService);
-
       this.log(
-        `Found ${serviceProcesses.length} service-related node.exe processes`
+        `Found ${processes.length} electricity-tokens service processes`
       );
-      return serviceProcesses;
+      return processes;
     } catch (err) {
       this.log(
         `Error finding service processes: ${err.message}`,

@@ -355,3 +355,136 @@ export type AuditQueryInput = z.infer<typeof auditQuerySchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type IdParamInput = z.infer<typeof idParamSchema>;
+
+// Receipt Data validation schemas
+
+// Base receipt data schema (without purchaseId) - used during purchase creation
+const receiptDataBaseSchema = z.object({
+  tokenNumber: z
+    .string()
+    .min(1, 'Token number cannot be empty')
+    .max(100, 'Token number too long')
+    .optional()
+    .nullable(),
+  accountNumber: z
+    .string()
+    .min(1, 'Account number cannot be empty')
+    .max(50, 'Account number too long')
+    .optional()
+    .nullable(),
+  kwhPurchased: positiveNumberSchema.max(
+    100000,
+    'kWh purchased cannot exceed 100,000'
+  ),
+  energyCostZWG: nonNegativeNumberSchema.max(
+    10000000,
+    'Energy cost too large'
+  ),
+  debtZWG: nonNegativeNumberSchema.max(10000000, 'Debt amount too large'),
+  reaZWG: nonNegativeNumberSchema.max(10000000, 'REA amount too large'),
+  vatZWG: nonNegativeNumberSchema.max(10000000, 'VAT amount too large'),
+  totalAmountZWG: positiveNumberSchema.max(
+    10000000,
+    'Total amount cannot exceed 10,000,000'
+  ),
+  tenderedZWG: positiveNumberSchema.max(
+    10000000,
+    'Tendered amount too large'
+  ),
+  transactionDateTime: z.union([
+    dateSchema, // ISO 8601 format
+    z.string().transform((val) => {
+      // Parse DD/MM/YY HH:MM:SS format (from Zimbabwe ZESA receipts)
+      const match = val.match(/^(\d{2})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
+      if (match) {
+        const [, day, month, year, hour, minute, second] = match;
+        // Assume 20xx for years (2000-2099)
+        const fullYear = `20${year}`;
+        const isoString = `${fullYear}-${month}-${day}T${hour}:${minute}:${second}.000Z`;
+        return isoString;
+      }
+      // If not DD/MM/YY format, try parsing as regular date string
+      return new Date(val).toISOString();
+    }),
+  ]),
+});
+
+// Schema for creating receipt data with purchase (no purchaseId needed)
+export const createReceiptDataWithPurchaseSchema = receiptDataBaseSchema;
+
+// Schema for creating standalone receipt data (requires purchaseId)
+export const createReceiptDataSchema = receiptDataBaseSchema.extend({
+  purchaseId: z.string().min(1, 'Purchase ID is required'),
+});
+
+export const updateReceiptDataSchema = z.object({
+  tokenNumber: z
+    .string()
+    .min(1, 'Token number cannot be empty')
+    .max(100, 'Token number too long')
+    .optional()
+    .nullable(),
+  accountNumber: z
+    .string()
+    .min(1, 'Account number cannot be empty')
+    .max(50, 'Account number too long')
+    .optional()
+    .nullable(),
+  kwhPurchased: positiveNumberSchema
+    .max(100000, 'kWh purchased cannot exceed 100,000')
+    .optional(),
+  energyCostZWG: nonNegativeNumberSchema
+    .max(10000000, 'Energy cost too large')
+    .optional(),
+  debtZWG: nonNegativeNumberSchema
+    .max(10000000, 'Debt amount too large')
+    .optional(),
+  reaZWG: nonNegativeNumberSchema
+    .max(10000000, 'REA amount too large')
+    .optional(),
+  vatZWG: nonNegativeNumberSchema
+    .max(10000000, 'VAT amount too large')
+    .optional(),
+  totalAmountZWG: positiveNumberSchema
+    .max(10000000, 'Total amount cannot exceed 10,000,000')
+    .optional(),
+  tenderedZWG: positiveNumberSchema
+    .max(10000000, 'Tendered amount too large')
+    .optional(),
+  transactionDateTime: dateSchema.optional(),
+});
+
+export const receiptDataQuerySchema = z.object({
+  purchaseId: cuidSchema.optional(),
+  tokenNumber: z.string().optional(),
+});
+
+// Bulk import schema for CSV parsing
+export const bulkImportReceiptSchema = z.object({
+  receipts: z.array(
+    z.object({
+      // Receipt data fields
+      tokenNumber: z.string().optional(),
+      accountNumber: z.string().optional(),
+      kwhPurchased: z.number().positive(),
+      energyCostZWG: z.number().nonnegative(),
+      debtZWG: z.number().nonnegative(),
+      reaZWG: z.number().nonnegative(),
+      vatZWG: z.number().nonnegative(),
+      totalAmountZWG: z.number().positive(),
+      tenderedZWG: z.number().positive(),
+      transactionDateTime: z.string(), // Will be parsed from dd/mm/yyyy hh:mm:ss
+      
+      // Optional matching fields
+      matchDate: z.string().optional(),
+      matchMeterReading: z.number().optional(),
+    })
+  ),
+  validateOnly: z.boolean().default(false),
+});
+
+export type CreateReceiptDataInput = z.infer<typeof createReceiptDataSchema>;
+export type CreateReceiptDataWithPurchaseInput = z.infer<typeof createReceiptDataWithPurchaseSchema>;
+export type UpdateReceiptDataInput = z.infer<typeof updateReceiptDataSchema>;
+export type ReceiptDataQueryInput = z.infer<typeof receiptDataQuerySchema>;
+export type BulkImportReceiptInput = z.infer<typeof bulkImportReceiptSchema>;

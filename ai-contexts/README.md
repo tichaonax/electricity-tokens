@@ -1,58 +1,59 @@
-# AI Context Documentation
+# AI Development Workflow
 
-## AI Context Hierarchy for Coding Workflows
+This directory contains the AI-assisted development workflow for this project.
 
-This directory contains context documentation for AI assistants working on this codebase. This strategic idea is a simple concept that creates a set of reusable **context files** and is an effective way to work around short-term memory constraints in AI agents. You can think of them as modular “instruction sets” that you load into a conversation as needed. Below is a **hierarchical Markdown template system** that you can expand with task-specific modules.
+## 📁 Structure
 
----
+```
+ai-contexts/
+├── contexts/          # Context documents (teach AI your standards)
+│   ├── master-context.md
+│   ├── code-workflow.md
+│   ├── backend/       # Backend-specific contexts
+│   └── frontend/      # Frontend-specific contexts
+│
+├── templates/         # Session templates for different tasks
+│   └── v1/
+│       ├── feature-development-session.md
+│       ├── debugging-session.md
+│       ├── refactor-optimization-session.md
+│       └── ...
+│
+├── wip/              # Work-in-progress context files (gitignored)
+│
+└── project-plans/    # AI-generated project plans
+    ├── active/       # Currently working on (gitignored)
+    └── completed/    # Finished & documented (tracked)
+```
 
-## Structure
+## 🚀 Quick Start
 
-- `master-context.md` - Master context file with high-level project overview
-- `code-workflow.md` - Standard code workflow and development practices
-- `general-problem-solving-context.md` - General problem-solving approaches
+1. **Choose a template** based on your task:
+   - Feature development: `templates/v1/feature-development-session.md`
+   - Bug fixing: `templates/v1/debugging-session.md`
+   - Refactoring: `templates/v1/refactor-optimization-session.md`
 
-### Frontend
+2. **Start AI session:**
+   ```
+   Please read these contexts in order:
+   1. FIRST: ai-contexts/contexts/master-context.md
+   2. SECOND: ai-contexts/contexts/code-workflow.md
+   3. THIRD: ai-contexts/templates/v1/[your-template].md
+   ```
 
-- `ui-context.md` - UI/UX patterns and conventions
-- `component-context.md` - Component architecture and patterns
-- `styling-context.md` - Styling system and conventions
-- `unit-testing-context.md` - Frontend testing patterns
+3. **Follow the workflow** with approval checkpoints
 
-### Backend
+## 📚 Documentation
 
-- `backend-api-context.md` - API design patterns and conventions
-- `database-context.md` - Database schema, Prisma conventions, and data models
+For complete documentation, examples, and guides:
+→ https://github.com/tichaonax/ai-dev-workflow
 
-### Session Templates
+## 🔄 Updating
 
-Session templates help initialize focused AI-assisted development sessions with proper context loading.
+Check `.workflow-version` file for current version and update instructions.
 
-**Location:** `session-templates/v1/`
+## ✏️ Customization
 
-**Available Templates:**
-
-- `init-session.md` - Generic session initialization
-- `feature-development-session.md` - New feature development with structured planning
-- `debugging-session.md` - Bug analysis and resolution
-- `design-review-session.md` - UI/UX design review before implementation
-- `refactor-optimization-session.md` - Code improvement and performance optimization
-- `api-endpoint-session.md` - REST API endpoint development with validation
-- `database-schema-session.md` - Database schema modifications with migration planning
-- `security-review-session.md` - Security audits and vulnerability assessment
-- `documentation-session.md` - Technical documentation and code comments
-
-**Example Templates:**
-Each template has a corresponding filled example (e.g., `EXAMPLE-feature-development-session-filled.md`) showing realistic usage with detailed scenarios.
-
-**Usage:**
-
-1. Choose the template matching your task
-2. Review the corresponding example for guidance
-3. Fill in your specific requirements
-4. Load recommended context documents
-5. Start session with clear objectives
-
-**See:** `session-templates/README.md` for complete guide including session reset procedures.
-
----
+Add project-specific contexts in:
+- `contexts/custom/` (create this folder)
+- These won't be overwritten during updates

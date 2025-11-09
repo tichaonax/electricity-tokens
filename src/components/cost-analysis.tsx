@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DualCurrencyChart } from '@/components/reports/dual-currency-chart';
+import { ZWGRateHistory } from '@/components/reports/zwg-rate-history';
 // Form components removed as they're not used in this component
 import {
   TrendingUp,
@@ -66,7 +68,7 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analysisType, setAnalysisType] = useState<
-    'user' | 'recommendations' | 'optimal'
+    'user' | 'recommendations' | 'optimal' | 'dual-currency' | 'rate-history'
   >('user');
   const [dateRange, setDateRange] = useState({
     startDate: '',
@@ -205,6 +207,26 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
           >
             <PieChart className="h-4 w-4 mr-1" />
             Optimal Contributions
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setAnalysisType('dual-currency')}
+            className="flex-1 sm:flex-none"
+          >
+            <BarChart3 className="h-4 w-4 mr-1" />
+            USD vs ZWG
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setAnalysisType('rate-history')}
+            className="flex-1 sm:flex-none"
+          >
+            <TrendingUp className="h-4 w-4 mr-1" />
+            Rate History
           </Button>
         </div>
 
@@ -603,6 +625,24 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Dual Currency Analysis View */}
+      {analysisType === 'dual-currency' && (
+        <div className="mt-6">
+          <DualCurrencyChart 
+            userId={userId}
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+          />
+        </div>
+      )}
+
+      {/* Rate History View */}
+      {analysisType === 'rate-history' && (
+        <div className="mt-6">
+          <ZWGRateHistory userId={userId} limit={50} />
         </div>
       )}
     </div>

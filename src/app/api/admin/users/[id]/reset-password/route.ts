@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { createAuditLog } from '@/lib/audit';
 import bcrypt from 'bcryptjs';
 
 export async function POST(
@@ -50,25 +51,16 @@ export async function POST(
       },
     });
 
-    // Generate a CUID for the audit log
-    const timestamp = Date.now().toString(36);
-    const randomPart = Math.random().toString(36).substring(2, 15);
-    const randomPart2 = Math.random().toString(36).substring(2, 15);
-    const auditLogId = `c${timestamp}${randomPart}${randomPart2}`;
-
-    // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        id: auditLogId,
-        userId: session.user.id,
-        action: 'UPDATE',
-        entityType: 'User',
-        entityId: userId,
-        newValues: {
-          action: 'temporary_password_generated',
-          targetUserId: userId,
-          targetUserEmail: user.email,
-        },
+    // Create audit log entry using the audit utility
+    await createAuditLog({
+      userId: session.user.id,
+      action: 'UPDATE',
+      entityType: 'User',
+      entityId: userId,
+      newValues: {
+        action: 'temporary_password_generated',
+        targetUserId: userId,
+        targetUserEmail: user.email,
       },
     });
 

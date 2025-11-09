@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/components/providers/session-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { UserThemeSync } from '@/components/providers/user-theme-sync';
+import { CacheInvalidationProvider } from '@/components/providers/cache-invalidation-provider';
 import { CSRFProvider } from '@/components/security/CSRFProvider';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { HealthStatusIndicator } from '@/components/ui/health-status-indicator';
@@ -84,24 +85,26 @@ export default function RootLayout({
         <SkipNavigation />
         <AuthProvider>
           <ThemeProvider>
-            <UserThemeSync />
-            <CSRFProvider>
-              <HighContrastProvider>
-                <AccessibilityAnnouncerProvider>
-                  <ErrorBoundary>
-                    <ToastProvider>
-                      <ConfirmationProvider>
-                        <main id="main-content" tabIndex={-1}>
-                          {children}
-                        </main>
-                        <HealthStatusIndicator />
-                        <OfflineIndicator />
-                      </ConfirmationProvider>
-                    </ToastProvider>
-                  </ErrorBoundary>
-                </AccessibilityAnnouncerProvider>
-              </HighContrastProvider>
-            </CSRFProvider>
+            <CacheInvalidationProvider>
+              <UserThemeSync />
+              <CSRFProvider>
+                <HighContrastProvider>
+                  <AccessibilityAnnouncerProvider>
+                    <ErrorBoundary>
+                      <ToastProvider>
+                        <ConfirmationProvider>
+                          <main id="main-content" tabIndex={-1}>
+                            {children}
+                          </main>
+                          <HealthStatusIndicator />
+                          <OfflineIndicator />
+                        </ConfirmationProvider>
+                      </ToastProvider>
+                    </ErrorBoundary>
+                  </AccessibilityAnnouncerProvider>
+                </HighContrastProvider>
+              </CSRFProvider>
+            </CacheInvalidationProvider>
           </ThemeProvider>
         </AuthProvider>
         <Analytics debug={false} />

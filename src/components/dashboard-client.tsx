@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
-import { ResponsiveNav } from '@/components/ui/responsive-nav';
+import { DashboardLayout } from '@/components/dashboard-layout';
 import { HelpPopover } from '@/components/ui/help-popover';
 import { ContributionProgress } from '@/components/contribution-progress';
 import { ProgressiveConsumptionWidget } from '@/components/ui/progressive-consumption-widget';
@@ -78,23 +78,20 @@ export function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <ResponsiveNav title="Electricity Tokens Tracker" />
-
-      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          {/* Welcome Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Welcome back, {session?.user?.name}!
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Track your electricity usage and manage your token
-                  contributions
-                </p>
-              </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Welcome Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Welcome back, {session?.user?.name}!
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Track your electricity usage and manage your token
+                contributions
+              </p>
+            </div>
               <HelpPopover
                 title="Getting Started"
                 items={[
@@ -973,7 +970,6 @@ export function DashboardClient() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </DashboardLayout>
   );
 }

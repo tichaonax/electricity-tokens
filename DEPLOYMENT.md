@@ -949,14 +949,49 @@ chmod +x .githooks/*
 
 #### 2. Database Migration Failures
 
+**⚠️ CRITICAL: Always backup before migrations!**
+
+See **DATABASE_BACKUP_PROCEDURE.md** for complete backup and rollback procedures.
+
+**Quick Pre-Migration Backup:**
+
+```bash
+# Windows (PowerShell)
+.\scripts\backup-before-migration.ps1
+
+# Linux/Mac
+./scripts/backup-before-migration.sh
+```
+
+**Migration Troubleshooting:**
+
 ```bash
 # Check current schema version
 npm run db:version
 
-# Reset and rebuild database (caution: data loss)
+# Check migration status
+npx prisma migrate status
+
+# If migration failed, check logs
+cat backups/pre-migration/migration-status-*.txt
+
+# Reset and rebuild database (caution: data loss - restore from backup if needed)
 npm run db:reset
 npm run db:setup-auto
 ```
+
+**Rollback from Backup (if needed):**
+
+```bash
+# Restore from latest backup
+pg_restore -h localhost -U postgres -d electricity_tokens \
+  --clean --if-exists \
+  backups/pre-migration/backup-YYYYMMDD-HHMMSS.dump
+```
+
+**See Also:**
+- **DATABASE_BACKUP_PROCEDURE.md** - Complete backup and rollback guide
+- **DISASTER_RECOVERY.md** - Emergency recovery procedures
 
 #### 3. Service Won't Restart After Upgrade
 
@@ -994,10 +1029,48 @@ npm run db:test
 
 - [ ] **System Requirements**: Verified hardware and software requirements
 - [ ] **Database Setup**: Database server installed and configured
+- [ ] **Database Backup**: Created pre-deployment backup (see DATABASE_BACKUP_PROCEDURE.md)
+- [ ] **Migration Status**: Verified current migration state with `npx prisma migrate status`
 - [ ] **Environment Variables**: All required variables configured securely
 - [ ] **SSL Certificates**: HTTPS certificates installed (if applicable)
 - [ ] **Firewall Rules**: Network access configured appropriately
 - [ ] **Backup Strategy**: Backup procedures planned and tested
+- [ ] **Rollback Plan**: Reviewed rollback procedures in DATABASE_BACKUP_PROCEDURE.md
+
+### 1.5. Pre-Migration Backup (CRITICAL for ET-100 and future migrations)
+
+**⚠️ Always backup before applying database migrations!**
+
+**Automated Backup Script:**
+
+```bash
+# Windows (PowerShell - Run as Administrator)
+.\scripts\backup-before-migration.ps1
+
+# Linux/Mac
+./scripts/backup-before-migration.sh
+```
+
+**What Gets Backed Up:**
+1. ✅ Full database dump (custom format)
+2. ✅ TokenPurchase table (critical data)
+3. ✅ Prisma migration history
+4. ✅ Migration status report
+5. ✅ Database schema
+
+**Backup Location:** `backups/pre-migration/backup-YYYYMMDD-HHMMSS.dump`
+
+**Manual Backup (if scripts fail):**
+
+```bash
+# PostgreSQL manual backup
+pg_dump -h localhost -U postgres -d electricity_tokens \
+  --format=custom \
+  --file="backups/manual-backup-$(date +%Y%m%d-%H%M%S).dump" \
+  --verbose
+```
+
+**See:** DATABASE_BACKUP_PROCEDURE.md for complete procedures
 
 ### 2. Security Configuration
 

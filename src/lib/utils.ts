@@ -12,6 +12,13 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function formatZWG(amount: number): string {
+  return `ZWG ${new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)}`;
+}
+
 export function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',

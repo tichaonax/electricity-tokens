@@ -275,6 +275,7 @@ export async function GET(
             },
           },
         },
+        receiptData: true,
       },
     });
 

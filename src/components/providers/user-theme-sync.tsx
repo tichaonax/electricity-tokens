@@ -21,14 +21,24 @@ export function UserThemeSync() {
     // Only proceed when authentication state is determined
     if (status === 'loading') return;
 
+    // CRITICAL: Only make API calls when authenticated
+    // This prevents triggering auth redirects that pollute callbackUrls
     if (status === 'authenticated' && session?.user?.id && !userThemeLoadedRef.current) {
       // Load user's theme preference from database
       const loadUserTheme = async () => {
         try {
+          // Double-check we're still authenticated before making the request
+          if (status !== 'authenticated' || !session?.user?.id) {
+            return;
+          }
+          
           const response = await fetch('/api/user/theme');
           if (response.ok) {
             const data = await response.json();
             setTheme(data.theme);
+          } else if (response.status === 401) {
+            // User is not authenticated, silently skip
+            console.log('Theme fetch skipped: user not authenticated');
           } else {
             // If no theme found, default to system
             setTheme('system');
@@ -51,8 +61,16 @@ export function UserThemeSync() {
 
   // Save theme changes to database when user is authenticated
   useEffect(() => {
+    // CRITICAL: Triple-check authentication before saving to prevent redirect loops
     if (status === 'authenticated' && session?.user?.id && userThemeLoadedRef.current) {
-      saveThemeToDatabase(theme);
+      // Additional safety check to prevent calls during signin process
+      const timer = setTimeout(() => {
+        if (status === 'authenticated' && session?.user?.id) {
+          saveThemeToDatabase(theme);
+        }
+      }, 100); // Small delay to ensure session is fully established
+      
+      return () => clearTimeout(timer);
     }
   }, [theme, status, session?.user?.id, saveThemeToDatabase]);
 

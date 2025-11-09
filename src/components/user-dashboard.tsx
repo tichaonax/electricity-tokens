@@ -32,6 +32,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { InsightsCard } from '@/components/insights-card';
 
 interface DashboardData {
   personalSummary: {
@@ -308,6 +309,9 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Electricity Insights */}
+      <InsightsCard />
 
       {/* Current Month Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

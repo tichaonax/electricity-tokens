@@ -39,6 +39,17 @@ This application helps households manage shared electricity costs by:
 - **Visual Charts**: Interactive graphs with theme-aware styling
 - **Personal Dashboards**: Individual usage summaries with anticipated payment calculations
 
+### 🧾 **Receipt Data & Dual-Currency Tracking (ET-100)**
+
+- **Optional Receipt Capture**: Link official electricity receipts to purchases
+- **Dual-Currency Monitoring**: Track both USD payments and ZWG (Zimbabwe Gold) official costs
+- **Exchange Rate Analysis**: Monitor ZWG/USD rate changes over time with trend detection
+- **Historical Insights**: Identify cost anomalies, rising/falling trends, and seasonal patterns
+- **Cost Breakdown**: View detailed charges (energy cost, debt, REA levy, VAT)
+- **Bulk Import**: Upload historical receipts via CSV with intelligent matching algorithm
+- **Confidence Scoring**: Auto-match receipts to purchases based on date proximity (50 pts) + kWh match (50 pts)
+- **Visual Analytics**: Dual-currency charts, rate history tables, and insights cards
+
 ### 👥 **Admin Management**
 
 - **User Management**: Account creation, roles, and permissions
@@ -145,31 +156,44 @@ This application helps households manage shared electricity costs by:
 1. **Create Account**: Register with email and password
 2. **Set Theme Preference**: Choose your preferred theme (light/dark/system) - it will persist across sessions
 3. **Add Purchases**: Record electricity token purchases with meter readings
-4. **Record Meter Readings**: Track individual consumption with detailed meter reading entries
-5. **Track Usage**: Add contributions based on your meter readings
-6. **Monitor Costs**: View mobile-optimized reports to understand your consumption patterns
-7. **Review Audit Trail**: See who created or modified entries for transparency
+4. **Add Receipt Data** (Optional): Link official receipts for dual-currency tracking and exchange rate analysis
+5. **Record Meter Readings**: Track individual consumption with detailed meter reading entries
+6. **Track Usage**: Add contributions based on your meter readings
+7. **Monitor Costs**: View mobile-optimized reports to understand your consumption patterns
+8. **Analyze Trends**: Use dual-currency charts and insights to optimize purchasing decisions
+9. **Review Audit Trail**: See who created or modified entries for transparency
 
 ### For Administrators
 
 1. **User Management**: Create accounts, assign roles, manage permissions and theme preferences
 2. **Meter Reading Oversight**: View, edit, and manage all meter readings with audit information
-3. **Enhanced Audit Access**: Review detailed modification history with IP addresses and user agents
-4. **Database Performance**: Monitor and optimize database performance with automated index management
-5. **System Monitoring**: Monitor security, audit logs, and system health
-6. **Data Management**: Create backups, export data, manage system settings
-7. **Analytics**: Access system-wide reports and usage patterns with mobile optimization
+3. **Receipt Data Management**: View and manage all receipt data across users
+4. **Bulk Import Tools**: Import historical receipt data via CSV with confidence scoring
+5. **Enhanced Audit Access**: Review detailed modification history with IP addresses and user agents
+6. **Database Performance**: Monitor and optimize database performance with automated index management
+7. **System Monitoring**: Monitor security, audit logs, and system health
+8. **Data Management**: Create backups, export data, manage system settings
+9. **Analytics**: Access system-wide reports and usage patterns with mobile optimization
+10. **Dual-Currency Reports**: Analyze exchange rate trends and cost anomalies across all users
 
 ## 📖 Documentation
 
-- **[User Manual](USER_MANUAL.md)** - Complete user guide
-- **[Feature Tutorials](FEATURE_TUTORIALS.md)** - Step-by-step tutorials
-- **[API Documentation](API_DOCUMENTATION.md)** - API reference
-- **[Database Schema](DATABASE_SCHEMA.md)** - Database structure
+### User Guides
+- **[User Manual](USER_MANUAL.md)** - Complete user guide including receipt data feature
+- **[Feature Tutorials](FEATURE_TUTORIALS.md)** - Step-by-step tutorials including bulk import (Tutorial 10)
+
+### Technical Documentation
+- **[API Documentation](API_DOCUMENTATION.md)** - API reference with receipt data endpoints
+- **[Database Schema](DATABASE_SCHEMA.md)** - Database structure including ReceiptData model
+- **[Database Backup Procedure](DATABASE_BACKUP_PROCEDURE.md)** - ⚠️ **Pre-migration backup & rollback guide**
+- **[Testing Guide - ET-100](TESTING_GUIDE_ET-100.md)** - Comprehensive testing guide for receipt features
 - **[Database Performance Indexes](DATABASE_PERFORMANCE_INDEXES.md)** - Performance optimization details
-- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment
+
+### Deployment & Operations
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment with backup procedures
 - **[Security Guide](SECURITY.md)** - Security considerations
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Disaster Recovery](DISASTER_RECOVERY.md)** - Emergency recovery procedures
 
 ## 🔧 Development
 

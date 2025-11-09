@@ -1,4 +1,17 @@
 // User Permissions System
+//
+// ADMIN AUTOMATIC ACCESS:
+// Users with role='ADMIN' automatically have ALL permissions without needing
+// explicit permission grants. This is enforced in:
+// - usePermissions hook: checkPermission() returns true for admins
+// - API routes: checkPermissions() utility allows admin bypass
+// - Database queries: admin role checked before permission validation
+//
+// PERMISSION HIERARCHY:
+// 1. Admin role check (if admin, grant all access)
+// 2. Custom user permissions (from database)
+// 3. Default permissions (fallback for new users)
+//
 export interface UserPermissions {
   // Purchase Management
   canAddPurchases: boolean;
@@ -34,6 +47,14 @@ export interface UserPermissions {
   canExportData: boolean;
   canImportData: boolean;
   canCreateBackup: boolean;
+
+  // Receipt Data Management (ET-100)
+  canCreatePurchase: boolean; // Create new purchase with receipt data
+  canAddReceiptData: boolean; // Add receipt data to existing purchase
+  canEditReceiptData: boolean; // Edit existing receipt data
+  canDeleteReceiptData: boolean; // Delete receipt data
+  canImportHistoricalReceipts: boolean; // Bulk import historical receipts via CSV
+  canViewDualCurrencyAnalysis: boolean; // View dual-currency charts and insights
 }
 
 // Default permissions for new users
@@ -72,6 +93,14 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   canExportData: false,
   canImportData: false,
   canCreateBackup: false,
+
+  // Receipt Data Management (ET-100) - Limited access by default
+  canCreatePurchase: true, // Allow users to create purchases with receipts
+  canAddReceiptData: false, // Restricted: adding receipt to existing purchase
+  canEditReceiptData: false, // Restricted: editing receipts
+  canDeleteReceiptData: false, // Restricted: deleting receipts
+  canImportHistoricalReceipts: false, // Restricted: bulk import requires permission
+  canViewDualCurrencyAnalysis: true, // Allow viewing dual-currency insights
 };
 
 // Full permissions for admin users
@@ -97,6 +126,14 @@ export const ADMIN_PERMISSIONS: UserPermissions = {
   canExportData: true,
   canImportData: true,
   canCreateBackup: true,
+
+  // Receipt Data Management (ET-100) - Full access for admins
+  canCreatePurchase: true,
+  canAddReceiptData: true,
+  canEditReceiptData: true,
+  canDeleteReceiptData: true,
+  canImportHistoricalReceipts: true,
+  canViewDualCurrencyAnalysis: true,
 };
 
 // Restricted permissions preset (read-only user)
@@ -122,6 +159,14 @@ export const READ_ONLY_PERMISSIONS: UserPermissions = {
   canExportData: false,
   canImportData: false,
   canCreateBackup: false,
+
+  // Receipt Data Management (ET-100) - No access for read-only
+  canCreatePurchase: false,
+  canAddReceiptData: false,
+  canEditReceiptData: false,
+  canDeleteReceiptData: false,
+  canImportHistoricalReceipts: false,
+  canViewDualCurrencyAnalysis: false,
 };
 
 // Contributor-only permissions preset
@@ -147,6 +192,14 @@ export const CONTRIBUTOR_ONLY_PERMISSIONS: UserPermissions = {
   canExportData: false,
   canImportData: false,
   canCreateBackup: false,
+
+  // Receipt Data Management (ET-100) - Limited for contributors
+  canCreatePurchase: false, // Contributors cannot create purchases
+  canAddReceiptData: false,
+  canEditReceiptData: false,
+  canDeleteReceiptData: false,
+  canImportHistoricalReceipts: false,
+  canViewDualCurrencyAnalysis: true, // Allow viewing insights
 };
 
 // Helper function to merge permissions with defaults

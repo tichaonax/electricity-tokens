@@ -1,7 +1,14 @@
 /**
  * Comprehensive Cost Calculation Engine
  * Handles proportional costs, multiple purchases, emergency rates, and user-specific calculations
+ * V2: Now includes dual-currency support with receipt data
  */
+
+import {
+  calculateDualCurrencyCost,
+  type PurchaseWithReceipt,
+  type DualCurrencyCostBreakdown,
+} from './cost-algorithm-v2';
 
 // Helper function to round to 2 decimal places
 const round2 = (num: number): number => Math.round(num * 100) / 100;
@@ -13,6 +20,16 @@ export interface Purchase {
   purchaseDate: Date | string;
   isEmergency: boolean;
   contributions?: Contribution[];
+  receiptData?: {
+    id: string;
+    kwhPurchased: number;
+    energyCostZWG: number;
+    debtZWG: number;
+    reaZWG: number;
+    vatZWG: number;
+    totalAmountZWG: number;
+    transactionDateTime: Date | string;
+  } | null;
 }
 
 export interface Contribution {
@@ -78,10 +95,40 @@ export function calculateProportionalCost(
 
 /**
  * Calculate cost per kWh for a specific purchase
+ * V2: Prefers official receipt data when available
  */
 export function calculateCostPerKwh(purchase: Purchase): number {
+  // Prefer official receipt data if available
+  if (purchase.receiptData && purchase.receiptData.kwhPurchased > 0) {
+    return purchase.receiptData.totalAmountZWG / purchase.receiptData.kwhPurchased;
+  }
+  
+  // Fall back to USD internal data
   if (purchase.totalTokens === 0) return 0;
   return purchase.totalPayment / purchase.totalTokens;
+}
+
+/**
+ * Calculate cost per kWh with dual-currency awareness
+ * Returns both USD and ZWG rates when receipt data is available
+ */
+export function calculateCostPerKwhDual(purchase: Purchase): {
+  usd: number;
+  zwg: number | null;
+  hasReceiptData: boolean;
+} {
+  const usd = purchase.totalTokens > 0 ? purchase.totalPayment / purchase.totalTokens : 0;
+  
+  let zwg: number | null = null;
+  if (purchase.receiptData && purchase.receiptData.kwhPurchased > 0) {
+    zwg = purchase.receiptData.totalAmountZWG / purchase.receiptData.kwhPurchased;
+  }
+  
+  return {
+    usd: round2(usd),
+    zwg: zwg !== null ? round2(zwg) : null,
+    hasReceiptData: zwg !== null,
+  };
 }
 
 /**
@@ -119,9 +166,6 @@ export function calculateUserTrueCost(
     const dateB = new Date(b.purchase.purchaseDate);
     return dateA.getTime() - dateB.getTime();
   });
-
-  // Find the earliest purchase date globally to determine the first purchase
-  const earliestPurchaseDate = sortedContributions[0]?.purchase?.purchaseDate;
 
   // Calculate correct balance: Amount Paid - True Cost
   sortedContributions.forEach((contribution) => {

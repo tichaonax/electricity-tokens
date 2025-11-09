@@ -79,6 +79,35 @@ Authorization: Bearer <session-token>
 - Deletion of TokenPurchase is restricted if UserContribution exists
 - Deletion of UserContribution cascades when User is deleted
 
+### ReceiptData
+
+```typescript
+{
+  id: string;
+  purchaseId: string; // UNIQUE - one receipt per purchase
+  tokenNumber: string | null; // 20-digit token from receipt
+  accountNumber: string | null;
+  kwhPurchased: number;
+  energyCostZWG: number;
+  debtZWG: number;
+  reaZWG: number; // Rural Electrification Agency levy
+  vatZWG: number;
+  totalAmountZWG: number; // Total cost in ZWG currency
+  tenderedZWG: number;
+  transactionDateTime: DateTime;
+  createdAt: DateTime;
+  updatedAt: DateTime;
+}
+```
+
+**Important Constraints:**
+- ReceiptData is optional for TokenPurchase (one-to-one optional relationship)
+- Each TokenPurchase can have at most one ReceiptData
+- Deletion of TokenPurchase cascades to delete ReceiptData (ON DELETE CASCADE)
+- All ZWG amounts must be ≥ 0
+- Exchange rate calculated as: totalAmountZWG / purchase.totalPayment
+- Used for dual-currency tracking (USD + ZWG) and historical analysis
+
 ### MeterReading
 
 ```typescript
@@ -575,6 +604,473 @@ Delete a contribution.
   "message": "Contribution deleted successfully"
 }
 ```
+
+---
+
+### Receipt Data Management
+
+The Receipt Data endpoints manage official electricity receipt information from power providers, enabling dual-currency tracking (USD/ZWG) and historical analysis.
+
+#### POST /api/receipt-data
+
+Create receipt data for an existing purchase.
+
+**Authentication:** Required  
+**Permissions:** User must own the purchase or be an admin
+
+**Request Body:**
+
+```json
+{
+  "purchaseId": "clxxxx...",
+  "tokenNumber": "1234 5678 9012 3456 7890",
+  "accountNumber": "37266905928",
+  "kwhPurchased": 200.00,
+  "energyCostZWG": 1285.00,
+  "debtZWG": 0.00,
+  "reaZWG": 77.10,
+  "vatZWG": 192.75,
+  "totalAmountZWG": 1554.85,
+  "tenderedZWG": 1555.00,
+  "transactionDateTime": "2025-11-01T14:30:00Z"
+}
+```
+
+**Validation Rules:**
+
+- `purchaseId`: Required, must exist, must not already have receipt data
+- `kwhPurchased`: Required, must be > 0
+- `energyCostZWG`: Required, must be ≥ 0
+- `debtZWG`: Required, must be ≥ 0
+- `reaZWG`: Required, must be ≥ 0
+- `vatZWG`: Required, must be ≥ 0
+- `totalAmountZWG`: Required, must be ≥ 0
+- `tenderedZWG`: Required, must be ≥ 0
+- `transactionDateTime`: Required, valid ISO 8601 datetime
+
+**Response (201 Created):**
+
+```json
+{
+  "message": "Receipt data created successfully",
+  "receiptData": {
+    "id": "clxxxx...",
+    "purchaseId": "clxxxx...",
+    "tokenNumber": "1234 5678 9012 3456 7890",
+    "accountNumber": "37266905928",
+    "kwhPurchased": 200.00,
+    "energyCostZWG": 1285.00,
+    "debtZWG": 0.00,
+    "reaZWG": 77.10,
+    "vatZWG": 192.75,
+    "totalAmountZWG": 1554.85,
+    "tenderedZWG": 1555.00,
+    "transactionDateTime": "2025-11-01T14:30:00.000Z",
+    "createdAt": "2025-11-08T10:00:00.000Z",
+    "updatedAt": "2025-11-08T10:00:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+
+- `400`: Validation errors
+- `401`: Unauthorized
+- `404`: Purchase not found
+- `409`: Receipt data already exists for this purchase
+
+---
+
+#### PUT /api/receipt-data/[id]
+
+Update existing receipt data.
+
+**Authentication:** Required  
+**Permissions:** User must own the associated purchase or be an admin
+
+**Request Body:**
+
+All fields optional (only send fields to update):
+
+```json
+{
+  "tokenNumber": "5678 1234 9012 3456 7890",
+  "energyCostZWG": 1300.00,
+  "totalAmountZWG": 1569.85
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Receipt data updated successfully",
+  "receiptData": {
+    "id": "clxxxx...",
+    "purchaseId": "clxxxx...",
+    "tokenNumber": "5678 1234 9012 3456 7890",
+    "kwhPurchased": 200.00,
+    "energyCostZWG": 1300.00,
+    "totalAmountZWG": 1569.85,
+    "updatedAt": "2025-11-08T11:00:00.000Z"
+    // ... other fields
+  }
+}
+```
+
+**Error Responses:**
+
+- `400`: Validation errors
+- `401`: Unauthorized
+- `403`: Forbidden (not purchase owner or admin)
+- `404`: Receipt data not found
+
+---
+
+#### DELETE /api/receipt-data/[id]
+
+Delete receipt data (purchase remains intact).
+
+**Authentication:** Required  
+**Permissions:** User must own the associated purchase or be an admin
+
+**Response (200 OK):**
+
+```json
+{
+  "message": "Receipt data deleted successfully"
+}
+```
+
+**Error Responses:**
+
+- `401`: Unauthorized
+- `403`: Forbidden
+- `404`: Receipt data not found
+
+---
+
+#### GET /api/receipt-data/analyze-historical
+
+Analyze historical receipt data to detect trends, anomalies, and generate recommendations.
+
+**Authentication:** Required  
+**Permissions:** All authenticated users (see own data), admins (see all data)
+
+**Query Parameters:** None
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "analysis": {
+    "summary": {
+      "totalReceipts": 25,
+      "avgZwgPerKwh": 7.65,
+      "minZwgPerKwh": 7.20,
+      "maxZwgPerKwh": 9.50,
+      "dateRange": {
+        "start": "2025-08-01T00:00:00.000Z",
+        "end": "2025-11-01T00:00:00.000Z"
+      }
+    },
+    "trends": [
+      {
+        "month": "2025-11",
+        "avgZwgPerKwh": 7.77,
+        "minZwgPerKwh": 7.50,
+        "maxZwgPerKwh": 8.10,
+        "receiptCount": 8,
+        "direction": "rising",
+        "changePercent": 3.5
+      }
+    ],
+    "anomalies": [
+      {
+        "receiptId": "clxxxx...",
+        "date": "2025-10-15T00:00:00.000Z",
+        "zwgPerKwh": 9.50,
+        "avgZwgPerKwh": 7.50,
+        "deviation": 26.7,
+        "type": "spike",
+        "severity": "high"
+      }
+    ],
+    "seasonalPatterns": {
+      "0": { "avgZwgPerKwh": 7.45, "count": 3 },
+      "10": { "avgZwgPerKwh": 7.77, "count": 8 }
+    },
+    "recommendations": [
+      "⚠️ ZWG rates have risen 15% over the last 3 months. Consider purchasing larger quantities when rates are lower.",
+      "📊 Current ZWG/kWh rate (7.77) is 3.5% above the 3-month average."
+    ],
+    "variance": {
+      "avgOverpayment": 5.2,
+      "totalOverpaid": 150.50
+    }
+  },
+  "generatedAt": "2025-11-08T12:00:00.000Z"
+}
+```
+
+**Analysis Details:**
+
+- **Trends**: Monthly aggregation with direction (rising/falling/stable)
+  - Rising: >5% increase from previous month
+  - Falling: <-5% decrease from previous month
+  - Stable: between -5% and 5%
+
+- **Anomalies**: Deviations >20% from average
+  - High severity: >40% deviation
+  - Medium severity: 30-40% deviation
+  - Low severity: 20-30% deviation
+
+- **Seasonal Patterns**: Requires 12+ receipts, groups by month (0-11)
+
+**Error Responses:**
+
+- `401`: Unauthorized
+- `500`: Server error
+
+---
+
+#### GET /api/receipt-data/dual-currency-analysis
+
+Get dual-currency (USD vs ZWG) cost analysis over time.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `timeRange`: `7d` | `30d` | `90d` | `1y` | `all` (default: `30d`)
+- `userId`: Filter by user (admin only)
+- `startDate`: Custom start date (ISO 8601)
+- `endDate`: Custom end date (ISO 8601)
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "date": "2025-11-01T00:00:00.000Z",
+      "usdCost": 25.00,
+      "zwgCost": 1554.85,
+      "zwgRate": 62.194,
+      "tokensKwh": 200,
+      "usdPerKwh": 0.125,
+      "zwgPerKwh": 7.77425,
+      "userName": "John Doe"
+    }
+  ],
+  "summary": {
+    "totalPurchases": 25,
+    "dateRange": {
+      "from": "2025-10-01T00:00:00.000Z",
+      "to": "2025-11-01T00:00:00.000Z"
+    },
+    "avgUsdPerKwh": 0.128,
+    "avgZwgPerKwh": 7.65,
+    "avgExchangeRate": 62.15,
+    "totalKwh": 5000,
+    "totalUsdSpent": 640.00,
+    "totalZwgSpent": 38250.00
+  }
+}
+```
+
+**Use Cases:**
+
+- Dual-currency line charts
+- Exchange rate trend visualization
+- Cost comparison over time
+- Performance analysis
+
+---
+
+#### GET /api/receipt-data/rate-history
+
+Get historical ZWG exchange rate data with percentage changes.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `limit`: Number of records (default: 50, max: 200)
+- `userId`: Filter by user (admin only)
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "date": "2025-11-01T00:00:00.000Z",
+      "zwgRate": 62.194,
+      "zwgPerKwh": 7.77425,
+      "usdPerKwh": 0.125,
+      "tokensKwh": 200,
+      "changePercent": 3.5
+    },
+    {
+      "date": "2025-10-25T00:00:00.000Z",
+      "zwgRate": 60.05,
+      "zwgPerKwh": 7.50,
+      "usdPerKwh": 0.125,
+      "tokensKwh": 180,
+      "changePercent": -2.1
+    }
+  ],
+  "summary": {
+    "totalEntries": 25,
+    "avgZwgRate": 61.50,
+    "minZwgRate": 58.20,
+    "maxZwgRate": 64.80,
+    "avgZwgPerKwh": 7.65
+  }
+}
+```
+
+**Change Percent Calculation:**
+
+Percentage change from previous purchase (descending order by date):
+```
+changePercent = ((currentRate - previousRate) / previousRate) * 100
+```
+
+---
+
+#### POST /api/receipt-data/bulk-import
+
+Import multiple receipt records from CSV file.
+
+**Authentication:** Required
+
+**Request Body (multipart/form-data):**
+
+- `file`: CSV file with receipt data
+- `mode`: `preview` | `import` (default: `preview`)
+
+**CSV Format:**
+
+```csv
+Transaction Date/Time,Token Number,Account Number,kWh Purchased,Energy Cost (ZWG),Debt/Arrears (ZWG),REA Levy (ZWG),VAT (ZWG),Total Amount (ZWG),Amount Tendered (ZWG)
+16/10/25 14:02:36,6447 1068 4258 9659 8834,37266905928,203.21,1306.60,0.00,78.40,195.99,1580.99,1581.00
+17/10/25 09:15:22,5123 4567 8901 2345 6789,37266905928,150.50,967.82,0.00,58.07,145.22,1171.11,1200.00
+```
+
+**Preview Mode Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "mode": "preview",
+  "summary": {
+    "totalRows": 10,
+    "validRows": 8,
+    "invalidRows": 2
+  },
+  "matches": [
+    {
+      "rowNumber": 1,
+      "receiptData": {
+        "transactionDateTime": "2025-10-16T14:02:36.000Z",
+        "tokenNumber": "6447 1068 4258 9659 8834",
+        "kwhPurchased": 203.21,
+        "totalAmountZWG": 1580.99
+        // ... other fields
+      },
+      "matchedPurchase": {
+        "id": "clxxxx...",
+        "purchaseDate": "2025-10-16T00:00:00.000Z",
+        "totalTokens": 203.21,
+        "totalPayment": 25.50
+      },
+      "confidence": 95,
+      "confidenceLevel": "high",
+      "matchReasons": [
+        "Date match: within 1 day (50 points)",
+        "kWh exact match (50 points)"
+      ],
+      "warnings": []
+    }
+  ],
+  "errors": [
+    {
+      "rowNumber": 5,
+      "error": "Invalid date format: 32/13/25",
+      "data": { /* raw row data */ }
+    }
+  ]
+}
+```
+
+**Import Mode Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "mode": "import",
+  "summary": {
+    "totalRows": 10,
+    "imported": 8,
+    "skipped": 2,
+    "failed": 0
+  },
+  "results": [
+    {
+      "rowNumber": 1,
+      "status": "imported",
+      "receiptId": "clxxxx...",
+      "purchaseId": "clxxxx..."
+    },
+    {
+      "rowNumber": 5,
+      "status": "skipped",
+      "reason": "Low confidence match (35%)"
+    }
+  ]
+}
+```
+
+**Matching Algorithm:**
+
+1. **Date Proximity (0-50 points)**
+   - Same day: 50 points
+   - Within 1 day: 40 points
+   - Within 2 days: 30 points
+   - Within 3 days: 20 points
+   - Within 7 days: 10 points
+
+2. **kWh Match (0-50 points)**
+   - Exact match: 50 points
+   - ±1% difference: 45 points
+   - ±2% difference: 40 points
+   - ±5% difference: 35 points
+
+3. **Confidence Levels:**
+   - High (80-100%): Auto-imported
+   - Medium (50-79%): Auto-imported
+   - Low (20-49%): Skipped (manual review required)
+   - None (<20%): Skipped
+
+**Constraints:**
+
+- Maximum file size: 5 MB
+- Maximum rows: 500 per file
+- Supported format: CSV only
+- Date formats: DD/MM/YY HH:mm:ss
+
+**Error Responses:**
+
+- `400`: Invalid CSV format, file too large, too many rows
+- `401`: Unauthorized
+- `500`: Server error
+
+---
 
 ### User Management
 

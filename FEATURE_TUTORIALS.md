@@ -971,6 +971,709 @@ Instead of horizontal scrolling table:
 
 ---
 
+## 🧾 Tutorial 10: Receipt Data & Dual-Currency Tracking (ET-100)
+
+### Understanding Receipt Data Feature
+
+**What is Receipt Data?**
+
+Receipt data is optional information from your official electricity purchase receipt (from ZETDC/ZESA) that enables:
+
+- **Dual-currency tracking**: Compare USD payments to official ZWG (Zimbabwe Gold) costs
+- **Exchange rate monitoring**: Track how ZWG/USD rates change over time
+- **Historical analysis**: Identify cost trends and anomalies
+- **Accurate breakdown**: See exact charges (energy, debt, REA levy, VAT)
+
+**Why Track Receipt Data?**
+
+1. **Currency transparency**: Understand true cost in both USD and ZWG
+2. **Rate trends**: Spot when ZWG rates are rising or falling
+3. **Budget accuracy**: Plan purchases based on historical exchange rates
+4. **Anomaly detection**: Get alerts for unusual pricing patterns
+5. **Cost forecasting**: Predict future costs based on trends
+
+---
+
+### Tutorial 10A: Adding Receipt Data Manually
+
+**Scenario**: You just bought 203.21 kWh for $25.50 USD and received this official receipt:
+
+```
+ZETDC/ZESA ELECTRICITY RECEIPT
+─────────────────────────────────────
+Transaction Date/Time: 16/10/25 14:02:36
+Token Number:          6447 1068 4258 9659 8834
+Account Number:        37266905928
+
+Energy Cost (ZWG):     1,306.60
+Debt/Arrears (ZWG):        0.00
+REA Levy (ZWG):           78.40
+VAT (ZWG):               195.99
+─────────────────────────────────────
+Total Amount (ZWG):    1,580.99
+Amount Tendered (ZWG): 1,581.00
+
+kWh Purchased:         203.21
+─────────────────────────────────────
+```
+
+**Step-by-Step: Adding This Receipt**
+
+**Step 1: Navigate to Purchase**
+
+1. Log in to your account
+2. Click "Purchases" in main menu
+3. Find your Oct 16 purchase (203.21 kWh, $25.50)
+4. Click on the purchase to open details
+5. Click "Add Receipt Data" button
+
+**Step 2: Fill in Receipt Form**
+
+**Token Number** (Optional):
+- Type: `6447 1068 4258 9659 8834`
+- Spaces are allowed and preserved
+- Can be left blank if not needed
+
+**Account Number** (Optional):
+- Type: `37266905928`
+- Your electricity account number
+- Can be left blank
+
+**kWh Purchased** (Required):
+- Type: `203.21`
+- Must match or be close to your purchase kWh
+- System uses this for matching in bulk imports
+
+**Energy Cost (ZWG)** (Required):
+- Type: `1306.60`
+- Base cost of electricity before fees/taxes
+- From "Energy Cost (ZWG)" line on receipt
+
+**Debt/Arrears (ZWG)** (Required):
+- Type: `0.00`
+- Any outstanding balance from previous months
+- If you have debt, enter the exact amount
+- Can be 0 if no debt
+
+**REA Levy (ZWG)** (Required):
+- Type: `78.40`
+- Rural Electrification Agency levy (~6% of energy cost)
+- From "REA Levy (ZWG)" line on receipt
+
+**VAT (ZWG)** (Required):
+- Type: `195.99`
+- Value Added Tax (15% on energy cost + REA levy)
+- From "VAT (ZWG)" line on receipt
+
+**Total Amount (ZWG)** (Required):
+- Type: `1580.99`
+- Sum of: Energy Cost + Debt + REA Levy + VAT
+- System validates: 1306.60 + 0 + 78.40 + 195.99 = 1580.99 ✓
+
+**Amount Tendered (ZWG)** (Required):
+- Type: `1581.00`
+- What you actually paid in ZWG
+- Usually slightly more than Total Amount (includes change)
+
+**Transaction Date/Time** (Required):
+- Click date picker
+- Select: October 16, 2025
+- Set time: 14:02:36
+- Format automatically handled by system
+
+**Step 3: Submit and Review**
+
+1. Click "Save Receipt Data"
+2. System validates all fields:
+   - ✓ All ZWG amounts ≥ 0
+   - ✓ Total = Energy + Debt + REA + VAT
+   - ✓ kWh within valid range (0-100,000)
+3. Success message appears: "Receipt data saved successfully"
+4. Exchange rate calculated automatically:
+   ```
+   ZWG Rate = 1580.99 ÷ 25.50 = 62.00 ZWG/USD
+   ZWG/kWh = 1580.99 ÷ 203.21 = 7.78 ZWG per kWh
+   USD/kWh = 25.50 ÷ 203.21 = 0.125 USD per kWh
+   ```
+
+**Step 4: View Your Receipt Data**
+
+After saving, you'll see on the purchase details page:
+
+**Receipt Information Panel:**
+```
+🧾 Receipt Data
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Token Number:     6447 1068 4258 9659 8834
+Account Number:   37266905928
+Transaction Date: Oct 16, 2025 at 14:02:36
+
+💰 Cost Breakdown (ZWG)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Energy Cost:      1,306.60 ZWG
+Debt/Arrears:          0.00 ZWG
+REA Levy:             78.40 ZWG
+VAT:                 195.99 ZWG
+─────────────────────────────────────
+Total Amount:     1,580.99 ZWG
+Amount Tendered:  1,581.00 ZWG
+
+📊 Exchange Rate Analysis
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ZWG/USD Rate:     62.00
+ZWG per kWh:       7.78
+USD per kWh:       0.125
+
+✏️ [Edit Receipt]  🗑️ [Delete Receipt]
+```
+
+**What These Numbers Mean:**
+
+- **Energy Cost**: Base electricity cost (1,306.60 ZWG)
+- **REA Levy**: Government levy for rural electrification (6% of energy cost)
+- **VAT**: 15% tax on (Energy Cost + REA Levy)
+- **Exchange Rate**: How many ZWG per 1 USD (62.00 means 1 USD = 62 ZWG)
+- **ZWG/kWh**: Cost per kilowatt-hour in ZWG currency
+- **USD/kWh**: Cost per kilowatt-hour in USD currency
+
+---
+
+### Tutorial 10B: Bulk Importing Historical Receipts
+
+**Scenario**: You have 10 historical receipts from the past 3 months and want to import them all at once.
+
+**Step 1: Gather Your Receipts**
+
+Collect all physical receipts and organize them by date:
+
+```
+Oct 16, 2025 - 203.21 kWh - 1,580.99 ZWG
+Oct 10, 2025 - 180.50 kWh - 1,398.75 ZWG
+Oct 05, 2025 - 150.00 kWh - 1,162.50 ZWG
+Sep 28, 2025 - 200.00 kWh - 1,520.00 ZWG
+Sep 20, 2025 - 175.30 kWh - 1,330.28 ZWG
+... (and so on)
+```
+
+**Step 2: Download CSV Template**
+
+1. Navigate to "Bulk Import" page in main menu
+2. Click "Download CSV Template" button
+3. Save file as `receipts-import-2025.csv`
+4. Open in Excel, Google Sheets, or text editor
+
+**Step 3: Fill in CSV Template**
+
+**Column Headers (DO NOT MODIFY):**
+```csv
+Transaction Date/Time,Token Number,Account Number,kWh Purchased,Energy Cost (ZWG),Debt/Arrears (ZWG),REA Levy (ZWG),VAT (ZWG),Total Amount (ZWG),Amount Tendered (ZWG)
+```
+
+**Add Your Receipt Data:**
+
+```csv
+Transaction Date/Time,Token Number,Account Number,kWh Purchased,Energy Cost (ZWG),Debt/Arrears (ZWG),REA Levy (ZWG),VAT (ZWG),Total Amount (ZWG),Amount Tendered (ZWG)
+16/10/25 14:02:36,6447 1068 4258 9659 8834,37266905928,203.21,1306.60,0.00,78.40,195.99,1580.99,1581.00
+10/10/25 09:15:22,5123 4567 8901 2345 6789,37266905928,180.50,1161.22,0.00,69.67,174.18,1405.07,1410.00
+05/10/25 16:48:11,9876 5432 1098 7654 3210,37266905928,150.00,965.25,0.00,57.92,144.79,1167.96,1170.00
+28/09/25 11:30:45,1111 2222 3333 4444 5555,37266905928,200.00,1287.00,0.00,77.22,193.05,1557.27,1560.00
+20/09/25 08:20:18,7777 8888 9999 0000 1111,37266905928,175.30,1128.19,0.00,67.69,169.23,1365.11,1370.00
+```
+
+**Important CSV Rules:**
+
+1. **Date Format**: `DD/MM/YY HH:mm:ss` (e.g., `16/10/25 14:02:36`)
+2. **Decimals**: Use `.` not `,` for decimals (1306.60, not 1306,60)
+3. **No currency symbols**: Just numbers (1306.60, not ZWG 1,306.60)
+4. **No commas in numbers**: 1306.60, not 1,306.60
+5. **Token spaces allowed**: Can include or omit spaces in token number
+6. **Optional fields**: Token Number and Account Number can be empty
+
+**Step 4: Upload CSV File**
+
+1. Go to "Bulk Import" page
+2. Click "Choose File" button
+3. Select your `receipts-import-2025.csv` file
+4. File uploads and validates:
+   - ✓ File size < 5 MB
+   - ✓ Format is CSV
+   - ✓ Rows ≤ 500
+   - ✓ Headers match template
+5. Click "Preview Import" button
+
+**Step 5: Review Preview Results**
+
+System shows preview with matched purchases:
+
+**Summary Panel:**
+```
+📊 Import Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total Rows:    10
+Valid Rows:     8
+Invalid Rows:   2
+```
+
+**Matched Receipt Example (High Confidence):**
+
+```
+🟢 Row 1: HIGH CONFIDENCE (95%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 Receipt Data:
+   Date: Oct 16, 2025 14:02:36
+   kWh: 203.21
+   Total ZWG: 1,580.99
+
+🔗 Matched Purchase:
+   Date: Oct 16, 2025
+   kWh: 203.21
+   USD: $25.50
+   Buyer: John Doe
+
+✓ Match Reasons:
+   • Date match: same day (50 points)
+   • kWh exact match (50 points)
+
+✅ WILL BE IMPORTED
+```
+
+**Matched Receipt Example (Medium Confidence):**
+
+```
+🟡 Row 2: MEDIUM CONFIDENCE (65%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 Receipt Data:
+   Date: Oct 10, 2025 09:15:22
+   kWh: 180.50
+   Total ZWG: 1,405.07
+
+🔗 Matched Purchase:
+   Date: Oct 11, 2025
+   kWh: 180.00
+   USD: $22.75
+   Buyer: Jane Smith
+
+✓ Match Reasons:
+   • Date match: within 1 day (40 points)
+   • kWh ±1% match (45 points)
+
+⚠️ Warning: Date differs by 1 day
+
+✅ WILL BE IMPORTED
+```
+
+**Skipped Receipt Example (Low Confidence):**
+
+```
+🟠 Row 5: LOW CONFIDENCE (35%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 Receipt Data:
+   Date: Sep 15, 2025 10:00:00
+   kWh: 120.00
+   Total ZWG: 950.00
+
+🔗 Matched Purchase:
+   Date: Sep 10, 2025
+   kWh: 150.00
+   USD: $19.50
+   Buyer: John Doe
+
+✓ Match Reasons:
+   • Date match: within 7 days (10 points)
+   • kWh ±5% match (35 points)
+
+⚠️ Warnings:
+   • Date differs by 5 days
+   • kWh differs by 20%
+
+⏭️ SKIPPED - Manual review required
+```
+
+**Error Example:**
+
+```
+❌ Row 8: INVALID DATA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❗ Error: Invalid date format: 32/13/25
+📄 Raw Data:
+   32/13/25 14:00:00,1234...,372669...,100.00,...
+
+⏭️ SKIPPED
+```
+
+**Understanding Confidence Scores:**
+
+| Score | Level | Color | Action | Meaning |
+|-------|-------|-------|--------|---------|
+| 80-100% | High | 🟢 Green | Auto-import | Excellent match, very confident |
+| 50-79% | Medium | 🟡 Yellow | Auto-import | Good match, reasonably confident |
+| 20-49% | Low | 🟠 Orange | Skip | Poor match, manual review needed |
+| 0-19% | None | ❌ Red | Skip | No suitable match found |
+
+**Step 6: Confirm Import**
+
+1. Review all preview results
+2. Check warnings on medium confidence matches
+3. Note which rows will be skipped
+4. Click "Confirm Import" button
+5. System imports high/medium confidence matches
+6. Low confidence and errors are skipped
+
+**Step 7: Review Import Results**
+
+After import completes:
+
+```
+✅ Import Complete!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total Rows:     10
+Imported:        8
+Skipped:         2
+Failed:          0
+```
+
+**Imported Receipts:**
+```
+Row 1: ✅ Imported (Receipt ID: clxxx1...)
+Row 2: ✅ Imported (Receipt ID: clxxx2...)
+Row 3: ✅ Imported (Receipt ID: clxxx3...)
+Row 4: ✅ Imported (Receipt ID: clxxx4...)
+Row 6: ✅ Imported (Receipt ID: clxxx5...)
+Row 7: ✅ Imported (Receipt ID: clxxx6...)
+Row 9: ✅ Imported (Receipt ID: clxxx7...)
+Row 10: ✅ Imported (Receipt ID: clxxx8...)
+```
+
+**Skipped Receipts:**
+```
+Row 5: ⏭️ Skipped - Low confidence (35%)
+       Reason: Date differs by 5 days, kWh differs by 20%
+       
+Row 8: ❌ Skipped - Invalid date format: 32/13/25
+       Reason: Invalid data
+```
+
+**Step 8: Handle Skipped Receipts**
+
+For skipped receipts, you have two options:
+
+**Option 1: Add Manually**
+1. Go to the purchase details page for that date
+2. Click "Add Receipt Data"
+3. Enter receipt information manually
+4. Submit
+
+**Option 2: Fix CSV and Re-import**
+1. Create new CSV with only skipped rows
+2. Fix errors (correct date format, adjust kWh if needed)
+3. Upload and import again
+
+---
+
+### Tutorial 10C: Understanding Dual-Currency Analysis
+
+**Scenario**: You've added 8+ receipts and want to analyze your dual-currency costs.
+
+**Step 1: Access Dual-Currency Chart**
+
+1. Navigate to "Dashboard" or "Analytics" page
+2. Scroll to "Dual-Currency Cost Analysis" section
+3. View the dual-line chart
+
+**What You'll See:**
+
+```
+📊 Dual-Currency Cost Analysis
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    ┌─────────────────────────────┐
+ 10 │                         ●   │ ZWG/kWh
+    │                     ●   │   │
+  8 │                 ●   │   │   │
+    │             ●   │   │   │   │
+  6 │         ●   │   │   │   │   │
+    │     ●   │   │   │   │   │   │
+  4 │ ●   │   │   │   │   │   │   │
+    │     ━   ━   ━   ━   ━   ━   │ USD/kWh
+  2 │ ━━━━━━━━━━━━━━━━━━━━━━━━━━ │
+    │                             │
+  0 └─────────────────────────────┘
+     Aug  Sep  Oct  Nov
+```
+
+**Reading the Chart:**
+
+- **Blue Line (USD/kWh)**: Your cost per kWh in USD (relatively stable ~0.125)
+- **Green Line (ZWG/kWh)**: Official cost per kWh in ZWG (rising trend ~7.78)
+- **X-Axis**: Timeline of your purchases (by month)
+- **Y-Axis**: Cost per kilowatt-hour
+
+**What This Tells You:**
+
+1. **USD costs stable**: Your USD cost per kWh stays around $0.125
+2. **ZWG costs rising**: ZWG per kWh is increasing from 7.50 → 7.78 (+3.7%)
+3. **Exchange rate trending up**: ZWG is weakening against USD
+4. **Budget impact**: Expect higher ZWG costs in future purchases
+
+**Step 2: View ZWG Rate History**
+
+1. Scroll to "ZWG Exchange Rate History" table
+2. Review chronological rate changes
+
+**Example Table:**
+
+| Date | ZWG/USD Rate | ZWG/kWh | Change | Trend |
+|------|-------------|---------|--------|-------|
+| Nov 1 | 62.19 | 7.77 | +3.5% | ↗️ Rising |
+| Oct 16 | 62.00 | 7.78 | +0.3% | → Stable |
+| Oct 10 | 61.82 | 7.75 | -2.1% | ↘️ Falling |
+| Oct 5 | 63.16 | 7.92 | +5.8% | ↗️ Rising |
+| Sep 28 | 59.70 | 7.49 | -1.2% | ↘️ Falling |
+
+**Reading the Table:**
+
+- **Change %**: Percentage increase/decrease from previous purchase
+- **Trend Indicators**:
+  - ↗️ Rising: Rate increased >1%
+  - ↘️ Falling: Rate decreased >1%
+  - → Stable: Change between -1% and +1%
+
+**Step 3: Check Insights Card**
+
+If you have 3+ receipts, scroll to "Insights Card":
+
+```
+🔍 Cost Insights
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 Current Trend: RISING
+   ZWG costs have increased 15% over the
+   last 3 months. Current ZWG/kWh rate
+   (7.77) is 3.5% above the 3-month average.
+
+⚠️ Anomaly Detected:
+   Oct 5 purchase had unusually high rate
+   (7.92 ZWG/kWh, 26% above average).
+   Possible emergency purchase or rate spike.
+
+💡 Recommendations:
+   • Purchase larger quantities when rates
+     are lower to average out costs
+   • Monitor rate trends before buying
+   • Consider buying on 15th-20th when
+     historical rates tend to be lower
+```
+
+**What Insights Mean:**
+
+- **Trend**: Overall direction of costs (rising/falling/stable)
+- **Anomalies**: Unusual purchases that deviate >20% from average
+- **Recommendations**: AI-generated suggestions based on your data
+
+---
+
+### Tutorial 10D: Common Receipt Data Scenarios
+
+**Scenario 1: Receipt with Debt/Arrears**
+
+```
+RECEIPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Energy Cost (ZWG):    1,200.00
+Debt/Arrears (ZWG):     450.00  ← Outstanding balance
+REA Levy (ZWG):          72.00
+VAT (ZWG):              180.00
+─────────────────────────────────────
+Total Amount (ZWG):   1,902.00
+```
+
+**How to Enter:**
+- Energy Cost: `1200.00`
+- Debt: `450.00` ← Don't skip this!
+- REA Levy: `72.00`
+- VAT: `180.00`
+- Total: `1902.00` (system validates sum)
+
+**Understanding:**
+- Your total cost is higher due to outstanding debt
+- Future purchases should have lower/no debt if you paid it off
+- System tracks debt trends over time
+
+**Scenario 2: Receipt Token Doesn't Match Purchase**
+
+```
+Purchase Record:
+   kWh: 200.00
+   Token: (not entered)
+
+Receipt:
+   kWh: 203.21  ← Slightly different
+   Token: 6447 1068 4258 9659 8834
+```
+
+**What Happened:**
+- Receipt shows actual kWh from power company (203.21)
+- Your purchase record has rounded value (200.00)
+- This is normal and expected
+
+**How to Handle:**
+- Enter receipt kWh exactly as shown: `203.21`
+- System allows ±5% difference for matching
+- Bulk import will still match with 45 points (±2%)
+
+**Scenario 3: Multiple Purchases Same Day**
+
+```
+Oct 16, 2025:
+   Purchase 1: 200 kWh at 10:00 AM
+   Purchase 2: 150 kWh at 3:00 PM
+
+Receipt:
+   Date: 16/10/25 14:02:36
+   kWh: 203.21
+```
+
+**How Bulk Import Handles This:**
+- System finds both purchases on Oct 16
+- Checks kWh match: 203.21 ≈ 200 (closer to Purchase 1)
+- Chooses Purchase 1 as best match
+- Shows warning: "Multiple purchases on same day"
+
+**Manual Entry:**
+- Navigate to correct purchase (check time if known)
+- Add receipt data to the matching purchase
+
+**Scenario 4: Import Shows "No Match Found"**
+
+```
+❌ Row 5: NO MATCH (5%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Receipt Date: Sep 10, 2025
+kWh: 175.00
+
+Error: No purchase found within 7 days
+       with matching kWh (±5%)
+```
+
+**Possible Reasons:**
+1. Purchase not yet entered in system
+2. Receipt date is wrong (typo in CSV)
+3. kWh value too different
+4. Purchase was made by different household member
+
+**Solutions:**
+1. **Add missing purchase first**:
+   - Go to "Purchase Form"
+   - Create purchase for Sep 10
+   - Then add receipt data manually
+
+2. **Check CSV for typos**:
+   - Verify date format (DD/MM/YY HH:mm:ss)
+   - Check kWh value matches purchase
+
+3. **Use manual entry**:
+   - Skip bulk import for this row
+   - Add receipt data manually to correct purchase
+
+---
+
+### Troubleshooting Receipt Data
+
+**Problem 1: "Total Amount doesn't match sum of components"**
+
+```
+❌ Validation Error:
+   Total Amount (1580.99) ≠
+   Energy (1306.60) + Debt (0) + REA (78.40) + VAT (195.00)
+   
+   Expected: 1579.99
+   Actual:   1580.99
+```
+
+**Solution:**
+- Recalculate: 1306.60 + 0 + 78.40 + 195.00 = 1580.00
+- Check receipt for typos
+- Adjust VAT to 196.00 (receipt may have rounding)
+
+**Problem 2: "Receipt already exists for this purchase"**
+
+```
+❌ Error: Receipt data already exists for purchase clxxx...
+```
+
+**Solution:**
+1. **Edit existing receipt**:
+   - Go to purchase details
+   - Click "Edit Receipt Data"
+   - Update fields
+
+2. **Delete and re-add**:
+   - Click "Delete Receipt Data"
+   - Confirm deletion
+   - Add new receipt data
+
+**Problem 3: Bulk import shows 0% confidence for all rows**
+
+**Possible Causes:**
+- No purchases in system yet
+- Date range doesn't match any purchases
+- kWh values too different
+
+**Solution:**
+1. Check you have purchases entered
+2. Verify CSV dates match purchase dates (±7 days)
+3. Compare CSV kWh to purchase kWh (should be ±5%)
+
+**Problem 4: Exchange rate seems wrong**
+
+```
+Exchange Rate: 2.48 ZWG/USD
+(Expected: ~62 ZWG/USD)
+```
+
+**Cause:**
+- Wrong currency entered (used USD instead of ZWG)
+- Decimal point error (1580.99 entered as 1.58099)
+
+**Solution:**
+1. Edit receipt data
+2. Check all ZWG amounts:
+   - Energy Cost: 1,306.60 (not 1.30660)
+   - Total Amount: 1,580.99 (not 1.58099)
+3. Re-save and verify exchange rate recalculates correctly
+
+---
+
+### Receipt Data Best Practices
+
+**Daily Habits:**
+
+1. **Save receipts immediately**: Don't lose physical receipts
+2. **Enter data within 24 hours**: While details are fresh
+3. **Double-check totals**: Verify sum matches before saving
+4. **Keep receipt photo**: Take phone picture as backup
+
+**Monthly Routines:**
+
+1. **Bulk import historical data**: Add past 3 months of receipts
+2. **Review trends**: Check insights card for patterns
+3. **Analyze exchange rates**: Identify best times to purchase
+4. **Share findings**: Discuss trends with household
+
+**Data Quality:**
+
+1. **Exact values**: Don't round or estimate ZWG amounts
+2. **Correct currency**: Always use ZWG from receipt, not USD
+3. **Complete data**: Fill in all required fields
+4. **Verify calculations**: Check Total = Energy + Debt + REA + VAT
+
+**Security:**
+
+1. **Don't share account numbers**: Keep account info private
+2. **Store receipts securely**: Physical copies in safe place
+3. **Regular backups**: Export data monthly
+4. **Audit periodically**: Review old receipts for accuracy
+
+---
+
 ## 🎓 Advanced Tips and Tricks
 
 ### Expert-Level Usage Strategies

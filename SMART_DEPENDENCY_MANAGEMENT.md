@@ -94,7 +94,7 @@ npm run install:update
 The installer will:
 
 1. ✅ Check service status
-2. ✅ Stop service if running
+2. ✅  if running
 3. 📊 **Check dependencies** (diagnostic)
    - Shows: Missing, changed, or up-to-date
 4. 📦 **ALWAYS runs `npm install`** (regardless of check)

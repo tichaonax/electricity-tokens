@@ -1,6 +1,18 @@
 import { useSession } from 'next-auth/react';
 import { UserPermissions, hasPermission, mergeWithDefaultPermissions, ADMIN_PERMISSIONS } from '@/types/permissions';
 
+/**
+ * Custom hook for checking user permissions
+ * 
+ * IMPORTANT: Admins automatically have ALL permissions without needing explicit grants.
+ * The checkPermission() function returns true for any permission if user role is 'ADMIN'.
+ * 
+ * @returns {Object} Permission utilities
+ * @returns {UserPermissions} permissions - All permissions for current user
+ * @returns {Function} checkPermission - Check if user has specific permission (always true for admins)
+ * @returns {boolean} isAdmin - Whether current user is an admin
+ * @returns {boolean} isAuthenticated - Whether user is authenticated
+ */
 export function usePermissions() {
   const { data: session } = useSession();
   

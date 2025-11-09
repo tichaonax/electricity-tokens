@@ -12,6 +12,15 @@ export async function middleware(request: NextRequest) {
 
   // FIRST PRIORITY: Completely prevent callback URL parameters from appearing anywhere
   if (request.nextUrl.searchParams.has('callbackUrl')) {
+    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl');
+    
+    // CRITICAL: Block API endpoints from being used as callback URLs
+    if (callbackUrl?.startsWith('/api/')) {
+      console.warn('🚫 Blocked API endpoint as callbackUrl:', callbackUrl);
+      const cleanUrl = new URL('/auth/signin', request.url);
+      return NextResponse.redirect(cleanUrl, 302);
+    }
+    
     const cleanUrl = new URL(pathname, request.url);
     // Use 302 redirect to prevent caching
     return NextResponse.redirect(cleanUrl, 302);
@@ -29,6 +38,23 @@ export async function middleware(request: NextRequest) {
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
+
+  // Optional deployment-time cache-invalidation: when set, mark root HTML responses
+  // so clients will fetch fresh HTML and pick up cache-invalidation headers.
+  try {
+    const forceInvalidate = process.env.FORCE_CACHE_INVALIDATION === '1';
+    if (forceInvalidate && pathname === '/') {
+      // Prevent caching of root HTML
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      // Instruct any client-side cache invalidation logic to run
+      response.headers.set('X-Cache-Invalidate', 'true');
+      response.headers.set('X-Deploy-Timestamp', Date.now().toString());
+    }
+  } catch {
+    // swallow
+  }
 
   // Skip middleware for static assets and Next.js internals, auth pages, and public health endpoint
   if (
@@ -101,10 +127,34 @@ export async function middleware(request: NextRequest) {
 
     // 3. Authentication checks for protected routes
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
+      // DEBUG: log cookies to inspect what the browser is sending
+      try {
+        const cookieHeader = request.headers.get('cookie');
+        console.log('🔐 MIDDLEWARE DEBUG - request cookies:', cookieHeader);
+      } catch {
+        // ignore
+      }
+
       const token = await getToken({
         req: request,
         secret: process.env.NEXTAUTH_SECRET,
+        // Read from the custom cookie name configured in NextAuth
+        cookieName: 'electricity-tokens.session-token',
       });
+
+      // When debugging, print a small, non-sensitive summary of the token
+      // (do NOT print full token contents or secrets). This is temporary.
+      if (process.env.DEBUG_AUTH === '1') {
+        try {
+          if (token) {
+            console.log(`🔐 MIDDLEWARE DEBUG - getToken result: present sub=${token.sub} role=${token.role}`);
+          } else {
+            console.log('🔐 MIDDLEWARE DEBUG - getToken result: null');
+          }
+        } catch {
+          // ignore logging errors
+        }
+      }
 
       if (!token) {
         // Force redirect to clean sign-in page to prevent NextAuth from adding callback URLs
@@ -122,6 +172,15 @@ export async function middleware(request: NextRequest) {
             'LOW'
           )
         );
+
+        // Optionally include incoming cookie header in redirect response for debugging
+        const debugEnabled = process.env.DEBUG_AUTH === '1';
+        if (debugEnabled) {
+          const cookieHeader = request.headers.get('cookie') || '';
+          const redirectResponse = NextResponse.redirect(signInUrl);
+          redirectResponse.headers.set('X-Debug-Cookies', cookieHeader);
+          return redirectResponse;
+        }
 
         // Use direct redirect without callback URL
         return NextResponse.redirect(signInUrl);

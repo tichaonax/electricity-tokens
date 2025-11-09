@@ -22,7 +22,11 @@ function formatUptime(seconds: number): string {
   return parts.length > 0 ? parts.join(' ') : 'Just started';
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Check if this is from the health monitor service
+  const userAgent = request.headers.get('user-agent') || '';
+  const isHealthMonitorService = userAgent.includes('ElectricityTracker-HealthMonitor');
+
   try {
     // Simple database connectivity check
     let databaseHealthy = false;
@@ -30,7 +34,10 @@ export async function GET() {
       await prisma.$queryRaw`SELECT 1`;
       databaseHealthy = true;
     } catch (dbError) {
-      console.error('Database health check failed:', dbError);
+      // Only log database errors if not from health monitor (reduce log spam)
+      if (!isHealthMonitorService) {
+        console.error('Database health check failed:', dbError);
+      }
     }
 
     const uptimeSeconds = process.uptime ? Math.floor(process.uptime()) : 0;
@@ -58,7 +65,10 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Health check failed:', error);
+    // Only log errors if not from health monitor (reduce log spam)
+    if (!isHealthMonitorService) {
+      console.error('Health check failed:', error);
+    }
 
     return NextResponse.json(
       {

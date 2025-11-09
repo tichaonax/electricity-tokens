@@ -163,6 +163,411 @@ The system enforces these rules:
 
 ---
 
+## 🧾 Adding Receipt Data to Purchases
+
+### Understanding Receipt Data
+
+Receipt data is **optional** information from your official electricity purchase receipt that enables:
+
+- **Dual-currency tracking**: Compare your USD payment to the official ZWG (Zimbabwe Gold) receipt cost
+- **Exchange rate monitoring**: Track how ZWG/USD rates change over time
+- **Historical analysis**: Identify cost trends and unusual pricing patterns
+- **Accurate cost breakdown**: See exact charges (energy cost, debt, REA levy, VAT)
+
+Receipt data is **one-to-one** with purchases: each purchase can have only one receipt record.
+
+### When to Add Receipt Data
+
+Add receipt data when:
+
+- You have an official electricity purchase receipt from ZETDC/ZESA
+- You want to track dual-currency costs (USD vs ZWG)
+- You need detailed cost breakdown (energy, debt, fees, taxes)
+- You're analyzing historical exchange rate trends
+- You're importing bulk historical data via CSV
+
+### Step-by-Step: Adding Receipt Data
+
+**Method 1: Manual Entry (Individual Purchase)**
+
+1. **Navigate to Purchase Details**
+   - Go to "Purchases" page
+   - Click on the purchase you want to add receipt data for
+   - Click "Add Receipt Data" button
+
+2. **Enter Receipt Information**:
+
+   **Token Number** (Optional): The 20-digit token from your receipt
+   - Example: `6447 1068 4258 9659 8834`
+   - Spaces are allowed and will be preserved
+
+   **Account Number** (Optional): Your electricity account number
+   - Example: `37266905928`
+
+   **kWh Purchased** (Required): Kilowatt-hours from receipt
+   - Example: `203.21`
+   - Must be greater than 0, max 100,000 kWh
+
+   **Energy Cost (ZWG)** (Required): Base energy cost in ZWG
+   - Example: `1306.60`
+   - Must be ≥ 0
+
+   **Debt/Arrears (ZWG)** (Required): Any outstanding debt charged
+   - Example: `0.00`
+   - Must be ≥ 0
+
+   **REA Levy (ZWG)** (Required): Rural Electrification Agency levy
+   - Example: `78.40`
+   - Must be ≥ 0
+
+   **VAT (ZWG)** (Required): Value Added Tax
+   - Example: `195.99`
+   - Must be ≥ 0
+
+   **Total Amount (ZWG)** (Required): Total cost in ZWG currency
+   - Example: `1580.99`
+   - Should equal: Energy Cost + Debt + REA Levy + VAT
+   - System validates this calculation
+
+   **Amount Tendered (ZWG)** (Required): Amount you paid in ZWG
+   - Example: `1581.00`
+   - Usually slightly more than Total Amount
+
+   **Transaction Date/Time** (Required): Date and time from receipt
+   - Example: `16/10/25 14:02:36`
+   - Use the date/time picker
+
+3. **Submit Receipt Data**
+   - Click "Save Receipt Data"
+   - System validates all fields and relationships
+   - Success message appears
+   - Exchange rate automatically calculated: `Total ZWG ÷ USD Payment`
+
+**Method 2: Bulk Import (Historical Data)**
+
+See "Bulk Importing Receipt Data" section below for CSV import instructions.
+
+### Receipt Data Validation
+
+The system enforces these rules:
+
+- **One-to-one relationship**: Each purchase can have only one receipt
+- **All ZWG amounts ≥ 0**: No negative values allowed
+- **Total amount validation**: `totalAmountZWG` should equal sum of components
+- **kWh limits**: Maximum 100,000 kWh per receipt
+- **Token format**: 20-digit token with spaces (optional field)
+- **Exchange rate**: Automatically calculated as `totalAmountZWG / purchase.totalPayment`
+
+### Understanding Your Receipt
+
+**Sample Receipt Breakdown:**
+
+```
+Transaction Date/Time: 16/10/25 14:02:36
+Token Number:          6447 1068 4258 9659 8834
+Account Number:        37266905928
+
+Energy Cost (ZWG):     1,306.60
+Debt/Arrears (ZWG):        0.00
+REA Levy (ZWG):           78.40
+VAT (ZWG):               195.99
+─────────────────────────────────
+Total Amount (ZWG):    1,580.99
+Amount Tendered (ZWG): 1,581.00
+
+kWh Purchased:         203.21
+```
+
+**What Each Field Means:**
+
+- **Energy Cost**: Base cost of electricity before fees/taxes
+- **Debt/Arrears**: Any outstanding balance from previous months
+- **REA Levy**: Government levy for rural electrification projects (~6% of energy cost)
+- **VAT**: Value Added Tax (15% on energy cost + REA levy)
+- **Total Amount**: Final cost in ZWG currency
+- **Amount Tendered**: What you actually paid (includes change)
+
+### Viewing Receipt Data
+
+Once receipt data is added, you can view it:
+
+1. **On Purchase Details Page**:
+   - Full receipt breakdown with all ZWG amounts
+   - Calculated exchange rate (ZWG/USD)
+   - Cost per kWh in both USD and ZWG
+
+2. **On Insights Card** (if you have 3+ receipts):
+   - Current ZWG/kWh rate trend (rising/falling/stable)
+   - Recent exchange rate changes
+   - Cost anomaly alerts
+   - Recommendations for optimization
+
+3. **On Dual-Currency Chart**:
+   - Line chart comparing USD vs ZWG costs over time
+   - Exchange rate trend line
+   - Cost per kWh in both currencies
+
+4. **On ZWG Rate History Table**:
+   - Chronological list of all receipt exchange rates
+   - Percentage changes between purchases
+   - Trend indicators (↗️ rising, ↘️ falling, → stable)
+
+### Editing Receipt Data
+
+To update existing receipt data:
+
+1. Go to Purchase Details page
+2. Click "Edit Receipt Data" button
+3. Modify any field (all fields are optional in edit mode)
+4. Click "Update Receipt Data"
+
+**Note**: You can only edit receipt data for purchases you own (or if you're an admin).
+
+### Deleting Receipt Data
+
+To remove receipt data:
+
+1. Go to Purchase Details page
+2. Click "Delete Receipt Data" button
+3. Confirm deletion
+4. Receipt data is removed, but the purchase remains intact
+
+**Important**: Deleting receipt data:
+- Removes dual-currency tracking for that purchase
+- Affects historical analysis trends
+- Cannot be undone (you'll need to re-enter the data)
+
+### Receipt Data Tips
+
+**Best Practices:**
+
+1. **Add immediately**: Enter receipt data right after each purchase for best tracking
+2. **Check calculations**: Verify Total Amount = Energy Cost + Debt + REA + VAT
+3. **Keep receipts**: Store physical receipts for verification and audits
+4. **Review trends**: Check Insights Card monthly to spot unusual patterns
+5. **Use bulk import**: For historical data, use CSV import instead of manual entry
+
+**Common Mistakes to Avoid:**
+
+- ❌ Don't mix currencies (use only ZWG amounts from receipt)
+- ❌ Don't forget to include all charges (debt, REA, VAT)
+- ❌ Don't use estimated values (use exact amounts from receipt)
+- ❌ Don't add receipt data for the wrong purchase
+- ❌ Don't enter negative values
+
+---
+
+## 🧾 Bulk Importing Receipt Data
+
+### Understanding Bulk Import
+
+The bulk import feature allows you to import multiple historical receipts at once via CSV file. The system uses an intelligent matching algorithm to automatically link receipts to existing purchases based on:
+
+- **Date proximity** (same day = 50 points, within 1 day = 40 points, etc.)
+- **kWh match** (exact match = 50 points, ±1% = 45 points, etc.)
+
+**Confidence Levels:**
+
+- **High (80-100%)**: Auto-imported ✅ (green in preview)
+- **Medium (50-79%)**: Auto-imported ⚠️ (yellow in preview)
+- **Low (20-49%)**: Skipped ⏭️ (requires manual review)
+- **None (<20%)**: Skipped ❌ (no suitable match found)
+
+### Preparing Your CSV File
+
+**Step 1: Download Template**
+
+1. Go to "Bulk Import" page
+2. Click "Download CSV Template"
+3. Open in Excel, Google Sheets, or text editor
+
+**Step 2: Fill in Receipt Data**
+
+Use this exact column order:
+
+```csv
+Transaction Date/Time,Token Number,Account Number,kWh Purchased,Energy Cost (ZWG),Debt/Arrears (ZWG),REA Levy (ZWG),VAT (ZWG),Total Amount (ZWG),Amount Tendered (ZWG)
+16/10/25 14:02:36,6447 1068 4258 9659 8834,37266905928,203.21,1306.60,0.00,78.40,195.99,1580.99,1581.00
+17/10/25 09:15:22,5123 4567 8901 2345 6789,37266905928,150.50,967.82,0.00,58.07,145.22,1171.11,1200.00
+```
+
+**Required Columns:**
+
+1. **Transaction Date/Time**: `DD/MM/YY HH:mm:ss` format
+2. **Token Number**: 20 digits with spaces (optional, can be empty)
+3. **Account Number**: Your electricity account number (optional, can be empty)
+4. **kWh Purchased**: Positive decimal number
+5. **Energy Cost (ZWG)**: Positive decimal number
+6. **Debt/Arrears (ZWG)**: Positive decimal or 0
+7. **REA Levy (ZWG)**: Positive decimal or 0
+8. **VAT (ZWG)**: Positive decimal or 0
+9. **Total Amount (ZWG)**: Sum of all costs
+10. **Amount Tendered (ZWG)**: Amount paid (usually ≥ Total Amount)
+
+**CSV Constraints:**
+
+- Maximum file size: 5 MB
+- Maximum rows: 500 per file
+- Supported format: CSV only
+- Date format: DD/MM/YY HH:mm:ss (e.g., `16/10/25 14:02:36`)
+
+### Step-by-Step Bulk Import
+
+**Step 1: Upload CSV File**
+
+1. Navigate to "Bulk Import" page in the main menu
+2. Click "Choose File" or drag-and-drop your CSV
+3. System validates file format and size
+4. Click "Preview Import"
+
+**Step 2: Review Preview Results**
+
+The preview shows:
+
+- **Summary**: Total rows, valid rows, invalid rows
+- **Matched Receipts** (green/yellow cards):
+  - Receipt data from CSV
+  - Matched purchase details
+  - Confidence score (0-100%)
+  - Match reasons (date proximity, kWh match)
+  - Any warnings
+
+- **Errors** (red cards):
+  - Row number with error
+  - Error description
+  - Raw data for debugging
+
+**Interpreting Confidence Scores:**
+
+```
+🟢 95% High Confidence
+   ✓ Date match: within 1 day (50 points)
+   ✓ kWh exact match (50 points)
+   → Will be imported automatically
+
+🟡 65% Medium Confidence
+   ✓ Date match: within 2 days (30 points)
+   ✓ kWh ±1% match (45 points)
+   ⚠️ Warning: Multiple purchases on same day
+   → Will be imported automatically
+
+🟠 35% Low Confidence
+   ✓ Date match: within 7 days (10 points)
+   ✓ kWh ±5% match (35 points)
+   ⚠️ Warning: kWh difference >2%
+   → SKIPPED (manual review required)
+
+❌ 10% No Match
+   ✗ No purchase within 7 days
+   ⚠️ Error: Cannot find suitable match
+   → SKIPPED
+```
+
+**Step 3: Confirm Import**
+
+1. Review all matched receipts in preview
+2. Check warnings and errors
+3. If satisfied, click "Confirm Import"
+4. System imports all high/medium confidence matches
+5. Low confidence and errors are skipped
+
+**Step 4: Review Results**
+
+After import, you'll see:
+
+- **Summary**: Total rows, imported count, skipped count, failed count
+- **Imported Receipts**: Row number, receipt ID, purchase ID, status
+- **Skipped Receipts**: Row number, reason for skipping
+- **Failed Receipts**: Row number, error message
+
+### Matching Algorithm Details
+
+The system calculates confidence score for each CSV row:
+
+**1. Date Proximity (0-50 points)**
+
+| Time Difference | Points | Example |
+|----------------|--------|---------|
+| Same day | 50 pts | Purchase on 16/10/25, Receipt on 16/10/25 |
+| Within 1 day | 40 pts | Purchase on 16/10/25, Receipt on 17/10/25 |
+| Within 2 days | 30 pts | Purchase on 16/10/25, Receipt on 18/10/25 |
+| Within 3 days | 20 pts | Purchase on 16/10/25, Receipt on 19/10/25 |
+| Within 7 days | 10 pts | Purchase on 16/10/25, Receipt on 22/10/25 |
+| >7 days | 0 pts | No match |
+
+**2. kWh Match (0-50 points)**
+
+| kWh Difference | Points | Example |
+|---------------|--------|---------|
+| Exact match | 50 pts | Both 200.00 kWh |
+| ±1% | 45 pts | Purchase 200 kWh, Receipt 198 kWh |
+| ±2% | 40 pts | Purchase 200 kWh, Receipt 196 kWh |
+| ±5% | 35 pts | Purchase 200 kWh, Receipt 190 kWh |
+| >5% | 0 pts | Too different |
+
+**3. Final Confidence**
+
+```
+Total Score = Date Proximity Points + kWh Match Points
+Confidence % = (Total Score / 100) × 100
+```
+
+**Example Calculations:**
+
+```
+Receipt A:
+- Same day purchase (50 pts)
+- Exact kWh match (50 pts)
+- Total: 100 pts → 100% confidence ✅
+
+Receipt B:
+- Within 1 day (40 pts)
+- kWh ±1% match (45 pts)
+- Total: 85 pts → 85% confidence ✅
+
+Receipt C:
+- Within 3 days (20 pts)
+- kWh ±2% match (40 pts)
+- Total: 60 pts → 60% confidence ⚠️
+
+Receipt D:
+- Within 7 days (10 pts)
+- kWh ±5% match (35 pts)
+- Total: 45 pts → 45% confidence ⏭️ SKIPPED
+```
+
+### Troubleshooting Bulk Import
+
+**Common Errors:**
+
+1. **"Invalid date format: 32/13/25"**
+   - Solution: Use `DD/MM/YY HH:mm:ss` format
+   - Example: `16/10/25 14:02:36`
+
+2. **"File too large: 6.2 MB (max 5 MB)"**
+   - Solution: Split into multiple files (max 500 rows each)
+
+3. **"Invalid kWh: must be positive"**
+   - Solution: Check kWh Purchased column for negative/zero values
+
+4. **"Cannot find suitable match (confidence 15%)"**
+   - Solution: Check date and kWh values match an existing purchase
+   - Consider adding missing purchase manually first
+
+5. **"Receipt already exists for this purchase"**
+   - Solution: Remove duplicate receipts from CSV or delete existing receipt data
+
+**Best Practices:**
+
+- ✅ **Import oldest receipts first** to build historical trends
+- ✅ **Verify CSV in preview mode** before confirming import
+- ✅ **Keep backups** of your CSV files for re-imports
+- ✅ **Review skipped receipts** and add manually if needed
+- ✅ **Check date formats** match DD/MM/YY HH:mm:ss exactly
+- ✅ **Validate totals** (Total Amount = Energy Cost + Debt + REA + VAT)
+
+---
+
 ## 📝 Contributing to Purchases
 
 ### Understanding Contributions

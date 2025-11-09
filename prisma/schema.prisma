@@ -66,19 +66,41 @@ model Session {
 }
 
 model TokenPurchase {
-  id           String             @id
+  id           String            @id
   totalTokens  Float
   totalPayment Float
   meterReading Float
   purchaseDate DateTime
-  isEmergency  Boolean            @default(false)
+  isEmergency  Boolean           @default(false)
   createdBy    String
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  user         User               @relation(fields: [createdBy], references: [id])
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  user         User              @relation(fields: [createdBy], references: [id])
   contribution UserContribution?
+  receiptData  ReceiptData?
 
   @@map("token_purchases")
+}
+
+model ReceiptData {
+  id                  String        @id @default(cuid())
+  purchaseId          String        @unique
+  tokenNumber         String?
+  accountNumber       String?
+  kwhPurchased        Float
+  energyCostZWG       Float
+  debtZWG             Float
+  reaZWG              Float
+  vatZWG              Float
+  totalAmountZWG      Float
+  tenderedZWG         Float
+  transactionDateTime DateTime
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  purchase            TokenPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseId])
+  @@map("receipt_data")
 }
 
 model UserContribution {

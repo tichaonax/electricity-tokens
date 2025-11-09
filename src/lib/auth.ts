@@ -3,22 +3,47 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { prisma } from './prisma';
-import { auditAuthentication, auditSession } from './audit';
+import { auditAuthentication } from './audit';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],
   session: {
     strategy: 'jwt',
   },
+  cookies: {
+    sessionToken: {
+      name: `electricity-tokens.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        // Allow explicit override for secure cookie behavior in non-HTTPS dev
+        secure: false, // Always false for HTTP-only local deployment
+      },
+    },
+    csrfToken: {
+      name: `electricity-tokens.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Always false for HTTP-only local deployment
+      },
+    },
+    callbackUrl: {
+      name: `electricity-tokens.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Always false for HTTP-only local deployment
+      },
+    },
+  },
   pages: {
     signIn: '/auth/signin',
     signOut: '/', // Redirect to homepage after logout
   },
-  // Disable callback URL to prevent parameter pollution
-  useSecureCookies: process.env.NODE_ENV === 'production',
   secret: process.env.NEXTAUTH_SECRET,
-  // Disable automatic callback URL generation
-  trustHost: true,
   // Remove hardcoded NEXTAUTH_URL - NextAuth will auto-detect from request headers
   providers: [
     CredentialsProvider({
@@ -31,8 +56,6 @@ export const authOptions: NextAuthOptions = {
         console.log('🔍 AUTH DEBUG: Starting authorization...');
         console.log('🔍 AUTH DEBUG: prisma object exists:', !!prisma);
         console.log('🔍 AUTH DEBUG: prisma.user exists:', !!prisma.user);
-        console.log('🔍 AUTH DEBUG: typeof prisma.user:', typeof prisma.user);
-        console.log('🔍 AUTH DEBUG: Available models:', Object.keys(prisma).filter(key => typeof prisma[key] === 'object' && prisma[key] && typeof prisma[key].findUnique === 'function'));
         
         if (!credentials?.email || !credentials?.password) {
           console.log('❌ AUTH DEBUG: Missing credentials');
@@ -158,14 +181,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      // Handle logout - if URL is explicitly set to homepage, respect it
-      if (url === baseUrl || url === `${baseUrl}/`) {
-        return baseUrl;
-      }
-      // For login redirects, ignore callback URLs and go to dashboard
-      return `${baseUrl}/dashboard`;
-    },
+    
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
@@ -173,6 +189,31 @@ export const authOptions: NextAuthOptions = {
         token.passwordResetRequired = user.passwordResetRequired;
       }
       return token;
+    },
+    async redirect({ url, baseUrl }) {
+      
+      // CRITICAL: Block API endpoints from being used as redirect targets
+      if (url.includes('/api/')) {
+        return `${baseUrl}/dashboard`;
+      }
+      
+      // Handle logout - if URL is explicitly set to homepage, respect it
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return baseUrl;
+      }
+      
+      // Block any external URLs
+      if (!url.startsWith(baseUrl) && !url.startsWith('/')) {
+        return `${baseUrl}/dashboard`;
+      }
+      
+      // If it's a relative URL starting with /, allow it
+      if (url.startsWith('/') && !url.includes('/api/')) {
+        return url;
+      }
+      
+      // For all other cases, go to dashboard
+      return `${baseUrl}/dashboard`;
     },
     async session({ session, token }) {
       if (token) {
@@ -204,3 +245,4 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+

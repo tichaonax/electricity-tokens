@@ -2,6 +2,37 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+// Load environment variables from .env.local
+const envPath = path.resolve(__dirname, '../..', '.env.local');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const trimmedLine = line.trim();
+    // Skip empty lines and comments
+    if (!trimmedLine || trimmedLine.startsWith('#')) {
+      return;
+    }
+    const match = trimmedLine.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      let value = match[2].trim();
+      // Remove surrounding quotes
+      if ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  });
+  console.log(`✅ Loaded environment from ${envPath}`);
+  console.log(`📌 PORT set to: ${process.env.PORT}`);
+  console.log(`📌 DATABASE_URL set to: ${process.env.DATABASE_URL ? 'present' : 'missing'}`);
+} else {
+  console.warn(`⚠️  .env.local not found at ${envPath}`);
+}
+
 class HybridElectricityTokensService {
   constructor() {
     this.appProcess = null;
@@ -1121,7 +1152,7 @@ class HybridElectricityTokensService {
         shell: false, // Don't use shell to avoid extra process layers
         env: {
           ...process.env,
-          NODE_ENV: 'production',
+          NODE_ENV: 'development', // Force development mode for consistent NextAuth cookie/session behavior
           PORT: process.env.PORT || 3000,
         },
       });
@@ -1141,6 +1172,12 @@ class HybridElectricityTokensService {
         const error = data.toString().trim();
         if (error) {
           this.log(`Next.js Error: ${error}`, 'ERROR');
+          // Extra: If error looks like a JSON parse error, log possible file suspects
+          if (error.includes('Unexpected token') && error.includes('JSON')) {
+            this.log('⚠️  JSON parse error detected. Possible corrupted or empty JSON file.', 'ERROR');
+            this.log('Check .next/build-info.json, public/build-info.json, package.json, and any cache/config files for corruption.', 'ERROR');
+            this.log('You can delete .next and re-run npm run build to regenerate.', 'ERROR');
+          }
         }
       });
 
@@ -1571,7 +1608,7 @@ class HybridElectricityTokensService {
       shell: false,
       env: {
         ...process.env,
-        NODE_ENV: 'production',
+        // NODE_ENV: 'production', // Removed - let .env.local control it
         PORT: process.env.PORT || 3000,
       },
     });

@@ -1,3 +1,6 @@
 {
-  "cSpell.words": ["buildexpectedservicename"]
+  "cSpell.words": [
+    "buildexpectedservicename"
+  ],
+  "idf.pythonInstallPath": "c:\\Espressif\\tools\\tools\\idf-python\\3.8.7\\python.exe"
 }

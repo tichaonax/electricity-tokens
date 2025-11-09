@@ -32,6 +32,7 @@ import {
   ExternalLink,
   CheckCircle,
   XCircle,
+  Receipt,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -58,6 +59,11 @@ interface Purchase {
     tokensConsumed: number;
     contributionAmount: number;
     meterReading: number;
+  } | null;
+  receiptData?: {
+    id: string;
+    totalAmountZWG: number;
+    kwhPurchased: number;
   } | null;
 }
 
@@ -926,10 +932,22 @@ export function PurchaseHistoryTable({
             {
               key: 'totalPayment',
               label: 'Amount',
-              render: (payment) => (
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                  ${payment.toFixed(2)}
-                </span>
+              render: (payment, row) => (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                    ${payment.toFixed(2)}
+                  </span>
+                  {row.receiptData && (
+                    <ResponsiveBadge
+                      variant="secondary"
+                      className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
+                      title="Has official ZWG receipt data"
+                    >
+                      <Receipt className="h-3 w-3" />
+                      <span className="hidden md:inline">Receipt</span>
+                    </ResponsiveBadge>
+                  )}
+                </div>
               ),
             },
             {

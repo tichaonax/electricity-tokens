@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form';
 import { AlertCircle, CheckCircle2, DollarSign, Zap, Info } from 'lucide-react';
 import { useFormAnimations } from '@/hooks/useFormAnimations';
+import { ReceiptDataForm } from '@/components/receipt-data-form';
 
 // Form-specific schema for react-hook-form
 const purchaseFormSchema = z.object({
@@ -52,6 +53,7 @@ interface PurchaseFormProps {
     purchaseDate: string;
     isEmergency: boolean;
   };
+  receiptDataDefault?: any;
 }
 
 export function PurchaseForm({
@@ -62,6 +64,7 @@ export function PurchaseForm({
   onCancel,
   isLoading = false,
   initialData,
+  receiptDataDefault,
 }: PurchaseFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -128,6 +131,20 @@ export function PurchaseForm({
   }>({
     isLoading: false,
   });
+
+  // Receipt data state
+  const [receiptData, setReceiptData] = useState<Partial<{
+    tokenNumber?: string;
+    accountNumber?: string;
+    kwhPurchased: number;
+    energyCostZWG: number;
+    debtZWG: number;
+    reaZWG: number;
+    vatZWG: number;
+    totalAmountZWG: number;
+    tenderedZWG: number;
+    transactionDateTime: string;
+  }> | null>(null);
 
   const {
     register,
@@ -470,10 +487,15 @@ export function PurchaseForm({
       setSubmitSuccess(false);
 
       // Convert date to ISO string for API submission
-      const submitData = {
+      const submitData: CreateTokenPurchaseInput & { receiptData?: any } = {
         ...data,
         purchaseDate: (data.purchaseDate || new Date()).toISOString(),
       };
+
+      // Add receipt data if provided
+      if (receiptData && receiptData.kwhPurchased) {
+        submitData.receiptData = receiptData;
+      }
 
       if (mode === 'edit' && purchaseId) {
         // Update existing purchase
@@ -1010,10 +1032,10 @@ export function PurchaseForm({
                     <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />
                     <div className="text-sm text-red-700 dark:text-red-300">
                       {meterReadingValidation.error}
-                      {meterReadingValidation.suggestedMinimum && (
+                      {meterReadingValidation.minimum && (
                         <div className="mt-1 font-medium">
                           Minimum required:{' '}
-                          {meterReadingValidation.suggestedMinimum.toLocaleString()}{' '}
+                          {meterReadingValidation.minimum.toLocaleString()}{' '}
                           kWh
                         </div>
                       )}
@@ -1154,6 +1176,17 @@ export function PurchaseForm({
               </div>
             </div>
           </FormField>
+        </div>
+
+        {/* Receipt Data Form (Optional) */}
+        <div className="mt-6">
+          <ReceiptDataForm
+            onChange={(data) => setReceiptData(data)}
+            defaultValues={receiptDataDefault}
+            collapsible={true}
+            defaultExpanded={false}
+            hasReceipt={!!receiptDataDefault}
+          />
         </div>
 
         {/* Cost Calculation Display */}

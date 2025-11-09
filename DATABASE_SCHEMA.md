@@ -107,6 +107,7 @@ CREATE TABLE token_purchases (
 
 - Many-to-one with `User` (creator)
 - One-to-one with `UserContribution` (optional contribution)
+- One-to-one with `ReceiptData` (optional receipt data)
 
 **Business Rules:**
 
@@ -116,6 +117,7 @@ CREATE TABLE token_purchases (
 - Meter readings must be chronologically sequential
 - Emergency purchases are flagged for cost analysis
 - Only one contribution allowed per purchase
+- Receipt data is optional but provides dual-currency tracking
 
 **Constraints:**
 
@@ -125,7 +127,86 @@ CREATE TABLE token_purchases (
 
 ---
 
-### 3. UserContribution Model
+### 3. ReceiptData Model
+
+The `ReceiptData` model stores official electricity receipt information from the power provider, enabling dual-currency (USD/ZWG) tracking and analysis.
+
+```sql
+CREATE TABLE receipt_data (
+  id                    VARCHAR PRIMARY KEY DEFAULT cuid(),
+  purchase_id           VARCHAR UNIQUE NOT NULL REFERENCES token_purchases(id) ON DELETE CASCADE,
+  token_number          VARCHAR NULL,
+  account_number        VARCHAR NULL,
+  kwh_purchased         DECIMAL(10,2) NOT NULL,
+  energy_cost_zwg       DECIMAL(10,2) NOT NULL,
+  debt_zwg              DECIMAL(10,2) NOT NULL,
+  rea_zwg               DECIMAL(10,2) NOT NULL,
+  vat_zwg               DECIMAL(10,2) NOT NULL,
+  total_amount_zwg      DECIMAL(10,2) NOT NULL,
+  tendered_zwg          DECIMAL(10,2) NOT NULL,
+  transaction_date_time TIMESTAMP NOT NULL,
+  created_at            TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at            TIMESTAMP DEFAULT NOW() NOT NULL,
+  INDEX idx_receipt_purchase_id (purchase_id)
+);
+```
+
+**Fields:**
+
+- `id`: Unique identifier (CUID format)
+- `purchaseId`: Reference to associated token purchase (unique, required)
+- `tokenNumber`: Official token number from receipt (20-digit, formatted with spaces)
+- `accountNumber`: Customer account number (optional)
+- `kwhPurchased`: kWh amount on receipt (should match purchase totalTokens)
+- `energyCostZWG`: Base energy cost in ZWG currency
+- `debtZWG`: Outstanding debt/arrears applied to purchase
+- `reaZWG`: Rural Electrification Agency levy
+- `vatZWG`: Value Added Tax (14.5% in Zimbabwe)
+- `totalAmountZWG`: Total cost in ZWG (sum of all charges)
+- `tenderedZWG`: Amount paid/tendered in ZWG
+- `transactionDateTime`: Official transaction timestamp from receipt
+- `createdAt`: Record creation timestamp
+- `updatedAt`: Last modification timestamp
+
+**Relationships:**
+
+- One-to-one with `TokenPurchase` (required, cascade delete)
+
+**Business Rules:**
+
+- Receipt data is optional for purchases
+- All ZWG amounts must be positive (≥ 0)
+- `kwhPurchased` should match the associated purchase's `totalTokens`
+- `totalAmountZWG` = `energyCostZWG + debtZWG + reaZWG + vatZWG`
+- Exchange rate calculated as: `totalAmountZWG / purchase.totalPayment`
+- Deleting a purchase automatically deletes associated receipt data (CASCADE)
+- Each purchase can have at most one receipt
+
+**Constraints:**
+
+- Maximum kWh: 100,000
+- Maximum ZWG amounts: 999,999,999.99
+- Token number format: 20 digits with spaces (e.g., "1234 5678 9012 3456 7890")
+- Transaction date cannot be in the future
+
+**Use Cases:**
+
+- Dual-currency cost tracking (USD internal payments + ZWG official receipts)
+- Exchange rate analysis over time
+- Historical pricing trend detection
+- Anomaly detection (unusual rate spikes/drops)
+- Bulk import from CSV for historical data
+- Cost forecasting based on ZWG rate trends
+
+**Indexes:**
+
+- Primary key index on `id`
+- Unique index on `purchaseId` (one receipt per purchase)
+- Performance index on `purchaseId` for join operations
+
+---
+
+### 4. UserContribution Model
 
 The `UserContribution` model tracks individual user contributions to token purchases.
 

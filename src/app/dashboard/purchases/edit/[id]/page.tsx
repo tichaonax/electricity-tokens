@@ -192,6 +192,7 @@ export default function EditPurchasePage() {
                   : '',
                 isEmergency: purchase?.isEmergency || false,
               }}
+              receiptDataDefault={purchase?.receiptData}
               onSuccess={handleSuccess}
               onCancel={() => router.push('/dashboard/purchases/history')}
             />

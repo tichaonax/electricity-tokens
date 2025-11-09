@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { signIn, getSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 function SignInContent() {
@@ -46,8 +46,8 @@ function SignInContent() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const message = searchParams.get('message');
@@ -73,43 +73,26 @@ function SignInContent() {
 
     try {
       console.log('FORM DEBUG - Attempting login with email:', email);
+
+      // Try with redirect: true and callbackUrl to let NextAuth handle everything
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
-        callbackUrl: '/dashboard', // Explicitly set clean callback URL
+        callbackUrl: '/dashboard',
+        redirect: true, // Let NextAuth handle the redirect
       });
 
       console.log('FORM DEBUG - SignIn result:', result);
+      // This code won't run if redirect:true works
+      // But keeping it as fallback
       if (result?.error) {
         console.log('FORM DEBUG - Login error:', result.error);
         setError('Invalid credentials');
-      } else {
-        console.log('FORM DEBUG - Login successful, checking session');
-        // Check if user needs to reset password
-        const session = await getSession();
-        console.log('FORM DEBUG - Session after login:', session);
-        if (session?.user?.passwordResetRequired) {
-          console.log(
-            'FORM DEBUG - Password reset required, redirecting to change-password'
-          );
-          // Use router.replace to prevent back navigation issues
-          router.replace('/auth/change-password');
-        } else {
-          console.log('FORM DEBUG - Redirecting to dashboard');
-          // Use router.replace to clean up the URL and go to dashboard
-          router.replace('/dashboard');
-
-          // Alternative approach if router.replace fails
-          setTimeout(() => {
-            console.log('FORM DEBUG - Fallback redirect using window.location');
-            window.location.href = '/dashboard';
-          }, 1000);
-        }
+        setLoading(false);
       }
-    } catch {
+    } catch (error) {
+      console.error('FORM DEBUG - Signin error:', error);
       setError('An error occurred during sign in');
-    } finally {
       setLoading(false);
     }
   };

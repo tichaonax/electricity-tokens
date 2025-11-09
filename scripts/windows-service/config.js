@@ -52,7 +52,7 @@ const SERVICE_CONFIG = {
 
   // Environment variables
   env: {
-    NODE_ENV: 'production',
+    // NODE_ENV: 'production', // Removed - let .env.local control it
     PORT: process.env.PORT || 3000,
 
     // Database URL from environment or default
