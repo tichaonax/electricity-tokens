@@ -25,23 +25,21 @@ export default withAuth(
       '__Secure-next-auth.session-token',
       '__Secure-next-auth.csrf-token',
       '__Secure-next-auth.callback-url',
-      '__Host-next-auth.csrf-token'
+      '__Host-next-auth.csrf-token',
     ];
 
     // Check if any old cookies exist and clear them
     const cookies = req.cookies;
-    let hasOldCookies = false;
 
     for (const oldName of oldCookieNames) {
       if (cookies.get(oldName)) {
-        hasOldCookies = true;
         // Delete the old cookie by setting it to expire immediately
         response.cookies.set(oldName, '', {
           expires: new Date(0),
           path: '/',
           httpOnly: true,
           sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production'
+          secure: process.env.NODE_ENV === 'production',
         });
       }
     }
@@ -53,7 +51,7 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
-        
+
         // Always allow access to auth pages
         if (pathname.startsWith('/auth/')) {
           return true;

@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { PurchaseForm } from '@/components/purchase-form';
 import { ArrowLeft, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,18 +30,7 @@ export default function EditPurchasePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
-      return;
-    }
-
-    if (status === 'authenticated' && purchaseId) {
-      fetchPurchase();
-    }
-  }, [status, router, purchaseId]); // fetchPurchase is called conditionally, which is intentional
-
-  const fetchPurchase = async () => {
+  const fetchPurchase = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -60,13 +49,24 @@ export default function EditPurchasePage() {
 
       const data = await response.json();
       setPurchase(data);
-    } catch (error) {
+    } catch {
       // console.error removed
       setError('Failed to load purchase');
     } finally {
       setLoading(false);
     }
-  };
+  }, [purchaseId]);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+      return;
+    }
+
+    if (status === 'authenticated' && purchaseId) {
+      fetchPurchase();
+    }
+  }, [status, router, purchaseId, fetchPurchase]);
 
   const handleSuccess = () => {
     router.push('/dashboard/purchases/history');

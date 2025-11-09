@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type CreateTokenPurchaseInput } from '@/lib/validations';
+import { CreateTokenPurchaseInput } from '@/lib/validations';
+import { CreateReceiptDataInput } from '@/types/receipt-data';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +54,7 @@ interface PurchaseFormProps {
     purchaseDate: string;
     isEmergency: boolean;
   };
-  receiptDataDefault?: any;
+  receiptDataDefault?: Partial<CreateReceiptDataInput>;
 }
 
 export function PurchaseForm({
@@ -487,7 +488,9 @@ export function PurchaseForm({
       setSubmitSuccess(false);
 
       // Convert date to ISO string for API submission
-      const submitData: CreateTokenPurchaseInput & { receiptData?: any } = {
+      const submitData: CreateTokenPurchaseInput & {
+        receiptData?: Partial<CreateReceiptDataInput>;
+      } = {
         ...data,
         purchaseDate: (data.purchaseDate || new Date()).toISOString(),
       };
@@ -1035,8 +1038,7 @@ export function PurchaseForm({
                       {meterReadingValidation.minimum && (
                         <div className="mt-1 font-medium">
                           Minimum required:{' '}
-                          {meterReadingValidation.minimum.toLocaleString()}{' '}
-                          kWh
+                          {meterReadingValidation.minimum.toLocaleString()} kWh
                         </div>
                       )}
                     </div>

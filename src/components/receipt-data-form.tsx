@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 // Helper to fetch the first account number
 async function fetchFirstAccountNumber() {
   try {
-    const res = await fetch('/api/receipt-data/first-account', { credentials: 'include' });
+    const res = await fetch('/api/receipt-data/first-account', {
+      credentials: 'include',
+    });
     if (!res.ok) return null;
     const data = await res.json();
     return data.accountNumber || null;
@@ -24,7 +26,13 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { formatZWG } from '@/lib/utils';
 
 // Receipt data form schema matching the project's validation pattern
@@ -75,7 +83,9 @@ export function ReceiptDataForm({
 
   const [checkingToken, setCheckingToken] = useState(false);
   const lastCheckedToken = useRef<string | undefined>(undefined);
-  const [globalAccountNumber, setGlobalAccountNumber] = useState<string | null>(null);
+  const [globalAccountNumber, setGlobalAccountNumber] = useState<string | null>(
+    null
+  );
   const [accountNumberLoading, setAccountNumberLoading] = useState(true);
 
   useEffect(() => {
@@ -87,7 +97,9 @@ export function ReceiptDataForm({
         if (acc) setValue('accountNumber', acc);
       }
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -109,12 +121,17 @@ export function ReceiptDataForm({
 
   const totalMismatch =
     calculatedTotal > 0 &&
-    Math.abs(calculatedTotal - Number(watchedValues.totalAmountZWG || 0)) > 0.01;
+    Math.abs(calculatedTotal - Number(watchedValues.totalAmountZWG || 0)) >
+      0.01;
 
   return (
     <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/30">
       <CardHeader
-        className={collapsible ? 'cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/30 transition-colors' : ''}
+        className={
+          collapsible
+            ? 'cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/30 transition-colors'
+            : ''
+        }
         onClick={() => collapsible && setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-between">
@@ -130,7 +147,9 @@ export function ReceiptDataForm({
                   />
                 )}
               </CardTitle>
-              <CardDescription className="text-xs text-blue-700 dark:text-blue-300">ZESA official receipt details</CardDescription>
+              <CardDescription className="text-xs text-blue-700 dark:text-blue-300">
+                ZESA official receipt details
+              </CardDescription>
             </div>
           </div>
           {collapsible && (
@@ -164,9 +183,14 @@ export function ReceiptDataForm({
                 disabled={accountNumberLoading}
               />
               <FormDescription className="text-xs text-purple-600 dark:text-purple-400">
-                20-digit account number from receipt (first receipt sets for all, then read-only)
-                {accountNumberLoading && <span className="ml-2 text-blue-500">Loading...</span>}
-                {globalAccountNumber && <span className="ml-2 text-green-600">(locked)</span>}
+                20-digit account number from receipt (first receipt sets for
+                all, then read-only)
+                {accountNumberLoading && (
+                  <span className="ml-2 text-blue-500">Loading...</span>
+                )}
+                {globalAccountNumber && (
+                  <span className="ml-2 text-green-600">(locked)</span>
+                )}
               </FormDescription>
               {errors.accountNumber && (
                 <FormMessage>{errors.accountNumber.message}</FormMessage>
@@ -185,11 +209,15 @@ export function ReceiptDataForm({
                     setCheckingToken(true);
                     lastCheckedToken.current = value;
                     try {
-                      const res = await fetch(`/api/receipt-data?tokenNumber=${encodeURIComponent(value)}`, { credentials: 'include' });
+                      const res = await fetch(
+                        `/api/receipt-data?tokenNumber=${encodeURIComponent(value)}`,
+                        { credentials: 'include' }
+                      );
                       const data = await res.json();
                       if (data.exists) {
                         const r = data.receiptData;
-                        let msg = 'A receipt with this token number already exists.';
+                        let msg =
+                          'A receipt with this token number already exists.';
                         if (r && r.purchase && r.purchase.user) {
                           msg += `\nEntered by: ${r.purchase.user.name} (${r.purchase.user.email})`;
                         }
@@ -203,7 +231,7 @@ export function ReceiptDataForm({
                       } else {
                         clearErrors('tokenNumber');
                       }
-                    } catch (err) {
+                    } catch {
                       setError('tokenNumber', {
                         type: 'manual',
                         message: 'Could not verify token number. Try again.',
@@ -384,7 +412,9 @@ export function ReceiptDataForm({
               }`}
             >
               <p className="font-medium">
-                {totalMismatch ? '⚠️ Total Mismatch Detected' : '✓ Total Verified'}
+                {totalMismatch
+                  ? '⚠️ Total Mismatch Detected'
+                  : '✓ Total Verified'}
               </p>
               <p className="text-xs mt-1">
                 Calculated: {formatZWG(calculatedTotal)} | Entered:{' '}

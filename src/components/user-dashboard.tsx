@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   LineChart,
@@ -93,11 +93,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
   const [error, setError] = useState<string | null>(null);
   const { checkPermission } = usePermissions();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [userId]); // fetchDashboardData is recreated each render, which is intentional
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -120,7 +116,11 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const getEfficiencyColor = (efficiency: number) => {
     if (efficiency >= 95) return 'text-green-600';

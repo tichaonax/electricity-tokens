@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 function SignInContent() {
@@ -47,7 +47,6 @@ function SignInContent() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   useEffect(() => {
     const message = searchParams.get('message');

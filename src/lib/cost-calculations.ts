@@ -4,12 +4,6 @@
  * V2: Now includes dual-currency support with receipt data
  */
 
-import {
-  calculateDualCurrencyCost,
-  type PurchaseWithReceipt,
-  type DualCurrencyCostBreakdown,
-} from './cost-algorithm-v2';
-
 // Helper function to round to 2 decimal places
 const round2 = (num: number): number => Math.round(num * 100) / 100;
 
@@ -100,9 +94,11 @@ export function calculateProportionalCost(
 export function calculateCostPerKwh(purchase: Purchase): number {
   // Prefer official receipt data if available
   if (purchase.receiptData && purchase.receiptData.kwhPurchased > 0) {
-    return purchase.receiptData.totalAmountZWG / purchase.receiptData.kwhPurchased;
+    return (
+      purchase.receiptData.totalAmountZWG / purchase.receiptData.kwhPurchased
+    );
   }
-  
+
   // Fall back to USD internal data
   if (purchase.totalTokens === 0) return 0;
   return purchase.totalPayment / purchase.totalTokens;
@@ -117,13 +113,15 @@ export function calculateCostPerKwhDual(purchase: Purchase): {
   zwg: number | null;
   hasReceiptData: boolean;
 } {
-  const usd = purchase.totalTokens > 0 ? purchase.totalPayment / purchase.totalTokens : 0;
-  
+  const usd =
+    purchase.totalTokens > 0 ? purchase.totalPayment / purchase.totalTokens : 0;
+
   let zwg: number | null = null;
   if (purchase.receiptData && purchase.receiptData.kwhPurchased > 0) {
-    zwg = purchase.receiptData.totalAmountZWG / purchase.receiptData.kwhPurchased;
+    zwg =
+      purchase.receiptData.totalAmountZWG / purchase.receiptData.kwhPurchased;
   }
-  
+
   return {
     usd: round2(usd),
     zwg: zwg !== null ? round2(zwg) : null,
