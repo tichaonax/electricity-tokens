@@ -89,7 +89,12 @@
       "Bash(cmd /c \"dir C:\\electricity-app\\electricity-tokens\\scripts\\windows-service\\daemon /O-D /B\")",
       "Bash(cmd /c \"if exist C:\\electricity-app\\electricity-tokens\\scripts\\windows-service\\daemon (echo EXISTS & dir C:\\electricity-app\\electricity-tokens\\scripts\\windows-service\\daemon) else (echo MISSING)\")",
       "Bash(sc.exe query ElectricityTracker.exe)",
-      "Bash(sc.exe start ElectricityTracker.exe)"
+      "Bash(sc.exe start ElectricityTracker.exe)",
+      "Bash(git mv:*)",
+      "Bash(cmd //c \"rd /s /q .next 2>NUL\")",
+      "Bash(cmd /c \"taskkill /PID 34628 /F\")",
+      "Bash(cmd /c \"dir C:\\electricity-app\\electricity-tokens\\logs /O-D /B\")",
+      "Bash(cmd /c \"type C:\\electricity-app\\electricity-tokens\\scripts\\windows-service\\daemon\\service.log | findstr /C:\"2025-11-09T21:14\" | tail -20\")"
     ],
     "deny": []
   }

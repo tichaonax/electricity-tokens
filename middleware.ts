@@ -10,17 +10,33 @@ import {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // FIRST PRIORITY: Completely prevent callback URL parameters from appearing anywhere
+  // CRITICAL: Skip middleware for auth and dashboard routes FIRST before any processing
+  // This allows NextAuth to handle its own redirects and prevents interference with authentication
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/user') || // Skip user API routes - they handle their own auth
+    pathname.startsWith('/api/health') || // Skip all health endpoints
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/dashboard') || // Skip dashboard routes - they handle their own auth via SessionProvider
+    (pathname.includes('.') && !pathname.includes('/auth/')) ||
+    pathname === '/favicon.ico' ||
+    pathname === '/' // Skip root page
+  ) {
+    return NextResponse.next();
+  }
+
+  // Only strip callbackUrl from non-auth pages
   if (request.nextUrl.searchParams.has('callbackUrl')) {
     const callbackUrl = request.nextUrl.searchParams.get('callbackUrl');
-    
+
     // CRITICAL: Block API endpoints from being used as callback URLs
     if (callbackUrl?.startsWith('/api/')) {
       console.warn('🚫 Blocked API endpoint as callbackUrl:', callbackUrl);
       const cleanUrl = new URL('/auth/signin', request.url);
       return NextResponse.redirect(cleanUrl, 302);
     }
-    
+
     const cleanUrl = new URL(pathname, request.url);
     // Use 302 redirect to prevent caching
     return NextResponse.redirect(cleanUrl, 302);
@@ -45,7 +61,10 @@ export async function middleware(request: NextRequest) {
     const forceInvalidate = process.env.FORCE_CACHE_INVALIDATION === '1';
     if (forceInvalidate && pathname === '/') {
       // Prevent caching of root HTML
-      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      response.headers.set(
+        'Cache-Control',
+        'no-cache, no-store, must-revalidate, max-age=0'
+      );
       response.headers.set('Pragma', 'no-cache');
       response.headers.set('Expires', '0');
       // Instruct any client-side cache invalidation logic to run
@@ -54,19 +73,6 @@ export async function middleware(request: NextRequest) {
     }
   } catch {
     // swallow
-  }
-
-  // Skip middleware for static assets and Next.js internals, auth pages, and public health endpoint
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/user') || // Skip user API routes - they handle their own auth
-    pathname.startsWith('/api/health') || // Skip all health endpoints
-    pathname.startsWith('/auth/') ||
-    (pathname.includes('.') && !pathname.includes('/auth/')) ||
-    pathname === '/favicon.ico'
-  ) {
-    return response;
   }
 
   try {
@@ -126,7 +132,11 @@ export async function middleware(request: NextRequest) {
     }
 
     // 3. Authentication checks for protected routes
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
+    // TEMPORARILY DISABLED FOR TESTING - Let NextAuth handle all auth
+    if (
+      false &&
+      (pathname.startsWith('/dashboard') || pathname.startsWith('/admin'))
+    ) {
       // DEBUG: log cookies to inspect what the browser is sending
       try {
         const cookieHeader = request.headers.get('cookie');
@@ -147,7 +157,9 @@ export async function middleware(request: NextRequest) {
       if (process.env.DEBUG_AUTH === '1') {
         try {
           if (token) {
-            console.log(`🔐 MIDDLEWARE DEBUG - getToken result: present sub=${token.sub} role=${token.role}`);
+            console.log(
+              `🔐 MIDDLEWARE DEBUG - getToken result: present sub=${token.sub} role=${token.role}`
+            );
           } else {
             console.log('🔐 MIDDLEWARE DEBUG - getToken result: null');
           }

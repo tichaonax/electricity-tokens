@@ -17,8 +17,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        // Allow explicit override for secure cookie behavior in non-HTTPS dev
-        secure: false, // Always false for HTTP-only local deployment
+        secure: false, // Always false - app runs on HTTP localhost only
       },
     },
     csrfToken: {
@@ -27,7 +26,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false, // Always false for HTTP-only local deployment
+        secure: false, // Always false - app runs on HTTP localhost only
       },
     },
     callbackUrl: {
@@ -35,16 +34,11 @@ export const authOptions: NextAuthOptions = {
       options: {
         sameSite: 'lax',
         path: '/',
-        secure: false, // Always false for HTTP-only local deployment
+        secure: false, // Always false - app runs on HTTP localhost only
       },
     },
   },
-  pages: {
-    signIn: '/auth/signin',
-    signOut: '/', // Redirect to homepage after logout
-  },
   secret: process.env.NEXTAUTH_SECRET,
-  // Remove hardcoded NEXTAUTH_URL - NextAuth will auto-detect from request headers
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -53,90 +47,88 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials, req) {
-        console.log('🔍 AUTH DEBUG: Starting authorization...');
-        console.log('🔍 AUTH DEBUG: prisma object exists:', !!prisma);
-        console.log('🔍 AUTH DEBUG: prisma.user exists:', !!prisma.user);
-        
         if (!credentials?.email || !credentials?.password) {
-          console.log('❌ AUTH DEBUG: Missing credentials');
           return null;
         }
 
-        let user;
-        try {
-          console.log('🔍 AUTH DEBUG: Attempting prisma.user.findUnique...');
-          user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
           },
         });
-          console.log('✅ AUTH DEBUG: prisma.user.findUnique completed, user found:', !!user);
-        } catch (error) {
-          console.error('❌ AUTH DEBUG: Error in prisma.user.findUnique:', error);
-          throw error;
+
+        if (!user) {
+          return null;
         }
 
         // Extract IP and User Agent for audit logging
-        const ipAddress = req?.headers?.['x-forwarded-for'] || req?.headers?.['x-real-ip'] || 'unknown';
+        const ipAddress =
+          req?.headers?.['x-forwarded-for'] ||
+          req?.headers?.['x-real-ip'] ||
+          'unknown';
         const userAgent = req?.headers?.['user-agent'] || 'unknown';
 
-        // TEMPORARY DEBUG: Log user state for debugging
-        console.log('AUTH DEBUG - Email:', credentials.email);
-        console.log('AUTH DEBUG - User found:', !!user);
-        if (user) {
-          console.log('AUTH DEBUG - User locked:', user.locked);
-          console.log('AUTH DEBUG - User has password:', !!user.password);
-          console.log('AUTH DEBUG - User isActive:', user.isActive);
-          console.log('AUTH DEBUG - User deactivationReason:', user.deactivationReason);
-        }
-
-        if (!user || user.locked || !user.password || !user.isActive) {
-          // Log failed login attempt if user exists
-          if (user) {
-            try {
-              await auditAuthentication(
-                user.id,
-                'LOGIN_FAILED',
-                { 
-                  reason: user.locked ? 'account_locked' : 
-                          !user.isActive ? 'account_deactivated' : 
-                          'invalid_credentials',
-                  email: credentials.email,
-                  deactivationReason: !user.isActive ? user.deactivationReason : undefined
-                },
-                ipAddress as string,
-                userAgent as string
-              );
-            } catch (error) {
-              console.error('Failed to log authentication audit:', error);
-              // Don't throw - allow auth to proceed
-            }
+        if (!user.isActive) {
+          // Log failed login attempt
+          try {
+            await auditAuthentication(
+              user.id,
+              'LOGIN_FAILED',
+              {
+                reason: 'account_deactivated',
+                email: credentials.email,
+                deactivationReason: user.deactivationReason,
+              },
+              ipAddress as string,
+              userAgent as string
+            );
+          } catch {
+            // Silent fail for audit logging
           }
           return null;
         }
 
-        // Validate password
+        if (user.locked) {
+          try {
+            await auditAuthentication(
+              user.id,
+              'LOGIN_FAILED',
+              {
+                reason: 'account_locked',
+                email: credentials.email,
+              },
+              ipAddress as string,
+              userAgent as string
+            );
+          } catch {
+            // Silent fail for audit logging
+          }
+          return null;
+        }
+
+        if (!user.password) {
+          return null;
+        }
+
         const isPasswordValid = await compare(
           credentials.password,
           user.password
         );
 
         if (!isPasswordValid) {
-          // Log failed login attempt
           try {
             await auditAuthentication(
               user.id,
               'LOGIN_FAILED',
-              { 
+              {
                 reason: 'invalid_password',
-                email: credentials.email 
+                email: credentials.email,
               },
               ipAddress as string,
               userAgent as string
             );
-          } catch (error) {
-            console.error('Failed to log authentication audit:', error);
-            // Don't throw - allow auth to proceed
+          } catch {
+            // Silent fail for audit logging
           }
           return null;
         }
@@ -145,11 +137,10 @@ export const authOptions: NextAuthOptions = {
         try {
           await prisma.user.update({
             where: { id: user.id },
-            data: { lastLoginAt: new Date() }
+            data: { lastLoginAt: new Date() },
           });
-        } catch (error) {
-          console.error('Failed to update last login timestamp:', error);
-          // Don't throw - allow auth to proceed
+        } catch {
+          // Silent fail for last login update
         }
 
         // Log successful login
@@ -157,16 +148,15 @@ export const authOptions: NextAuthOptions = {
           await auditAuthentication(
             user.id,
             'LOGIN',
-            { 
+            {
               email: credentials.email,
-              loginMethod: 'credentials'
+              loginMethod: 'credentials',
             },
             ipAddress as string,
             userAgent as string
           );
-        } catch (error) {
-          console.error('Failed to log authentication audit:', error);
-          // Don't throw - allow auth to proceed
+        } catch {
+          // Silent fail for audit logging
         }
 
         return {
@@ -174,75 +164,68 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          permissions: user.permissions,
+          permissions: user.permissions || {},
           passwordResetRequired: user.passwordResetRequired,
-        };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
       },
     }),
   ],
   callbacks: {
-    
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.permissions = user.permissions;
-        token.passwordResetRequired = user.passwordResetRequired;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const t: any = token;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        t.role = (user as any).role;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        t.permissions = (user as any).permissions;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        t.passwordResetRequired = (user as any).passwordResetRequired;
+
+        // Ensure the token subject is the user id
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        t.sub = (user as any).id;
+        t.sessionId = `${t.sub}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        t.loginTime = Date.now();
       }
       return token;
     },
-    async redirect({ url, baseUrl }) {
-      
-      // CRITICAL: Block API endpoints from being used as redirect targets
-      if (url.includes('/api/')) {
-        return `${baseUrl}/dashboard`;
-      }
-      
-      // Handle logout - if URL is explicitly set to homepage, respect it
-      if (url === baseUrl || url === `${baseUrl}/`) {
-        return baseUrl;
-      }
-      
-      // Block any external URLs
-      if (!url.startsWith(baseUrl) && !url.startsWith('/')) {
-        return `${baseUrl}/dashboard`;
-      }
-      
-      // If it's a relative URL starting with /, allow it
-      if (url.startsWith('/') && !url.includes('/api/')) {
-        return url;
-      }
-      
-      // For all other cases, go to dashboard
-      return `${baseUrl}/dashboard`;
-    },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub!;
-        session.user.role = token.role as string;
-        session.user.permissions = token.permissions;
-        session.user.passwordResetRequired = token.passwordResetRequired;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const s: any = session;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const t: any = token;
+        s.user = s.user || {};
+        s.user.id = t.sub || s.user.id;
+        s.user.role = t.role;
+        s.user.permissions = t.permissions;
+        s.user.passwordResetRequired = t.passwordResetRequired;
+        s.sessionId = t.sessionId;
+        s.loginTime = t.loginTime;
       }
       return session;
     },
   },
   events: {
-    async signOut({ token }) {
-      // Log logout event - wrap in try/catch to prevent auth failures
+    async signOut({ token, session }) {
+      // Log logout event
       try {
-        if (token?.sub) {
-          await auditAuthentication(
-            token.sub,
-            'LOGOUT',
-            { 
-              logoutMethod: 'user_initiated'
-            }
-          );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userId = (token as any)?.sub || (session as any)?.user?.id;
+        if (userId) {
+          await auditAuthentication(userId, 'LOGOUT', {
+            logoutMethod: 'user_initiated',
+          });
         }
-      } catch (error) {
-        console.error('Failed to log logout audit:', error);
-        // Don't throw - allow logout to proceed
+      } catch {
+        // Silent fail for audit logging
       }
     },
   },
+  pages: {
+    signIn: '/auth/signin',
+    signOut: '/auth/signin',
+  },
 };
-

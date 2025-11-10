@@ -6,7 +6,7 @@ const fs = require('fs');
 const envPath = path.resolve(__dirname, '../..', '.env.local');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
-  envContent.split('\n').forEach(line => {
+  envContent.split('\n').forEach((line) => {
     const trimmedLine = line.trim();
     // Skip empty lines and comments
     if (!trimmedLine || trimmedLine.startsWith('#')) {
@@ -17,8 +17,10 @@ if (fs.existsSync(envPath)) {
       const key = match[1].trim();
       let value = match[2].trim();
       // Remove surrounding quotes
-      if ((value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))) {
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
         value = value.slice(1, -1);
       }
       if (!process.env[key]) {
@@ -28,7 +30,9 @@ if (fs.existsSync(envPath)) {
   });
   console.log(`✅ Loaded environment from ${envPath}`);
   console.log(`📌 PORT set to: ${process.env.PORT}`);
-  console.log(`📌 DATABASE_URL set to: ${process.env.DATABASE_URL ? 'present' : 'missing'}`);
+  console.log(
+    `📌 DATABASE_URL set to: ${process.env.DATABASE_URL ? 'present' : 'missing'}`
+  );
 } else {
   console.warn(`⚠️  .env.local not found at ${envPath}`);
 }
@@ -618,6 +622,10 @@ class HybridElectricityTokensService {
         cwd: this.appRoot,
         stdio: 'pipe',
         shell: true,
+        env: {
+          ...process.env,
+          NODE_ENV: 'production', // Use production mode for builds
+        },
       });
 
       let buildOutput = '';
@@ -1152,7 +1160,7 @@ class HybridElectricityTokensService {
         shell: false, // Don't use shell to avoid extra process layers
         env: {
           ...process.env,
-          NODE_ENV: 'development', // Force development mode for consistent NextAuth cookie/session behavior
+          NODE_ENV: 'production', // Match the build environment for consistent cookie behavior
           PORT: process.env.PORT || 3000,
         },
       });
@@ -1174,9 +1182,18 @@ class HybridElectricityTokensService {
           this.log(`Next.js Error: ${error}`, 'ERROR');
           // Extra: If error looks like a JSON parse error, log possible file suspects
           if (error.includes('Unexpected token') && error.includes('JSON')) {
-            this.log('⚠️  JSON parse error detected. Possible corrupted or empty JSON file.', 'ERROR');
-            this.log('Check .next/build-info.json, public/build-info.json, package.json, and any cache/config files for corruption.', 'ERROR');
-            this.log('You can delete .next and re-run npm run build to regenerate.', 'ERROR');
+            this.log(
+              '⚠️  JSON parse error detected. Possible corrupted or empty JSON file.',
+              'ERROR'
+            );
+            this.log(
+              'Check .next/build-info.json, public/build-info.json, package.json, and any cache/config files for corruption.',
+              'ERROR'
+            );
+            this.log(
+              'You can delete .next and re-run npm run build to regenerate.',
+              'ERROR'
+            );
           }
         }
       });

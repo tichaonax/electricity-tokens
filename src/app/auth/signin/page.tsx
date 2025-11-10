@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -56,12 +56,7 @@ function SignInContent() {
       );
     }
 
-    // Remove callback URL parameters from the URL
-    if (searchParams.has('callbackUrl')) {
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('callbackUrl');
-      window.history.replaceState({}, '', newUrl.pathname + newUrl.search);
-    }
+    // DO NOT remove callbackUrl - NextAuth needs it for redirect after login!
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,26 +66,31 @@ function SignInContent() {
     setSuccess('');
 
     try {
-      console.log('FORM DEBUG - Attempting login with email:', email);
-
-      // Try with redirect: true and callbackUrl to let NextAuth handle everything
+      // Use redirect: false to manually control the redirect (matching reference app pattern)
       const result = await signIn('credentials', {
         email,
         password,
-        callbackUrl: '/dashboard',
-        redirect: true, // Let NextAuth handle the redirect
+        redirect: false,
       });
 
-      console.log('FORM DEBUG - SignIn result:', result);
-      // This code won't run if redirect:true works
-      // But keeping it as fallback
       if (result?.error) {
-        console.log('FORM DEBUG - Login error:', result.error);
         setError('Invalid credentials');
         setLoading(false);
+      } else {
+        // Force session refresh to ensure client has the session before redirecting
+        const session = await getSession();
+
+        if (session) {
+          // Small delay to ensure browser has processed the session cookie
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          // Use window.location.href to force full page reload with fresh session context
+          window.location.href = '/dashboard';
+        } else {
+          setError('Session creation failed. Please try again.');
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      console.error('FORM DEBUG - Signin error:', error);
+    } catch {
       setError('An error occurred during sign in');
       setLoading(false);
     }
