@@ -377,6 +377,9 @@ class ComprehensiveInstaller {
 
   async buildApplication() {
     this.log('🔨 Building application with enhanced recovery strategies...');
+    this.log(
+      '📋 Using unified build tracking - service will recognize this build'
+    );
 
     // Pre-build cleanup and validation
     await this.preBuildCleanup();

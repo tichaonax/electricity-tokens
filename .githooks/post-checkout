@@ -27,6 +27,7 @@ if [ "$3" = "1" ]; then
     # Check if source code changed significantly
     if git diff --name-only "$1" "$2" | grep -E "\.(ts|tsx|js|jsx)$" >/dev/null; then
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🔨 Source code changed, rebuilding..."
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] 📋 Using unified build tracking - service will recognize this build"
         npm run build
 
         # Check if service needs restart (don't restart automatically)

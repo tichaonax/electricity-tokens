@@ -1,5 +1,28 @@
 2
 
+## Unified Build Tracking System
+This project uses a **unified build tracking system** that harmonizes build detection across all workflows:
+
+### How It Works:
+- When any workflow builds the app (`npm run build`), it creates a `.next/.build-complete` marker file
+- This marker contains the git commit hash, BUILD_ID, and completion timestamp
+- The service checks this marker on startup and **skips rebuild** if the build is current
+- This prevents duplicate builds when git hooks, install scripts, or service build the app
+
+### Build Recognition:
+- ✅ **Service builds** → Git hooks recognize it
+- ✅ **Git hook builds** → Service recognizes it
+- ✅ **Install script builds** → Service recognizes it
+- ✅ **Manual builds** → All workflows recognize it
+
+### Files Involved:
+- `scripts/generate-build-info.js` - Creates build metadata (runs pre-build)
+- `scripts/post-build.js` - Updates tracking after successful build (runs post-build)
+- `.next/build-info.json` - Build metadata (git commit, version, timestamp)
+- `.next/.build-complete` - Build completion marker (proves build succeeded)
+
+**See** `docs/UNIFIED_BUILD_TRACKING.md` for detailed documentation.
+
 ## Windows Service Management
 This project uses a **Hybrid Service Architecture** for reliable Windows service deployment:
 

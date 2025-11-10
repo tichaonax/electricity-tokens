@@ -70,6 +70,7 @@ main() {
     
     # 3. Build the application
     log_with_timestamp "🔨 Building application..."
+    log_with_timestamp "📋 Using unified build tracking - service will recognize this build"
     if ! run_npm run build; then
         log_with_timestamp "❌ Build failed!"
         exit 1

@@ -174,6 +174,7 @@ class HybridElectricityTokensService {
     try {
       const buildDir = path.join(this.appRoot, '.next');
       const buildInfoFile = path.join(buildDir, 'build-info.json');
+      const buildCompleteMarker = path.join(buildDir, '.build-complete');
 
       // No build directory = rebuild needed
       if (!fs.existsSync(buildDir)) {
@@ -185,6 +186,14 @@ class HybridElectricityTokensService {
       const buildId = path.join(buildDir, 'BUILD_ID');
       if (!fs.existsSync(buildId)) {
         this.log('No BUILD_ID found - rebuild required');
+        return true;
+      }
+
+      // Check for build completion marker (unified build tracking)
+      if (!fs.existsSync(buildCompleteMarker)) {
+        this.log(
+          'No build completion marker found - rebuild required to create unified tracking'
+        );
         return true;
       }
 
