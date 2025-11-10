@@ -1,17 +1,114 @@
+# Project Plan: ET-101 Service Session Authentication Fix (COMPLETED)
+
+## Problem
+
+Users could not login when the application runs as a Windows service, despite successful credential validation (HTTP 200 responses and server-side authentication success). The same authentication worked correctly in development mode (`npm run dev`). After successful login, users were immediately redirected back to `/auth/signin?callbackUrl=...` with no error messages.
+
+## Root Cause Analysis
+
+### 1. Cookie Secure Flag Issue
+
+- Cookie `secure` flag was dynamically set via `process.env.NODE_ENV === 'production'`
+- This compiled to `secure: true` at build time in production builds
+- Browser rejected cookies over HTTP because secure flag was true
+- Application runs on HTTP localhost only, not HTTPS
+
+### 2. Middleware Interference
+
+- Middleware was intercepting dashboard routes and causing 307 redirects
+- This broke NextAuth's redirect flow after successful authentication
+- Middleware was processing routes before checking if they should be skipped
+
+### 3. NextAuth Redirect Mechanism
+
+- NextAuth's automatic redirect (`redirect: true`) wasn't working properly
+- Manual redirect control needed with session validation before redirecting
+
+## Implementation
+
+### Changes Made
+
+#### src/lib/auth.ts (lines 20, 29, 37, 159-167, 212-213)
+
+- Changed cookie secure flags from dynamic to hardcoded `secure: false` for HTTP localhost deployment
+- Removed all debug logging from authorize function and callbacks
+- Simplified signout event to only do audit logging
+- Added ESLint disable comments for necessary `any` types in JWT/session callbacks
+
+#### src/app/auth/signin/page.tsx (lines 62-96)
+
+- Changed from NextAuth automatic redirect to manual control (`redirect: false`)
+- Added manual session refresh using `getSession()` before redirecting
+- Implemented client-side redirect with `window.location.href` for full page reload
+- Added 100ms delay to ensure browser processes session cookie
+- Removed all debug logging and unused imports
+- Fixed ESLint errors (unused router, unused error variable)
+
+#### middleware.ts (lines 13-27)
+
+- Updated skip list to include `/dashboard` and all sub-routes
+- Added root path `/` to skip list
+- Prevents middleware from interfering with NextAuth redirect flow
+- Middleware still provides security features for non-protected routes
+
+#### src/components/dashboard-client.tsx (useEffect)
+
+- Removed all debug logging statements
+- Simplified useEffect to only handle authentication redirect
+
+#### scripts/windows-service/service-wrapper-hybrid.js (lines 689-705)
+
+- Restored auto-build detection that was disabled during testing
+- Service now checks if rebuild is needed on startup using `checkIfRebuildNeeded()`
+
+#### Deleted Files
+
+- `src/middleware.ts` - Removed duplicate middleware file (kept only root middleware.ts)
+
+## Testing & Verification
+
+### Test Results ✅
+
+- ✅ Authentication works when running as Windows service
+- ✅ Cookie secure flag correctly shows `false` in browser DevTools
+- ✅ No more redirect loops to signin page after successful login
+- ✅ Session properly created and accessible via `/api/auth/session`
+- ✅ Service auto-build functionality working
+- ✅ ESLint pre-commit hooks passing
+- ✅ All debug logging removed from frontend and backend
+
+### Reference Implementation
+
+Implementation matches working reference app at `C:\Users\ticha\apps\multi-business-multi-apps\` while maintaining middleware functionality as requested.
+
+## Git Commit
+
+- **Commit:** `8448015`
+- **Message:** fix(ET-101): resolve service session authentication issue
+- **Files Changed:** 7 files (856 insertions, 930 deletions)
+- **Date:** 2025-11-10
+- **Status:** ✅ Committed and pushed to GitHub
+
+---
+
 # Project Plan: Fix TokenPurchase API Route Field Name Mismatch
 
 ## Problem
+
 The `/api/purchases` route is trying to include a `creator` field that doesn't exist on the `TokenPurchase` model. According to the Prisma schema, the relation field is named `user` (not `creator`).
 
 ## Schema Analysis
+
 - `TokenPurchase.createdBy` → foreign key to `User.id`
 - `TokenPurchase.user` → relation field (current name in schema)
 - API route incorrectly references `creator` instead of `user` in multiple places
 
 ## Solution
+
 Update the API route to use the correct field name `user` instead of `creator`.
 
 ## Todo Items
+
 - [x] Update GET endpoint include clause to use `user` instead of `creator`
 - [x] Update GET endpoint search filter to use `user` instead of `creator`
 - [x] Update GET endpoint orderBy clause to use `user` instead of `creator`
@@ -31,6 +128,7 @@ All 4 instances of the incorrect `creator` field have been updated to use the co
 4. **Line 289**: POST endpoint include clause - Changed `creator` to `user`
 
 **Impact:**
+
 - The API will now correctly query the `TokenPurchase.user` relation field
 - Purchases can be searched by creator name
 - Purchases can be sorted by creator name
@@ -282,6 +380,7 @@ npm run service:start
    - Try logging in with `admin@electricity.local` / `admin123`
 
 3. **Test health endpoint:**
+
    ```powershell
    curl http://localhost:3000/api/health
    ```
