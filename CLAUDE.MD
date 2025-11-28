@@ -77,20 +77,22 @@ This project supports **backward-compatible restores**, allowing you to restore 
 When setting up a new server and restoring from an old backup:
 
 ```bash
-# 1. Verify environment and database schema
-npm run restore:verify
-
-# 2. Run automated fresh install setup
+# 1. Run automated fresh install setup (applies migrations + creates temp admin)
 npm run restore:setup
 
-# Or verify-only mode (no changes)
+# 2. Start application
+npm start  # Production
+npm run dev  # Development
+
+# 3. Restore via web UI:
+#    - Log in with temporary admin (admin@temp.local / temppass123)
+#    - Go to: Admin > Data Management > Restore
+#    - Upload backup file and restore
+#    - Temp admin will be overwritten by backup data
+#    - Log in again with your real admin account from backup
+
+# Optional: Verify-only mode (no changes, just checks)
 npm run restore:setup-verify
-
-# 3. Create admin user
-node scripts/seed-admin.js
-
-# 4. Start application and restore via web UI
-npm start
 ```
 
 ### Restore Verification
