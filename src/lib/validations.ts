@@ -406,7 +406,10 @@ const receiptDataBaseSchema = z.object({
     'kWh purchased cannot exceed 100,000'
   ),
   energyCostZWG: nonNegativeNumberSchema.max(10000000, 'Energy cost too large'),
-  debtZWG: nonNegativeNumberSchema.max(10000000, 'Debt amount too large'),
+  debtZWG: z.preprocess(
+    (val) => (val === null || val === undefined ? 0 : val),
+    nonNegativeNumberSchema.max(10000000, 'Debt amount too large')
+  ),
   reaZWG: nonNegativeNumberSchema.max(10000000, 'REA amount too large'),
   vatZWG: nonNegativeNumberSchema.max(10000000, 'VAT amount too large'),
   totalAmountZWG: positiveNumberSchema.max(
@@ -439,7 +442,7 @@ const receiptDataBaseSchema = z.object({
         return isoString;
       }
 
-      // If neither format matches, try parsing as ISO date string
+      // Handle datetime-local format (YYYY-MM-DDTHH:MM without seconds)
       const parsed = new Date(val);
       if (isNaN(parsed.getTime())) {
         throw new Error(
