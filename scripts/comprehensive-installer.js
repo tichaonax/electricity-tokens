@@ -535,9 +535,9 @@ class ComprehensiveInstaller {
       let buildErrors = [];
 
       const outputTimeout = setInterval(() => {
-        if (Date.now() - lastOutputTime > 300000 && hasOutput) {
-          // 5 minutes no output
-          this.log('⚠️ No build output for 5 minutes, terminating...', 'WARN');
+        if (Date.now() - lastOutputTime > 600000 && hasOutput) {
+          // 10 minutes no output
+          this.log('⚠️ No build output for 10 minutes, terminating...', 'WARN');
           buildProcess.kill();
           reject(new Error('Build output timeout'));
         }
