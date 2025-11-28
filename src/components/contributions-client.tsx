@@ -6,10 +6,27 @@ import { useEffect, useState, useMemo } from 'react';
 import { useConfirmation, useAlert } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/toast';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Plus, Users, DollarSign, Zap, TrendingUp, User, Trash2, Edit, ShoppingCart } from 'lucide-react';
+import {
+  Plus,
+  Users,
+  DollarSign,
+  Zap,
+  TrendingUp,
+  User,
+  Trash2,
+  Edit,
+  ShoppingCart,
+} from 'lucide-react';
 import { NavigationFormButton } from '@/components/ui/navigation-form-button';
-import { navigateToDashboard, navigateToNewContribution } from '@/app/actions/navigation';
-import { editContribution, deleteContribution } from '@/app/actions/contributions';
+import {
+  navigateToDashboard,
+  navigateToNewContribution,
+} from '@/app/actions/navigation';
+import {
+  editContribution,
+  deleteContribution,
+} from '@/app/actions/contributions';
+import { formatDisplayDate } from '@/lib/utils';
 
 interface Contribution {
   id: string;
@@ -64,13 +81,19 @@ export function ContributionsClient() {
       if (contributionId) {
         // Wait for contributions to load, then scroll to the contribution
         setTimeout(() => {
-          const element = document.getElementById(`contribution-${contributionId}`);
+          const element = document.getElementById(
+            `contribution-${contributionId}`
+          );
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
             // Remove highlight after a few seconds
             setTimeout(() => {
-              element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+              element.classList.remove(
+                'ring-2',
+                'ring-blue-500',
+                'ring-opacity-50'
+              );
             }, 3000);
           }
         }, 500);
@@ -102,10 +125,10 @@ export function ContributionsClient() {
 
       const data = await response.json();
       setContributions(data.contributions || []);
-      
+
       // Fetch global running balance
       await fetchRunningBalance();
-      
+
       // Check if there are available purchases (purchases without contributions)
       await checkAvailablePurchases();
     } catch (error) {
@@ -124,7 +147,10 @@ export function ContributionsClient() {
       if (response.ok) {
         const data = await response.json();
         // Check if there are any purchases without contributions
-        const hasAvailable = data.purchases?.some((purchase: { contribution?: unknown }) => !purchase.contribution) || false;
+        const hasAvailable =
+          data.purchases?.some(
+            (purchase: { contribution?: unknown }) => !purchase.contribution
+          ) || false;
         setHasAvailablePurchases(hasAvailable);
       }
     } catch {
@@ -153,8 +179,9 @@ export function ContributionsClient() {
   const latestContributionId = useMemo(() => {
     if (contributions.length === 0) return null;
 
-    const sortedByCreation = [...contributions].sort((a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const sortedByCreation = [...contributions].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return sortedByCreation[0]?.id || null;
@@ -200,7 +227,6 @@ export function ContributionsClient() {
       },
     });
   };
-
 
   if (status === 'loading') {
     return (
@@ -265,16 +291,20 @@ export function ContributionsClient() {
           )}
 
           {/* Info message when no purchases are available for contribution AND no existing contributions */}
-          {!hasAvailablePurchases && !isLoading && contributions.length === 0 && (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-              <div className="flex items-center">
-                <User className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  All token purchases have matching contributions. New contributions can only be added when there are purchases without contributions.
-                </p>
+          {!hasAvailablePurchases &&
+            !isLoading &&
+            contributions.length === 0 && (
+              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <div className="flex items-center">
+                  <User className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    All token purchases have matching contributions. New
+                    contributions can only be added when there are purchases
+                    without contributions.
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Message when there are existing contributions but no available purchases for new ones */}
           {!hasAvailablePurchases && !isLoading && contributions.length > 0 && (
@@ -282,7 +312,8 @@ export function ContributionsClient() {
               <div className="flex items-center">
                 <User className="h-4 w-4 text-amber-600 dark:text-amber-400 mr-2" />
                 <p className="text-sm text-amber-700 dark:text-amber-300">
-                  All purchases have contributions. New contributions can only be added when there are purchases without contributions.
+                  All purchases have contributions. New contributions can only
+                  be added when there are purchases without contributions.
                 </p>
               </div>
             </div>
@@ -315,7 +346,8 @@ export function ContributionsClient() {
                 </NavigationFormButton>
                 {!hasAvailablePurchases && (
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    All purchases already have contributions. No new contributions can be added at this time.
+                    All purchases already have contributions. No new
+                    contributions can be added at this time.
                   </p>
                 )}
               </div>
@@ -327,14 +359,19 @@ export function ContributionsClient() {
                 <div className="bg-white p-6 rounded-lg shadow dark:bg-slate-800">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <TrendingUp className={`h-8 w-8 ${runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                      <TrendingUp
+                        className={`h-8 w-8 ${runningBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                      />
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                         Account Balance
                       </p>
-                      <p className={`text-2xl font-semibold ${runningBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {runningBalance >= 0 ? '+' : ''}${runningBalance.toFixed(2)}
+                      <p
+                        className={`text-2xl font-semibold ${runningBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                      >
+                        {runningBalance >= 0 ? '+' : ''}$
+                        {runningBalance.toFixed(2)}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         {runningBalance >= 0 ? 'credit' : 'owed'}
@@ -454,8 +491,9 @@ export function ContributionsClient() {
                         key={contribution.id}
                         id={`contribution-${contribution.id}`}
                         className={`px-4 sm:px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-200 ${
-                          (session?.user?.role === 'ADMIN' || contribution.user.id === session?.user?.id) 
-                            ? 'border-l-4 border-l-transparent hover:border-l-blue-500' 
+                          session?.user?.role === 'ADMIN' ||
+                          contribution.user.id === session?.user?.id
+                            ? 'border-l-4 border-l-transparent hover:border-l-blue-500'
                             : ''
                         }`}
                       >
@@ -477,12 +515,23 @@ export function ContributionsClient() {
                               </div>
                             </div>
                             {/* Action Buttons */}
-                            {((isAdmin || checkPermission('canEditContributions')) || 
-                              (isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions'))) && (
+                            {(isAdmin ||
+                              checkPermission('canEditContributions') ||
+                              isAdmin ||
+                              contribution.user.id === session?.user?.id ||
+                              checkPermission('canDeleteContributions')) && (
                               <div className="flex items-center space-x-1 flex-shrink-0">
-                                {(isAdmin || checkPermission('canEditContributions')) && (
-                                  <form action={editContribution} className="inline">
-                                    <input type="hidden" name="contributionId" value={contribution.id} />
+                                {(isAdmin ||
+                                  checkPermission('canEditContributions')) && (
+                                  <form
+                                    action={editContribution}
+                                    className="inline"
+                                  >
+                                    <input
+                                      type="hidden"
+                                      name="contributionId"
+                                      value={contribution.id}
+                                    />
                                     <button
                                       type="submit"
                                       className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors min-w-[44px] min-h-[44px]"
@@ -492,7 +541,11 @@ export function ContributionsClient() {
                                     </button>
                                   </form>
                                 )}
-                                {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                                {(isAdmin ||
+                                  contribution.user.id === session?.user?.id ||
+                                  checkPermission(
+                                    'canDeleteContributions'
+                                  )) && (
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -500,20 +553,23 @@ export function ContributionsClient() {
                                       e.stopPropagation();
                                       handleDeleteContribution(contribution);
                                     }}
-                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                    disabled={
+                                      deletingId === contribution.id ||
+                                      !isLatestContribution(contribution)
+                                    }
                                     className={`p-2 rounded-lg transition-colors min-w-[44px] min-h-[44px] ${
                                       !isLatestContribution(contribution)
                                         ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
                                         : deletingId === contribution.id
-                                        ? 'text-slate-400 cursor-wait'
-                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                          ? 'text-slate-400 cursor-wait'
+                                          : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
                                     }`}
                                     title={
                                       !isLatestContribution(contribution)
                                         ? 'Only the latest contribution in the system can be deleted'
                                         : deletingId === contribution.id
-                                        ? 'Deleting...'
-                                        : 'Delete contribution'
+                                          ? 'Deleting...'
+                                          : 'Delete contribution'
                                     }
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -539,7 +595,10 @@ export function ContributionsClient() {
 
                           {/* Purchase Info */}
                           <div className="text-sm text-slate-500 dark:text-slate-400">
-                            Purchase Date: {new Date(contribution.purchase.purchaseDate).toLocaleDateString()}
+                            Purchase Date:{' '}
+                            {formatDisplayDate(
+                              contribution.purchase.purchaseDate
+                            )}
                           </div>
 
                           {/* Consumption */}
@@ -549,7 +608,8 @@ export function ContributionsClient() {
                                 {contribution.tokensConsumed.toFixed(2)} kWh
                               </p>
                               <p className="text-xs text-blue-600 dark:text-blue-300">
-                                Consumed (Reading: {contribution.meterReading.toLocaleString()})
+                                Consumed (Reading:{' '}
+                                {contribution.meterReading.toLocaleString()})
                               </p>
                             </div>
                           </div>
@@ -560,16 +620,23 @@ export function ContributionsClient() {
                               <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                                 ${contribution.contributionAmount.toFixed(2)}
                               </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">You Paid</p>
-                              <p className={`text-xs mt-1 ${overpayment >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                {overpayment >= 0 ? '+' : ''}${overpayment.toFixed(2)} net
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                You Paid
+                              </p>
+                              <p
+                                className={`text-xs mt-1 ${overpayment >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                              >
+                                {overpayment >= 0 ? '+' : ''}$
+                                {overpayment.toFixed(2)} net
                               </p>
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3 text-center">
                               <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                                 ${trueCost.toFixed(2)}
                               </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">Fair Share</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Fair Share
+                              </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 {efficiency.toFixed(1)}% efficiency
                               </p>
@@ -578,7 +645,12 @@ export function ContributionsClient() {
 
                           {/* Rate */}
                           <div className="text-center text-sm text-slate-600 dark:text-slate-400">
-                            Rate: ${(contribution.purchase.totalPayment / contribution.purchase.totalTokens).toFixed(4)}/kWh
+                            Rate: $
+                            {(
+                              contribution.purchase.totalPayment /
+                              contribution.purchase.totalTokens
+                            ).toFixed(4)}
+                            /kWh
                           </div>
                         </div>
 
@@ -607,13 +679,13 @@ export function ContributionsClient() {
                               <div className="flex items-center space-x-4 mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 <span>
                                   Purchase:{' '}
-                                  {new Date(
+                                  {formatDisplayDate(
                                     contribution.purchase.purchaseDate
-                                  ).toLocaleDateString()}
+                                  )}
                                 </span>
                                 <span className="font-medium text-blue-600 dark:text-blue-400">
-                                  {contribution.tokensConsumed.toFixed(2)}{' '}
-                                  kWh consumed
+                                  {contribution.tokensConsumed.toFixed(2)} kWh
+                                  consumed
                                 </span>
                                 <span>
                                   Reading:{' '}
@@ -636,10 +708,15 @@ export function ContributionsClient() {
                                     Purchase Cost
                                   </p>
                                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                    ${contribution.purchase.totalPayment.toFixed(2)}
+                                    $
+                                    {contribution.purchase.totalPayment.toFixed(
+                                      2
+                                    )}
                                   </p>
                                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    ({contribution.purchase.totalTokens.toLocaleString()} kWh)
+                                    (
+                                    {contribution.purchase.totalTokens.toLocaleString()}{' '}
+                                    kWh)
                                   </p>
                                 </div>
                                 <div className="text-center">
@@ -650,7 +727,8 @@ export function ContributionsClient() {
                                     ${trueCost.toFixed(2)}
                                   </p>
                                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    ({contribution.tokensConsumed.toFixed(2)} kWh)
+                                    ({contribution.tokensConsumed.toFixed(2)}{' '}
+                                    kWh)
                                   </p>
                                 </div>
                                 <div className="text-center">
@@ -658,12 +736,14 @@ export function ContributionsClient() {
                                     You Paid
                                   </p>
                                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                    ${contribution.contributionAmount.toFixed(2)}
+                                    $
+                                    {contribution.contributionAmount.toFixed(2)}
                                   </p>
                                   <p
                                     className={`text-xs ${overpayment >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                                   >
-                                    {overpayment >= 0 ? '+' : ''}${overpayment.toFixed(2)}
+                                    {overpayment >= 0 ? '+' : ''}$
+                                    {overpayment.toFixed(2)}
                                   </p>
                                   <p className="text-xs text-slate-400 mt-1">
                                     (net for this contribution)
@@ -674,7 +754,11 @@ export function ContributionsClient() {
                                     Rate/kWh
                                   </p>
                                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                    ${(contribution.purchase.totalPayment / contribution.purchase.totalTokens).toFixed(4)}
+                                    $
+                                    {(
+                                      contribution.purchase.totalPayment /
+                                      contribution.purchase.totalTokens
+                                    ).toFixed(4)}
                                   </p>
                                   <p className="text-xs text-slate-500 dark:text-slate-400">
                                     {efficiency.toFixed(1)}% eff.
@@ -683,12 +767,23 @@ export function ContributionsClient() {
                               </div>
                             </div>
                             {/* Action Buttons */}
-                            {((isAdmin || checkPermission('canEditContributions')) || 
-                              (isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions'))) && (
+                            {(isAdmin ||
+                              checkPermission('canEditContributions') ||
+                              isAdmin ||
+                              contribution.user.id === session?.user?.id ||
+                              checkPermission('canDeleteContributions')) && (
                               <div className="flex items-center space-x-2">
-                                {(isAdmin || checkPermission('canEditContributions')) && (
-                                  <form action={editContribution} className="inline">
-                                    <input type="hidden" name="contributionId" value={contribution.id} />
+                                {(isAdmin ||
+                                  checkPermission('canEditContributions')) && (
+                                  <form
+                                    action={editContribution}
+                                    className="inline"
+                                  >
+                                    <input
+                                      type="hidden"
+                                      name="contributionId"
+                                      value={contribution.id}
+                                    />
                                     <button
                                       type="submit"
                                       className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 rounded-lg transition-colors"
@@ -698,7 +793,11 @@ export function ContributionsClient() {
                                     </button>
                                   </form>
                                 )}
-                                {(isAdmin || contribution.user.id === session?.user?.id || checkPermission('canDeleteContributions')) && (
+                                {(isAdmin ||
+                                  contribution.user.id === session?.user?.id ||
+                                  checkPermission(
+                                    'canDeleteContributions'
+                                  )) && (
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -706,20 +805,23 @@ export function ContributionsClient() {
                                       e.stopPropagation();
                                       handleDeleteContribution(contribution);
                                     }}
-                                    disabled={deletingId === contribution.id || !isLatestContribution(contribution)}
+                                    disabled={
+                                      deletingId === contribution.id ||
+                                      !isLatestContribution(contribution)
+                                    }
                                     className={`p-2 rounded-lg transition-colors ${
                                       !isLatestContribution(contribution)
                                         ? 'text-slate-300 cursor-not-allowed dark:text-slate-600'
                                         : deletingId === contribution.id
-                                        ? 'text-slate-400 cursor-wait'
-                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                          ? 'text-slate-400 cursor-wait'
+                                          : 'text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
                                     }`}
                                     title={
                                       !isLatestContribution(contribution)
                                         ? 'Only the latest contribution in the system can be deleted'
                                         : deletingId === contribution.id
-                                        ? 'Deleting...'
-                                        : 'Delete contribution'
+                                          ? 'Deleting...'
+                                          : 'Delete contribution'
                                     }
                                   >
                                     <Trash2 className="h-4 w-4" />

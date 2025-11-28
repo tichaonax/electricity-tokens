@@ -57,47 +57,90 @@ export function calculateEfficiency(
 }
 
 /**
- * Format a date string (YYYY-MM-DD) to local date without timezone shift
+ * Universal date formatter - handles all date formats and prevents timezone shifts
  * Returns format: MM/DD/YYYY
- * @param dateString - ISO date string like "2025-11-25"
+ *
+ * Handles:
+ * - ISO date strings: "2025-11-25"
+ * - ISO datetime strings: "2025-11-25T06:12:45.000Z"
+ * - Date objects
+ *
+ * @param dateInput - Date string, Date object, or null/undefined
+ * @returns Formatted date string in MM/DD/YYYY format, or "Invalid Date" if parsing fails
  */
-export function formatPurchaseDate(dateString: string): string {
-  // Append T00:00:00 to prevent timezone shift (treat as local midnight)
-  const date = new Date(dateString + 'T00:00:00');
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
+export function formatDisplayDate(
+  dateInput: string | Date | null | undefined
+): string {
+  if (!dateInput) return 'Invalid Date';
+
+  try {
+    let date: Date;
+
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (typeof dateInput === 'string') {
+      // Check if it's a date-only string (YYYY-MM-DD)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+        // Append T00:00:00 to prevent timezone shift
+        date = new Date(dateInput + 'T00:00:00');
+      } else {
+        // Full datetime string
+        date = new Date(dateInput);
+      }
+    } else {
+      return 'Invalid Date';
+    }
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid Date';
+  }
 }
 
 /**
- * Format a date-time string to local date without timezone shift
- * Returns format: MM/DD/YYYY
- * @param dateString - ISO datetime string
- */
-export function formatLocalDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-}
-
-/**
- * Format a date-time string to local date and time
+ * Format date and time for display
  * Returns format: MM/DD/YYYY, HH:MM:SS AM/PM
- * @param dateString - ISO datetime string
+ *
+ * @param dateInput - Date string or Date object
+ * @returns Formatted datetime string
  */
-export function formatLocalDateTime(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
+export function formatDisplayDateTime(
+  dateInput: string | Date | null | undefined
+): string {
+  if (!dateInput) return 'Invalid Date';
+
+  try {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  } catch (error) {
+    console.error('Error formatting datetime:', error);
+    return 'Invalid Date';
+  }
 }
+
+// Legacy aliases for backward compatibility
+export const formatPurchaseDate = formatDisplayDate;
+export const formatLocalDate = formatDisplayDate;
+export const formatLocalDateTime = formatDisplayDateTime;
