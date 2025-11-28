@@ -3,11 +3,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { validateBusinessRules } from '@/lib/validation-middleware';
-import { UserPermissions, hasPermission, mergeWithDefaultPermissions, ADMIN_PERMISSIONS } from '@/types/permissions';
+import {
+  UserPermissions,
+  hasPermission,
+  mergeWithDefaultPermissions,
+  ADMIN_PERMISSIONS,
+} from '@/types/permissions';
 import type { UpdateData } from '@/types/api';
 
 // Helper function to get user permissions
-function getUserPermissions(user: { role?: string; permissions?: unknown }): UserPermissions {
+function getUserPermissions(user: {
+  role?: string;
+  permissions?: unknown;
+}): UserPermissions {
   if (user.role === 'ADMIN') {
     return ADMIN_PERMISSIONS;
   }
@@ -58,8 +66,8 @@ export async function GET(
 
     // Check permissions for global contribution access
     const userPermissions = getUserPermissions(session.user);
-    const canViewContributions = 
-      session.user.role === 'ADMIN' || 
+    const canViewContributions =
+      session.user.role === 'ADMIN' ||
       hasPermission(userPermissions, 'canViewUserContributions');
 
     if (!canViewContributions) {
@@ -240,26 +248,41 @@ export async function DELETE(
     // Check permissions - users can delete their own contributions OR have deleteContributions permission OR be admin
     const userPermissions = getUserPermissions(session.user);
     const canDeleteOwn = existingContribution.userId === session.user.id;
-    const canDeleteAny = hasPermission(userPermissions, 'canDeleteContributions');
+    const canDeleteAny = hasPermission(
+      userPermissions,
+      'canDeleteContributions'
+    );
     const isAdmin = session.user.role === 'ADMIN';
 
     if (!canDeleteOwn && !canDeleteAny && !isAdmin) {
       return NextResponse.json(
-        { message: 'Forbidden: You do not have permission to delete this contribution' },
+        {
+          message:
+            'Forbidden: You do not have permission to delete this contribution',
+        },
         { status: 403 }
       );
     }
 
     // Constraint: Only allow deletion of the globally latest contribution in the system
+    // Use purchase date for ordering (matches UI display and handles restored backups correctly)
     const globalLatestContribution = await prisma.userContribution.findFirst({
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        purchase: {
+          purchaseDate: 'desc',
+        },
+      },
+      include: {
+        purchase: true,
+      },
     });
 
     if (!globalLatestContribution || globalLatestContribution.id !== id) {
       return NextResponse.json(
-        { 
-          message: 'Cannot delete contribution: Only the latest contribution in the system may be deleted',
-          constraint: 'GLOBAL_LATEST_CONTRIBUTION_ONLY'
+        {
+          message:
+            'Cannot delete contribution: Only the latest contribution in the system may be deleted',
+          constraint: 'GLOBAL_LATEST_CONTRIBUTION_ONLY',
         },
         { status: 400 }
       );
@@ -268,15 +291,16 @@ export async function DELETE(
     // Additional constraint: Check if latest token purchase has no contribution
     // If so, prevent deletion to avoid having two purchases without contributions
     const latestPurchase = await prisma.tokenPurchase.findFirst({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { purchaseDate: 'desc' },
       include: { contribution: true },
     });
 
     if (latestPurchase && !latestPurchase.contribution) {
       return NextResponse.json(
-        { 
-          message: 'Cannot delete contribution: Latest token purchase has no contribution. Deleting this contribution would leave two purchases without contributions.',
-          constraint: 'PREVENT_MULTIPLE_UNCONSUMED_PURCHASES'
+        {
+          message:
+            'Cannot delete contribution: Latest token purchase has no contribution. Deleting this contribution would leave two purchases without contributions.',
+          constraint: 'PREVENT_MULTIPLE_UNCONSUMED_PURCHASES',
         },
         { status: 400 }
       );
