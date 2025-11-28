@@ -48,6 +48,8 @@ next-env.d.ts
 # Database backups
 /backups/
 *.sql
+*backup*.json
+et-backup*.json
 
 # Logs
 /logs/

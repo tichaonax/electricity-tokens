@@ -48,7 +48,10 @@
     "install:fresh": "node scripts/comprehensive-installer.js fresh",
     "install:update": "node scripts/comprehensive-installer.js update",
     "install:auto": "node scripts/comprehensive-installer.js install",
-    "install:verify": "node scripts/comprehensive-installer.js verify"
+    "install:verify": "node scripts/comprehensive-installer.js verify",
+    "restore:verify": "node scripts/verify-restore-compatibility.js",
+    "restore:setup": "node scripts/fresh-install-setup.js",
+    "restore:setup-verify": "node scripts/fresh-install-setup.js --verify-only"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

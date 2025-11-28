@@ -65,7 +65,83 @@ Always test on the deployment machine with Administrator privileges. The hybrid 
 
 ### Migration Commands:
 - `npx prisma migrate dev --name migration_name` - Create and apply new migration (development)
-- `npx prisma migrate deploy` - Apply pending migrations (production)  
+- `npx prisma migrate deploy` - Apply pending migrations (production)
 - `npx prisma migrate status` - Check migration status
 - `npx prisma migrate resolve --applied migration_name` - Mark migration as applied
 - `npx prisma migrate resolve --rolled-back migration_name` - Mark failed migration as rolled back
+
+## Backup and Restore System
+This project supports **backward-compatible restores**, allowing you to restore backups from older system versions even if the current database schema includes new fields.
+
+### Fresh Installation and Restore (Remote Servers)
+When setting up a new server and restoring from an old backup:
+
+```bash
+# 1. Verify environment and database schema
+npm run restore:verify
+
+# 2. Run automated fresh install setup
+npm run restore:setup
+
+# Or verify-only mode (no changes)
+npm run restore:setup-verify
+
+# 3. Create admin user
+node scripts/seed-admin.js
+
+# 4. Start application and restore via web UI
+npm start
+```
+
+### Restore Verification
+Before restoring a backup, verify compatibility:
+
+```bash
+# Check if database is ready for restore
+npm run restore:verify
+
+# Verify specific backup file
+node scripts/verify-restore-compatibility.js /path/to/backup.json
+```
+
+The verification checks:
+- ✅ Database connection
+- ✅ All migrations applied
+- ✅ Required columns with correct defaults (e.g., `isActive`)
+- ✅ Required indexes
+- ✅ Backup file format and compatibility
+
+### How Backward Compatibility Works
+The migration `20250905045331_add_user_deactivation_system` adds new columns (`isActive`, `deactivatedAt`, etc.) with default values:
+- Old backups **without** these fields → Restored successfully with defaults
+- `isActive` defaults to `true` for all restored users
+- Uses `IF NOT EXISTS` - safe to run multiple times
+- No data loss or corruption
+
+### Restore Process
+**Via Web UI (Recommended):**
+1. Log in as admin
+2. Navigate to: Admin → Data Management → Restore
+3. Upload backup file (e.g., `et-backup_full_2025-11-27.json`)
+4. Click "Restore" and wait for completion
+5. Verify restored data
+
+**Via API:**
+```bash
+curl -X POST http://localhost:3000/api/backup \
+  -H "Content-Type: application/json" \
+  -H "Cookie: next-auth.session-token=YOUR_TOKEN" \
+  -d @backup-file.json
+```
+
+### Key Scripts
+- `scripts/verify-restore-compatibility.js` - Verify database is ready for restore
+- `scripts/fresh-install-setup.js` - Automated setup for new servers
+- `src/app/api/backup/route.ts` - Backup/restore API endpoint
+
+**See** `docs/FRESH_INSTALL_AND_RESTORE.md` for detailed documentation.
+
+### Troubleshooting
+- **"Column isActive does not exist"** → Run `npx prisma migrate deploy`
+- **"Environment variable not found: DATABASE_URL"** → Check `.env.local` file
+- **"current transaction is aborted"** → Expected during restore errors, check logs for root cause
