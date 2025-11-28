@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatPurchaseDate, formatLocalDateTime } from '@/lib/utils';
 
 interface Purchase {
   id: string;
@@ -913,10 +914,10 @@ export function PurchaseHistoryTable({
               render: (value, row) => (
                 <div>
                   <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {new Date(value).toLocaleDateString()}
+                    {formatPurchaseDate(value)}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
-                    {new Date(row.createdAt).toLocaleTimeString()}
+                    {new Date(row.createdAt).toLocaleTimeString('en-US')}
                   </div>
                 </div>
               ),
@@ -1356,12 +1357,10 @@ export function PurchaseHistoryTable({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {new Date(purchase.createdAt).toLocaleDateString()}
+                        {formatPurchaseDate(purchase.purchaseDate)}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">
-                        Purchase: {new Date(
-                          purchase.purchaseDate + 'T00:00:00'
-                        ).toLocaleDateString()}
+                        Created: {formatLocalDateTime(purchase.createdAt)}
                       </div>
                     </div>
                   </td>

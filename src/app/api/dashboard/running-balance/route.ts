@@ -205,8 +205,20 @@ export async function GET() {
     });
 
     // Get the latest contribution GLOBALLY (not user-specific)
+    // Order by purchase date, not createdAt (which gets reset on backup restore)
     const latestGlobalContribution = await prisma.userContribution.findFirst({
-      orderBy: { createdAt: 'desc' },
+      include: {
+        purchase: {
+          select: {
+            purchaseDate: true,
+          },
+        },
+      },
+      orderBy: {
+        purchase: {
+          purchaseDate: 'desc',
+        },
+      },
     });
 
     console.log('=== GLOBAL METER READING DEBUG ===');

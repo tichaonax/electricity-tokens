@@ -85,11 +85,16 @@ export async function GET(request: NextRequest) {
     switch (analysisType) {
       case 'user': {
         // Get user's contribution with purchase data
+        // Use purchase date for filtering and ordering, not createdAt
         const contribution = await prisma.userContribution.findMany({
           where: {
             userId: targetUserId,
-            ...(start && { createdAt: { gte: start } }),
-            ...(end && { createdAt: { lte: end } }),
+            ...(start && {
+              purchase: { purchaseDate: { gte: start } },
+            }),
+            ...(end && {
+              purchase: { purchaseDate: { lte: end } },
+            }),
           },
           include: {
             purchase: true,
@@ -100,7 +105,11 @@ export async function GET(request: NextRequest) {
               },
             },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: {
+            purchase: {
+              purchaseDate: 'desc',
+            },
+          },
         });
 
         const costBreakdown = calculateUserTrueCost(
@@ -231,9 +240,10 @@ export async function GET(request: NextRequest) {
 
       case 'optimal': {
         // Calculate optimal contribution for recent purchases
+        // Use purchase date, not createdAt (which gets reset on backup restore)
         const recentPurchases = await prisma.tokenPurchase.findMany({
           where: {
-            createdAt: {
+            purchaseDate: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
             },
             contribution: {
@@ -243,7 +253,7 @@ export async function GET(request: NextRequest) {
           include: {
             contribution: true,
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { purchaseDate: 'desc' },
           take: 10,
         });
 

@@ -94,7 +94,13 @@
       "Bash(cmd //c \"rd /s /q .next 2>NUL\")",
       "Bash(cmd /c \"taskkill /PID 34628 /F\")",
       "Bash(cmd /c \"dir C:\\electricity-app\\electricity-tokens\\logs /O-D /B\")",
-      "Bash(cmd /c \"type C:\\electricity-app\\electricity-tokens\\scripts\\windows-service\\daemon\\service.log | findstr /C:\"2025-11-09T21:14\" | tail -20\")"
+      "Bash(cmd /c \"type C:\\electricity-app\\electricity-tokens\\scripts\\windows-service\\daemon\\service.log | findstr /C:\"2025-11-09T21:14\" | tail -20\")",
+      "Bash(cmd /c \"rd /s /q .next 2>NUL\")",
+      "Bash(timeout /t 30)",
+      "Bash(set -a)",
+      "Bash(source .env.local)",
+      "Bash(set +a)",
+      "Bash(git check-ignore:*)"
     ],
     "deny": []
   }
