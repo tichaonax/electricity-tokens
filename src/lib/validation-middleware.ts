@@ -182,11 +182,19 @@ export interface PermissionCheck {
   };
 }
 
+export interface SessionUser {
+  id: string;
+  role: string;
+  permissions?: Record<string, unknown> | null;
+  email?: string;
+  name?: string;
+}
+
 export function checkPermissions(
-  session: { user?: { id: string; role: string } } | null,
+  session: { user?: SessionUser } | null,
   data: Record<string, unknown>,
   permissions: PermissionCheck
-): { success: boolean; error?: string; user?: { id: string; role: string } } {
+): { success: boolean; error?: string; user?: SessionUser } {
   // Check if authentication is required
   if (permissions.requireAuth && !session?.user) {
     return { success: false, error: 'Authentication required' };

@@ -11,6 +11,7 @@ import {
   User,
   Loader2,
 } from 'lucide-react';
+import { useAlert } from '@/components/ui/alert-dialog';
 
 interface ExportOptions {
   type: 'purchases' | 'contributions' | 'users' | 'summary' | 'purchase-data';
@@ -30,6 +31,8 @@ export function DataExport({ userRole }: DataExportProps) {
     type: 'purchase-data',
     format: 'csv',
   });
+
+  const { alert } = useAlert();
 
   const setCurrentMonth = () => {
     const now = new Date();
@@ -106,7 +109,11 @@ export function DataExport({ userRole }: DataExportProps) {
       document.body.removeChild(a);
     } catch (error) {
       // console.error removed
-      alert('Export failed. Please try again.');
+      alert({
+        title: 'Export Failed',
+        description: 'Export failed. Please try again.',
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }

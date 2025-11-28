@@ -2,8 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
+import { useEffect, useState, useMemo } from 'react';
+import { useConfirmation, useAlert } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/toast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Plus, Users, DollarSign, Zap, TrendingUp, User, Trash2, Edit, ShoppingCart } from 'lucide-react';
@@ -34,7 +34,8 @@ interface Contribution {
 export function ContributionsClient() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const confirmDelete = useDeleteConfirmation();
+  const { confirm } = useConfirmation();
+  const { alert } = useAlert();
   const { success, error: showError } = useToast();
   const { checkPermission, isAdmin } = usePermissions();
   const [contributions, setContributions] = useState<Contribution[]>([]);
@@ -148,52 +149,56 @@ export function ContributionsClient() {
     );
   };
 
+  // Memoize the latest contribution to avoid re-sorting on every render
+  const latestContributionId = useMemo(() => {
+    if (contributions.length === 0) return null;
+
+    const sortedByCreation = [...contributions].sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return sortedByCreation[0]?.id || null;
+  }, [contributions]);
 
   const isLatestContribution = (contribution: Contribution) => {
-    // Find the globally latest contribution in the entire system
-    if (contributions.length === 0) return false;
-    
-    // Sort all contributions by creation date and get the most recent one
-    const latest = contributions.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )[0];
-    
-    return latest.id === contribution.id;
+    return contribution.id === latestContributionId;
   };
 
   const handleDeleteContribution = async (contribution: Contribution) => {
     console.log('Delete button clicked for contribution:', contribution.id);
-    
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete this contribution?\n\nThis action cannot be undone and will permanently remove:\n- Contribution amount: $${contribution.contributionAmount.toFixed(2)}\n- Tokens consumed: ${contribution.tokensConsumed.toFixed(2)} kWh\n- By: ${contribution.user.name}`
-    );
 
-    console.log('Confirmation result:', confirmDelete);
+    confirm({
+      title: 'Delete Contribution',
+      description: `Are you sure you want to delete this contribution?\n\nThis action cannot be undone and will permanently remove:\n- Contribution amount: $${contribution.contributionAmount.toFixed(2)}\n- Tokens consumed: ${contribution.tokensConsumed.toFixed(2)} kWh\n- By: ${contribution.user.name}`,
+      variant: 'danger',
+      onConfirm: async () => {
+        console.log('User confirmed deletion');
 
-    if (!confirmDelete) {
-      console.log('User cancelled deletion');
-      return;
-    }
+        try {
+          console.log('Starting deletion process...');
+          setDeletingId(contribution.id);
 
-    try {
-      console.log('Starting deletion process...');
-      setDeletingId(contribution.id);
-      
-      const formData = new FormData();
-      formData.append('contributionId', contribution.id);
-      
-      console.log('Calling deleteContribution server action...');
-      await deleteContribution(formData);
-      
-      console.log('Deletion successful, refreshing page...');
-      // Refresh the page on successful deletion
-      window.location.reload();
-    } catch (error) {
-      console.error('Error deleting contribution:', error);
-      alert(`Failed to delete contribution: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setDeletingId(null);
-    }
+          const formData = new FormData();
+          formData.append('contributionId', contribution.id);
+
+          console.log('Calling deleteContribution server action...');
+          await deleteContribution(formData);
+
+          console.log('Deletion successful, refreshing page...');
+          // Refresh the page on successful deletion
+          window.location.reload();
+        } catch (error) {
+          console.error('Error deleting contribution:', error);
+          alert({
+            title: 'Delete Failed',
+            description: `Failed to delete contribution: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            variant: 'error',
+          });
+        } finally {
+          setDeletingId(null);
+        }
+      },
+    });
   };
 
 

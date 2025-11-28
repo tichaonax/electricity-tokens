@@ -12,7 +12,7 @@ import {
 import { SkeletonTable } from '@/components/ui/skeleton';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { useToast } from '@/components/ui/toast';
-import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
+import { useDeleteConfirmation } from '@/components/ui/alert-dialog';
 import {
   ChevronLeft,
   ChevronRight,
@@ -84,7 +84,8 @@ type SortField =
   | 'totalTokens'
   | 'totalPayment'
   | 'meterReading'
-  | 'creator';
+  | 'creator'
+  | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 export function PurchaseHistoryTable({
@@ -179,7 +180,7 @@ export function PurchaseHistoryTable({
   }, [filters.startDate, filters.endDate, getActivePreset]);
 
   // Sorting state
-  const [sortField, setSortField] = useState<SortField>('purchaseDate');
+  const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // UI state
@@ -1269,11 +1270,11 @@ export function PurchaseHistoryTable({
             <tr>
               <th className="px-6 py-3 text-left">
                 <button
-                  onClick={() => handleSort('purchaseDate')}
+                  onClick={() => handleSort('createdAt')}
                   className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hover:text-slate-700 dark:hover:text-slate-200"
                 >
-                  Date
-                  {getSortIcon('purchaseDate')}
+                  Date Added
+                  {getSortIcon('createdAt')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left">
@@ -1355,12 +1356,12 @@ export function PurchaseHistoryTable({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {new Date(
-                          purchase.purchaseDate + 'T00:00:00'
-                        ).toLocaleDateString()}
+                        {new Date(purchase.createdAt).toLocaleDateString()}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">
-                        {new Date(purchase.createdAt).toLocaleTimeString()}
+                        Purchase: {new Date(
+                          purchase.purchaseDate + 'T00:00:00'
+                        ).toLocaleDateString()}
                       </div>
                     </div>
                   </td>

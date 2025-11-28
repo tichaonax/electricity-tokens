@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Gauge,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -48,6 +49,11 @@ const navItems: NavItem[] = [
     href: '/dashboard/contributions',
     label: 'Contributions',
     icon: DollarSign,
+  },
+  {
+    href: '/dashboard/meter-readings',
+    label: 'Meter Readings',
+    icon: Gauge,
   },
   {
     href: '/dashboard/receipts/import',

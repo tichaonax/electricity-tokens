@@ -105,7 +105,11 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: {
+          purchase: {
+            purchaseDate: 'desc',
+          },
+        },
         skip,
         take: limit,
       }),

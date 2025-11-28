@@ -22,6 +22,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useConfirmation } from '@/components/ui/alert-dialog';
 
 interface IndexStatus {
   name: string;
@@ -42,6 +43,7 @@ interface DatabaseStats {
 export default function DatabasePerformancePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { confirm } = useConfirmation();
   const [indexes, setIndexes] = useState<IndexStatus[]>([]);
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -89,48 +91,47 @@ export default function DatabasePerformancePage() {
     }
   };
 
-  const runOptimization = async () => {
+  const runOptimization = () => {
     // Show confirmation dialog
-    const confirmed = window.confirm(
-      '⚠️ Database Optimization\n\n' +
+    confirm({
+      title: 'Database Optimization',
+      description: '⚠️ Database Optimization\n\n' +
         'This operation will create database indexes which may temporarily affect performance during execution.\n\n' +
         'It is recommended to run this during low-traffic periods or outside business hours.\n\n' +
-        'Are you sure you want to continue?'
-    );
+        'Are you sure you want to continue?',
+      variant: 'warning',
+      onConfirm: async () => {
+        try {
+          setIsOptimizing(true);
+          setMessage(null);
 
-    if (!confirmed) {
-      return;
-    }
+          const response = await fetch('/api/admin/database-performance/optimize', {
+            method: 'POST',
+          });
 
-    try {
-      setIsOptimizing(true);
-      setMessage(null);
+          if (!response.ok) {
+            throw new Error('Failed to run database optimization');
+          }
 
-      const response = await fetch('/api/admin/database-performance/optimize', {
-        method: 'POST',
-      });
+          const data = await response.json();
+          setMessage({
+            type: 'success',
+            text: `Database optimization completed successfully! ${data.indexesCreated} indexes created.`,
+          });
 
-      if (!response.ok) {
-        throw new Error('Failed to run database optimization');
-      }
-
-      const data = await response.json();
-      setMessage({
-        type: 'success',
-        text: `Database optimization completed successfully! ${data.indexesCreated} indexes created.`,
-      });
-
-      // Refresh the status
-      await checkIndexStatus();
-    } catch (error) {
-      console.error('Error running database optimization:', error);
-      setMessage({
-        type: 'error',
-        text: 'Failed to run database optimization. Please try again.',
-      });
-    } finally {
-      setIsOptimizing(false);
-    }
+          // Refresh the status
+          await checkIndexStatus();
+        } catch (error) {
+          console.error('Error running database optimization:', error);
+          setMessage({
+            type: 'error',
+            text: 'Failed to run database optimization. Please try again.',
+          });
+        } finally {
+          setIsOptimizing(false);
+        }
+      },
+    });
   };
 
   const getImpactBadge = (impact: string) => {

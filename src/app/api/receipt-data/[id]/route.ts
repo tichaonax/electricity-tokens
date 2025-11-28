@@ -107,7 +107,7 @@ export async function GET(
  * - vatZWG: VAT in ZWG
  * - totalAmountZWG: Total ZWG amount
  * - transactionDateTime: Transaction date/time from receipt
- * - accountNumber: 20-digit account number
+ * - accountNumber: Account number
  * - tokenNumber: Meter/token number
  * 
  * Authorization:

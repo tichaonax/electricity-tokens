@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { createAuditLog } from '@/lib/audit';
 import type { UpdateData } from '@/types/api';
 import { updateTokenPurchaseSchema, idParamSchema } from '@/lib/validations';
 import {
@@ -336,11 +337,12 @@ export async function PUT(
     );
 
     // Validate request body directly
+    let validatedBody;
     try {
-      const bodyValidation = updateTokenPurchaseSchema.parse(requestBody);
+      validatedBody = updateTokenPurchaseSchema.parse(requestBody);
       console.log(
         'Body validation passed:',
-        JSON.stringify(bodyValidation, null, 2)
+        JSON.stringify(validatedBody, null, 2)
       );
     } catch (error) {
       console.error('Body validation failed:', error);
@@ -371,12 +373,25 @@ export async function PUT(
       return createValidationErrorResponse(paramValidation);
     }
 
-    const body = requestBody as {
+    // Use the validated body (with transforms applied)
+    const body = validatedBody as {
       totalTokens?: number;
       totalPayment?: number;
       meterReading?: number;
       purchaseDate?: string | Date;
       isEmergency?: boolean;
+      receiptData?: {
+        tokenNumber?: string | null;
+        accountNumber?: string | null;
+        kwhPurchased?: number;
+        energyCostZWG?: number;
+        debtZWG?: number;
+        reaZWG?: number;
+        vatZWG?: number;
+        totalAmountZWG?: number;
+        tenderedZWG?: number;
+        transactionDateTime?: string | Date;
+      };
     };
     const sanitizedData = sanitizeInput(body);
     const {
@@ -385,12 +400,25 @@ export async function PUT(
       meterReading,
       purchaseDate,
       isEmergency,
+      receiptData,
     } = sanitizedData as {
       totalTokens?: number;
       totalPayment?: number;
       meterReading?: number;
       purchaseDate?: string | Date;
       isEmergency?: boolean;
+      receiptData?: {
+        tokenNumber?: string | null;
+        accountNumber?: string | null;
+        kwhPurchased?: number;
+        energyCostZWG?: number;
+        debtZWG?: number;
+        reaZWG?: number;
+        vatZWG?: number;
+        totalAmountZWG?: number;
+        tenderedZWG?: number;
+        transactionDateTime?: string | Date;
+      };
     };
 
     // Check if purchase exists and include contribution relationship
@@ -537,8 +565,95 @@ export async function PUT(
             },
           },
         },
+        receiptData: true,
       },
     });
+
+    // Handle receiptData upsert if provided
+    if (receiptData) {
+      console.log('Processing receiptData update:', JSON.stringify(receiptData, null, 2));
+
+      // Prepare receipt data for upsert
+      const receiptUpdateData: any = {};
+
+      if (receiptData.tokenNumber !== undefined) {
+        receiptUpdateData.tokenNumber = receiptData.tokenNumber;
+      }
+      if (receiptData.accountNumber !== undefined) {
+        receiptUpdateData.accountNumber = receiptData.accountNumber;
+      }
+      if (receiptData.kwhPurchased !== undefined) {
+        receiptUpdateData.kwhPurchased = receiptData.kwhPurchased;
+      }
+      if (receiptData.energyCostZWG !== undefined) {
+        receiptUpdateData.energyCostZWG = receiptData.energyCostZWG ?? 0;
+      }
+      if (receiptData.debtZWG !== undefined) {
+        receiptUpdateData.debtZWG = receiptData.debtZWG ?? 0;
+      }
+      if (receiptData.reaZWG !== undefined) {
+        receiptUpdateData.reaZWG = receiptData.reaZWG ?? 0;
+      }
+      if (receiptData.vatZWG !== undefined) {
+        receiptUpdateData.vatZWG = receiptData.vatZWG ?? 0;
+      }
+      if (receiptData.totalAmountZWG !== undefined) {
+        receiptUpdateData.totalAmountZWG = receiptData.totalAmountZWG;
+      }
+      if (receiptData.tenderedZWG !== undefined) {
+        receiptUpdateData.tenderedZWG = receiptData.tenderedZWG;
+      }
+      if (receiptData.transactionDateTime !== undefined) {
+        // The transactionDateTime has already been validated and transformed by Zod
+        // It's either a Date object or an ISO string that can be parsed
+        const dateValue =
+          receiptData.transactionDateTime instanceof Date
+            ? receiptData.transactionDateTime
+            : new Date(receiptData.transactionDateTime);
+
+        // Validate the date is valid
+        if (isNaN(dateValue.getTime())) {
+          console.error(
+            'Invalid transactionDateTime after parsing:',
+            receiptData.transactionDateTime
+          );
+          return NextResponse.json(
+            { message: 'Invalid transaction date time provided' },
+            { status: 400 }
+          );
+        }
+
+        receiptUpdateData.transactionDateTime = dateValue;
+      }
+
+      // Upsert receipt data
+      // For create, we need all required fields. For update, partial is fine.
+      const createData = {
+        purchaseId: id,
+        kwhPurchased: receiptData.kwhPurchased ?? 0,
+        energyCostZWG: receiptData.energyCostZWG ?? 0,
+        debtZWG: receiptData.debtZWG ?? 0,
+        reaZWG: receiptData.reaZWG ?? 0,
+        vatZWG: receiptData.vatZWG ?? 0,
+        totalAmountZWG: receiptData.totalAmountZWG ?? 0,
+        tenderedZWG: receiptData.tenderedZWG ?? 0,
+        transactionDateTime:
+          receiptUpdateData.transactionDateTime ?? new Date(),
+        tokenNumber: receiptData.tokenNumber ?? null,
+        accountNumber: receiptData.accountNumber ?? null,
+      };
+
+      const upsertedReceiptData = await prisma.receiptData.upsert({
+        where: { purchaseId: id },
+        update: receiptUpdateData,
+        create: createData,
+      });
+
+      console.log('Receipt data upsert completed successfully');
+
+      // Update the receiptData in the response object
+      (updatedPurchase as any).receiptData = upsertedReceiptData;
+    }
 
     // Perform contribution recalculation if meter reading changed
     let recalculationResults = null;
@@ -550,62 +665,58 @@ export async function PUT(
 
       // Create audit logs for each recalculated contribution
       for (const updatedContribution of recalculationResults.updatedContributions) {
-        await prisma.auditLog.create({
-          data: {
-            userId: permissionCheck.user!.id,
-            action: 'RECALCULATE',
-            entityType: 'UserContribution',
-            entityId: updatedContribution.id,
-            oldValues: {
-              meterReading: impactAnalysis.oldValues.contributionMeterReading,
-              tokensConsumed:
-                impactAnalysis.oldValues.contributionTokensConsumed,
-              trigger: 'Purchase meter reading changed',
-              originalPurchaseMeterReading:
-                impactAnalysis.oldValues.purchaseMeterReading,
-            },
-            newValues: {
-              meterReading: updatedContribution.meterReading,
-              tokensConsumed: updatedContribution.tokensConsumed,
-              trigger: 'Purchase meter reading changed',
-              newPurchaseMeterReading: meterReading,
-            },
+        await createAuditLog({
+          userId: permissionCheck.user!.id,
+          action: 'RECALCULATE' as any,
+          entityType: 'UserContribution',
+          entityId: updatedContribution.id,
+          oldValues: {
+            meterReading: impactAnalysis.oldValues.contributionMeterReading,
+            tokensConsumed:
+              impactAnalysis.oldValues.contributionTokensConsumed,
+            trigger: 'Purchase meter reading changed',
+            originalPurchaseMeterReading:
+              impactAnalysis.oldValues.purchaseMeterReading,
+          },
+          newValues: {
+            meterReading: updatedContribution.meterReading,
+            tokensConsumed: updatedContribution.tokensConsumed,
+            trigger: 'Purchase meter reading changed',
+            newPurchaseMeterReading: meterReading,
           },
         });
       }
     }
 
     // Create audit log entry for purchase update
-    await prisma.auditLog.create({
-      data: {
-        userId: permissionCheck.user!.id,
-        action: 'UPDATE',
-        entityType: 'TokenPurchase',
-        entityId: id,
-        oldValues: {
-          ...existingPurchase,
-          cascadingChanges: recalculationResults
-            ? {
-                affectedContributions: recalculationResults.affectedPurchases,
-                recalculationPerformed: true,
-              }
-            : null,
-        },
-        newValues: {
-          ...updatedPurchase,
-          cascadingChanges: recalculationResults
-            ? {
-                affectedContributions: recalculationResults.affectedPurchases,
-                recalculationPerformed: true,
-                updatedContributions:
-                  recalculationResults.updatedContributions.map((c) => ({
-                    id: c.id,
-                    meterReading: c.meterReading,
-                    tokensConsumed: c.tokensConsumed,
-                  })),
-              }
-            : null,
-        },
+    await createAuditLog({
+      userId: permissionCheck.user!.id,
+      action: 'UPDATE',
+      entityType: 'TokenPurchase',
+      entityId: id,
+      oldValues: {
+        ...existingPurchase,
+        cascadingChanges: recalculationResults
+          ? {
+              affectedContributions: recalculationResults.affectedPurchases,
+              recalculationPerformed: true,
+            }
+          : null,
+      },
+      newValues: {
+        ...updatedPurchase,
+        cascadingChanges: recalculationResults
+          ? {
+              affectedContributions: recalculationResults.affectedPurchases,
+              recalculationPerformed: true,
+              updatedContributions:
+                recalculationResults.updatedContributions.map((c) => ({
+                  id: c.id,
+                  meterReading: c.meterReading,
+                  tokensConsumed: c.tokensConsumed,
+                })),
+            }
+          : null,
       },
     });
 
@@ -752,14 +863,12 @@ export async function DELETE(
     }
 
     // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        userId: permissionCheck.user!.id,
-        action: 'DELETE',
-        entityType: 'TokenPurchase',
-        entityId: id,
-        oldValues: existingPurchase,
-      },
+    await createAuditLog({
+      userId: permissionCheck.user!.id,
+      action: 'DELETE',
+      entityType: 'TokenPurchase',
+      entityId: id,
+      oldValues: existingPurchase,
     });
 
     return NextResponse.json(

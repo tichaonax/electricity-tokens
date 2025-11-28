@@ -25,6 +25,7 @@ import {
   Save,
   RotateCcw,
 } from 'lucide-react';
+import { useConfirmation } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -71,6 +72,7 @@ export default function EditUser() {
   const [success, setSuccess] = useState<string | null>(null);
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const { confirm } = useConfirmation();
 
   const [formData, setFormData] = useState<UserEditFormData>({
     name: '',
@@ -836,9 +838,12 @@ export default function EditUser() {
                         type="button"
                         variant="outline"
                         onClick={() => {
-                          if (window.confirm('Are you sure you want to discard all changes?')) {
-                            router.push('/dashboard/admin/users');
-                          }
+                          confirm({
+                            title: 'Discard Changes',
+                            description: 'Are you sure you want to discard all changes?',
+                            variant: 'warning',
+                            onConfirm: () => router.push('/dashboard/admin/users'),
+                          });
                         }}
                         disabled={saving}
                         className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"

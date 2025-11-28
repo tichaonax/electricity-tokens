@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { createAuditLog } from '@/lib/audit';
 
 export async function editContribution(formData: FormData) {
   const contributionId = formData.get('contributionId') as string;
@@ -66,14 +67,12 @@ export async function deleteContribution(formData: FormData) {
     });
 
     // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: 'DELETE',
-        entityType: 'UserContribution',
-        entityId: contributionId,
-        oldValues: existingContribution,
-      },
+    await createAuditLog({
+      userId: session.user.id,
+      action: 'DELETE',
+      entityType: 'UserContribution',
+      entityId: contributionId,
+      oldValues: existingContribution,
     });
 
     // Revalidate the contributions page to reflect the changes

@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   Loader2,
 } from 'lucide-react';
+import { useAlert, useConfirmation } from '@/components/ui/alert-dialog';
 
 interface BackupOptions {
   type: 'full' | 'users' | 'purchase-data';
@@ -47,6 +48,9 @@ export function DataBackup({ isAdmin = false }: DataBackupProps) {
     null
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { alert } = useAlert();
+  const { confirm } = useConfirmation();
 
   const handleBackup = async () => {
     try {
@@ -85,7 +89,11 @@ export function DataBackup({ isAdmin = false }: DataBackupProps) {
       document.body.removeChild(a);
     } catch (error) {
       // console.error removed
-      alert('Backup failed. Please try again.');
+      alert({
+        title: 'Backup Failed',
+        description: 'Backup failed. Please try again.',
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -97,45 +105,54 @@ export function DataBackup({ isAdmin = false }: DataBackupProps) {
       setRestoreFile(selectedFile);
       setRestoreResult(null);
     } else {
-      alert('Please select a JSON backup file');
+      alert({
+        title: 'Invalid File',
+        description: 'Please select a JSON backup file',
+        variant: 'warning',
+      });
     }
   };
 
   const handleRestore = async () => {
     if (!restoreFile) return;
 
-    const confirmed = window.confirm(
-      'Are you sure you want to restore from this backup? This will overwrite existing data and cannot be undone.'
-    );
+    confirm({
+      title: 'Confirm Restore',
+      description: 'Are you sure you want to restore from this backup? This will overwrite existing data and cannot be undone.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          setLoading(true);
 
-    if (!confirmed) return;
+          const fileContent = await restoreFile.text();
+          const backupData = JSON.parse(fileContent);
 
-    try {
-      setLoading(true);
+          const response = await fetch('/api/backup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(backupData),
+          });
 
-      const fileContent = await restoreFile.text();
-      const backupData = JSON.parse(fileContent);
+          if (!response.ok) {
+            throw new Error('Restore failed');
+          }
 
-      const response = await fetch('/api/backup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(backupData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Restore failed');
-      }
-
-      const result = await response.json();
-      setRestoreResult(result);
-    } catch (error) {
-      // console.error removed
-      alert('Restore failed. Please check the backup file and try again.');
-    } finally {
-      setLoading(false);
-    }
+          const result = await response.json();
+          setRestoreResult(result);
+        } catch (error) {
+          // console.error removed
+          alert({
+            title: 'Restore Failed',
+            description: 'Restore failed. Please check the backup file and try again.',
+            variant: 'error',
+          });
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   const backupTypes = [

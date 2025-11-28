@@ -7,6 +7,9 @@
 // - API routes: checkPermissions() utility allows admin bypass
 // - Database queries: admin role checked before permission validation
 //
+// ADMIN_PERMISSIONS is automatically generated from DEFAULT_USER_PERMISSIONS keys
+// to ensure admins always have access to all current and future permissions.
+//
 // PERMISSION HIERARCHY:
 // 1. Admin role check (if admin, grant all access)
 // 2. Custom user permissions (from database)
@@ -103,38 +106,15 @@ export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
   canViewDualCurrencyAnalysis: true, // Allow viewing dual-currency insights
 };
 
-// Full permissions for admin users
-export const ADMIN_PERMISSIONS: UserPermissions = {
-  canAddPurchases: true,
-  canEditPurchases: true,
-  canDeletePurchases: true,
-  canAddContributions: true,
-  canEditContributions: true,
-  canDeleteContributions: true,
-  canAddMeterReadings: true,
-  canViewUsageReports: true,
-  canViewFinancialReports: true,
-  canViewEfficiencyReports: true,
-  canViewPersonalDashboard: true,
-  canViewCostAnalysis: true,
-  canViewAccountBalance: true,
-  canViewProgressiveTokenConsumption: true,
-  canViewMaximumDailyConsumption: true,
-  canViewPurchaseHistory: true,
-  canAccessNewPurchase: true,
-  canViewUserContributions: true,
-  canExportData: true,
-  canImportData: true,
-  canCreateBackup: true,
-
-  // Receipt Data Management (ET-100) - Full access for admins
-  canCreatePurchase: true,
-  canAddReceiptData: true,
-  canEditReceiptData: true,
-  canDeleteReceiptData: true,
-  canImportHistoricalReceipts: true,
-  canViewDualCurrencyAnalysis: true,
-};
+// Full permissions for admin users - AUTOMATICALLY GENERATED
+// This ensures admins always have ALL permissions without manual maintenance
+export const ADMIN_PERMISSIONS: UserPermissions = Object.keys(DEFAULT_USER_PERMISSIONS).reduce(
+  (acc, key) => {
+    acc[key as keyof UserPermissions] = true;
+    return acc;
+  },
+  {} as UserPermissions
+);
 
 // Restricted permissions preset (read-only user)
 export const READ_ONLY_PERMISSIONS: UserPermissions = {
@@ -223,7 +203,7 @@ export function hasPermission(
 
 // Permission groups for easy admin selection
 export const PERMISSION_PRESETS = {
-  'full-access': ADMIN_PERMISSIONS,
+  'full-access': ADMIN_PERMISSIONS, // Note: This is automatically generated for admins
   default: DEFAULT_USER_PERMISSIONS,
   'read-only': READ_ONLY_PERMISSIONS,
   'contributor-only': CONTRIBUTOR_ONLY_PERMISSIONS,

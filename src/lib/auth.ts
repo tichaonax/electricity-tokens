@@ -164,7 +164,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          permissions: user.permissions || {},
+          // Admin users should have null permissions for automatic full access
+          permissions: user.role === 'ADMIN' ? null : (user.permissions || {}),
           passwordResetRequired: user.passwordResetRequired,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
@@ -178,8 +179,8 @@ export const authOptions: NextAuthOptions = {
         const t: any = token;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         t.role = (user as any).role;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        t.permissions = (user as any).permissions;
+        // Admin users should have null permissions for automatic full access
+        t.permissions = (user as any).role === 'ADMIN' ? null : (user as any).permissions;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         t.passwordResetRequired = (user as any).passwordResetRequired;
 

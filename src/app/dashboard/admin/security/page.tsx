@@ -13,6 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
+import { useAlert } from '@/components/ui/alert-dialog';
 import {
   Shield,
   Eye,
@@ -77,6 +78,7 @@ export default function SecurityAndAudit() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { alert } = useAlert();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -411,9 +413,11 @@ export default function SecurityAndAudit() {
                           className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
                           onClick={() => {
                             // In real implementation, show detailed view
-                            alert(
-                              `Audit Log Details:\n\nUser: ${log.userName}\nAction: ${log.action}\nEntity: ${log.entityType}\nTime: ${new Date(log.timestamp).toLocaleString()}`
-                            );
+                            alert({
+                              title: 'Audit Log Details',
+                              description: `User: ${log.userName}\nAction: ${log.action}\nEntity: ${log.entityType}\nTime: ${new Date(log.timestamp).toLocaleString()}`,
+                              variant: 'info',
+                            });
                           }}
                         >
                           View Details
@@ -451,9 +455,11 @@ export default function SecurityAndAudit() {
                             className="w-full text-center px-3 py-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium border border-indigo-300 dark:border-indigo-600 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                             onClick={() => {
                               // In real implementation, show detailed view
-                              alert(
-                                `Audit Log Details:\n\nUser: ${log.userName}\nAction: ${log.action}\nEntity: ${log.entityType}\nTime: ${new Date(log.timestamp).toLocaleString()}`
-                              );
+                              alert({
+                                title: 'Audit Log Details',
+                                description: `User: ${log.userName}\nAction: ${log.action}\nEntity: ${log.entityType}\nTime: ${new Date(log.timestamp).toLocaleString()}`,
+                                variant: 'info',
+                              });
                             }}
                           >
                             View Details

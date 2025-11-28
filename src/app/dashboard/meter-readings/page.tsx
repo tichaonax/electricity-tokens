@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useConfirmation } from '@/components/ui/alert-dialog';
 
 // Helper function to get current month date range
 function getCurrentMonthRange() {
@@ -101,6 +102,7 @@ function MeterReadingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { checkPermission } = usePermissions();
+  const { confirm } = useConfirmation();
 
   // Check if coming from admin panel - only rely on URL parameter
   const isFromAdmin = searchParams.get('from') === 'admin';
@@ -511,30 +513,33 @@ function MeterReadingsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this meter reading?')) {
-      return;
-    }
+    confirm({
+      title: 'Delete Meter Reading',
+      description: 'Are you sure you want to delete this meter reading?',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          setError(null);
+          const response = await fetch(`/api/meter-readings/${id}`, {
+            method: 'DELETE',
+          });
 
-    try {
-      setError(null);
-      const response = await fetch(`/api/meter-readings/${id}`, {
-        method: 'DELETE',
-      });
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete meter reading');
+          }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete meter reading');
-      }
-
-      await fetchMeterReadings(pagination.page);
-    } catch (error) {
-      console.error('Error deleting meter reading:', error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete meter reading'
-      );
-    }
+          await fetchMeterReadings(pagination.page);
+        } catch (error) {
+          console.error('Error deleting meter reading:', error);
+          setError(
+            error instanceof Error
+              ? error.message
+              : 'Failed to delete meter reading'
+          );
+        }
+      },
+    });
   };
 
   const cancelEdit = () => {

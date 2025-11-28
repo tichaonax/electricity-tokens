@@ -11,6 +11,7 @@ import { ArrowLeft, Save, AlertTriangle, DollarSign, Zap, Calendar, Trash2 } fro
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useConfirmation } from '@/components/ui/alert-dialog';
 
 const editContributionSchema = z.object({
   contributionAmount: z.number()
@@ -47,6 +48,7 @@ function EditContributionContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+  const { confirm } = useConfirmation();
   const contributionId = params.id as string;
   const fromPage = searchParams.get('from');
   
@@ -64,7 +66,7 @@ function EditContributionContent() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [canDelete, setCanDelete] = useState(false);
+  const [isContributionDeletable, setIsContributionDeletable] = useState(false);
 
   const {
     register,
@@ -107,10 +109,12 @@ function EditContributionContent() {
       setValue('contributionAmount', data.contributionAmount);
       // tokensConsumed is calculated and readonly
 
-      // Check if this contribution can be deleted (only if it's attached to the most recent purchase)
-      if (session?.user?.role === 'ADMIN') {
-        checkIfCanDelete(data.purchase.id);
-      }
+      // For users with delete permissions, assume they can potentially delete
+      // The API will enforce the business rules (latest contribution only)
+      const userPermissions = session?.user?.permissions as Record<string, unknown> | null;
+      const hasDeletePermission = session?.user?.role === 'ADMIN' || userPermissions?.canDeleteContributions === true;
+      
+      setIsContributionDeletable(hasDeletePermission);
     } catch {
       // console.error removed
       setError('Failed to load contribution data.');
@@ -120,51 +124,41 @@ function EditContributionContent() {
   };
 
   const checkIfCanDelete = async (purchaseId: string) => {
-    try {
-      // Check if this is the latest contribution in the system
-      const response = await fetch(`/api/contributions`);
-      if (response.ok) {
-        const contributions = await response.json();
-        const latestContribution = contributions.contributions?.[0]; // First item should be latest
-        
-        // Only allow deletion if this is the latest contribution
-        const isLatestContribution = latestContribution?.id === contributionId;
-        setCanDelete(isLatestContribution);
-      }
-    } catch {
-      setCanDelete(false);
-    }
+    // This function is no longer needed - simplified to just check permissions
+    // The API handles the business rules (latest contribution constraint)
   };
 
   const handleDelete = async () => {
-    if (!contribution || !isAdmin) return;
+    if (!contribution) return;
     
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete this contribution?\n\nThis action cannot be undone and will permanently remove:\n- Contribution amount: $${contribution.contributionAmount.toFixed(2)}\n- Tokens consumed: ${contribution.tokensConsumed.toFixed(2)} kWh\n- By: ${contribution.user.name}`
-    );
-    
-    if (!confirmDelete) return;
-    
-    try {
-      setDeleting(true);
-      setError(null);
-      
-      const response = await fetch(`/api/contributions/${contributionId}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete contribution');
+    confirm({
+      title: 'Delete Contribution',
+      description: `Are you sure you want to delete this contribution?\n\nThis action cannot be undone and will permanently remove:\n- Contribution amount: $${contribution.contributionAmount.toFixed(2)}\n- Tokens consumed: ${contribution.tokensConsumed.toFixed(2)} kWh\n- By: ${contribution.user.name}\n\nNote: Only the most recent contribution can be deleted.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          setDeleting(true);
+          setError(null);
+          
+          const response = await fetch(`/api/contributions/${contributionId}`, {
+            method: 'DELETE',
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete contribution');
+          }
+          
+          // Success - redirect back to source page
+          router.push(getBackPath());
+        } catch (error) {
+          setError(error instanceof Error ? error.message : 'Failed to delete contribution');
+        } finally {
+          setDeleting(false);
+        }
       }
-      
-      // Success - redirect back to source page
-      router.push(getBackPath());
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete contribution');
-    } finally {
-      setDeleting(false);
-    }
+    });
   };
 
   const validateContribution = async (contributionAmount: number) => {
@@ -279,8 +273,14 @@ function EditContributionContent() {
     isOwner || 
     userPermissions?.canEditContributions === true;
 
+  const canDelete = isAdmin || 
+    isOwner || 
+    userPermissions?.canDeleteContributions === true;
+
   console.log('  Final canView:', canView);
   console.log('  Final canEdit:', canEdit);
+  console.log('  Final canDelete:', canDelete);
+  console.log('  isContributionDeletable (has permission):', isContributionDeletable);
 
   if (status === 'loading' || loading) {
     return (
@@ -517,17 +517,17 @@ function EditContributionContent() {
                           type="button"
                           variant="outline"
                           onClick={() => router.push(getBackPath())}
-                          className="flex-1 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                          className="px-4 py-2 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                         >
                           Cancel
                         </Button>
-                        {isAdmin && canDelete && (
+                        {canDelete && isContributionDeletable && (
                           <Button
                             type="button"
                             variant="outline"
                             onClick={handleDelete}
                             disabled={deleting}
-                            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+                            className="px-4 py-2 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
                           >
                             {deleting ? (
                               <>
@@ -555,7 +555,7 @@ function EditContributionContent() {
                           ) : (
                             <>
                               <Save className="h-4 w-4 mr-2" />
-                              Update Contribution
+                              Update
                             </>
                           )}
                         </Button>

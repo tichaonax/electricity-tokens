@@ -1,5 +1,6 @@
 import { DataEncryption } from './security';
 import { prisma } from './prisma';
+import { createAuditLog } from './audit';
 
 /**
  * Utility for storing and retrieving encrypted sensitive data
@@ -15,21 +16,21 @@ export class EncryptedStorage {
   ): Promise<string> {
     try {
       const encryptedData = DataEncryption.encrypt(JSON.stringify(data));
-      
+      const entityId = `${dataType}_${Date.now()}`;
+
       // Store in a dedicated encrypted_data table (you'll need to add this to your schema)
       // For now, we'll simulate this with the audit log system
-      const record = await prisma.auditLog.create({
-        data: {
-          userId,
-          action: 'ENCRYPTED_STORE',
-          entityType: 'UserData',
-          entityId: `${dataType}_${Date.now()}`,
-          newValues: { encryptedData },
-          oldValues: { dataType, timestamp: new Date() },
-        },
+      await createAuditLog({
+        userId,
+        action: 'ENCRYPTED_STORE' as any,
+        entityType: 'UserData',
+        entityId,
+        newValues: { encryptedData },
+        oldValues: { dataType, timestamp: new Date() },
       });
 
-      return record.id;
+      // Note: createAuditLog generates its own ID, so we return the entityId instead
+      return entityId;
     } catch (error) {
       console.error('Error storing encrypted data:', error);
       throw new Error('Failed to store encrypted data');
@@ -40,13 +41,13 @@ export class EncryptedStorage {
    * Retrieve and decrypt user data
    */
   static async retrieveUserData(
-    recordId: string,
+    entityId: string,
     userId: string
   ): Promise<Record<string, any> | null> {
     try {
       const record = await prisma.auditLog.findFirst({
         where: {
-          id: recordId,
+          entityId,
           userId,
           action: 'ENCRYPTED_STORE',
         },
@@ -118,20 +119,20 @@ export class EncryptedStorage {
       };
 
       const encryptedBackup = DataEncryption.encrypt(JSON.stringify(backupData));
-      
+      const entityId = `backup_${Date.now()}`;
+
       // Store backup reference
-      const backupRecord = await prisma.auditLog.create({
-        data: {
-          userId,
-          action: 'BACKUP_CREATED',
-          entityType: 'UserBackup',
-          entityId: `backup_${Date.now()}`,
-          newValues: { encryptedBackup, size: encryptedBackup.length },
-          oldValues: { timestamp: new Date(), type: 'full_backup' },
-        },
+      await createAuditLog({
+        userId,
+        action: 'BACKUP_CREATED' as any,
+        entityType: 'UserBackup',
+        entityId,
+        newValues: { encryptedBackup, size: encryptedBackup.length },
+        oldValues: { timestamp: new Date(), type: 'full_backup' },
       });
 
-      return backupRecord.id;
+      // Note: createAuditLog generates its own ID, so we return the entityId instead
+      return entityId;
     } catch (error) {
       console.error('Error creating user backup:', error);
       throw new Error('Failed to create user backup');
@@ -142,13 +143,13 @@ export class EncryptedStorage {
    * Restore user data from encrypted backup
    */
   static async restoreUserBackup(
-    backupId: string,
+    backupEntityId: string,
     userId: string
   ): Promise<boolean> {
     try {
       const backupRecord = await prisma.auditLog.findFirst({
         where: {
-          id: backupId,
+          entityId: backupEntityId,
           userId,
           action: 'BACKUP_CREATED',
         },
@@ -172,15 +173,13 @@ export class EncryptedStorage {
       }
 
       // Log the restore operation
-      await prisma.auditLog.create({
-        data: {
-          userId,
-          action: 'BACKUP_RESTORED',
-          entityType: 'UserBackup',
-          entityId: backupId,
-          newValues: { restoredAt: new Date() },
-          oldValues: { originalBackupTime: backupData.backupTimestamp },
-        },
+      await createAuditLog({
+        userId,
+        action: 'BACKUP_RESTORED' as any,
+        entityType: 'UserBackup',
+        entityId: backupEntityId,
+        newValues: { restoredAt: new Date() },
+        oldValues: { originalBackupTime: backupData.backupTimestamp },
       });
 
       return true;

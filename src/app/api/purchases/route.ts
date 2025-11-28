@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         startDate?: string;
         endDate?: string;
         before?: string;
-        sortBy?: 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'creator';
+        sortBy?: 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'creator' | 'createdAt';
         sortDirection?: 'asc' | 'desc';
         search?: string;
       };
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       startDate,
       endDate,
       before,
-      sortBy = 'purchaseDate',
+      sortBy = 'createdAt',
       sortDirection = 'desc',
       search,
     } = query || {};
@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
       | { purchaseDate: 'asc' | 'desc' }
       | { totalTokens: 'asc' | 'desc' }
       | { totalPayment: 'asc' | 'desc' }
+      | { createdAt: 'asc' | 'desc' }
       | { user: { name: 'asc' | 'desc' } };
     switch (sortBy) {
       case 'creator':
@@ -120,6 +121,9 @@ export async function GET(request: NextRequest) {
         break;
       case 'totalPayment':
         orderBy = { totalPayment: sortDirection };
+        break;
+      case 'createdAt':
+        orderBy = { createdAt: sortDirection };
         break;
       case 'purchaseDate':
       default:

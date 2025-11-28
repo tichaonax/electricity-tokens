@@ -182,8 +182,14 @@ export async function PUT(
 
     // Create audit log entry
     try {
+      const auditTimestamp = Date.now().toString(36);
+      const auditRandomPart = Math.random().toString(36).substring(2, 15);
+      const auditRandomPart2 = Math.random().toString(36).substring(2, 15);
+      const auditLogId = `u${auditTimestamp}${auditRandomPart}${auditRandomPart2}`;
+
       await prisma.auditLog.create({
         data: {
+          id: auditLogId,
           userId: session.user.id,
           action: 'UPDATE',
           entityType: 'UserContribution',
@@ -281,15 +287,26 @@ export async function DELETE(
     });
 
     // Create audit log entry
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: 'DELETE',
-        entityType: 'UserContribution',
-        entityId: id,
-        oldValues: existingContribution,
-      },
-    });
+    try {
+      const auditTimestamp = Date.now().toString(36);
+      const auditRandomPart = Math.random().toString(36).substring(2, 15);
+      const auditRandomPart2 = Math.random().toString(36).substring(2, 15);
+      const auditLogId = `d${auditTimestamp}${auditRandomPart}${auditRandomPart2}`;
+
+      await prisma.auditLog.create({
+        data: {
+          id: auditLogId,
+          userId: session.user.id,
+          action: 'DELETE',
+          entityType: 'UserContribution',
+          entityId: id,
+          oldValues: existingContribution,
+        },
+      });
+    } catch (auditError) {
+      console.error('Failed to create audit log:', auditError);
+      // Don't fail the main operation if audit logging fails
+    }
 
     return NextResponse.json(
       { message: 'Contribution deleted successfully' },

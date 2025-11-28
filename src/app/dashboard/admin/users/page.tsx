@@ -26,6 +26,7 @@ import {
   UserPlus,
   UserMinus,
 } from 'lucide-react';
+import { useConfirmation } from '@/components/ui/alert-dialog';
 import {
   UserPermissions,
   PERMISSION_PRESETS,
@@ -76,6 +77,7 @@ function UserManagementContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { confirm } = useConfirmation();
 
   // Filter states
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -664,13 +666,12 @@ function UserManagementContent() {
                                       user._count.tokenPurchases === 0 && (
                                         <button
                                           onClick={() => {
-                                            if (
-                                              confirm(
-                                                `Are you sure you want to delete ${user.name}? This action cannot be undone.`
-                                              )
-                                            ) {
-                                              handleUserAction(user.id, 'delete');
-                                            }
+                                            confirm({
+                                              title: 'Delete User',
+                                              description: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+                                              variant: 'danger',
+                                              onConfirm: () => handleUserAction(user.id, 'delete'),
+                                            });
                                           }}
                                           disabled={actionLoading === user.id}
                                           className="p-1 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 min-w-[32px] min-h-[32px] flex items-center justify-center"
@@ -879,13 +880,12 @@ function UserManagementContent() {
                                   user._count.tokenPurchases === 0 && (
                                     <button
                                       onClick={() => {
-                                        if (
-                                          confirm(
-                                            `Are you sure you want to delete ${user.name}? This action cannot be undone.`
-                                          )
-                                        ) {
-                                          handleUserAction(user.id, 'delete');
-                                        }
+                                        confirm({
+                                          title: 'Delete User',
+                                          description: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+                                          variant: 'danger',
+                                          onConfirm: () => handleUserAction(user.id, 'delete'),
+                                        });
                                       }}
                                       disabled={actionLoading === user.id}
                                       className="p-2 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 disabled:opacity-50 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"

@@ -9,7 +9,7 @@ import { CSRFProvider } from '@/components/security/CSRFProvider';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { HealthStatusIndicator } from '@/components/ui/health-status-indicator';
 import { ToastProvider } from '@/components/ui/toast';
-import { ConfirmationProvider } from '@/components/ui/confirmation-dialog';
+import { ConfirmationProvider, AlertProvider } from '@/components/ui/alert-dialog';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { HighContrastProvider } from '@/components/ui/high-contrast';
 import { AccessibilityAnnouncerProvider } from '@/components/ui/accessibility-announcer';
@@ -92,13 +92,15 @@ export default function RootLayout({
                   <AccessibilityAnnouncerProvider>
                     <ErrorBoundary>
                       <ToastProvider>
-                        <ConfirmationProvider>
-                          <main id="main-content" tabIndex={-1}>
-                            {children}
-                          </main>
-                          <HealthStatusIndicator />
-                          <OfflineIndicator />
-                        </ConfirmationProvider>
+                        <AlertProvider>
+                          <ConfirmationProvider>
+                            <main id="main-content" tabIndex={-1}>
+                              {children}
+                            </main>
+                            <HealthStatusIndicator />
+                            <OfflineIndicator />
+                          </ConfirmationProvider>
+                        </AlertProvider>
                       </ToastProvider>
                     </ErrorBoundary>
                   </AccessibilityAnnouncerProvider>

@@ -8,7 +8,23 @@ export const positiveNumberSchema = z
 export const nonNegativeNumberSchema = z
   .number()
   .min(0, 'Must be non-negative');
-export const cuidSchema = z.string().cuid('Invalid ID format');
+// More lenient ID schema to support both old format (purchase-*, contribution-*)
+// and new CUID format (c...)
+export const cuidSchema = z.string().min(1, 'ID is required').refine(
+  (id) => {
+    // Accept old format: purchase-*, contribution-*, receipt-*, user-*
+    if (/^(purchase|contribution|receipt|user)-\d+$/.test(id)) {
+      return true;
+    }
+    // Accept CUID format: starts with 'c' followed by alphanumeric
+    if (/^c[0-9a-z]{24,}$/i.test(id)) {
+      return true;
+    }
+    // Accept any other string ID format (for flexibility)
+    return id.length >= 10;
+  },
+  { message: 'Invalid ID format' }
+);
 export const dateSchema = z
   .string()
   .datetime('Invalid date format')
@@ -121,6 +137,7 @@ export const updateTokenPurchaseSchema = z
       .optional(),
     purchaseDate: dateSchema.optional(),
     isEmergency: z.boolean().optional(),
+    receiptData: z.lazy(() => updateReceiptDataSchema).optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided for update',
@@ -148,7 +165,7 @@ export const purchaseQuerySchema = z
     endDate: z.string().datetime('Invalid end date format').optional(),
     before: z.string().datetime('Invalid before date format').optional(),
     sortBy: z
-      .enum(['purchaseDate', 'totalTokens', 'totalPayment', 'creator'])
+      .enum(['purchaseDate', 'totalTokens', 'totalPayment', 'creator', 'createdAt'])
       .optional(),
     sortDirection: z.enum(['asc', 'desc']).optional(),
     search: z.string().max(100, 'Search term cannot exceed 100 characters').optional(),
@@ -435,23 +452,42 @@ export const updateReceiptDataSchema = z.object({
     .optional(),
   energyCostZWG: nonNegativeNumberSchema
     .max(10000000, 'Energy cost too large')
-    .optional(),
+    .optional()
+    .nullable(),
   debtZWG: nonNegativeNumberSchema
     .max(10000000, 'Debt amount too large')
-    .optional(),
+    .optional()
+    .nullable(),
   reaZWG: nonNegativeNumberSchema
     .max(10000000, 'REA amount too large')
-    .optional(),
+    .optional()
+    .nullable(),
   vatZWG: nonNegativeNumberSchema
     .max(10000000, 'VAT amount too large')
-    .optional(),
+    .optional()
+    .nullable(),
   totalAmountZWG: positiveNumberSchema
     .max(10000000, 'Total amount cannot exceed 10,000,000')
     .optional(),
   tenderedZWG: positiveNumberSchema
     .max(10000000, 'Tendered amount too large')
     .optional(),
-  transactionDateTime: dateSchema.optional(),
+  transactionDateTime: z.union([
+    dateSchema, // ISO 8601 format
+    z.string().transform((val) => {
+      // Parse DD/MM/YYYY or DD/MM/YY format
+      const matchWithTime = val.match(/^(\d{2})\/(\d{2})\/(\d{2,4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/);
+      if (matchWithTime) {
+        const [, day, month, year, hour = '00', minute = '00', second = '00'] = matchWithTime;
+        // Handle both 2-digit and 4-digit years
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        const isoString = `${fullYear}-${month}-${day}T${hour}:${minute}:${second}.000Z`;
+        return isoString;
+      }
+      // If not DD/MM/YY(YY) format, try parsing as regular date string
+      return new Date(val).toISOString();
+    }),
+  ]).optional(),
 });
 
 export const receiptDataQuerySchema = z.object({

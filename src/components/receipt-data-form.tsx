@@ -183,7 +183,7 @@ export function ReceiptDataForm({
                 disabled={accountNumberLoading}
               />
               <FormDescription className="text-xs text-purple-600 dark:text-purple-400">
-                20-digit account number from receipt (first receipt sets for
+                Account number from receipt (first receipt sets for
                 all, then read-only)
                 {accountNumberLoading && (
                   <span className="ml-2 text-blue-500">Loading...</span>

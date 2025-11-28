@@ -12,6 +12,7 @@ import {
   Save,
   Loader2,
 } from 'lucide-react';
+import { useAlert, useConfirmation } from '@/components/ui/alert-dialog';
 
 interface ImportResult {
   success: boolean;
@@ -42,6 +43,8 @@ export function DataImport() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'upload' | 'preview' | 'result'>('upload');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { alert } = useAlert();
+  const { confirm } = useConfirmation();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -51,7 +54,11 @@ export function DataImport() {
       setResult(null);
       setStep('upload');
     } else {
-      alert('Please select a CSV file');
+      alert({
+        title: 'No File Selected',
+        description: 'Please select a CSV file to continue.',
+        variant: 'warning'
+      });
     }
   };
 
@@ -82,7 +89,11 @@ export function DataImport() {
       setStep('preview');
     } catch (error) {
       // console.error removed
-      alert('Failed to parse file. Please check the format and try again.');
+      alert({
+        title: 'Parse Error',
+        description: 'Failed to parse file. Please check the format and try again.',
+        variant: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -112,15 +123,25 @@ export function DataImport() {
       const result = await response.json();
 
       if (result.errors.length > 0) {
-        alert(
-          `Validation found ${result.errors.length} errors. Please check the preview and fix the data.`
-        );
+        alert({
+          title: 'Validation Errors',
+          description: `Validation found ${result.errors.length} errors. Please check the preview and fix the data.`,
+          variant: 'warning'
+        });
       } else {
-        alert('Validation successful! Data looks good.');
+        alert({
+          title: 'Validation Successful',
+          description: 'Data looks good.',
+          variant: 'success'
+        });
       }
     } catch (error) {
       // console.error removed
-      alert('Validation failed. Please try again.');
+      alert({
+        title: 'Validation Failed',
+        description: 'Please try again.',
+        variant: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -129,39 +150,44 @@ export function DataImport() {
   const importData = async () => {
     if (!preview) return;
 
-    const confirmed = window.confirm(
-      `Are you sure you want to import ${preview.totalRows} rows? This action cannot be undone.`
-    );
+    confirm({
+      title: 'Confirm Import',
+      description: `Are you sure you want to import ${preview.totalRows} rows? This action cannot be undone.`,
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          const response = await fetch('/api/import', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: importType,
+              data: preview.preview, // In a real implementation, you'd send all data
+              validateOnly: false,
+            }),
+          });
 
-    if (!confirmed) return;
+          if (!response.ok) {
+            throw new Error('Import failed');
+          }
 
-    try {
-      setLoading(true);
-      const response = await fetch('/api/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: importType,
-          data: preview.preview, // In a real implementation, you'd send all data
-          validateOnly: false,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Import failed');
-      }
-
-      const result = await response.json();
-      setResult(result);
-      setStep('result');
-    } catch (error) {
-      // console.error removed
-      alert('Import failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+          const result = await response.json();
+          setResult(result);
+          setStep('result');
+        } catch (error) {
+          // console.error removed
+          alert({
+            title: 'Import Failed',
+            description: 'Import failed. Please try again.',
+            variant: 'error',
+          });
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   const reset = () => {

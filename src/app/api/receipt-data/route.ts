@@ -151,8 +151,8 @@ export async function GET(request: NextRequest) {
  * - vatZWG (required): VAT in ZWG
  * - totalAmountZWG (required): Total ZWG amount
  * - transactionDateTime (required): Transaction date/time from receipt
- * - accountNumber (optional): 20-digit account number (stays same for all receipts)
- * - tokenNumber (optional): Meter/token number (unique per purchase)
+ * - accountNumber (optional): Account number (stays same for all receipts)
+ * - tokenNumber (optional): Token number (unique per purchase)
  * 
  * Authorization:
  * - Requires authenticated user
