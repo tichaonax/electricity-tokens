@@ -1188,6 +1188,7 @@ export function PurchaseForm({
             collapsible={true}
             defaultExpanded={false}
             hasReceipt={!!receiptDataDefault}
+            totalTokens={watchedValues.totalTokens}
           />
         </div>
 

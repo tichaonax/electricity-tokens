@@ -57,6 +57,7 @@ interface ReceiptDataFormProps {
   collapsible?: boolean;
   defaultExpanded?: boolean;
   hasReceipt?: boolean;
+  totalTokens?: number;
 }
 
 export function ReceiptDataForm({
@@ -65,6 +66,7 @@ export function ReceiptDataForm({
   collapsible = true,
   defaultExpanded = false,
   hasReceipt = false,
+  totalTokens,
 }: ReceiptDataFormProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -102,6 +104,14 @@ export function ReceiptDataForm({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-fill kwhPurchased when totalTokens changes
+  useEffect(() => {
+    if (totalTokens !== undefined && totalTokens > 0) {
+      setValue('kwhPurchased', totalTokens);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalTokens]);
 
   const watchedValues = watch();
 
