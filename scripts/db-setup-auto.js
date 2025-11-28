@@ -255,7 +255,7 @@ LOG_LEVEL="info"
         );
       }
 
-      return true;
+      return { success: true, clientGenerated };
     } catch (migrateError) {
       this.log(`❌ Migration failed: ${migrateError.message}`, 'ERROR');
       throw new Error(`Database migration failed: ${migrateError.message}`);
@@ -562,10 +562,21 @@ LOG_LEVEL="info"
       }
 
       // 5. Run migrations
-      await this.runMigrations();
+      const migrationResult = await this.runMigrations();
 
-      // 6. Seed database (optional)
-      await this.seedDatabase();
+      // 6. Seed database (optional) - only if Prisma Client was successfully generated
+      if (migrationResult.clientGenerated) {
+        await this.seedDatabase();
+      } else {
+        this.log(
+          '⏭️ Skipping database seeding - Prisma Client generation failed',
+          'WARN'
+        );
+        this.log(
+          '💡 You can seed manually later with: npx prisma db seed',
+          'INFO'
+        );
+      }
 
       this.log('🎉 Database setup completed successfully!');
       this.log('📊 Database is ready for the application');
