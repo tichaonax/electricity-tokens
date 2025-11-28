@@ -571,10 +571,13 @@ export async function PUT(
 
     // Handle receiptData upsert if provided
     if (receiptData) {
-      console.log('Processing receiptData update:', JSON.stringify(receiptData, null, 2));
+      console.log(
+        'Processing receiptData update:',
+        JSON.stringify(receiptData, null, 2)
+      );
 
       // Prepare receipt data for upsert
-      const receiptUpdateData: any = {};
+      const receiptUpdateData: Record<string, unknown> = {};
 
       if (receiptData.tokenNumber !== undefined) {
         receiptUpdateData.tokenNumber = receiptData.tokenNumber;
@@ -652,7 +655,11 @@ export async function PUT(
       console.log('Receipt data upsert completed successfully');
 
       // Update the receiptData in the response object
-      (updatedPurchase as any).receiptData = upsertedReceiptData;
+      (
+        updatedPurchase as typeof updatedPurchase & {
+          receiptData: typeof upsertedReceiptData;
+        }
+      ).receiptData = upsertedReceiptData;
     }
 
     // Perform contribution recalculation if meter reading changed
@@ -667,13 +674,12 @@ export async function PUT(
       for (const updatedContribution of recalculationResults.updatedContributions) {
         await createAuditLog({
           userId: permissionCheck.user!.id,
-          action: 'RECALCULATE' as any,
+          action: 'UPDATE',
           entityType: 'UserContribution',
           entityId: updatedContribution.id,
           oldValues: {
             meterReading: impactAnalysis.oldValues.contributionMeterReading,
-            tokensConsumed:
-              impactAnalysis.oldValues.contributionTokensConsumed,
+            tokensConsumed: impactAnalysis.oldValues.contributionTokensConsumed,
             trigger: 'Purchase meter reading changed',
             originalPurchaseMeterReading:
               impactAnalysis.oldValues.purchaseMeterReading,
@@ -806,15 +812,16 @@ export async function DELETE(
     }
 
     // Constraint: Only allow deletion of the globally latest purchase in the system
+    // Use updatedAt to allow deleting recently entered/modified purchases
     const globalLatestPurchase = await prisma.tokenPurchase.findFirst({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
     });
 
     if (!globalLatestPurchase || globalLatestPurchase.id !== id) {
       return NextResponse.json(
         {
           message:
-            'Cannot delete purchase: Only the latest purchase in the system may be deleted',
+            'Cannot delete purchase: Only the most recently entered/updated purchase may be deleted',
           constraint: 'GLOBAL_LATEST_PURCHASE_ONLY',
         },
         { status: 400 }
