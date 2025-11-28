@@ -53,7 +53,12 @@ export async function GET(request: NextRequest) {
         startDate?: string;
         endDate?: string;
         before?: string;
-        sortBy?: 'purchaseDate' | 'totalTokens' | 'totalPayment' | 'creator' | 'createdAt';
+        sortBy?:
+          | 'purchaseDate'
+          | 'totalTokens'
+          | 'totalPayment'
+          | 'creator'
+          | 'createdAt';
         sortDirection?: 'asc' | 'desc';
         search?: string;
       };
@@ -65,7 +70,7 @@ export async function GET(request: NextRequest) {
       startDate,
       endDate,
       before,
-      sortBy = 'createdAt',
+      sortBy = 'purchaseDate',
       sortDirection = 'desc',
       search,
     } = query || {};
@@ -240,7 +245,8 @@ export async function POST(request: NextRequest) {
     // Validate receipt data if provided
     let validatedReceiptData: CreateReceiptDataWithPurchaseInput | null = null;
     if (receiptData) {
-      const receiptValidation = createReceiptDataWithPurchaseSchema.safeParse(receiptData);
+      const receiptValidation =
+        createReceiptDataWithPurchaseSchema.safeParse(receiptData);
       if (!receiptValidation.success) {
         return NextResponse.json(
           {
