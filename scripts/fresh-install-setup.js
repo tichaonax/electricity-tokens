@@ -238,27 +238,52 @@ class FreshInstallSetup {
 
     try {
       const { PrismaClient } = require('@prisma/client');
+      const { hash } = require('bcryptjs');
       const prisma = new PrismaClient();
 
       const adminCount = await prisma.user.count({
         where: { role: 'ADMIN' },
       });
 
-      await prisma.$disconnect();
-
       if (adminCount > 0) {
         this.log(`Found ${adminCount} admin user(s)`, 'INFO');
         this.log('Skipping admin user creation', 'INFO');
+        await prisma.$disconnect();
         return true;
       }
 
-      this.log('No admin users found', 'WARN');
-      this.log('You can create an admin user later with:', 'INFO');
-      this.log('  node scripts/seed-admin.js', 'INFO');
+      this.log('Creating temporary admin user for restore access...', 'INFO');
+      this.log(
+        'Note: This user will be overwritten when you restore your backup',
+        'INFO'
+      );
+
+      const tempAdmin = await prisma.user.create({
+        data: {
+          id: `user_temp_${Date.now()}`,
+          email: 'admin@temp.local',
+          name: 'Temporary Admin',
+          password: await hash('temppass123', 12),
+          role: 'ADMIN',
+          isActive: true,
+        },
+      });
+
+      await prisma.$disconnect();
+
+      this.log('✅ Temporary admin user created', 'SUCCESS');
+      this.log('   Email: admin@temp.local', 'INFO');
+      this.log('   Password: temppass123', 'INFO');
+      this.log(
+        '   (This user will be replaced when you restore your backup)',
+        'INFO'
+      );
 
       return true;
     } catch (error) {
-      this.log(`Error checking admin users: ${error.message}`, 'WARN');
+      this.log(`Error creating admin user: ${error.message}`, 'WARN');
+      this.log('You can create an admin user manually with:', 'INFO');
+      this.log('  node scripts/seed-admin.js', 'INFO');
       return true; // Don't fail setup
     }
   }
@@ -282,21 +307,22 @@ class FreshInstallSetup {
 
     console.log('✅ Fresh installation setup complete!\n');
     console.log('Next steps to restore your backup:\n');
-    console.log("1. Create an admin user (if you haven't already):");
-    console.log('   node scripts/seed-admin.js\n');
-    console.log('2. Start the application:');
+    console.log('1. Start the application:');
     console.log('   npm run dev          # Development');
     console.log('   npm start            # Production\n');
+    console.log('2. Log in with the temporary admin account:');
+    console.log('   Email: admin@temp.local');
+    console.log('   Password: temppass123\n');
     console.log('3. Restore your backup:');
-    console.log('   - Open the app in your browser');
-    console.log('   - Log in with your admin account');
     console.log('   - Go to Admin > Data Management > Restore');
-    console.log('   - Upload your backup file:\n');
+    console.log('   - Upload your backup file');
     if (this.backupFile) {
-      console.log(`     ${this.backupFile}\n`);
+      console.log(`     ${this.backupFile}`);
     }
-    console.log('   - Click "Restore" and wait for completion\n');
-    console.log('4. Verify the restored data:');
+    console.log('   - Click "Restore" and wait for completion');
+    console.log('   - The temp admin will be overwritten by backup data\n');
+    console.log('4. Log in with your real admin account from the backup\n');
+    console.log('5. Verify the restored data:');
     console.log('   - Check that all users are present');
     console.log('   - Verify token purchases and contributions');
     console.log('   - Check meter readings\n');
