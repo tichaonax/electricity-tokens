@@ -30,14 +30,15 @@ export function RunningBalanceWidget() {
   const [loading, setLoading] = useState(true);
   const { checkPermission } = usePermissions();
 
-  // Check if user has permission to view account balance
-  if (!checkPermission('canViewAccountBalance')) {
-    return null; // Don't render the widget if user doesn't have permission
-  }
-
   useEffect(() => {
     fetchBalanceData();
   }, []);
+
+  // Check if user has permission to view account balance (after hooks)
+  const hasPermission = checkPermission('canViewAccountBalance');
+  if (!hasPermission) {
+    return null; // Don't render the widget if user doesn't have permission
+  }
 
   const fetchBalanceData = async () => {
     try {
@@ -45,16 +46,19 @@ export function RunningBalanceWidget() {
       // Add cache-busting parameters to ensure fresh data after database reset
       const cacheBuster = new URLSearchParams({
         t: Date.now().toString(),
-        v: 'fresh'
+        v: 'fresh',
       });
-      const response = await fetch(`/api/dashboard/running-balance?${cacheBuster}`, {
-        // Force fresh fetch, bypassing cache
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+      const response = await fetch(
+        `/api/dashboard/running-balance?${cacheBuster}`,
+        {
+          // Force fresh fetch, bypassing cache
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+          },
         }
-      });
+      );
       if (response.ok) {
         const result = await response.json();
         setData(result);
@@ -91,7 +95,9 @@ export function RunningBalanceWidget() {
           Running Balance
         </h3>
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400 mb-2">No balance data available</p>
+          <p className="text-gray-500 dark:text-gray-400 mb-2">
+            No balance data available
+          </p>
           <p className="text-sm text-gray-400 dark:text-gray-500">
             Start by adding token purchases to track your running balance
           </p>
@@ -116,11 +122,17 @@ export function RunningBalanceWidget() {
   const getStatusIcon = () => {
     switch (data.status) {
       case 'healthy':
-        return <Wallet className="h-5 w-5 text-green-600 dark:text-green-400" />;
+        return (
+          <Wallet className="h-5 w-5 text-green-600 dark:text-green-400" />
+        );
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />;
+        return (
+          <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+        );
       case 'critical':
-        return <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />;
+        return (
+          <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+        );
       default:
         return <Wallet className="h-5 w-5 text-gray-600 dark:text-gray-400" />;
     }
@@ -140,11 +152,11 @@ export function RunningBalanceWidget() {
   const getStatusMessage = () => {
     switch (data.status) {
       case 'healthy':
-        return data.contributionBalance >= 0 ? 'Credit available' : 'Balanced';
+        return data.contributionBalance <= 0 ? 'Credit available' : 'Balanced';
       case 'warning':
         return 'Amount owed';
       case 'critical':
-        return 'Significant debt';
+        return 'Significant debt owed';
       default:
         return 'Balance status unknown';
     }
@@ -167,25 +179,30 @@ export function RunningBalanceWidget() {
       <div className="space-y-4">
         {/* Account Balance */}
         <div className="text-center py-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className={`text-3xl font-bold mb-1 ${
-            data.contributionBalance >= 0 
-              ? 'text-green-600 dark:text-green-400' 
-              : 'text-red-600 dark:text-red-400'
-          }`}>
-            {data.contributionBalance < 0 ? '-' : ''}${Math.abs(data.contributionBalance).toFixed(2)}
+          <div
+            className={`text-3xl font-bold mb-1 ${
+              data.contributionBalance <= 0
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            }`}
+          >
+            {data.contributionBalance < 0 ? '-' : ''}$
+            {Math.abs(data.contributionBalance).toFixed(2)}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Account Balance
           </div>
-          <div className={`text-xs mt-1 ${
-            data.contributionBalance >= 0 
-              ? 'text-green-600 dark:text-green-400' 
-              : 'text-red-600 dark:text-red-400'
-          }`}>
-            {data.contributionBalance >= 0 ? 'credit' : 'owed'}
+          <div
+            className={`text-xs mt-1 ${
+              data.contributionBalance <= 0
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            }`}
+          >
+            {data.contributionBalance <= 0 ? 'credit' : 'owed'}
           </div>
         </div>
-        
+
         {/* NEW: Anticipated Payment Predictions Section - Similar to Historical Summary */}
         <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-600 mt-4">
           <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">
@@ -196,64 +213,85 @@ export function RunningBalanceWidget() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* Anticipated Next Payment */}
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className={`text-base font-bold mb-2 whitespace-nowrap ${
-                data.anticipatedPayment < 0 
-                  ? 'text-red-700 dark:text-red-400' 
-                  : 'text-green-700 dark:text-green-400'
-              }`}>
-                {data.anticipatedPayment < 0 ? '-$' : '$'}{Math.abs(data.anticipatedPayment).toFixed(2)}
+              <div
+                className={`text-base font-bold mb-2 whitespace-nowrap ${
+                  data.anticipatedPayment < 0
+                    ? 'text-red-700 dark:text-red-400'
+                    : 'text-green-700 dark:text-green-400'
+                }`}
+              >
+                {data.anticipatedPayment < 0 ? '-$' : '$'}
+                {Math.abs(data.anticipatedPayment).toFixed(2)}
               </div>
               <div className="text-sm text-blue-600 dark:text-blue-300 mb-1">
                 Anticipated Next Payment
               </div>
-              <div className={`text-xs ${
-                data.anticipatedPayment < 0 
-                  ? 'text-red-500 dark:text-red-400' 
-                  : 'text-green-500 dark:text-green-400'
-              }`}>
-                {data.anticipatedPayment < 0 ? 'payment due' : 'credit expected'}
+              <div
+                className={`text-xs ${
+                  data.anticipatedPayment < 0
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-green-500 dark:text-green-400'
+                }`}
+              >
+                {data.anticipatedPayment < 0
+                  ? 'payment due'
+                  : 'credit expected'}
               </div>
             </div>
 
             {/* Anticipated Others Payment */}
             <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-              <div className={`text-base font-bold mb-2 whitespace-nowrap ${
-                data.anticipatedOthersPayment < 0 
-                  ? 'text-red-700 dark:text-red-400' 
-                  : 'text-green-700 dark:text-green-400'
-              }`}>
-                {data.anticipatedOthersPayment < 0 ? '-$' : '$'}{Math.abs(data.anticipatedOthersPayment).toFixed(2)}
+              <div
+                className={`text-base font-bold mb-2 whitespace-nowrap ${
+                  data.anticipatedOthersPayment < 0
+                    ? 'text-red-700 dark:text-red-400'
+                    : 'text-green-700 dark:text-green-400'
+                }`}
+              >
+                {data.anticipatedOthersPayment < 0 ? '-$' : '$'}
+                {Math.abs(data.anticipatedOthersPayment).toFixed(2)}
               </div>
               <div className="text-sm text-purple-600 dark:text-purple-300 mb-1">
                 Anticipated Others Payment
               </div>
-              <div className={`text-xs ${
-                data.anticipatedOthersPayment < 0 
-                  ? 'text-red-500 dark:text-red-400' 
-                  : 'text-green-500 dark:text-green-400'
-              }`}>
-                {data.anticipatedOthersPayment < 0 ? 'contribution due' : 'credit expected'}
+              <div
+                className={`text-xs ${
+                  data.anticipatedOthersPayment < 0
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-green-500 dark:text-green-400'
+                }`}
+              >
+                {data.anticipatedOthersPayment < 0
+                  ? 'contribution due'
+                  : 'credit expected'}
               </div>
             </div>
 
             {/* Anticipated Token Purchase */}
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-              <div className={`text-base font-bold mb-2 whitespace-nowrap ${
-                data.anticipatedTokenPurchase < 0 
-                  ? 'text-red-700 dark:text-red-400' 
-                  : 'text-green-700 dark:text-green-400'
-              }`}>
-                {data.anticipatedTokenPurchase < 0 ? '-$' : '$'}{Math.abs(data.anticipatedTokenPurchase).toFixed(2)}
+              <div
+                className={`text-base font-bold mb-2 whitespace-nowrap ${
+                  data.anticipatedTokenPurchase < 0
+                    ? 'text-red-700 dark:text-red-400'
+                    : 'text-green-700 dark:text-green-400'
+                }`}
+              >
+                {data.anticipatedTokenPurchase < 0 ? '-$' : '$'}
+                {Math.abs(data.anticipatedTokenPurchase).toFixed(2)}
               </div>
               <div className="text-sm text-orange-600 dark:text-orange-300 mb-1">
                 Anticipated Token Purchase
               </div>
-              <div className={`text-xs ${
-                data.anticipatedTokenPurchase < 0 
-                  ? 'text-red-500 dark:text-red-400' 
-                  : 'text-green-500 dark:text-green-400'
-              }`}>
-                {data.anticipatedTokenPurchase < 0 ? 'total amount' : 'total credit'}
+              <div
+                className={`text-xs ${
+                  data.anticipatedTokenPurchase < 0
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-green-500 dark:text-green-400'
+                }`}
+              >
+                {data.anticipatedTokenPurchase < 0
+                  ? 'total amount'
+                  : 'total credit'}
               </div>
             </div>
           </div>
@@ -302,7 +340,7 @@ export function RunningBalanceWidget() {
               Total Contributed
             </div>
           </div>
-          
+
           <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
             <div className="text-xl font-semibold text-orange-700 dark:text-orange-400 mb-1">
               ${data.totalFairShareCost.toFixed(2)}
