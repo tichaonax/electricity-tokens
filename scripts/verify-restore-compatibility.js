@@ -14,12 +14,22 @@ const { PrismaClient } = require('@prisma/client');
 const { promisify } = require('util');
 const { exec } = require('child_process');
 const path = require('path');
-
-// Load environment variables from .env.local in project root
-// Use process.cwd() to ensure we look in the directory where npm was run
-require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
+const fs = require('fs');
 
 const execAsync = promisify(exec);
+
+// Load environment variables - check multiple locations like db-setup-auto.js does
+const appRoot = path.resolve(__dirname, '..');
+const envFiles = ['.env.local', '.env'];
+for (const envFile of envFiles) {
+  const envPath = path.join(appRoot, envFile);
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+    console.log(`📝 Loaded environment from: ${envFile}`);
+    break;
+  }
+}
+
 const prisma = new PrismaClient();
 
 class RestoreCompatibilityChecker {
