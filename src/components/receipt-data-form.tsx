@@ -113,6 +113,22 @@ export function ReceiptDataForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalTokens]);
 
+  // Pre-populate transactionDateTime from defaultValues in edit mode
+  useEffect(() => {
+    if (defaultValues?.transactionDateTime) {
+      // Convert to datetime-local format (YYYY-MM-DDTHH:mm) without timezone shift
+      const date = new Date(defaultValues.transactionDateTime);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+      setValue('transactionDateTime', formattedDateTime);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultValues?.transactionDateTime]);
+
   const watchedValues = watch();
 
   useEffect(() => {
