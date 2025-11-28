@@ -265,15 +265,11 @@ export async function DELETE(
     }
 
     // Constraint: Only allow deletion of the globally latest contribution in the system
-    // Use purchase date for ordering (matches UI display and handles restored backups correctly)
+    // Use contribution updatedAt (when it was last modified), not purchase date
+    // This allows deleting recently entered contributions even if tied to older purchases
     const globalLatestContribution = await prisma.userContribution.findFirst({
       orderBy: {
-        purchase: {
-          purchaseDate: 'desc',
-        },
-      },
-      include: {
-        purchase: true,
+        updatedAt: 'desc',
       },
     });
 
@@ -281,7 +277,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           message:
-            'Cannot delete contribution: Only the latest contribution in the system may be deleted',
+            'Cannot delete contribution: Only the most recently entered/updated contribution may be deleted',
           constraint: 'GLOBAL_LATEST_CONTRIBUTION_ONLY',
         },
         { status: 400 }
