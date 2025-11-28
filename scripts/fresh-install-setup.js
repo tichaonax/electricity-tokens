@@ -13,13 +13,14 @@
  *   node scripts/fresh-install-setup.js --backup-file=/path/to/backup.json
  */
 
-// Load environment variables from .env.local
-require('dotenv').config({ path: '.env.local' });
-
 const { promisify } = require('util');
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+
+// Load environment variables from .env.local in project root
+// Use process.cwd() to ensure we look in the directory where npm was run
+require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 
 const execAsync = promisify(exec);
 

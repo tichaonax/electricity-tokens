@@ -10,12 +10,14 @@
  * required schema changes are in place.
  */
 
-// Load environment variables from .env.local
-require('dotenv').config({ path: '.env.local' });
-
 const { PrismaClient } = require('@prisma/client');
 const { promisify } = require('util');
 const { exec } = require('child_process');
+const path = require('path');
+
+// Load environment variables from .env.local in project root
+// Use process.cwd() to ensure we look in the directory where npm was run
+require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 
 const execAsync = promisify(exec);
 const prisma = new PrismaClient();
