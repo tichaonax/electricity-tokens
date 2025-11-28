@@ -10,21 +10,24 @@ export const nonNegativeNumberSchema = z
   .min(0, 'Must be non-negative');
 // More lenient ID schema to support both old format (purchase-*, contribution-*)
 // and new CUID format (c...)
-export const cuidSchema = z.string().min(1, 'ID is required').refine(
-  (id) => {
-    // Accept old format: purchase-*, contribution-*, receipt-*, user-*
-    if (/^(purchase|contribution|receipt|user)-\d+$/.test(id)) {
-      return true;
-    }
-    // Accept CUID format: starts with 'c' followed by alphanumeric
-    if (/^c[0-9a-z]{24,}$/i.test(id)) {
-      return true;
-    }
-    // Accept any other string ID format (for flexibility)
-    return id.length >= 10;
-  },
-  { message: 'Invalid ID format' }
-);
+export const cuidSchema = z
+  .string()
+  .min(1, 'ID is required')
+  .refine(
+    (id) => {
+      // Accept old format: purchase-*, contribution-*, receipt-*, user-*
+      if (/^(purchase|contribution|receipt|user)-\d+$/.test(id)) {
+        return true;
+      }
+      // Accept CUID format: starts with 'c' followed by alphanumeric
+      if (/^c[0-9a-z]{24,}$/i.test(id)) {
+        return true;
+      }
+      // Accept any other string ID format (for flexibility)
+      return id.length >= 10;
+    },
+    { message: 'Invalid ID format' }
+  );
 export const dateSchema = z
   .string()
   .datetime('Invalid date format')
@@ -165,10 +168,19 @@ export const purchaseQuerySchema = z
     endDate: z.string().datetime('Invalid end date format').optional(),
     before: z.string().datetime('Invalid before date format').optional(),
     sortBy: z
-      .enum(['purchaseDate', 'totalTokens', 'totalPayment', 'creator', 'createdAt'])
+      .enum([
+        'purchaseDate',
+        'totalTokens',
+        'totalPayment',
+        'creator',
+        'createdAt',
+      ])
       .optional(),
     sortDirection: z.enum(['asc', 'desc']).optional(),
-    search: z.string().max(100, 'Search term cannot exceed 100 characters').optional(),
+    search: z
+      .string()
+      .max(100, 'Search term cannot exceed 100 characters')
+      .optional(),
   })
   .refine(
     (data) => {
@@ -393,10 +405,7 @@ const receiptDataBaseSchema = z.object({
     100000,
     'kWh purchased cannot exceed 100,000'
   ),
-  energyCostZWG: nonNegativeNumberSchema.max(
-    10000000,
-    'Energy cost too large'
-  ),
+  energyCostZWG: nonNegativeNumberSchema.max(10000000, 'Energy cost too large'),
   debtZWG: nonNegativeNumberSchema.max(10000000, 'Debt amount too large'),
   reaZWG: nonNegativeNumberSchema.max(10000000, 'REA amount too large'),
   vatZWG: nonNegativeNumberSchema.max(10000000, 'VAT amount too large'),
@@ -404,24 +413,40 @@ const receiptDataBaseSchema = z.object({
     10000000,
     'Total amount cannot exceed 10,000,000'
   ),
-  tenderedZWG: positiveNumberSchema.max(
-    10000000,
-    'Tendered amount too large'
-  ),
+  tenderedZWG: positiveNumberSchema.max(10000000, 'Tendered amount too large'),
   transactionDateTime: z.union([
     dateSchema, // ISO 8601 format
     z.string().transform((val) => {
-      // Parse DD/MM/YY HH:MM:SS format (from Zimbabwe ZESA receipts)
-      const match = val.match(/^(\d{2})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
-      if (match) {
-        const [, day, month, year, hour, minute, second] = match;
-        // Assume 20xx for years (2000-2099)
+      // Parse DD/MM/YY HH:MM:SS or DD/MM/YYYY HH:MM:SS format (from Zimbabwe ZESA receipts)
+      const match2Digit = val.match(
+        /^(\d{2})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/
+      );
+      const match4Digit = val.match(
+        /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/
+      );
+
+      if (match2Digit) {
+        const [, day, month, year, hour, minute, second] = match2Digit;
+        // Assume 20xx for 2-digit years (2000-2099)
         const fullYear = `20${year}`;
         const isoString = `${fullYear}-${month}-${day}T${hour}:${minute}:${second}.000Z`;
         return isoString;
       }
-      // If not DD/MM/YY format, try parsing as regular date string
-      return new Date(val).toISOString();
+
+      if (match4Digit) {
+        const [, day, month, year, hour, minute, second] = match4Digit;
+        const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}.000Z`;
+        return isoString;
+      }
+
+      // If neither format matches, try parsing as ISO date string
+      const parsed = new Date(val);
+      if (isNaN(parsed.getTime())) {
+        throw new Error(
+          'Invalid date format. Use DD/MM/YYYY HH:MM:SS or select from picker.'
+        );
+      }
+      return parsed.toISOString();
     }),
   ]),
 });
@@ -472,22 +497,34 @@ export const updateReceiptDataSchema = z.object({
   tenderedZWG: positiveNumberSchema
     .max(10000000, 'Tendered amount too large')
     .optional(),
-  transactionDateTime: z.union([
-    dateSchema, // ISO 8601 format
-    z.string().transform((val) => {
-      // Parse DD/MM/YYYY or DD/MM/YY format
-      const matchWithTime = val.match(/^(\d{2})\/(\d{2})\/(\d{2,4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/);
-      if (matchWithTime) {
-        const [, day, month, year, hour = '00', minute = '00', second = '00'] = matchWithTime;
-        // Handle both 2-digit and 4-digit years
-        const fullYear = year.length === 2 ? `20${year}` : year;
-        const isoString = `${fullYear}-${month}-${day}T${hour}:${minute}:${second}.000Z`;
-        return isoString;
-      }
-      // If not DD/MM/YY(YY) format, try parsing as regular date string
-      return new Date(val).toISOString();
-    }),
-  ]).optional(),
+  transactionDateTime: z
+    .union([
+      dateSchema, // ISO 8601 format
+      z.string().transform((val) => {
+        // Parse DD/MM/YYYY or DD/MM/YY format
+        const matchWithTime = val.match(
+          /^(\d{2})\/(\d{2})\/(\d{2,4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/
+        );
+        if (matchWithTime) {
+          const [
+            ,
+            day,
+            month,
+            year,
+            hour = '00',
+            minute = '00',
+            second = '00',
+          ] = matchWithTime;
+          // Handle both 2-digit and 4-digit years
+          const fullYear = year.length === 2 ? `20${year}` : year;
+          const isoString = `${fullYear}-${month}-${day}T${hour}:${minute}:${second}.000Z`;
+          return isoString;
+        }
+        // If not DD/MM/YY(YY) format, try parsing as regular date string
+        return new Date(val).toISOString();
+      }),
+    ])
+    .optional(),
 });
 
 export const receiptDataQuerySchema = z.object({
@@ -510,7 +547,7 @@ export const bulkImportReceiptSchema = z.object({
       totalAmountZWG: z.number().positive(),
       tenderedZWG: z.number().positive(),
       transactionDateTime: z.string(), // Will be parsed from dd/mm/yyyy hh:mm:ss
-      
+
       // Optional matching fields
       matchDate: z.string().optional(),
       matchMeterReading: z.number().optional(),
@@ -520,7 +557,9 @@ export const bulkImportReceiptSchema = z.object({
 });
 
 export type CreateReceiptDataInput = z.infer<typeof createReceiptDataSchema>;
-export type CreateReceiptDataWithPurchaseInput = z.infer<typeof createReceiptDataWithPurchaseSchema>;
+export type CreateReceiptDataWithPurchaseInput = z.infer<
+  typeof createReceiptDataWithPurchaseSchema
+>;
 export type UpdateReceiptDataInput = z.infer<typeof updateReceiptDataSchema>;
 export type ReceiptDataQueryInput = z.infer<typeof receiptDataQuerySchema>;
 export type BulkImportReceiptInput = z.infer<typeof bulkImportReceiptSchema>;

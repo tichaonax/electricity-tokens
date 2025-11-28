@@ -183,8 +183,8 @@ export function ReceiptDataForm({
                 disabled={accountNumberLoading}
               />
               <FormDescription className="text-xs text-purple-600 dark:text-purple-400">
-                Account number from receipt (first receipt sets for
-                all, then read-only)
+                Account number from receipt (first receipt sets for all, then
+                read-only)
                 {accountNumberLoading && (
                   <span className="ml-2 text-blue-500">Loading...</span>
                 )}
@@ -282,12 +282,12 @@ export function ReceiptDataForm({
               </FormLabel>
               <Input
                 id="transactionDateTime"
-                placeholder="16/10/25 14:02:36"
+                type="datetime-local"
                 {...register('transactionDateTime')}
                 className={errors.transactionDateTime ? 'border-red-500' : ''}
               />
               <FormDescription className="text-xs">
-                Format: dd/mm/yy hh:mm:ss
+                Select date and time from the picker
               </FormDescription>
               {errors.transactionDateTime && (
                 <FormMessage>{errors.transactionDateTime.message}</FormMessage>
