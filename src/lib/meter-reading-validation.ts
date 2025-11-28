@@ -161,10 +161,11 @@ async function findLastMeterReading(
     });
 
     // Add contribution reading if it exists
+    // Use purchase date, not contribution createdAt (handles restored backups correctly)
     if (purchase.contribution) {
       allReadings.push({
         value: purchase.contribution.meterReading,
-        date: purchase.contribution.createdAt,
+        date: purchase.purchaseDate, // Use purchase date, not createdAt
         type: 'contribution',
       });
     }
