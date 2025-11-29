@@ -515,6 +515,7 @@ export async function POST(request: NextRequest) {
         tokenPurchases: 0,
         userContributions: 0,
         meterReadings: 0,
+        receiptData: 0,
         auditLogs: 0,
         accounts: 0,
         sessions: 0,
@@ -745,6 +746,52 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             results.errors.push(
               `Failed to restore meter reading ${reading.id}: ${error}`
+            );
+          }
+        }
+      }
+
+      // Restore receipt data
+      if (backupData.receiptData) {
+        for (const receipt of backupData.receiptData) {
+          try {
+            await tx.receiptData.upsert({
+              where: { id: receipt.id },
+              update: {
+                tokenNumber: receipt.tokenNumber,
+                accountNumber: receipt.accountNumber,
+                kwhPurchased: receipt.kwhPurchased,
+                energyCostZWG: receipt.energyCostZWG,
+                debtZWG: receipt.debtZWG,
+                reaZWG: receipt.reaZWG,
+                vatZWG: receipt.vatZWG,
+                totalAmountZWG: receipt.totalAmountZWG,
+                tenderedZWG: receipt.tenderedZWG,
+                transactionDateTime: new Date(receipt.transactionDateTime),
+                createdAt: new Date(receipt.createdAt),
+                updatedAt: new Date(receipt.updatedAt),
+              },
+              create: {
+                id: receipt.id,
+                purchaseId: receipt.purchaseId,
+                tokenNumber: receipt.tokenNumber,
+                accountNumber: receipt.accountNumber,
+                kwhPurchased: receipt.kwhPurchased,
+                energyCostZWG: receipt.energyCostZWG,
+                debtZWG: receipt.debtZWG,
+                reaZWG: receipt.reaZWG,
+                vatZWG: receipt.vatZWG,
+                totalAmountZWG: receipt.totalAmountZWG,
+                tenderedZWG: receipt.tenderedZWG,
+                transactionDateTime: new Date(receipt.transactionDateTime),
+                createdAt: new Date(receipt.createdAt),
+                updatedAt: new Date(receipt.updatedAt),
+              },
+            });
+            results.restored.receiptData++;
+          } catch (error) {
+            results.errors.push(
+              `Failed to restore receipt data ${receipt.id}: ${error}`
             );
           }
         }
