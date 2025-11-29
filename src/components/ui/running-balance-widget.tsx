@@ -203,7 +203,7 @@ export function RunningBalanceWidget() {
           </div>
         </div>
 
-        {/* NEW: Anticipated Payment Predictions Section - Show when user has permission and there is global data */}
+        {/* Anticipated Payment Analysis - Global data shown to all authorized users */}
         {data.totalConsumed > 0 && data.totalContributed > 0 && (
           <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-600 mt-4">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">
@@ -299,7 +299,7 @@ export function RunningBalanceWidget() {
           </div>
         )}
 
-        {/* Usage Since Last Contribution - Show when there is global meter data */}
+        {/* Usage Since Last Contribution - Global data shown to all authorized users */}
         {data.totalConsumed > 0 && (
           <div className="py-3 px-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
             <div className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">

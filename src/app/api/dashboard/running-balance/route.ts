@@ -291,98 +291,44 @@ export async function GET() {
     // Calculate user-specific breakdown using the same cost calculation (for the anticipated payment formula)
     // const userCostBreakdown = calculateUserTrueCost(userContributions);
 
-    // Calculate anticipated payments - run for all users with global data available
+    // Calculate GLOBAL anticipated payments - same for all users with permission
     if (latestGlobalMeterReading) {
-      // For users who haven't contributed, use global averages or defaults
-      let userMeterReadingAtLastContribution = 0;
-      let userHasContributed = false;
+      // Calculate tokens consumed since the last global contribution
+      // Use the most recent contribution across all users as the baseline
+      const lastGlobalContribution = await prisma.userContribution.findFirst({
+        orderBy: { createdAt: 'desc' },
+        select: { meterReading: true },
+      });
 
-      if (latestUserContribution) {
-        // User has contributed - use their actual data
-        userMeterReadingAtLastContribution =
-          latestUserContribution.meterReading;
-        userHasContributed = true;
-      } else {
-        // User hasn't contributed - use average meter reading from recent contributions
-        // This provides meaningful global anticipated payment data for managers/admins
-        const recentContributions = await prisma.userContribution.findMany({
-          take: 10,
-          orderBy: { createdAt: 'desc' },
-          select: { meterReading: true },
-        });
+      const baselineMeterReading = lastGlobalContribution?.meterReading || 0;
 
-        if (recentContributions.length > 0) {
-          const avgMeterReading =
-            recentContributions.reduce((sum, c) => sum + c.meterReading, 0) /
-            recentContributions.length;
-          userMeterReadingAtLastContribution = avgMeterReading;
-        }
-        // If no contributions exist, userMeterReadingAtLastContribution remains 0
-      }
-
-      // Calculate tokens consumed since last contribution (or average)
       tokensConsumedSinceLastContribution = Math.max(
         0,
-        latestGlobalMeterReading.reading - userMeterReadingAtLastContribution
+        latestGlobalMeterReading.reading - baselineMeterReading
       );
 
       // Calculate historical fair share cost per kWh (using GLOBAL data)
       const historicalCostPerKwh =
         totalConsumed > 0 ? totalTrueCost / totalConsumed : 0;
 
-      // Estimated cost since last contribution (for the "Usage Since Last Contribution" section)
+      // Estimated cost since last contribution (global)
       estimatedCostSinceLastContribution = -(
         tokensConsumedSinceLastContribution * historicalCostPerKwh
       );
 
-      // Calculate anticipated payments using proportional approach
-      if (userHasContributed && userContributions.length > 0) {
-        // User has contributed - use their specific data
-        // Get all purchases that the user contributed to
-        const userPurchaseIds = [
-          ...new Set(userContributions.map((c) => c.purchaseId)),
-        ];
-        const userPurchaseTotal = await prisma.tokenPurchase.aggregate({
-          where: {
-            id: {
-              in: userPurchaseIds,
-            },
-          },
-          _sum: {
-            totalPayment: true,
-            totalTokens: true,
-          },
-        });
+      // Calculate GLOBAL anticipated payments - same for all authorized users
+      // This represents the company's anticipated payment situation
 
-        // Calculate anticipated payment using your specified algorithm
-        // User's fair share = what user should have paid based on their consumption
-        const userFairShare = totalTrueCost;
+      // Global anticipated next payment = Current balance + estimated cost since last global contribution
+      anticipatedPayment =
+        contributionBalance + estimatedCostSinceLastContribution;
 
-        // Others' usage = Total paid by user for purchases - User's fair share
-        const userPurchaseTotalCost = userPurchaseTotal._sum.totalPayment || 0;
-        const othersUsage = userPurchaseTotalCost - userFairShare;
+      // For global calculations, "others payment" represents additional costs or adjustments
+      // This could be based on historical patterns or set to 0 for simplicity
+      anticipatedOthersPayment = 0; // Global others payment - can be calculated based on company needs
 
-        // a) User Anticipated cost = User Balance + User cost since last contribution
-        anticipatedPayment =
-          contributionBalance + estimatedCostSinceLastContribution;
-
-        // b) Others usage = User cost since last contribution × (Others usage / User fair share)
-        if (userFairShare > 0) {
-          const proportionRatio = othersUsage / userFairShare;
-          anticipatedOthersPayment =
-            estimatedCostSinceLastContribution * proportionRatio;
-
-          // c) Anticipated token purchase = User Anticipated cost + Others usage
-          anticipatedTokenPurchase =
-            anticipatedPayment + anticipatedOthersPayment;
-        }
-      } else {
-        // User hasn't contributed - show global anticipated payment information
-        // This provides managers/admins with meaningful global data
-        anticipatedPayment = contributionBalance; // Global balance status
-        anticipatedOthersPayment = 0; // Not applicable for non-contributing users
-        anticipatedTokenPurchase = contributionBalance; // Global balance
-      }
+      // Global anticipated token purchase = Total anticipated amount needed
+      anticipatedTokenPurchase = anticipatedPayment + anticipatedOthersPayment;
     }
 
     const response = {
