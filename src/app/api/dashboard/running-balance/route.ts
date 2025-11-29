@@ -271,24 +271,41 @@ export async function GET() {
       latestGlobalMeterReading?.reading || 'None'
     );
 
-    // Get user-specific data for the current user (commented out - not used in global approach)
-    // const userContributions = await prisma.userContribution.findMany({
-    //   where: { userId },
-    //   include: {
-    //     purchase: {
-    //       select: {
-    //         totalTokens: true,
-    //         totalPayment: true,
-    //         purchaseDate: true,
-    //       }
-    //     }
-    //   },
-    //   orderBy: {
-    //     purchase: {
-    //       purchaseDate: 'asc',
-    //     },
-    //   },
-    // });
+    // Get user-specific data for the current user (for anticipated payment calculation)
+    const userContributions = await prisma.userContribution.findMany({
+      where: { userId },
+      include: {
+        purchase: {
+          select: {
+            totalTokens: true,
+            totalPayment: true,
+            purchaseDate: true,
+          }
+        }
+      },
+      orderBy: {
+        purchase: {
+          purchaseDate: 'asc',
+        },
+      },
+    });
+
+    // Calculate historical user fair share and others usage for anticipated payments
+    let historicalUserFairShare = 0;
+    let historicalOthersUsage = 0;
+
+    if (userContributions.length > 0) {
+      // Calculate user's total fair share from their contributions
+      for (const contribution of userContributions) {
+        const effectiveTokensConsumed = contribution.tokensConsumed || 0;
+        const fairShare = (effectiveTokensConsumed / contribution.purchase.totalTokens) * contribution.purchase.totalPayment;
+        historicalUserFairShare += fairShare;
+      }
+
+      // Calculate others' usage = total user paid - user's fair share
+      const totalUserPaid = userContributions.reduce((sum, c) => sum + c.contributionAmount, 0);
+      historicalOthersUsage = totalUserPaid - historicalUserFairShare;
+    }
 
     // Calculate user-specific breakdown using the same cost calculation (for the anticipated payment formula)
     // const userCostBreakdown = calculateUserTrueCost(userContributions);
