@@ -13,6 +13,7 @@ import { SkeletonTable } from '@/components/ui/skeleton';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { useToast } from '@/components/ui/toast';
 import { useDeleteConfirmation } from '@/components/ui/alert-dialog';
+import { AccessibleModal } from '@/components/ui/accessible-modal';
 import {
   ChevronLeft,
   ChevronRight,
@@ -63,8 +64,18 @@ interface Purchase {
   } | null;
   receiptData?: {
     id: string;
-    totalAmountZWG: number;
+    tokenNumber?: string;
+    accountNumber?: string;
     kwhPurchased: number;
+    energyCostZWG: number;
+    debtZWG: number;
+    reaZWG: number;
+    vatZWG: number;
+    totalAmountZWG: number;
+    tenderedZWG: number;
+    transactionDateTime: string;
+    createdAt: string;
+    updatedAt: string;
   } | null;
 }
 
@@ -143,6 +154,11 @@ export function PurchaseHistoryTable({
   const [activePreset, setActivePreset] = useState<
     'thisMonth' | 'lastMonth' | 'allTime' | null
   >('thisMonth');
+
+  // Receipt modal state
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] =
+    useState<Purchase['receiptData']>(null);
 
   // Helper function to determine active preset based on current filters
   const getActivePreset = useCallback(() => {
@@ -497,6 +513,13 @@ export function PurchaseHistoryTable({
         // Fallback to general contribution page
         window.location.href = '/dashboard/contributions/new';
       }
+    }
+  };
+
+  const handleViewReceipt = (receiptData: Purchase['receiptData']) => {
+    if (receiptData) {
+      setSelectedReceipt(receiptData);
+      setReceiptModalOpen(true);
     }
   };
 
@@ -942,8 +965,9 @@ export function PurchaseHistoryTable({
                   {row.receiptData && (
                     <ResponsiveBadge
                       variant="secondary"
-                      className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800"
-                      title="Has official ZWG receipt data"
+                      className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800 cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                      title="Click to view receipt details"
+                      onClick={() => handleViewReceipt(row.receiptData)}
                     >
                       <Receipt className="h-3 w-3" />
                       <span className="hidden md:inline">Receipt</span>
@@ -963,7 +987,9 @@ export function PurchaseHistoryTable({
                       ZWG {receiptData.totalAmountZWG.toLocaleString()}
                     </span>
                   ) : (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">-</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      -
+                    </span>
                   )}
                 </div>
               ),
@@ -976,10 +1002,14 @@ export function PurchaseHistoryTable({
                 <div>
                   {row.receiptData ? (
                     <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-                      {(row.receiptData.totalAmountZWG / row.totalPayment).toFixed(2)}
+                      {(
+                        row.receiptData.totalAmountZWG / row.totalPayment
+                      ).toFixed(2)}
                     </span>
                   ) : (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">-</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      -
+                    </span>
                   )}
                 </div>
               ),
@@ -1623,6 +1653,129 @@ export function PurchaseHistoryTable({
           </div>
         </div>
       )}
+
+      {/* Receipt Details Modal */}
+      <AccessibleModal
+        isOpen={receiptModalOpen}
+        onClose={() => setReceiptModalOpen(false)}
+        title="Receipt Details"
+        description="Official ZWG electricity receipt information"
+        size="lg"
+      >
+        {selectedReceipt && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                Electricity Purchase Receipt
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Transaction Date:{' '}
+                {formatDisplayDateTime(selectedReceipt.transactionDateTime)}
+              </p>
+            </div>
+
+            {/* Receipt Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Token Number
+                  </label>
+                  <div className="text-sm text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    {selectedReceipt.tokenNumber || 'Not specified'}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Account Number
+                  </label>
+                  <div className="text-sm text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    {selectedReceipt.accountNumber || 'Not specified'}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    KWh Purchased
+                  </label>
+                  <div className="text-sm text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    {selectedReceipt.kwhPurchased.toLocaleString()} kWh
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Energy Cost
+                  </label>
+                  <div className="text-sm text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    ZWG {selectedReceipt.energyCostZWG.toLocaleString()}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Outstanding Debt
+                  </label>
+                  <div className="text-sm text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    ZWG {selectedReceipt.debtZWG.toLocaleString()}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    REA Fee
+                  </label>
+                  <div className="text-sm text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    ZWG {selectedReceipt.reaZWG.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  VAT (15%)
+                </label>
+                <div className="text-lg font-semibold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 p-3 rounded">
+                  ZWG {selectedReceipt.vatZWG.toLocaleString()}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Total Amount
+                </label>
+                <div className="text-lg font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded">
+                  ZWG {selectedReceipt.totalAmountZWG.toLocaleString()}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Tendered
+                </label>
+                <div className="text-lg font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+                  ZWG {selectedReceipt.tenderedZWG.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="text-xs text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-200 dark:border-slate-700">
+              Receipt ID: {selectedReceipt.id} • Created:{' '}
+              {formatDisplayDateTime(selectedReceipt.createdAt)}
+            </div>
+          </div>
+        )}
+      </AccessibleModal>
     </div>
   );
 }
