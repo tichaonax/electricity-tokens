@@ -526,6 +526,8 @@ export async function POST(request: NextRequest) {
                 permissions: user.permissions || null,
                 themePreference: user.themePreference,
                 lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
+                createdAt: new Date(user.createdAt),
+                updatedAt: new Date(user.updatedAt),
               },
               create: {
                 id: user.id,
@@ -602,6 +604,8 @@ export async function POST(request: NextRequest) {
                 meterReading: purchase.meterReading || 0,
                 purchaseDate: new Date(purchase.purchaseDate),
                 isEmergency: purchase.isEmergency,
+                createdAt: new Date(purchase.createdAt),
+                updatedAt: new Date(purchase.updatedAt),
               },
               create: {
                 id: purchase.id,
@@ -622,6 +626,8 @@ export async function POST(request: NextRequest) {
                 contributionAmount: contribution.contributionAmount,
                 meterReading: contribution.meterReading,
                 tokensConsumed: contribution.tokensConsumed,
+                createdAt: new Date(contribution.createdAt),
+                updatedAt: new Date(contribution.updatedAt),
               },
               create: {
                 id: contribution.id,
@@ -667,6 +673,8 @@ export async function POST(request: NextRequest) {
                 reading: reading.reading,
                 readingDate: new Date(reading.readingDate),
                 notes: reading.notes,
+                createdAt: new Date(reading.createdAt),
+                updatedAt: new Date(reading.updatedAt),
               },
               create: {
                 id: reading.id,
@@ -835,7 +843,9 @@ export async function POST(request: NextRequest) {
 
     // Automatically run balance fix after successful restore
     try {
-      const { fixAllAccountBalances } = await import('@/lib/balance-fix');
+      const { fixAllAccountBalances, recalculateAllTokensConsumed } = await import('@/lib/balance-fix');
+      console.log('🔧 Recalculating tokens consumed...');
+      await recalculateAllTokensConsumed();
       console.log('🔧 Running automatic balance fix after restore...');
       await fixAllAccountBalances();
       console.log('✅ Balance fix completed automatically');

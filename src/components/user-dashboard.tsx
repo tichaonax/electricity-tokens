@@ -32,7 +32,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { InsightsCard } from '@/components/insights-card';
+import { formatDisplayDate } from '@/lib/utils';
 
 interface DashboardData {
   personalSummary: {
@@ -200,10 +200,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     .slice()
     .reverse()
     .map((reading) => ({
-      name: new Date(reading.date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      }),
+      name: formatDisplayDate(reading.date),
       reading: reading.reading,
       consumed: reading.tokensConsumed,
       rate: reading.costPerKwh,
@@ -561,9 +558,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
             </span>
             <span className="font-medium text-slate-900 dark:text-slate-100">
               {data.personalSummary.lastContributionDate
-                ? new Date(
-                    data.personalSummary.lastContributionDate
-                  ).toLocaleDateString()
+                ? formatDisplayDate(data.personalSummary.lastContributionDate)
                 : 'None'}
             </span>
           </div>

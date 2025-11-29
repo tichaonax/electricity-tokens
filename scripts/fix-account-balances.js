@@ -132,7 +132,7 @@ async function fixAllAccountBalances(skipApiTest = false) {
     // Get all users who have contributions
     const usersWithContributions = await prisma.user.findMany({
       where: {
-        contributions: {
+        userContributions: {
           some: {},
         },
       },

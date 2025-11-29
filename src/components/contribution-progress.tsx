@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePermissions } from '@/hooks/usePermissions';
-import { formatDateTime } from '@/lib/utils';
+import { formatDisplayDate, formatDisplayDateTime } from '@/lib/utils';
 import { ContributionProgressSkeleton } from '@/components/ui/skeleton';
 
 interface ContributionProgressData {
@@ -222,9 +222,7 @@ export function ContributionProgress({
               <div className="flex items-center gap-2 mt-1">
                 <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-blue-600 dark:text-blue-400">
-                  {new Date(
-                    progress.nextPurchaseToContribute.purchaseDate
-                  ).toLocaleDateString()}
+                  {formatDisplayDate(progress.nextPurchaseToContribute.purchaseDate)}
                 </span>
                 <span className="text-xs text-blue-600 dark:text-blue-400">
                   •
@@ -345,7 +343,7 @@ export function ContributionProgress({
                   </div>
                   <div className="text-xs text-blue-500 dark:text-blue-400">
                     by {latestReading.userName} •{' '}
-                    {formatDateTime(new Date(latestReading.readingDate!))}
+                    {formatDisplayDateTime(latestReading.readingDate!)}
                   </div>
                 </div>
               )}

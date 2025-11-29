@@ -33,7 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { formatZWG } from '@/lib/utils';
+import { formatZWG, formatDisplayDateTime } from '@/lib/utils';
 
 // Receipt data form schema matching the project's validation pattern
 const receiptDataFormSchema = z.object({
@@ -58,6 +58,7 @@ interface ReceiptDataFormProps {
   defaultExpanded?: boolean;
   hasReceipt?: boolean;
   totalTokens?: number;
+  usdAmount?: number;
 }
 
 export function ReceiptDataForm({
@@ -67,6 +68,7 @@ export function ReceiptDataForm({
   defaultExpanded = false,
   hasReceipt = false,
   totalTokens,
+  usdAmount,
 }: ReceiptDataFormProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -178,19 +180,27 @@ export function ReceiptDataForm({
               </CardDescription>
             </div>
           </div>
-          {collapsible && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={isExpanded ? 'Collapse' : 'Expand'}
-              className="ml-2"
-              tabIndex={-1}
-              onClick={() => setIsExpanded((v) => !v)}
-            >
-              {isExpanded ? <ChevronUp /> : <ChevronDown />}
-            </Button>
-          )}
+          <div className="flex items-center gap-4">
+            {collapsible && !isExpanded && usdAmount && usdAmount > 0 && watchedValues.totalAmountZWG && watchedValues.totalAmountZWG > 0 && (
+              <div className="text-right text-xs text-gray-600 dark:text-gray-400">
+                <div>Rate: {(watchedValues.totalAmountZWG / usdAmount).toFixed(2)} ZWG/USD</div>
+                <div>Outstanding: {formatZWG((watchedValues.tenderedZWG || 0) - (watchedValues.totalAmountZWG || 0))}</div>
+              </div>
+            )}
+            {collapsible && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                className="ml-2"
+                tabIndex={-1}
+                onClick={() => setIsExpanded((v) => !v)}
+              >
+                {isExpanded ? <ChevronUp /> : <ChevronDown />}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -248,7 +258,7 @@ export function ReceiptDataForm({
                           msg += `\nEntered by: ${r.purchase.user.name} (${r.purchase.user.email})`;
                         }
                         if (r && r.createdAt) {
-                          msg += `\nOn: ${new Date(r.createdAt).toLocaleString()}`;
+                          msg += `\nOn: ${formatDisplayDateTime(r.createdAt)}`;
                         }
                         setError('tokenNumber', {
                           type: 'manual',
@@ -451,6 +461,22 @@ export function ReceiptDataForm({
                   Please verify the amounts match your receipt.
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Exchange Rate Display */}
+          {usdAmount && usdAmount > 0 && watchedValues.totalAmountZWG && watchedValues.totalAmountZWG > 0 && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200">
+              <p className="font-medium">💱 Exchange Rate</p>
+              <p className="text-xs mt-1">
+                ZWG {watchedValues.totalAmountZWG.toLocaleString()} ÷ USD ${usdAmount.toFixed(2)} ={' '}
+                <span className="font-bold text-blue-900 dark:text-blue-100">
+                  {(watchedValues.totalAmountZWG / usdAmount).toFixed(2)}
+                </span>
+              </p>
+              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400">
+                1 USD = {(watchedValues.totalAmountZWG / usdAmount).toFixed(2)} ZWG
+              </p>
             </div>
           )}
         </CardContent>

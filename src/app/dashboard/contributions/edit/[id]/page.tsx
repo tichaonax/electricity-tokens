@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Save, AlertTriangle, DollarSign, Zap, Calendar, Trash2 } from 'lucide-react';
+import { formatDisplayDate } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -388,7 +389,7 @@ function EditContributionContent() {
                       Purchase Date
                     </label>
                     <p className="text-slate-900 dark:text-blue-300 font-medium">
-                      {new Date(contribution.purchase.purchaseDate).toLocaleDateString()}
+                      {formatDisplayDate(contribution.purchase.purchaseDate)}
                     </p>
                   </div>
                   <div>

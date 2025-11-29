@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useConfirmation } from '@/components/ui/alert-dialog';
+import { formatDisplayDate, formatDisplayDateTime } from '@/lib/utils';
 
 // Helper function to get current month date range
 function getCurrentMonthRange() {
@@ -1252,11 +1253,7 @@ function MeterReadingsPage() {
                               <div className="flex items-center">
                                 <Calendar className="h-4 w-4 text-slate-400 mr-2" />
                                 <span className="text-sm text-slate-900 dark:text-slate-100">
-                                  {
-                                    new Date(reading.readingDate)
-                                      .toISOString()
-                                      .split('T')[0]
-                                  }
+                                  {formatDisplayDate(reading.readingDate)}
                                 </span>
                               </div>
                             </td>
@@ -1305,21 +1302,11 @@ function MeterReadingsPage() {
                                 </div>
                                 <div className="text-slate-500 dark:text-slate-400 text-xs">
                                   Created:{' '}
-                                  {new Date(
-                                    reading.createdAt
-                                  ).toLocaleDateString()}{' '}
-                                  {new Date(
-                                    reading.createdAt
-                                  ).toLocaleTimeString()}
+                                  {formatDisplayDateTime(reading.createdAt)}
                                   {reading.latestUpdateAudit ? (
                                     <div className="text-amber-600 dark:text-amber-400">
                                       Updated:{' '}
-                                      {new Date(
-                                        reading.latestUpdateAudit.timestamp
-                                      ).toLocaleDateString()}{' '}
-                                      {new Date(
-                                        reading.latestUpdateAudit.timestamp
-                                      ).toLocaleTimeString()}
+                                      {formatDisplayDateTime(reading.latestUpdateAudit.timestamp)}
                                       <br />
                                       by {reading.latestUpdateAudit.user.name}
                                     </div>
@@ -1327,12 +1314,7 @@ function MeterReadingsPage() {
                                     reading.updatedAt !== reading.createdAt ? (
                                     <div className="text-amber-600 dark:text-amber-400">
                                       Updated:{' '}
-                                      {new Date(
-                                        reading.updatedAt
-                                      ).toLocaleDateString()}{' '}
-                                      {new Date(
-                                        reading.updatedAt
-                                      ).toLocaleTimeString()}
+                                      {formatDisplayDateTime(reading.updatedAt)}
                                       <br />
                                       (Legacy update - no audit info)
                                     </div>
@@ -1402,11 +1384,7 @@ function MeterReadingsPage() {
                               <div className="flex items-center mb-1">
                                 <Calendar className="h-4 w-4 text-slate-400 mr-2" />
                                 <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                  {
-                                    new Date(reading.readingDate)
-                                      .toISOString()
-                                      .split('T')[0]
-                                  }
+                                  {formatDisplayDate(reading.readingDate)}
                                 </span>
                               </div>
                               <div className="flex items-center">
@@ -1479,8 +1457,7 @@ function MeterReadingsPage() {
                               {reading.user?.name || 'Unknown'}
                             </div>
                             <div>
-                              {new Date(reading.createdAt).toLocaleDateString()}{' '}
-                              {new Date(reading.createdAt).toLocaleTimeString()}
+                              {formatDisplayDateTime(reading.createdAt)}
                             </div>
 
                             {reading.latestUpdateAudit ? (
@@ -1492,12 +1469,7 @@ function MeterReadingsPage() {
                                   {reading.latestUpdateAudit.user.name}
                                 </div>
                                 <div>
-                                  {new Date(
-                                    reading.latestUpdateAudit.timestamp
-                                  ).toLocaleDateString()}{' '}
-                                  {new Date(
-                                    reading.latestUpdateAudit.timestamp
-                                  ).toLocaleTimeString()}
+                                  {formatDisplayDateTime(reading.latestUpdateAudit.timestamp)}
                                 </div>
                               </div>
                             ) : reading.updatedAt &&
@@ -1505,12 +1477,7 @@ function MeterReadingsPage() {
                               <div className="text-amber-600 dark:text-amber-400">
                                 <div>
                                   Updated:{' '}
-                                  {new Date(
-                                    reading.updatedAt
-                                  ).toLocaleDateString()}{' '}
-                                  {new Date(
-                                    reading.updatedAt
-                                  ).toLocaleTimeString()}
+                                  {formatDisplayDateTime(reading.updatedAt)}
                                 </div>
                                 <div>(Legacy update - no audit info)</div>
                               </div>

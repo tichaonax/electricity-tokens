@@ -1,4 +1,5 @@
 // Dynamic imports will be used in methods
+import { formatDisplayDate } from './utils';
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -49,7 +50,7 @@ export class PDFGenerator {
     this.doc.setFontSize(10);
     this.doc.setFont('helvetica', 'normal');
     this.doc.text(
-      `Generated on: ${new Date().toLocaleDateString()}`,
+      `Generated on: ${formatDisplayDate(new Date())}`,
       20,
       data.subtitle ? 40 : 30
     );

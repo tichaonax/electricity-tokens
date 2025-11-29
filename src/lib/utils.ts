@@ -58,7 +58,7 @@ export function calculateEfficiency(
 
 /**
  * Universal date formatter - handles all date formats and prevents timezone shifts
- * Returns format: MM/DD/YYYY
+ * Returns format: DD/MM/YYYY
  *
  * Handles:
  * - ISO date strings: "2025-11-25"
@@ -66,7 +66,7 @@ export function calculateEfficiency(
  * - Date objects
  *
  * @param dateInput - Date string, Date object, or null/undefined
- * @returns Formatted date string in MM/DD/YYYY format, or "Invalid Date" if parsing fails
+ * @returns Formatted date string in DD/MM/YYYY format, or "Invalid Date" if parsing fails
  */
 export function formatDisplayDate(
   dateInput: string | Date | null | undefined
@@ -96,11 +96,11 @@ export function formatDisplayDate(
       return 'Invalid Date';
     }
 
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
+    // Manually format as DD/MM/YYYY to ensure consistent formatting
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   } catch (error) {
     console.error('Error formatting date:', error);
     return 'Invalid Date';
@@ -126,7 +126,7 @@ export function formatDisplayDateTime(
       return 'Invalid Date';
     }
 
-    return date.toLocaleString('en-US', {
+    return date.toLocaleString('en-GB', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

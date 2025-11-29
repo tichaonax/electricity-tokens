@@ -389,7 +389,7 @@ export function PaymentBalanceChart({ startDate, endDate }: PaymentBalanceChartP
                   ?.contributionDetails.map((detail, index) => (
                     <tr key={index}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {new Date(detail.purchaseDate).toLocaleDateString()}
+                        {new Date(detail.purchaseDate).toLocaleDateString('en-GB')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                         ${detail.contributionAmount.toFixed(2)}

@@ -129,3 +129,67 @@ export async function fixAllAccountBalances(): Promise<void> {
     throw error;
   }
 }
+
+export async function recalculateAllTokensConsumed(): Promise<void> {
+  try {
+    log('🔧 Recalculating tokensConsumed for all contributions', colors.blue);
+    log('====================================================', colors.blue);
+
+    // Get all purchases with their contributions, ordered by purchase date
+    const purchasesWithContributions = await prisma.tokenPurchase.findMany({
+      include: {
+        contribution: true,
+      },
+      orderBy: {
+        purchaseDate: 'asc',
+      },
+    });
+
+    if (purchasesWithContributions.length === 0) {
+      log('✅ No purchases found. Nothing to recalculate.', colors.green);
+      return;
+    }
+
+    log(`Found ${purchasesWithContributions.length} purchases`, colors.cyan);
+
+    let previousMeterReading = 0;
+    let updatedCount = 0;
+
+    for (let i = 0; i < purchasesWithContributions.length; i++) {
+      const purchase = purchasesWithContributions[i];
+
+      if (purchase.contribution) {
+        // Calculate correct tokens consumed
+        const correctTokensConsumed = i === 0
+          ? 0 // First purchase: no previous consumption
+          : Math.max(0, purchase.meterReading - previousMeterReading);
+
+        // Update if different
+        if (purchase.contribution.tokensConsumed !== correctTokensConsumed) {
+          await prisma.userContribution.update({
+            where: { id: purchase.contribution.id },
+            data: { tokensConsumed: correctTokensConsumed },
+          });
+          updatedCount++;
+          log(
+            `Updated contribution ${purchase.contribution.id}: ${purchase.contribution.tokensConsumed} → ${correctTokensConsumed} kWh`,
+            colors.yellow
+          );
+        }
+
+        // Update previous meter reading for next iteration
+        previousMeterReading = purchase.meterReading;
+      } else {
+        // No contribution for this purchase, but still update previous meter reading
+        previousMeterReading = purchase.meterReading;
+      }
+    }
+
+    log(`✅ Updated ${updatedCount} contributions with correct tokensConsumed values`, colors.green);
+    log('🎉 Tokens consumed recalculation completed!', colors.green);
+  } catch (error) {
+    log('❌ Error recalculating tokens consumed:', colors.red);
+    console.error(error);
+    throw error;
+  }
+}

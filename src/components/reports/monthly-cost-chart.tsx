@@ -122,7 +122,7 @@ export function MonthlyCostChart({ startDate, endDate }: MonthlyCostChartProps) 
   // Prepare chart data
   const months = data.map(item => {
     const date = new Date(item.month + '-01');
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
   });
 
   const spendingChartData = {
@@ -403,7 +403,7 @@ export function MonthlyCostChart({ startDate, endDate }: MonthlyCostChartProps) 
             <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
               {data.map((item, index) => {
                 const monthDate = new Date(item.month + '-01');
-                const monthName = monthDate.toLocaleDateString('en-US', { 
+                const monthName = monthDate.toLocaleDateString('en-GB', { 
                   year: 'numeric', 
                   month: 'long' 
                 });
@@ -446,7 +446,7 @@ export function MonthlyCostChart({ startDate, endDate }: MonthlyCostChartProps) 
         <div className="lg:hidden divide-y divide-slate-200 dark:divide-slate-700">
           {data.map((item, index) => {
             const monthDate = new Date(item.month + '-01');
-            const monthName = monthDate.toLocaleDateString('en-US', { 
+            const monthName = monthDate.toLocaleDateString('en-GB', { 
               year: 'numeric', 
               month: 'long' 
             });

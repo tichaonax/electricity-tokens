@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { formatDisplayDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ResponsiveNav } from '@/components/ui/responsive-nav';
 import {
@@ -241,7 +242,7 @@ export default function DatabasePerformancePage() {
                         Last Optimized
                       </span>
                       <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                        {new Date(stats.lastOptimized).toLocaleDateString()}
+                        {formatDisplayDate(stats.lastOptimized)}
                       </span>
                     </div>
                   )}

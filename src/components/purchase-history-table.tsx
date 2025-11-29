@@ -181,7 +181,7 @@ export function PurchaseHistoryTable({
   }, [filters.startDate, filters.endDate, getActivePreset]);
 
   // Sorting state
-  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortField, setSortField] = useState<SortField>('purchaseDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // UI state
@@ -948,6 +948,38 @@ export function PurchaseHistoryTable({
                       <Receipt className="h-3 w-3" />
                       <span className="hidden md:inline">Receipt</span>
                     </ResponsiveBadge>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: 'receiptData',
+              label: 'ZWD Amount',
+              mobileHide: true,
+              render: (receiptData, row) => (
+                <div>
+                  {receiptData ? (
+                    <span className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                      ZWG {receiptData.totalAmountZWG.toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">-</span>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: 'exchangeRate',
+              label: 'Exchange Rate',
+              mobileHide: true,
+              render: (value, row) => (
+                <div>
+                  {row.receiptData ? (
+                    <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                      {(row.receiptData.totalAmountZWG / row.totalPayment).toFixed(2)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">-</span>
                   )}
                 </div>
               ),

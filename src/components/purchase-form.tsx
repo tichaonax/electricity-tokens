@@ -18,6 +18,85 @@ import {
 } from '@/components/ui/form';
 import { AlertCircle, CheckCircle2, DollarSign, Zap, Info } from 'lucide-react';
 import { useFormAnimations } from '@/hooks/useFormAnimations';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
+// Custom styles for DatePicker dark mode
+const datePickerStyles = `
+  .react-datepicker-wrapper {
+    width: 100%;
+  }
+  .react-datepicker__input-container input {
+    width: 100%;
+  }
+  .react-datepicker {
+    font-family: inherit;
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  .react-datepicker__header {
+    background-color: hsl(var(--muted));
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .react-datepicker__current-month,
+  .react-datepicker-time__header {
+    color: hsl(var(--foreground));
+  }
+  .react-datepicker__day-names,
+  .react-datepicker__week {
+    display: flex;
+  }
+  .react-datepicker__day-name,
+  .react-datepicker__day {
+    color: hsl(var(--foreground));
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    line-height: 2rem;
+    text-align: center;
+    margin: 0.125rem;
+    border-radius: 4px;
+  }
+  .react-datepicker__day:hover {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+  .react-datepicker__day--selected {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+  .react-datepicker__day--keyboard-selected {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+  .react-datepicker__day--today {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
+  .react-datepicker__navigation {
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    top: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .react-datepicker__navigation:hover {
+    background-color: hsl(var(--accent));
+  }
+  .react-datepicker__navigation-icon::before {
+    border-color: hsl(var(--foreground));
+    border-width: 2px 2px 0 0;
+  }
+`;
+import { formatDisplayDate } from '@/lib/utils';
 import { ReceiptDataForm } from '@/components/receipt-data-form';
 
 // Form-specific schema for react-hook-form
@@ -542,6 +621,7 @@ export function PurchaseForm({
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg dark:bg-slate-900">
+      <style dangerouslySetInnerHTML={{ __html: datePickerStyles }} />
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
           <Zap className="h-6 w-6 text-blue-600" />
@@ -593,9 +673,7 @@ export function PurchaseForm({
                 </span>
                 <span className="font-medium text-slate-900 dark:text-slate-100">
                   {initialData.purchaseDate
-                    ? new Date(
-                        initialData.purchaseDate + 'T00:00:00'
-                      ).toLocaleDateString()
+                    ? formatDisplayDate(initialData.purchaseDate)
                     : 'N/A'}
                 </span>
               </div>
@@ -798,9 +876,7 @@ export function PurchaseForm({
                             ? 'meter reading'
                             : 'purchase'}{' '}
                           on:{' '}
-                          {new Date(
-                            meterReadingSuggestion.date!
-                          ).toLocaleDateString()}
+                          {formatDisplayDate(meterReadingSuggestion.date!)}
                         </div>
                         <div className="text-xs text-green-600 dark:text-green-400 mt-1">
                           ✨{' '}
@@ -844,9 +920,7 @@ export function PurchaseForm({
                         </div>
                         <div className="text-xs mt-1">
                           From purchase on:{' '}
-                          {new Date(
-                            lastMeterReading.date!
-                          ).toLocaleDateString()}
+                          {formatDisplayDate(lastMeterReading.date!)}
                         </div>
                         <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                           💡 Your new meter reading should be greater than{' '}
@@ -880,9 +954,7 @@ export function PurchaseForm({
                             {contextInfo.previousPurchase.meterReading?.toLocaleString()}{' '}
                             kWh (
                             {contextInfo.previousPurchase.date
-                              ? new Date(
-                                  contextInfo.previousPurchase.date
-                                ).toLocaleDateString()
+                              ? formatDisplayDate(contextInfo.previousPurchase.date)
                               : 'Unknown date'}
                             )
                           </div>
@@ -895,9 +967,7 @@ export function PurchaseForm({
                             {contextInfo.nextPurchase.meterReading?.toLocaleString()}{' '}
                             kWh (
                             {contextInfo.nextPurchase.date
-                              ? new Date(
-                                  contextInfo.nextPurchase.date
-                                ).toLocaleDateString()
+                              ? formatDisplayDate(contextInfo.nextPurchase.date)
                               : 'Unknown date'}
                             )
                           </div>
@@ -1063,43 +1133,41 @@ export function PurchaseForm({
               {mode === 'edit' && initialData?.purchaseDate && (
                 <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">
                   (was:{' '}
-                  {new Date(
-                    initialData.purchaseDate + 'T00:00:00'
-                  ).toLocaleDateString()}
+                  {formatDisplayDate(initialData.purchaseDate)}
                   )
                   {watchedValues.purchaseDate &&
-                    new Date(
-                      watchedValues.purchaseDate
-                    ).toLocaleDateString() !==
-                      new Date(
-                        initialData.purchaseDate + 'T00:00:00'
-                      ).toLocaleDateString() && (
+                    formatDisplayDate(watchedValues.purchaseDate) !==
+                      formatDisplayDate(initialData.purchaseDate) && (
                       <span className="ml-1 text-orange-600 dark:text-orange-400 font-medium">
                         → changing to{' '}
-                        {new Date(
-                          watchedValues.purchaseDate
-                        ).toLocaleDateString()}
+                        {formatDisplayDate(watchedValues.purchaseDate)}
                       </span>
                     )}
                 </span>
               )}
             </FormLabel>
-            <Input
-              type="date"
-              {...register('purchaseDate', {
-                setValueAs: (value) => (value ? new Date(value) : new Date()),
-              })}
-              defaultValue={
-                initialData?.purchaseDate
-                  ? initialData.purchaseDate.split('T')[0]
-                  : new Date().toISOString().split('T')[0]
-              }
-              className={
-                errors.purchaseDate
-                  ? 'border-red-500 dark:bg-slate-800 dark:text-slate-100 dark:border-red-600'
-                  : 'dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600'
-              }
-            />
+            <div className="relative">
+              <DatePicker
+                selected={watchedValues.purchaseDate}
+                onChange={(date) => {
+                  if (date) {
+                    setValue('purchaseDate', date);
+                  }
+                }}
+                dateFormat="dd/MM/yyyy"
+                className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  errors.purchaseDate
+                    ? 'border-red-500 dark:bg-slate-800 dark:text-slate-100 dark:border-red-600'
+                    : 'dark:bg-slate-800 dark:text-slate-100 dark:border-slate-600'
+                }`}
+                placeholderText="Select purchase date"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                yearDropdownItemNumber={10}
+                scrollableYearDropdown
+              />
+            </div>
             <FormDescription>
               Select the date when the tokens were purchased
             </FormDescription>
@@ -1126,9 +1194,7 @@ export function PurchaseForm({
                           </div>
                           <div className="text-xs text-red-700 dark:text-red-300">
                             Date:{' '}
-                            {new Date(
-                              sequentialValidation.blockingPurchase.date
-                            ).toLocaleDateString()}
+                            {formatDisplayDate(sequentialValidation.blockingPurchase.date)}
                             <br />
                             Tokens:{' '}
                             {sequentialValidation.blockingPurchase.totalTokens.toLocaleString()}{' '}
@@ -1189,6 +1255,7 @@ export function PurchaseForm({
             defaultExpanded={false}
             hasReceipt={!!receiptDataDefault}
             totalTokens={watchedValues.totalTokens}
+            usdAmount={watchedValues.totalPayment}
           />
         </div>
 

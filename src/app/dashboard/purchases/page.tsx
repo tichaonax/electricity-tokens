@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Zap, DollarSign, Calendar, AlertTriangle } from 'lucide-react';
+import { formatDisplayDate } from '@/lib/utils';
 
 interface Purchase {
   id: string;
@@ -176,9 +177,7 @@ export default function PurchasesPage() {
                               {purchase.totalPayment.toFixed(2)}
                               <span className="mx-2">•</span>
                               <Calendar className="h-4 w-4 mr-1" />
-                              {new Date(
-                                purchase.purchaseDate
-                              ).toLocaleDateString()}
+                              {formatDisplayDate(purchase.purchaseDate)}
                             </div>
                           </div>
                         </div>

@@ -131,7 +131,7 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
   const monthlyChartData = {
     labels: data.monthlyBreakdown.map(item => {
       const date = new Date(item.month + '-01');
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
     }),
     datasets: [
       {

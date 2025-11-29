@@ -272,7 +272,7 @@ export function ZWGRateHistory({ userId, limit = 50 }: ZWGRateHistoryProps) {
               {sortedData.map((entry, index) => (
                 <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {new Date(entry.date).toLocaleDateString()}
+                    {new Date(entry.date).toLocaleDateString('en-GB')}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-medium">
                     {formatZWG(entry.zwgRate)}

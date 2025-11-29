@@ -171,7 +171,7 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
   const userTrendData = selectedUserData ? {
     labels: [...selectedUserData.monthlyUsage.map(m => {
       const date = new Date(m.month + '-01');
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
     }), 'Predicted'],
     datasets: [
       {

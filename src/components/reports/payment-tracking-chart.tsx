@@ -171,7 +171,7 @@ export function PaymentTrackingChart({ startDate, endDate }: PaymentTrackingChar
       return {
         labels: sortedMonths.map(month => {
           const date = new Date(month + '-01');
-          return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+          return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
         }),
         datasets: [
           {
@@ -195,7 +195,7 @@ export function PaymentTrackingChart({ startDate, endDate }: PaymentTrackingChar
 
       const months = selectedUserData.monthlyBreakdown.map(month => {
         const date = new Date(month.month + '-01');
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
       });
 
       return {
@@ -451,8 +451,8 @@ export function PaymentTrackingChart({ startDate, endDate }: PaymentTrackingChar
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {new Date(user.firstContribution).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - 
-                      {new Date(user.lastContribution).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                      {new Date(user.firstContribution).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} - 
+                      {new Date(user.lastContribution).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                     </div>
                   </td>
                 </tr>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ZodSchema, ZodError } from 'zod';
+import { formatDisplayDate } from './utils';
 
 /**
  * Validation middleware for API routes
@@ -368,7 +369,7 @@ export async function validateBusinessRules(
     if (previousPurchase && !previousPurchase.contribution) {
       return {
         success: false,
-        error: `Cannot create new purchase. Previous purchase from ${previousPurchase.purchaseDate.toLocaleDateString()} requires a contribution first.`,
+        error: `Cannot create new purchase. Previous purchase from ${formatDisplayDate(previousPurchase.purchaseDate)} requires a contribution first.`,
       };
     }
   }

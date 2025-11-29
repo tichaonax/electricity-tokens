@@ -120,7 +120,7 @@ export function DualCurrencyChart({ userId, startDate, endDate }: DualCurrencyCh
 
   // Format data for display
   const chartData = data.map(d => ({
-    date: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: new Date(d.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }),
     USD: parseFloat(d.usdPerKwh.toFixed(4)),
     ZWG: parseFloat((d.zwgPerKwh / 1000).toFixed(2)), // Convert to thousands for better scale
     usdCost: d.usdCost,

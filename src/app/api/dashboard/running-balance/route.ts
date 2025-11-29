@@ -7,6 +7,43 @@ import { subDays } from 'date-fns';
 // Helper function to round to 2 decimal places
 const round2 = (num: number): number => Math.round(num * 100) / 100;
 
+// Calculate account balance from contributions
+async function calculateAccountBalance(contributions: any[]): Promise<number> {
+  if (contributions.length === 0) {
+    return 0;
+  }
+
+  // Get the earliest purchase date to determine what counts as "first purchase"
+  const earliestPurchase = await prisma.tokenPurchase.findFirst({
+    orderBy: { purchaseDate: 'asc' },
+  });
+
+  let runningBalance = 0;
+
+  for (let i = 0; i < contributions.length; i++) {
+    const contribution = contributions[i];
+
+    // Check if this is the first purchase globally
+    const isFirstPurchase =
+      earliestPurchase &&
+      contribution.purchase.purchaseDate.getTime() ===
+        earliestPurchase.purchaseDate.getTime();
+
+    // For the first purchase, no tokens were consumed before it
+    const effectiveTokensConsumed = isFirstPurchase
+      ? 0
+      : contribution.tokensConsumed;
+
+    const fairShare =
+      (effectiveTokensConsumed / contribution.purchase.totalTokens) *
+      contribution.purchase.totalPayment;
+    const balanceChange = contribution.contributionAmount - fairShare;
+    runningBalance += balanceChange;
+  }
+
+  return runningBalance;
+}
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -21,8 +58,8 @@ export async function GET() {
     const sevenDaysAgo = subDays(now, 7);
     const fourteenDaysAgo = subDays(now, 14);
 
-    // Get ALL user contributions globally (system-wide shared electricity pool)
-    const contributions = await prisma.userContribution.findMany({
+    // Get ALL contributions in the system (global balance)
+    const allContributions = await prisma.userContribution.findMany({
       include: {
         purchase: {
           select: {
@@ -40,28 +77,31 @@ export async function GET() {
     });
 
     console.log(
-      'Running balance API - Found global contributions:',
-      contributions.length
+      'Running balance API - Found all contributions:',
+      allContributions.length
     );
 
-    // Get total cost of all purchases
-    const totalPurchasesCostResult = await prisma.tokenPurchase.aggregate({
+    // Calculate GLOBAL account balance
+    const globalContributionBalance = await calculateAccountBalance(allContributions);
+
+    // Get total cost of ALL purchases
+    const allPurchasesCostResult = await prisma.tokenPurchase.aggregate({
       _sum: {
         totalPayment: true,
       },
     });
-    const totalPurchasesCost = totalPurchasesCostResult._sum.totalPayment || 0;
+    const totalPurchasesCost = allPurchasesCostResult._sum.totalPayment || 0;
 
-    // Calculate total contributions
-    const totalContributionsSum = contributions.reduce(
+    // Calculate total ALL contributions
+    const totalContributionsSum = allContributions.reduce(
       (sum, c) => sum + c.contributionAmount,
       0
     );
 
-    // Account Balance = Total Purchases Cost - Total Contributions
-    // Positive = money owed to system (debt)
-    // Negative = overpaid (credit)
-    const contributionBalance = totalPurchasesCost - totalContributionsSum;
+    // Global Account Balance = Total purchases cost - Total contributions
+    // Positive = company owes money (underpaid)
+    // Negative = company has credit (overpaid)
+    const contributionBalance = globalContributionBalance;
 
     console.log(
       'Running balance API - Total purchases cost:',
@@ -73,22 +113,22 @@ export async function GET() {
     );
     console.log('Running balance API - Account balance:', contributionBalance);
 
-    // Use the same calculation as contributions API for true cost breakdown
+    // Use the same calculation as contributions API for GLOBAL true cost breakdown
     const { calculateUserTrueCost } = await import('@/lib/cost-calculations');
-    const globalCostBreakdown = calculateUserTrueCost(contributions);
+    const globalCostBreakdown = calculateUserTrueCost(allContributions);
 
-    // Get recent consumption for trend analysis - use purchase date (meter reading date) instead of contribution created date
-    const recentContributions = contributions.filter(
+    // Get recent consumption for trend analysis - use GLOBAL contributions
+    const recentContributions = allContributions.filter(
       (contrib) => contrib.purchase.purchaseDate >= sevenDaysAgo
     );
 
-    const previousWeekContributions = contributions.filter(
+    const previousWeekContributions = allContributions.filter(
       (contrib) =>
         contrib.purchase.purchaseDate >= fourteenDaysAgo &&
         contrib.purchase.purchaseDate < sevenDaysAgo
     );
 
-    // Use global totals from the cost breakdown
+    // Use GLOBAL totals from the cost breakdown
     const totalContributed = globalCostBreakdown.totalAmountPaid;
     const totalConsumed = globalCostBreakdown.totalTokensUsed;
     const totalTrueCost = globalCostBreakdown.totalTrueCost;
@@ -199,14 +239,9 @@ export async function GET() {
     let anticipatedOthersPayment = 0;
     let anticipatedTokenPurchase = 0;
 
-    // Get the latest meter reading GLOBALLY (not user-specific)
-    const latestGlobalMeterReading = await prisma.meterReading.findFirst({
-      orderBy: [{ readingDate: 'desc' }, { reading: 'desc' }],
-    });
-
-    // Get the latest contribution GLOBALLY (not user-specific)
-    // Order by purchase date, not createdAt (which gets reset on backup restore)
-    const latestGlobalContribution = await prisma.userContribution.findFirst({
+    // Get USER-SPECIFIC latest meter reading and contribution
+    const latestUserContribution = await prisma.userContribution.findFirst({
+      where: { userId },
       include: {
         purchase: {
           select: {
@@ -221,18 +256,19 @@ export async function GET() {
       },
     });
 
-    console.log('=== GLOBAL METER READING DEBUG ===');
+    // Get the latest GLOBAL meter reading (for consumption calculation)
+    const latestGlobalMeterReading = await prisma.meterReading.findFirst({
+      orderBy: [{ readingDate: 'desc' }, { reading: 'desc' }],
+    });
+
+    console.log('=== USER METER READING DEBUG ===');
+    console.log(
+      'Latest USER contribution meter reading:',
+      latestUserContribution?.meterReading || 'None'
+    );
     console.log(
       'Latest GLOBAL meter reading:',
       latestGlobalMeterReading?.reading || 'None'
-    );
-    console.log(
-      'Latest GLOBAL contribution meter reading:',
-      latestGlobalContribution?.meterReading || 'None'
-    );
-    console.log('Expected: Latest global meter reading should be 1363.60');
-    console.log(
-      'Expected: Latest global contribution meter reading should be 1339'
     );
 
     // Get user-specific data for the current user (commented out - not used in global approach)
@@ -257,11 +293,11 @@ export async function GET() {
     // Calculate user-specific breakdown using the same cost calculation (for the anticipated payment formula)
     // const userCostBreakdown = calculateUserTrueCost(userContributions);
 
-    if (latestGlobalMeterReading && latestGlobalContribution) {
-      // Calculate tokens consumed since the GLOBAL last contribution
+    if (latestGlobalMeterReading && latestUserContribution) {
+      // Calculate tokens consumed since the USER'S last contribution
       tokensConsumedSinceLastContribution = Math.max(
         0,
-        latestGlobalMeterReading.reading - latestGlobalContribution.meterReading
+        latestGlobalMeterReading.reading - latestUserContribution.meterReading
       );
 
       // Calculate historical fair share cost per kWh (using GLOBAL data)
@@ -279,15 +315,14 @@ export async function GET() {
         latestGlobalMeterReading.reading
       );
       console.log(
-        'Latest GLOBAL contribution meter reading:',
-        latestGlobalContribution.meterReading
+        'Latest USER contribution meter reading:',
+        latestUserContribution.meterReading
       );
       console.log(
-        'Tokens consumed since last GLOBAL contribution:',
+        'Tokens consumed since last USER contribution:',
         tokensConsumedSinceLastContribution
       );
-      console.log('Expected tokens consumed: 1363.60 - 1339 = 24.6');
-      console.log('Historical cost per kWh (GLOBAL):', historicalCostPerKwh);
+      console.log('Historical cost per kWh (USER):', historicalCostPerKwh);
       console.log('Total global consumed tokens:', totalConsumed);
       console.log('Total global true cost:', totalTrueCost);
       console.log(
@@ -295,47 +330,49 @@ export async function GET() {
         estimatedCostSinceLastContribution
       );
 
-      // Calculate anticipated payments using the correct proportional approach
-      // We need the historical total tokens purchased (not just user's fair share)
-
-      // Get the historical total cost of ALL token purchases (not just those with contributions)
-      const allPurchases = await prisma.tokenPurchase.findMany({
-        select: {
-          id: true,
+      // Calculate anticipated payments using USER-SPECIFIC proportional approach
+      // Get all purchases that the user contributed to
+      const userPurchaseIds = [...new Set(userContributions.map(c => c.purchaseId))];
+      const userPurchaseTotal = await prisma.tokenPurchase.aggregate({
+        where: {
+          id: {
+            in: userPurchaseIds
+          }
+        },
+        _sum: {
           totalPayment: true,
+          totalTokens: true,
         },
       });
-      const historicalTotalPaid = allPurchases.reduce(
-        (sum, purchase) => sum + purchase.totalPayment,
-        0
-      );
 
-      // Historical user total fair share = totalTrueCost (what user should have paid based on consumption)
-      const historicalUserFairShare = totalTrueCost;
+      const userPurchaseTotalCost = userPurchaseTotal._sum.totalPayment || 0;
+      const userPurchaseTotalTokens = userPurchaseTotal._sum.totalTokens || 0;
 
-      // Historical usage by others = Total paid - User's fair share
-      const historicalOthersUsage =
-        historicalTotalPaid - historicalUserFairShare;
+      // User's fair share = what user should have paid based on their consumption
+      const userFairShare = totalTrueCost;
+
+      // Others' usage = Total paid by user for purchases - User's fair share
+      const othersUsage = userPurchaseTotalCost - userFairShare;
 
       console.log(
-        '=== ANTICIPATED PAYMENT CALCULATION (CORRECTED APPROACH) ==='
+        '=== ANTICIPATED PAYMENT CALCULATION (USER-SPECIFIC APPROACH) ==='
       );
       console.log(
         'User cost since last contribution:',
         estimatedCostSinceLastContribution
-      ); // -6.97
-      console.log('User Balance:', contributionBalance); // -4.75
-      console.log('Historical total tokens purchased:', historicalTotalPaid); // Should be ~202.50
-      console.log('Historical user total fair share:', historicalUserFairShare); // 81.60
-      console.log('Historical usage by others:', historicalOthersUsage); // Should be ~120.90
+      );
+      console.log('User Balance:', contributionBalance);
+      console.log('User purchase total cost:', userPurchaseTotalCost);
+      console.log('User fair share:', userFairShare);
+      console.log('Others usage:', othersUsage);
 
       // a) User Anticipated cost = User Balance + User cost since last contribution
       anticipatedPayment =
         contributionBalance + estimatedCostSinceLastContribution;
 
-      // b) Others usage = User cost since last contribution × (Historical others usage / Historical user usage)
-      if (historicalUserFairShare > 0) {
-        const proportionRatio = historicalOthersUsage / historicalUserFairShare;
+      // b) Others usage = User cost since last contribution × (Others usage / User fair share)
+      if (userFairShare > 0) {
+        const proportionRatio = othersUsage / userFairShare;
         anticipatedOthersPayment =
           estimatedCostSinceLastContribution * proportionRatio;
 
@@ -399,10 +436,6 @@ export async function GET() {
       console.log(
         'Latest GLOBAL meter reading exists:',
         !!latestGlobalMeterReading
-      );
-      console.log(
-        'Latest GLOBAL contribution exists:',
-        !!latestGlobalContribution
       );
       console.log('If missing data, check:');
       console.log('1. Do you have any meter readings in the database?');

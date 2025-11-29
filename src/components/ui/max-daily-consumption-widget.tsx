@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Calendar, TrendingUp, Award, AlertCircle } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { formatDisplayDate } from '@/lib/utils';
 
 interface DailyConsumptionData {
   maxDailyConsumption: {
@@ -139,7 +140,7 @@ export function MaxDailyConsumptionWidget() {
           <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center space-x-2">
             <Calendar className="h-4 w-4" />
             <span>
-              {new Date(data.maxDailyConsumption.date).toLocaleDateString()} 
+              {formatDisplayDate(data.maxDailyConsumption.date)}
               ({data.maxDailyConsumption.dayOfWeek})
             </span>
           </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Session } from 'next-auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -91,6 +92,7 @@ export function ContributionForm({
   isAdmin = false,
   session,
 }: ContributionFormProps) {
+  const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -783,6 +785,19 @@ export function ContributionForm({
                   allowed per purchase. Please select a different purchase.
                 </p>
                 <div className="flex gap-2 mt-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="default"
+                    onClick={() => {
+                      if (selectedPurchase?.contribution) {
+                        router.push(`/dashboard/contributions/edit/${selectedPurchase.contribution.id}`);
+                      }
+                    }}
+                    className="text-xs bg-blue-600 hover:bg-blue-700"
+                  >
+                    Edit Existing Contribution
+                  </Button>
                   <Button
                     type="button"
                     size="sm"

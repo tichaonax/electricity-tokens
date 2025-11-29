@@ -138,7 +138,7 @@ export function EmergencyImpactChart({ startDate, endDate }: EmergencyImpactChar
   // Prepare chart data
   const labels = data.emergencyAnalysis.map(item => {
     const date = new Date(item.date);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
   });
 
   const premiumChartData = {
@@ -434,7 +434,7 @@ export function EmergencyImpactChart({ startDate, endDate }: EmergencyImpactChar
               {data.emergencyAnalysis.map((item, index) => (
                 <tr key={index}>
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {new Date(item.date).toLocaleDateString()}
+                    {new Date(item.date).toLocaleDateString('en-GB')}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                     {item.totalTokens.toLocaleString()}

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { formatDisplayDate } from './utils';
 
 export interface MeterReadingValidationResult {
   valid: boolean;
@@ -45,7 +46,7 @@ export async function validateMeterReadingChronology(
     // Invalid: meter reading goes backwards
     return {
       valid: false,
-      error: `Meter reading cannot decrease. The last reading on ${lastValidReading.date.toLocaleDateString()} was ${lastValidReading.value.toLocaleString()} kWh.`,
+      error: `Meter reading cannot decrease. The last reading on ${formatDisplayDate(lastValidReading.date)} was ${lastValidReading.value.toLocaleString()} kWh.`,
       suggestedMinimum: lastValidReading.value,
       lastReading: lastValidReading,
     };
@@ -236,6 +237,6 @@ export async function getMeterReadingSuggestion(
   return {
     minimum: lastReading.value,
     suggestion: lastReading.value + suggestedIncrement,
-    context: `Last reading was ${lastReading.value.toLocaleString()} kWh on ${lastReading.date.toLocaleDateString()} (${lastReading.type}). Suggested: ~${suggestedIncrement} kWh increase.`,
+    context: `Last reading was ${lastReading.value.toLocaleString()} kWh on ${formatDisplayDate(lastReading.date)} (${lastReading.type}). Suggested: ~${suggestedIncrement} kWh increase.`,
   };
 }
