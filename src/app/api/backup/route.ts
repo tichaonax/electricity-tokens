@@ -74,6 +74,23 @@ interface BackupMeterReading {
   updatedAt: string;
 }
 
+interface BackupReceiptData {
+  id: string;
+  purchaseId: string;
+  tokenNumber?: string;
+  accountNumber?: string;
+  kwhPurchased: number;
+  energyCostZWG: number;
+  debtZWG: number;
+  reaZWG: number;
+  vatZWG: number;
+  totalAmountZWG: number;
+  tenderedZWG: number;
+  transactionDateTime: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface BackupAccount {
   id: string;
   userId: string;
@@ -113,6 +130,7 @@ interface BackupData {
   tokenPurchases?: BackupPurchase[];
   userContributions?: BackupContribution[];
   meterReadings?: BackupMeterReading[];
+  receiptData?: BackupReceiptData[];
   auditLogs?: Record<string, unknown>[];
   accounts?: BackupAccount[];
   sessions?: BackupSession[];
@@ -138,7 +156,9 @@ export async function GET(request: NextRequest) {
     });
 
     const isAdmin = user?.role === 'ADMIN';
-    const permissions = user?.permissions as { canCreateBackup?: boolean } | null;
+    const permissions = user?.permissions as {
+      canCreateBackup?: boolean;
+    } | null;
     const canCreateBackup = isAdmin || permissions?.canCreateBackup === true;
 
     if (!canCreateBackup) {
@@ -325,6 +345,34 @@ export async function GET(request: NextRequest) {
       backupData.metadata.recordCounts.meterReadings = meterReadings.length;
     }
 
+    // Backup receipt data
+    if (type === 'full' || type === 'purchase-data') {
+      const receiptData = await prisma.receiptData.findMany({
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+
+      backupData.receiptData = receiptData.map((receipt) => ({
+        id: receipt.id,
+        purchaseId: receipt.purchaseId,
+        tokenNumber: receipt.tokenNumber || undefined,
+        accountNumber: receipt.accountNumber || undefined,
+        kwhPurchased: receipt.kwhPurchased,
+        energyCostZWG: receipt.energyCostZWG,
+        debtZWG: receipt.debtZWG,
+        reaZWG: receipt.reaZWG,
+        vatZWG: receipt.vatZWG,
+        totalAmountZWG: receipt.totalAmountZWG,
+        tenderedZWG: receipt.tenderedZWG,
+        transactionDateTime: receipt.transactionDateTime.toISOString(),
+        createdAt: receipt.createdAt.toISOString(),
+        updatedAt: receipt.updatedAt.toISOString(),
+      }));
+
+      backupData.metadata.recordCounts.receiptData = receiptData.length;
+    }
+
     // Backup accounts (full backup only for security)
     if (type === 'full') {
       const accounts = await prisma.account.findMany();
@@ -392,7 +440,10 @@ export async function GET(request: NextRequest) {
       backupData.metadata.recordCounts.auditLogs = auditLogs.length;
     }
 
-    const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/:/g, '-')
+      .replace(/\..+/, '');
     const filename = `ElectricityTracker-backup_${type}_${timestamp}.json`;
 
     return new NextResponse(JSON.stringify(backupData, null, 2), {
@@ -525,7 +576,9 @@ export async function POST(request: NextRequest) {
                 passwordResetRequired: user.passwordResetRequired,
                 permissions: user.permissions || null,
                 themePreference: user.themePreference,
-                lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
+                lastLoginAt: user.lastLoginAt
+                  ? new Date(user.lastLoginAt)
+                  : null,
                 createdAt: new Date(user.createdAt),
                 updatedAt: new Date(user.updatedAt),
               },
@@ -539,7 +592,9 @@ export async function POST(request: NextRequest) {
                 passwordResetRequired: user.passwordResetRequired,
                 permissions: user.permissions || null,
                 themePreference: user.themePreference,
-                lastLoginAt: user.lastLoginAt ? new Date(user.lastLoginAt) : null,
+                lastLoginAt: user.lastLoginAt
+                  ? new Date(user.lastLoginAt)
+                  : null,
                 createdAt: new Date(user.createdAt),
                 updatedAt: new Date(user.updatedAt),
               },
@@ -843,7 +898,8 @@ export async function POST(request: NextRequest) {
 
     // Automatically run balance fix after successful restore
     try {
-      const { fixAllAccountBalances, recalculateAllTokensConsumed } = await import('@/lib/balance-fix');
+      const { fixAllAccountBalances, recalculateAllTokensConsumed } =
+        await import('@/lib/balance-fix');
       console.log('🔧 Recalculating tokens consumed...');
       await recalculateAllTokensConsumed();
       console.log('🔧 Running automatic balance fix after restore...');
