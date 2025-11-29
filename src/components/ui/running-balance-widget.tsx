@@ -186,7 +186,7 @@ export function RunningBalanceWidget() {
                 : 'text-red-600 dark:text-red-400'
             }`}
           >
-            {data.contributionBalance < 0 ? '-' : ''}$
+            {data.contributionBalance > 0 ? '-' : ''}$
             {Math.abs(data.contributionBalance).toFixed(2)}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
