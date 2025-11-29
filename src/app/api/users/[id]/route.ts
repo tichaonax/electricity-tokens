@@ -81,7 +81,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  let updateData: UpdateData = {};
+  const updateData: UpdateData = {};
   try {
     const session = await getServerSession(authOptions);
 
@@ -95,7 +95,7 @@ export async function PUT(
 
     // Parse request body
     const body = await request.json();
-    
+
     const sanitizedData = sanitizeInput(body);
     const { name, email, role, locked, permissions, resetPassword } =
       sanitizedData as {
@@ -133,7 +133,7 @@ export async function PUT(
     // Name can be updated by user or admin
     if (name !== undefined) {
       const trimmedName = name.trim();
-      
+
       // Validate name is not empty
       if (!trimmedName) {
         return NextResponse.json(
@@ -141,7 +141,7 @@ export async function PUT(
           { status: 400 }
         );
       }
-      
+
       updateData.name = trimmedName;
     }
 
@@ -155,7 +155,7 @@ export async function PUT(
       }
 
       const trimmedEmail = email.trim().toLowerCase();
-      
+
       // Validate email is not empty
       if (!trimmedEmail) {
         return NextResponse.json(
@@ -163,7 +163,7 @@ export async function PUT(
           { status: 400 }
         );
       }
-      
+
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(trimmedEmail)) {
@@ -340,7 +340,7 @@ export async function PUT(
       updateData,
       userId: id,
     });
-    
+
     // Handle specific Prisma errors
     if (error instanceof Error) {
       if (error.message.includes('Unique constraint')) {
@@ -356,9 +356,12 @@ export async function PUT(
         );
       }
     }
-    
+
     return NextResponse.json(
-      { message: 'Internal server error', error: error instanceof Error ? error.message : String(error) },
+      {
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

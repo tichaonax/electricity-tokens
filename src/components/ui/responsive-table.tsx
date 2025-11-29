@@ -6,33 +6,32 @@ import { Badge } from './badge';
 import { EmptyState } from './error-display';
 import { Zap } from 'lucide-react';
 
-interface Column {
+interface Column<T = Record<string, unknown>> {
   key: string;
   label: string;
-  render?: (value: any, row: any) => ReactNode;
+  render?: (value: unknown, row: T) => ReactNode;
   className?: string;
   mobileHide?: boolean; // Hide this column on mobile
   mobileLabel?: string; // Different label for mobile
 }
 
-interface ResponsiveTableProps {
-  columns: Column[];
-  data: any[];
+interface ResponsiveTableProps<T = Record<string, unknown>> {
+  columns: Column<T>[];
+  data: T[];
   loading?: boolean;
   emptyMessage?: string;
-  onRowClick?: (row: any) => void;
+  onRowClick?: (row: T) => void;
   className?: string;
 }
 
-export function ResponsiveTable({
+export function ResponsiveTable<T = Record<string, unknown>>({
   columns,
   data,
   loading = false,
-  emptyMessage = "No data available",
+  emptyMessage = 'No data available',
   onRowClick,
-  className = ""
+  className = '',
 }: ResponsiveTableProps) {
-  
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -43,11 +42,7 @@ export function ResponsiveTable({
 
   if (data.length === 0) {
     return (
-      <EmptyState
-        icon={Zap}
-        title="No data found"
-        description={emptyMessage}
-      />
+      <EmptyState icon={Zap} title="No data found" description={emptyMessage} />
     );
   }
 
@@ -80,10 +75,9 @@ export function ResponsiveTable({
                     key={column.key}
                     className={`px-6 py-4 whitespace-nowrap text-sm ${column.className || 'text-gray-900 dark:text-gray-100'}`}
                   >
-                    {column.render 
+                    {column.render
                       ? column.render(row[column.key], row)
-                      : row[column.key]
-                    }
+                      : row[column.key]}
                   </td>
                 ))}
               </tr>
@@ -98,25 +92,32 @@ export function ResponsiveTable({
           <Card
             key={index}
             className={`${onRowClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-            onClick={onRowClick ? (e) => {
-              // Don't trigger row click if clicking on mobile actions
-              if (!(e.target as HTMLElement).closest('.mobile-actions')) {
-                onRowClick(row);
-              }
-            } : undefined}
+            onClick={
+              onRowClick
+                ? (e) => {
+                    // Don't trigger row click if clicking on mobile actions
+                    if (!(e.target as HTMLElement).closest('.mobile-actions')) {
+                      onRowClick(row);
+                    }
+                  }
+                : undefined
+            }
           >
             <CardContent className="p-4">
               <div className="space-y-3">
                 {columns
-                  .filter(column => !column.mobileHide)
+                  .filter((column) => !column.mobileHide)
                   .map((column) => {
                     const value = row[column.key];
-                    const displayValue = column.render 
+                    const displayValue = column.render
                       ? column.render(value, row)
                       : value;
-                    
+
                     return (
-                      <div key={column.key} className="flex justify-between items-start">
+                      <div
+                        key={column.key}
+                        className="flex justify-between items-start"
+                      >
                         <span className="text-sm font-medium text-gray-500 dark:text-gray-400 min-w-0 flex-1">
                           {column.mobileLabel || column.label}:
                         </span>
@@ -126,10 +127,13 @@ export function ResponsiveTable({
                       </div>
                     );
                   })}
-                
+
                 {/* Mobile actions if provided */}
                 {row.mobileActions && (
-                  <div className="mobile-actions pt-3 border-t border-gray-100 dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="mobile-actions pt-3 border-t border-gray-100 dark:border-gray-700"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {row.mobileActions}
                   </div>
                 )}
@@ -148,9 +152,14 @@ interface MobileActionsProps {
   className?: string;
 }
 
-export function MobileActions({ children, className = "" }: MobileActionsProps) {
+export function MobileActions({
+  children,
+  className = '',
+}: MobileActionsProps) {
   return (
-    <div className={`flex flex-wrap gap-2 pt-3 border-t border-gray-100 dark:border-gray-700 ${className}`}>
+    <div
+      className={`flex flex-wrap gap-2 pt-3 border-t border-gray-100 dark:border-gray-700 ${className}`}
+    >
       {children}
     </div>
   );
@@ -172,20 +181,24 @@ export function TouchButton({
   size = 'md',
   disabled = false,
   children,
-  className = ""
+  className = '',
 }: TouchButtonProps) {
-  const baseClasses = "inline-flex items-center justify-center font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
-  
+  const baseClasses =
+    'inline-flex items-center justify-center font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+
   const variantClasses = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600",
-    secondary: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:bg-red-500 dark:hover:bg-red-600"
+    primary:
+      'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600',
+    secondary:
+      'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700',
+    danger:
+      'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:bg-red-500 dark:hover:bg-red-600',
   };
 
   const sizeClasses = {
-    sm: "px-3 py-2 text-sm min-h-[36px]", // Minimum 36px for touch targets
-    md: "px-4 py-2 text-sm min-h-[40px]", // Minimum 40px for touch targets  
-    lg: "px-6 py-3 text-base min-h-[44px]" // Minimum 44px for touch targets
+    sm: 'px-3 py-2 text-sm min-h-[36px]', // Minimum 36px for touch targets
+    md: 'px-4 py-2 text-sm min-h-[40px]', // Minimum 40px for touch targets
+    lg: 'px-6 py-3 text-base min-h-[44px]', // Minimum 44px for touch targets
   };
 
   return (
@@ -200,26 +213,31 @@ export function TouchButton({
 }
 
 // Helper component for responsive badges
-interface ResponsiveBadgeProps {
+interface ResponsiveBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   variant?: 'default' | 'secondary' | 'destructive' | 'outline';
   size?: 'sm' | 'md';
   className?: string;
 }
 
-export function ResponsiveBadge({ 
-  children, 
-  variant = 'default', 
+export function ResponsiveBadge({
+  children,
+  variant = 'default',
   size = 'sm',
-  className = "" 
+  className = '',
+  ...props
 }: ResponsiveBadgeProps) {
   const sizeClasses = {
-    sm: "text-xs px-2 py-1",
-    md: "text-sm px-3 py-1"
+    sm: 'text-xs px-2 py-1',
+    md: 'text-sm px-3 py-1',
   };
 
   return (
-    <Badge variant={variant} className={`${sizeClasses[size]} ${className}`}>
+    <Badge
+      variant={variant}
+      className={`${sizeClasses[size]} ${className}`}
+      {...props}
+    >
       {children}
     </Badge>
   );

@@ -522,6 +522,7 @@ export async function POST(request: NextRequest) {
         verificationTokens: 0,
       },
       errors: [] as string[],
+      warnings: [] as string[],
     };
 
     // Validate backup data constraints before restore
@@ -717,8 +718,8 @@ export async function POST(request: NextRequest) {
             });
 
             if (!userExists) {
-              results.errors.push(
-                `Cannot restore meter reading ${reading.id}: user ${reading.userId} not found`
+              results.warnings.push(
+                `Skipping meter reading ${reading.id}: user ${reading.userId} not found in target database`
               );
               continue;
             }
@@ -755,6 +756,18 @@ export async function POST(request: NextRequest) {
       if (backupData.receiptData) {
         for (const receipt of backupData.receiptData) {
           try {
+            // First check if the purchase exists
+            const purchaseExists = await tx.tokenPurchase.findUnique({
+              where: { id: receipt.purchaseId },
+            });
+
+            if (!purchaseExists) {
+              results.errors.push(
+                `Cannot restore receipt data ${receipt.id}: purchase ${receipt.purchaseId} not found`
+              );
+              continue;
+            }
+
             await tx.receiptData.upsert({
               where: { id: receipt.id },
               update: {
@@ -791,7 +804,7 @@ export async function POST(request: NextRequest) {
             results.restored.receiptData++;
           } catch (error) {
             results.errors.push(
-              `Failed to restore receipt data ${receipt.id}: ${error}`
+              `Failed to restore receipt data ${receipt.id} for purchase ${receipt.purchaseId}: ${error}`
             );
           }
         }

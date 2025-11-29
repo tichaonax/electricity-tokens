@@ -9,12 +9,16 @@ import { CSRFProvider } from '@/components/security/CSRFProvider';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { HealthStatusIndicator } from '@/components/ui/health-status-indicator';
 import { ToastProvider } from '@/components/ui/toast';
-import { ConfirmationProvider, AlertProvider } from '@/components/ui/alert-dialog';
+import {
+  ConfirmationProvider,
+  AlertProvider,
+} from '@/components/ui/alert-dialog';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { HighContrastProvider } from '@/components/ui/high-contrast';
 import { AccessibilityAnnouncerProvider } from '@/components/ui/accessibility-announcer';
-import { SkipNavigation } from '@/components/ui/skip-link';
 import { Analytics } from '@vercel/analytics/react';
+import { SkipNavigation } from '@/components/ui/skip-link';
+import { BrowserCompatibilityWarning } from '@/components/ui/browser-compatibility-warning';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -83,6 +87,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SkipNavigation />
+        <BrowserCompatibilityWarning />
         <AuthProvider>
           <ThemeProvider>
             <CacheInvalidationProvider>

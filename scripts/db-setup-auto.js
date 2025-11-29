@@ -564,22 +564,10 @@ LOG_LEVEL="info"
       // 5. Run migrations
       const migrationResult = await this.runMigrations();
 
-      // 6. Seed database (optional) - only if Prisma Client was successfully generated
-      if (migrationResult.clientGenerated) {
-        await this.seedDatabase();
-      } else {
-        this.log(
-          '⏭️ Skipping database seeding - Prisma Client generation failed',
-          'WARN'
-        );
-        this.log(
-          '💡 You can seed manually later with: npx prisma db seed',
-          'INFO'
-        );
-      }
-
-      this.log('🎉 Database setup completed successfully!');
+      // Database setup complete - seeding is now optional and manual
+      this.log('✅ Database setup completed successfully!');
       this.log('📊 Database is ready for the application');
+      this.log('🌱 To seed with test data (optional): npm run db:seed');
 
       return true;
     } catch (error) {
