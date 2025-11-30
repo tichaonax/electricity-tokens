@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DualCurrencyChart } from '@/components/reports/dual-currency-chart';
 import { ZWGRateHistory } from '@/components/reports/zwg-rate-history';
+import { PurchaseComparisonChart } from '@/components/reports/purch-comparison-chart';
 // Form components removed as they're not used in this component
 import {
   TrendingUp,
@@ -47,6 +48,14 @@ interface CostAnalysisProps {
 }
 
 export function CostAnalysis({ userId }: CostAnalysisProps) {
+  // Helper function to get default date range (show all data by default)
+  const getDefaultDateRange = () => {
+    return {
+      startDate: '',
+      endDate: '',
+    };
+  };
+
   const [costData, setCostData] = useState<CostBreakdown | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation | null>(
     null
@@ -65,24 +74,49 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
       difference: number;
     }[]
   >([]);
+  const [purchaseComparison, setPurchaseComparison] = useState<{
+    purchases: {
+      purchaseId: string;
+      purchaseDate: string;
+      contributionAmount: number;
+      trueCost: number;
+      totalElectricityCost: number;
+      tokensConsumed: number;
+      totalTokensInPurchase: number;
+      difference: number;
+      isEmergency: boolean;
+      costPerKwh: number;
+    }[];
+    summary: {
+      totalContributions: number;
+      totalTrueCost: number;
+      totalElectricityCost: number;
+      totalDifference: number;
+      averageEfficiency: number;
+    };
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analysisType, setAnalysisType] = useState<
-    'user' | 'recommendations' | 'optimal' | 'dual-currency' | 'rate-history'
+    'user' | 'comparison' | 'recommendations' | 'optimal' | 'dual-currency' | 'rate-history'
   >('user');
-  const [dateRange, setDateRange] = useState({
-    startDate: '',
-    endDate: '',
-  });
+  const [dateRange, setDateRange] = useState(getDefaultDateRange);
 
   const fetchCostAnalysis = useCallback(async () => {
+    // Only skip API fetch for analysis types that don't use the cost-analysis endpoint
+    if (analysisType === 'dual-currency' || analysisType === 'rate-history') {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       const params = new URLSearchParams({
-        analysisType,
-        ...(userId && { userId }),
+        analysisType: analysisType === 'comparison' ? 'comparison' : 'user', // Use 'comparison' for API calls when needed
+        // Note: userId is intentionally not passed to show global data
+        // ...(userId && { userId }),
         ...(dateRange.startDate && {
           startDate: new Date(dateRange.startDate).toISOString(),
         }),
@@ -100,6 +134,8 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
 
       if (analysisType === 'user') {
         setCostData(data.costBreakdown);
+      } else if (analysisType === 'comparison') {
+        setPurchaseComparison(data.purchaseComparison);
       } else if (analysisType === 'recommendations') {
         setCostData(data.user);
         setRecommendations(data.recommendations);
@@ -114,10 +150,23 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
     } finally {
       setLoading(false);
     }
-  }, [userId, analysisType, dateRange]);
+  }, [analysisType, dateRange]);
 
   useEffect(() => {
-    fetchCostAnalysis();
+    // Only fetch data when analysisType changes, not when dates change
+    // Users must click "Refresh" to fetch with new dates
+    if (analysisType !== 'dual-currency' && analysisType !== 'rate-history') {
+      fetchCostAnalysis();
+    } else {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analysisType]); // Only re-fetch when analysis type changes
+
+  const handleShowAll = useCallback(() => {
+    setDateRange({ startDate: '', endDate: '' });
+    // Small delay to ensure state updates before fetching
+    setTimeout(() => fetchCostAnalysis(), 100);
   }, [fetchCostAnalysis]);
 
   const getEfficiencyColor = (efficiency: number) => {
@@ -192,6 +241,16 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
             type="button"
             variant="outline"
             size="sm"
+            onClick={() => setAnalysisType('comparison')}
+            className="flex-1 sm:flex-none"
+          >
+            <BarChart3 className="h-4 w-4 mr-1" />
+            Payment Comparison
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={() => setAnalysisType('recommendations')}
             className="flex-1 sm:flex-none"
           >
@@ -259,30 +318,52 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
           >
             Refresh
           </Button>
+          <Button
+            type="button"
+            onClick={handleShowAll}
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
+          >
+            Show All
+          </Button>
         </div>
       </div>
 
       {/* Cost Breakdown Display */}
-      {(analysisType === 'user' || analysisType === 'recommendations') &&
-        costData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {/* Total Usage */}
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                    Total Usage
-                  </p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {costData.totalTokensUsed.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
-                    kWh
-                  </p>
-                </div>
-                <Zap className="h-8 w-8 text-blue-600" />
-              </div>
+      {(analysisType === 'user' || analysisType === 'recommendations') && costData && (
+        <div className="mb-6">
+          {costData.totalTokensUsed === 0 && costData.totalAmountPaid === 0 ? (
+            <div className="text-center py-12">
+              <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                No Cost Data Available
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400">
+                {dateRange.startDate || dateRange.endDate
+                  ? "No contributions found for the selected date range. Try adjusting your date filters or select 'Show All' to view all your data."
+                  : "You haven't made any contributions yet. Start by making a purchase to see your cost analysis."}
+              </p>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Usage */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      Total Usage
+                    </p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {costData.totalTokensUsed.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      kWh
+                    </p>
+                  </div>
+                  <Zap className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
 
             {/* Total Paid */}
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-950 dark:border-green-800">
@@ -340,11 +421,14 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
               </div>
             </div>
           </div>
-        )}
+          )}
+        </div>
+      )}
 
       {/* Detailed Metrics */}
       {(analysisType === 'user' || analysisType === 'recommendations') &&
-        costData && (
+        costData &&
+        costData.totalTokensUsed > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Cost Breakdown */}
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg dark:bg-slate-800 dark:border-slate-700">
@@ -426,7 +510,6 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
           </div>
         )}
 
-      {/* Recommendations */}
       {analysisType === 'recommendations' && recommendations && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
@@ -643,6 +726,95 @@ export function CostAnalysis({ userId }: CostAnalysisProps) {
       {analysisType === 'rate-history' && (
         <div className="mt-6">
           <ZWGRateHistory userId={userId} limit={50} />
+        </div>
+      )}
+
+      {/* Purchase Comparison View */}
+      {analysisType === 'comparison' && purchaseComparison && (
+        <div className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <div className="flex items-center">
+                <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
+                <div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">Total Contributions</p>
+                  <p className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                    ${purchaseComparison.summary.totalContributions.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+              <div className="flex items-center">
+                <Zap className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                <div>
+                  <p className="text-sm text-green-600 dark:text-green-400">Total True Cost</p>
+                  <p className="text-lg font-semibold text-green-900 dark:text-green-100">
+                    ${purchaseComparison.summary.totalTrueCost.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+              <div className="flex items-center">
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2" />
+                <div>
+                  <p className="text-sm text-red-600 dark:text-red-400">Total Electricity Cost</p>
+                  <p className="text-lg font-semibold text-red-900 dark:text-red-100">
+                    ${purchaseComparison.summary.totalElectricityCost.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className={`p-4 rounded-lg ${
+              purchaseComparison.summary.totalDifference >= 0
+                ? 'bg-green-50 dark:bg-green-900/20'
+                : 'bg-red-50 dark:bg-red-900/20'
+            }`}>
+              <div className="flex items-center">
+                <Target className={`h-5 w-5 mr-2 ${
+                  purchaseComparison.summary.totalDifference >= 0
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                }`} />
+                <div>
+                  <p className={`text-sm ${
+                    purchaseComparison.summary.totalDifference >= 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    Net Position
+                  </p>
+                  <p className={`text-lg font-semibold ${
+                    purchaseComparison.summary.totalDifference >= 0
+                      ? 'text-green-900 dark:text-green-100'
+                      : 'text-red-900 dark:text-red-100'
+                  }`}>
+                    ${Math.abs(purchaseComparison.summary.totalDifference).toFixed(2)}
+                    {purchaseComparison.summary.totalDifference >= 0 ? ' surplus' : ' deficit'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+              <div className="flex items-center">
+                <Award className="h-5 w-5 text-purple-600 dark:text-purple-400 mr-2" />
+                <div>
+                  <p className="text-sm text-purple-600 dark:text-purple-400">Average Efficiency</p>
+                  <p className="text-lg font-semibold text-purple-900 dark:text-purple-100">
+                    {purchaseComparison.summary.averageEfficiency.toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-slate-200 dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+              Payment Comparison: Contribution vs. True Cost
+            </h3>
+            <PurchaseComparisonChart data={purchaseComparison} />
+          </div>
         </div>
       )}
     </div>

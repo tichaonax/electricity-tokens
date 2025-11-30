@@ -73,10 +73,21 @@ export async function GET(request: Request) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {};
 
-    // Role-based filtering
-    if (session.user.role !== 'admin') {
+    // Permissions-based filtering
+    const userPermissions = (session.user.permissions || null) as Record<string, unknown> | null;
+    const canViewAllReceipts =
+      session.user.role === 'ADMIN' ||
+      userPermissions?.canViewUsageReports === true ||
+      userPermissions?.canViewFinancialReports === true ||
+      userPermissions?.canViewEfficiencyReports === true ||
+      userPermissions?.canViewDualCurrencyAnalysis === true ||
+      userPermissions?.canViewCostAnalysis === true;
+
+    if (!canViewAllReceipts) {
+      // Non-privileged users only see their own data
       whereClause.user = { id: session.user.id };
     } else if (userId) {
+      // Privileged users (admins or permissioned) can filter by userId
       whereClause.user = { id: userId };
     }
 

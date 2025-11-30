@@ -910,7 +910,7 @@ export function DashboardClient() {
                       <div
                         className={`w-8 h-8 rounded-md flex items-center justify-center ${
                           quickStats?.accountBalance &&
-                          quickStats.accountBalance >= 0
+                          quickStats.accountBalance <= 0
                             ? 'bg-green-500'
                             : 'bg-red-500'
                         }`}
@@ -938,7 +938,7 @@ export function DashboardClient() {
                         <dd
                           className={`text-lg font-medium ${
                             quickStats?.accountBalance &&
-                            quickStats.accountBalance >= 0
+                            quickStats.accountBalance <= 0
                               ? 'text-green-600 dark:text-green-400'
                               : 'text-red-600 dark:text-red-400'
                           }`}
@@ -946,7 +946,7 @@ export function DashboardClient() {
                           {loadingStats ? (
                             <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-18 rounded"></div>
                           ) : quickStats ? (
-                            `$${quickStats.accountBalance.toFixed(2)}`
+                            `${quickStats.accountBalance <= 0 ? '+' : '-'}$${Math.abs(quickStats.accountBalance).toFixed(2)}`
                           ) : (
                             '$0.00'
                           )}

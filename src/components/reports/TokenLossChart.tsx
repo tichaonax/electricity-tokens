@@ -169,13 +169,25 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)', // gray-400 for dark mode compatibility
+        },
       },
       title: {
         display: true,
         text: 'Monthly Token Loss Analysis',
+        color: 'rgb(209, 213, 219)', // gray-300 for dark mode
       },
     },
     scales: {
+      x: {
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
+        },
+      },
       y: {
         type: 'linear' as const,
         display: true,
@@ -183,6 +195,13 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
         title: {
           display: true,
           text: 'Potential Savings ($)',
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
         },
       },
       y1: {
@@ -192,6 +211,10 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
         title: {
           display: true,
           text: 'Loss Percentage (%)',
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
         },
         grid: {
           drawOnChartArea: false,
@@ -205,10 +228,14 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
     plugins: {
       legend: {
         position: 'bottom' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
       },
       title: {
         display: true,
         text: 'Spending Distribution',
+        color: 'rgb(209, 213, 219)', // gray-300
       },
     },
   };
@@ -219,7 +246,7 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Loss Percentage</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Loss Percentage</CardTitle>
             <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -234,7 +261,7 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Potential Savings</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Potential Savings</CardTitle>
             <DollarSign className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -249,7 +276,7 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Emergency Premium</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Emergency Premium</CardTitle>
             <AlertTriangle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
@@ -264,7 +291,7 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Emergency Frequency</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Emergency Frequency</CardTitle>
             <Target className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -283,8 +310,8 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Loss Analysis</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900 dark:text-gray-100">Monthly Loss Analysis</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-400">
                 Track potential savings and loss percentage over time
               </CardDescription>
             </CardHeader>
@@ -297,8 +324,8 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Spending Distribution</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900 dark:text-gray-100">Spending Distribution</CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-400">
                 Regular vs emergency purchase spending
               </CardDescription>
             </CardHeader>
@@ -312,16 +339,16 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
       {/* Insights */}
       <Card>
         <CardHeader>
-          <CardTitle>Key Insights & Recommendations</CardTitle>
+          <CardTitle className="text-gray-900 dark:text-gray-100">Key Insights & Recommendations</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h4 className="font-semibold flex items-center gap-2">
+              <h4 className="font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <AlertTriangle className="h-4 w-4 text-orange-500" />
                 Impact Analysis
               </h4>
-              <div className="space-y-1 text-sm">
+              <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                 <p>Emergency purchases: {data.insights.totalEmergencyPurchases} of {data.insights.totalEmergencyPurchases + data.insights.totalRegularPurchases} total</p>
                 <p>Average loss per emergency: ${data.insights.averageSavingsPerEmergency.toFixed(2)}</p>
                 <p>Emergency tokens: {data.summary.emergencyTokens.toFixed(2)} of {data.summary.totalTokens.toFixed(2)} total</p>
@@ -329,11 +356,11 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-semibold flex items-center gap-2">
+              <h4 className="font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                 <Target className="h-4 w-4 text-green-500" />
                 Optimization Opportunities
               </h4>
-              <div className="space-y-1 text-sm">
+              <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                 <div className="flex justify-between">
                   <span>Regular rate:</span>
                   <Badge variant="secondary">${data.summary.avgRegularRate.toFixed(4)}/token</Badge>
@@ -342,7 +369,7 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
                   <span>Emergency rate:</span>
                   <Badge variant="destructive">${data.summary.avgEmergencyRate.toFixed(4)}/token</Badge>
                 </div>
-                <p className="pt-2 text-xs text-muted-foreground">
+                <p className="pt-2 text-xs text-gray-600 dark:text-gray-400">
                   Reducing emergency purchases could save ${data.summary.potentialSavings.toFixed(2)} 
                   ({data.summary.tokenLossPercentage.toFixed(1)}% efficiency gain)
                 </p>

@@ -132,15 +132,15 @@ export default function EfficiencyReportsPage() {
       {/* Controls */}
       <Card>
         <CardHeader>
-          <CardTitle>Report Configuration</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900 dark:text-gray-100">Report Configuration</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Select the type of efficiency analysis and date range for your report.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Report Type</label>
+              <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Report Type</label>
               <Select value={reportType} onValueChange={(value: ReportType) => setReportType(value)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -154,7 +154,7 @@ export default function EfficiencyReportsPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Date Range</label>
+              <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Date Range</label>
               <Select value={dateFilter} onValueChange={handleDateFilterChange}>
                 <SelectTrigger>
                   <SelectValue />
@@ -172,7 +172,7 @@ export default function EfficiencyReportsPage() {
 
             {dateFilter === 'custom' && (
               <div>
-                <label className="text-sm font-medium mb-2 block">Custom Date Range</label>
+                <label className="text-sm font-medium mb-2 block text-gray-700 dark:text-gray-300">Custom Date Range</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -217,12 +217,12 @@ export default function EfficiencyReportsPage() {
           <div className="flex items-center gap-2">
             {getReportIcon()}
             <div>
-              <CardTitle>
+              <CardTitle className="text-gray-900 dark:text-gray-100">
                 {reportType === 'token-loss' && 'Token Loss Analysis'}
                 {reportType === 'purchase-timing' && 'Purchase Timing Recommendations'}
                 {reportType === 'usage-prediction' && 'Usage Prediction Analysis'}
               </CardTitle>
-              <CardDescription>{getReportDescription()}</CardDescription>
+              <CardDescription className="text-gray-600 dark:text-gray-400">{getReportDescription()}</CardDescription>
             </div>
           </div>
         </CardHeader>

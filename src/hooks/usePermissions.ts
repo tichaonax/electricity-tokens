@@ -14,7 +14,7 @@ import { UserPermissions, hasPermission, mergeWithDefaultPermissions, ADMIN_PERM
  * @returns {boolean} isAuthenticated - Whether user is authenticated
  */
 export function usePermissions() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   
   // Get user permissions, with fallback to defaults
   const getUserPermissions = (): UserPermissions => {
@@ -35,6 +35,11 @@ export function usePermissions() {
   
   // Check if user has a specific permission
   const checkPermission = (permission: keyof UserPermissions): boolean => {
+    // If session is still loading, deny access (except for admins once authenticated)
+    if (status === 'loading') {
+      return false;
+    }
+    
     if (!session?.user) return false;
     
     // Admins always have all permissions
@@ -54,5 +59,6 @@ export function usePermissions() {
     checkPermission,
     isAdmin: session?.user?.role === 'ADMIN',
     isAuthenticated: !!session?.user,
+    isLoading: status === 'loading',
   };
 }

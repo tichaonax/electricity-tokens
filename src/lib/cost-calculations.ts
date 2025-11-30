@@ -504,3 +504,95 @@ export function generateCostRecommendations(userSummary: UserCostSummary): {
     potentialSavings: round2(potentialSavings),
   };
 }
+
+/**
+ * Calculate detailed purchase-by-purchase comparison of contributions vs true costs
+ */
+export function calculatePurchaseComparison(contributions: Contribution[]): {
+  purchases: {
+    purchaseId: string;
+    purchaseDate: string;
+    contributionAmount: number;
+    trueCost: number;
+    totalElectricityCost: number; // Total purchase price
+    tokensConsumed: number;
+    totalTokensInPurchase: number;
+    difference: number; // contribution - trueCost
+    isEmergency: boolean;
+    costPerKwh: number;
+  }[];
+  summary: {
+    totalContributions: number;
+    totalTrueCost: number;
+    totalElectricityCost: number;
+    totalDifference: number;
+    averageEfficiency: number;
+  };
+} {
+  if (contributions.length === 0) {
+    return {
+      purchases: [],
+      summary: {
+        totalContributions: 0,
+        totalTrueCost: 0,
+        totalElectricityCost: 0,
+        totalDifference: 0,
+        averageEfficiency: 0,
+      },
+    };
+  }
+
+  // Sort contributions by purchase date
+  const sortedContributions = [...contributions].sort((a, b) => {
+    if (!a.purchase?.purchaseDate || !b.purchase?.purchaseDate) return 0;
+    const dateA = new Date(a.purchase.purchaseDate);
+    const dateB = new Date(b.purchase.purchaseDate);
+    return dateA.getTime() - dateB.getTime();
+  });
+
+  const purchases = sortedContributions.map((contribution) => {
+    const purchase = contribution.purchase!;
+    const trueCost = calculateProportionalCost(
+      contribution.tokensConsumed,
+      purchase.totalTokens,
+      purchase.totalPayment
+    );
+
+    const costPerKwh = contribution.tokensConsumed > 0 ? trueCost / contribution.tokensConsumed : 0;
+
+    // Handle both Date and string types for purchaseDate
+    const purchaseDateStr = typeof purchase.purchaseDate === 'string'
+      ? purchase.purchaseDate.split('T')[0]
+      : purchase.purchaseDate.toISOString().split('T')[0];
+
+    return {
+      purchaseId: purchase.id,
+      purchaseDate: purchaseDateStr,
+      contributionAmount: round2(contribution.contributionAmount),
+      trueCost: round2(trueCost),
+      totalElectricityCost: round2(purchase.totalPayment), // Total purchase price
+      tokensConsumed: contribution.tokensConsumed,
+      totalTokensInPurchase: purchase.totalTokens,
+      difference: round2(contribution.contributionAmount - trueCost),
+      isEmergency: purchase.isEmergency || false,
+      costPerKwh: round2(costPerKwh),
+    };
+  });
+
+  const totalContributions = purchases.reduce((sum, p) => sum + p.contributionAmount, 0);
+  const totalTrueCost = purchases.reduce((sum, p) => sum + p.trueCost, 0);
+  const totalElectricityCost = purchases.reduce((sum, p) => sum + p.totalElectricityCost, 0);
+  const totalDifference = purchases.reduce((sum, p) => sum + p.difference, 0);
+  const averageEfficiency = totalTrueCost > 0 ? (totalTrueCost / totalContributions) * 100 : 0;
+
+  return {
+    purchases,
+    summary: {
+      totalContributions: round2(totalContributions),
+      totalTrueCost: round2(totalTrueCost),
+      totalElectricityCost: round2(totalElectricityCost),
+      totalDifference: round2(totalDifference),
+      averageEfficiency: round2(averageEfficiency),
+    },
+  };
+}

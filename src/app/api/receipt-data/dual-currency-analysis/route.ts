@@ -104,12 +104,20 @@ export async function GET(request: Request) {
       },
     };
 
-    // Role-based filtering: admins can see all, users see only their own
-    if (session.user.role !== 'admin') {
-      // Non-admin users: force filter to their own purchases only
+    // Permissions-based filtering: admins or permissioned users see global data
+    const userPermissions = (session.user.permissions || null) as Record<string, unknown> | null;
+    const canViewAllDualCurrency =
+      session.user.role === 'ADMIN' ||
+      userPermissions?.canViewDualCurrencyAnalysis === true ||
+      userPermissions?.canViewUsageReports === true ||
+      userPermissions?.canViewFinancialReports === true ||
+      userPermissions?.canViewCostAnalysis === true;
+
+    if (!canViewAllDualCurrency) {
+      // Non-privileged users: restrict to their own purchases
       whereClause.user = { id: session.user.id };
     } else if (userId) {
-      // Admin with userId filter: show specific user's purchases
+      // Privileged users can filter by specific user
       whereClause.user = { id: userId };
     }
     // Admin without userId: shows all users' purchases (no user filter)

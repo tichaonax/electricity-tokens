@@ -174,37 +174,37 @@ export function UserDashboard({ userId }: UserDashboardProps) {
     return null;
   }
 
-  // Prepare chart data
+  // Prepare chart data with safety checks
   const pieData = [
     {
       name: 'Regular Usage',
-      value: data.costBreakdown.regularCosts,
+      value: data.costBreakdown?.regularCosts || 0,
       color: '#10b981',
     },
     {
       name: 'Emergency Usage',
-      value: data.costBreakdown.emergencyCosts,
+      value: data.costBreakdown?.emergencyCosts || 0,
       color: '#ef4444',
     },
-  ];
+  ].filter(item => item.value > 0); // Only show items with values
 
-  const trendData = data.monthlyTrends.map((month) => ({
+  const trendData = (data.monthlyTrends || []).map((month) => ({
     name: `${month.month} ${month.year}`,
-    tokens: month.totalTokensUsed,
-    cost: month.totalAmountPaid,
-    efficiency: month.efficiency,
-    emergencyTokens: month.emergencyTokens,
+    tokens: month.totalTokensUsed || 0,
+    cost: month.totalAmountPaid || 0,
+    efficiency: month.efficiency || 0,
+    emergencyTokens: month.emergencyTokens || 0,
   }));
 
-  const meterData = data.meterReadingHistory
+  const meterData = (data.meterReadingHistory || [])
     .slice()
     .reverse()
     .map((reading) => ({
       name: formatDisplayDate(reading.date),
-      reading: reading.reading,
-      consumed: reading.tokensConsumed,
-      rate: reading.costPerKwh,
-      type: reading.purchaseType,
+      reading: reading.reading || 0,
+      consumed: reading.tokensConsumed || 0,
+      rate: reading.costPerKwh || 0,
+      type: reading.purchaseType || 'regular',
     }));
 
   return (
@@ -258,7 +258,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
                 Total Spent
               </p>
               <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                ${data.personalSummary.totalAmountPaid.toFixed(2)}
+                ${(data.personalSummary?.totalAmountPaid || 0).toFixed(2)}
               </p>
               <p className="text-xs text-green-600 dark:text-green-400">
                 in contributions
@@ -276,7 +276,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
                 Avg Cost/kWh
               </p>
               <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                ${data.personalSummary.averageCostPerKwh.toFixed(3)}
+                ${(data.personalSummary?.averageCostPerKwh || 0).toFixed(3)}
               </p>
               <p className="text-xs text-purple-600 dark:text-purple-400">
                 per kilowatt-hour
@@ -294,9 +294,9 @@ export function UserDashboard({ userId }: UserDashboardProps) {
                 Efficiency
               </p>
               <p
-                className={`text-2xl font-bold ${getEfficiencyColor(data.personalSummary.efficiency)}`}
+                className={`text-2xl font-bold ${getEfficiencyColor(data.personalSummary?.efficiency || 0)}`}
               >
-                {data.personalSummary.efficiency.toFixed(1)}%
+                {(data.personalSummary?.efficiency || 0).toFixed(1)}%
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 payment accuracy
@@ -306,9 +306,6 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           </div>
         </div>
       </div>
-
-      {/* Electricity Insights */}
-      <InsightsCard />
 
       {/* Current Month Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -322,7 +319,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                {data.currentMonth.tokensUsed.toLocaleString()}
+                {(data.currentMonth?.tokensUsed || 0).toLocaleString()}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-400">
                 kWh Used
@@ -330,7 +327,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                ${data.currentMonth.amountPaid.toFixed(2)}
+                ${(data.currentMonth?.amountPaid || 0).toFixed(2)}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-400">
                 Amount Paid
@@ -338,7 +335,7 @@ export function UserDashboard({ userId }: UserDashboardProps) {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                {data.currentMonth.contributionCount}
+                {data.currentMonth?.contributionCount || 0}
               </div>
               <div className="text-sm text-slate-600 dark:text-slate-400">
                 Contributions
@@ -353,23 +350,23 @@ export function UserDashboard({ userId }: UserDashboardProps) {
                 Progress vs Average
               </span>
               <span
-                className={`font-medium ${getProgressColor(data.currentMonth.progressVsAverage).split(' ')[0]}`}
+                className={`font-medium ${getProgressColor(data.currentMonth?.progressVsAverage || 0).split(' ')[0]}`}
               >
-                {data.currentMonth.progressVsAverage.toFixed(1)}%
+                {(data.currentMonth?.progressVsAverage || 0).toFixed(1)}%
               </span>
             </div>
             <div className="w-full bg-slate-200 rounded-full h-3 dark:bg-slate-700">
               <div
-                className={`h-3 rounded-full transition-all ${getProgressColor(data.currentMonth.progressVsAverage).split(' ')[1]}`}
+                className={`h-3 rounded-full transition-all ${getProgressColor(data.currentMonth?.progressVsAverage || 0).split(' ')[1]}`}
                 style={{
-                  width: `${Math.min(data.currentMonth.progressVsAverage, 100)}%`,
+                  width: `${Math.min(data.currentMonth?.progressVsAverage || 0, 100)}%`,
                 }}
               ></div>
             </div>
             <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>Day {data.currentMonth.daysIntoMonth} of month</span>
+              <span>Day {data.currentMonth?.daysIntoMonth || 0} of month</span>
               <span>
-                {data.currentMonth.progressVsAverage > 100 ? 'Above' : 'Below'}{' '}
+                {(data.currentMonth?.progressVsAverage || 0) > 100 ? 'Above' : 'Below'}{' '}
                 average
               </span>
             </div>
@@ -385,19 +382,19 @@ export function UserDashboard({ userId }: UserDashboardProps) {
 
           <div className="text-center mb-4">
             <div className="text-3xl font-bold text-red-600">
-              {data.currentMonth.emergencyRate.toFixed(1)}%
+              {(data.currentMonth?.emergencyRate || 0).toFixed(1)}%
             </div>
             <div className="text-sm text-slate-600 dark:text-slate-400">
               of contributions this month
             </div>
           </div>
 
-          {data.personalSummary.emergencyPremium > 0 && (
+          {(data.personalSummary?.emergencyPremium || 0) > 0 && (
             <div className="p-3 bg-red-50 border border-red-200 rounded dark:bg-red-950 dark:border-red-800">
               <div className="text-sm text-red-700 dark:text-red-300">
                 <div className="font-medium">Total Emergency Premium:</div>
                 <div className="text-lg font-bold">
-                  ${data.personalSummary.emergencyPremium.toFixed(2)}
+                  ${(data.personalSummary?.emergencyPremium || 0).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -408,118 +405,124 @@ export function UserDashboard({ userId }: UserDashboardProps) {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Usage Trends */}
-        <div className="p-6 bg-white rounded-lg shadow-lg dark:bg-slate-900">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            Usage Trends
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="tokens"
-                stackId="1"
-                stroke="#3b82f6"
-                fill="#3b82f6"
-                fillOpacity={0.6}
-                name="Regular Usage"
-              />
-              <Area
-                type="monotone"
-                dataKey="emergencyTokens"
-                stackId="1"
-                stroke="#ef4444"
-                fill="#ef4444"
-                fillOpacity={0.8}
-                name="Emergency Usage"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        {trendData.length > 0 && (
+          <div className="p-6 bg-white rounded-lg shadow-lg dark:bg-slate-900">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Usage Trends
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="tokens"
+                  stackId="1"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.6}
+                  name="Regular Usage"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="emergencyTokens"
+                  stackId="1"
+                  stroke="#ef4444"
+                  fill="#ef4444"
+                  fillOpacity={0.8}
+                  name="Emergency Usage"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {/* Cost Breakdown */}
-        <div className="p-6 bg-white rounded-lg shadow-lg dark:bg-slate-900">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <PieChartIcon className="h-5 w-5 text-green-600" />
-            Cost Breakdown
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) =>
-                  `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
-                }
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-            <div className="text-center">
-              <div className="font-medium text-green-600">Regular Rate</div>
-              <div className="text-slate-900 dark:text-slate-100">
-                ${data.costBreakdown.regularRate.toFixed(4)}/kWh
+        {pieData.length > 0 && (
+          <div className="p-6 bg-white rounded-lg shadow-lg dark:bg-slate-900">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5 text-green-600" />
+              Cost Breakdown
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) =>
+                    `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
+                  }
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+              <div className="text-center">
+                <div className="font-medium text-green-600">Regular Rate</div>
+                <div className="text-slate-900 dark:text-slate-100">
+                  ${(data.costBreakdown?.regularRate || 0).toFixed(4)}/kWh
+                </div>
               </div>
-            </div>
-            <div className="text-center">
-              <div className="font-medium text-red-600">Emergency Rate</div>
-              <div className="text-slate-900 dark:text-slate-100">
-                ${data.costBreakdown.emergencyRate.toFixed(4)}/kWh
+              <div className="text-center">
+                <div className="font-medium text-red-600">Emergency Rate</div>
+                <div className="text-slate-900 dark:text-slate-100">
+                  ${(data.costBreakdown?.emergencyRate || 0).toFixed(4)}/kWh
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Meter Reading History */}
-      <div className="p-6 bg-white rounded-lg shadow-lg dark:bg-slate-900">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-          <Activity className="h-5 w-5 text-purple-600" />
-          Meter Reading History
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={meterData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis yAxisId="left" />
-            <YAxis yAxisId="right" orientation="right" />
-            <Tooltip />
-            <Legend />
-            <Line
-              yAxisId="left"
-              type="monotone"
-              dataKey="consumed"
-              stroke="#8b5cf6"
-              strokeWidth={2}
-              name="Tokens Consumed"
-              dot={{ fill: '#8b5cf6' }}
-            />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="rate"
-              stroke="#f59e0b"
-              strokeWidth={2}
-              name="Cost per kWh"
-              dot={{ fill: '#f59e0b' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {meterData.length > 0 && (
+        <div className="p-6 bg-white rounded-lg shadow-lg dark:bg-slate-900">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-purple-600" />
+            Meter Reading History
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={meterData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis yAxisId="left" />
+              <YAxis yAxisId="right" orientation="right" />
+              <Tooltip />
+              <Legend />
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey="consumed"
+                stroke="#8b5cf6"
+                strokeWidth={2}
+                name="Tokens Consumed"
+                dot={{ fill: '#8b5cf6' }}
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="rate"
+                stroke="#f59e0b"
+                strokeWidth={2}
+                name="Cost per kWh"
+                dot={{ fill: '#f59e0b' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

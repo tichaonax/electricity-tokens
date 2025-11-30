@@ -17,6 +17,52 @@ import {
 import { validateContributionMeterReading } from '@/lib/meter-reading-validation';
 import { canPurchaseAcceptContribution } from '@/lib/sequential-contributions';
 
+async function calculateAccountBalance(contributions: any[]): Promise<number> {
+  try {
+    if (contributions.length === 0) {
+      return 0;
+    }
+
+    // Get the earliest purchase date to determine what counts as "first purchase"
+    const earliestPurchase = await prisma.tokenPurchase.findFirst({
+      orderBy: { purchaseDate: 'asc' },
+    });
+
+    // Sort contributions by purchase date
+    const sortedContributions = contributions.sort(
+      (a, b) => new Date(a.purchase.purchaseDate).getTime() - new Date(b.purchase.purchaseDate).getTime()
+    );
+
+    let runningBalance = 0;
+
+    for (let i = 0; i < sortedContributions.length; i++) {
+      const contribution = sortedContributions[i];
+
+      // Check if this is the first purchase globally
+      const isFirstPurchase =
+        earliestPurchase &&
+        contribution.purchase.purchaseDate.getTime() ===
+          earliestPurchase.purchaseDate.getTime();
+
+      // For the first purchase, no tokens were consumed before it
+      const effectiveTokensConsumed = isFirstPurchase
+        ? 0
+        : contribution.tokensConsumed;
+
+      const fairShare =
+        (effectiveTokensConsumed / contribution.purchase.totalTokens) *
+        contribution.purchase.totalPayment;
+      const balanceChange = contribution.contributionAmount - fairShare;
+      runningBalance += balanceChange;
+    }
+
+    return runningBalance;
+  } catch (error) {
+    console.error('Error calculating account balance:', error);
+    return 0;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -69,20 +115,8 @@ export async function GET(request: NextRequest) {
       where.purchaseId = purchaseId;
     }
 
-    if (userId) {
-      where.userId = userId;
-    }
-
-    // Check permissions for global contribution access
-    const userPermissions = permissionCheck.user!.permissions as Record<string, unknown> | null;
-    const canViewAllContributions = 
-      permissionCheck.user!.role === 'ADMIN' || 
-      userPermissions?.canViewUserContributions === true;
-
-    // Non-admin users without global permission can only see their own contributions
-    if (!canViewAllContributions) {
-      where.userId = permissionCheck.user!.id;
-    }
+    // Always show global contributions since user wants all data global
+    // Remove userId filter
 
     const [contributions, total] = await Promise.all([
       prisma.userContribution.findMany({
@@ -119,30 +153,10 @@ export async function GET(request: NextRequest) {
     // Calculate running balance if requested - this is a GLOBAL balance, not per-user
     let runningBalance = 0;
     if (calculateBalance) {
-      // Import and use the updated cost calculation function
+      // Use the same calculation as the dashboard for consistency
       const { calculateUserTrueCost } = await import('@/lib/cost-calculations');
-
-      // Get ALL contributions in the system, ordered by purchase date (not createdAt)
-      const balanceContributions = await prisma.userContribution.findMany({
-        include: {
-          purchase: {
-            select: {
-              totalTokens: true,
-              totalPayment: true,
-              purchaseDate: true,
-            },
-          },
-        },
-        orderBy: {
-          purchase: {
-            purchaseDate: 'asc', // Order by purchase date, not contribution creation
-          },
-        },
-      });
-
-      // Use the same calculation logic as the cost calculations library for ALL contributions
-      const costBreakdown = calculateUserTrueCost(balanceContributions);
-      runningBalance = costBreakdown.overpayment;
+      const globalCostBreakdown = calculateUserTrueCost(balanceContributions);
+      runningBalance = globalCostBreakdown.overpayment;
     }
 
     const response = {

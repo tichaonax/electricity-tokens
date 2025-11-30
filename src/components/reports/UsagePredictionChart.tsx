@@ -199,14 +199,78 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+      },
+      title: {
+        display: true,
+        text: 'Usage Predictions by User',
+        color: 'rgb(209, 213, 219)', // gray-300
       },
     },
     scales: {
+      x: {
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
+        },
+      },
       y: {
         beginAtZero: true,
         title: {
           display: true,
           text: 'Tokens',
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
+        },
+      },
+    },
+  };
+
+  const userTrendOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+      },
+      title: {
+        display: true,
+        text: `${selectedUserData?.userName || 'User'} Usage Trend`,
+        color: 'rgb(209, 213, 219)', // gray-300
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
+        },
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Tokens',
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
         },
       },
     },
@@ -236,7 +300,7 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Predicted Total Usage</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Predicted Total Usage</CardTitle>
             <Brain className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -251,7 +315,7 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recommended Purchase</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Recommended Purchase</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -266,7 +330,7 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Trend</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">System Trend</CardTitle>
             <Activity className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -284,7 +348,7 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">High Confidence Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">High Confidence Users</CardTitle>
             <Users className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
@@ -302,8 +366,8 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>System Usage Prediction</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-gray-900 dark:text-gray-100">System Usage Prediction</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
               Overall system usage prediction vs historical average
             </CardDescription>
           </CardHeader>
@@ -314,8 +378,8 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
 
         <Card>
           <CardHeader>
-            <CardTitle>User Comparison</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-gray-900 dark:text-gray-100">User Comparison</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
               Historical vs predicted usage by user
             </CardDescription>
           </CardHeader>
@@ -328,8 +392,8 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
       {/* Individual User Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle>Individual User Trend Analysis</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900 dark:text-gray-100">Individual User Trend Analysis</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Detailed prediction analysis for specific users
           </CardDescription>
         </CardHeader>

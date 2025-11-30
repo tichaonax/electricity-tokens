@@ -28,14 +28,29 @@ interface BalanceData {
 export function RunningBalanceWidget() {
   const [data, setData] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const { checkPermission } = usePermissions();
+  const { checkPermission, isLoading: permissionsLoading } = usePermissions();
 
   useEffect(() => {
     fetchBalanceData();
   }, []);
 
   // Check if user has permission to view account balance (after hooks)
-  const hasPermission = checkPermission('canViewAccountBalance');
+  // Wait for permissions to load before checking
+  const hasPermission = !permissionsLoading && checkPermission('canViewAccountBalance');
+  
+  // Show loading state while permissions are loading
+  if (permissionsLoading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+        </div>
+      </div>
+    );
+  }
+  
   if (!hasPermission) {
     return null; // Don't render the widget if user doesn't have permission
   }
@@ -186,7 +201,7 @@ export function RunningBalanceWidget() {
                 : 'text-red-600 dark:text-red-400'
             }`}
           >
-            {data.contributionBalance > 0 ? '-' : ''}$
+            {data.contributionBalance <= 0 ? '+' : '-'}$
             {Math.abs(data.contributionBalance).toFixed(2)}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">

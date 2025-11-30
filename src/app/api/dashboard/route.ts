@@ -158,17 +158,22 @@ export async function GET(request: NextRequest) {
       userPermissions?.canViewDashboards === true;
 
     // Determine target user ID based on permissions
-    let targetUserId = session.user.id; // Default to current user
-    
+    let targetUserId: string | undefined = undefined;
+
     if (userId) {
       // If specific user requested, check global permissions
       if (!canViewAllDashboards) {
         return NextResponse.json(
-          { message: 'Insufficient permissions to view other users\' dashboards' },
+          { message: "Insufficient permissions to view other users' dashboards" },
           { status: 403 }
         );
       }
       targetUserId = userId;
+    } else {
+      // No explicit user requested - if user cannot view all dashboards, default to their own
+      if (!canViewAllDashboards) {
+        targetUserId = session.user.id;
+      }
     }
 
     // Calculate date ranges
@@ -180,14 +185,20 @@ export async function GET(request: NextRequest) {
       1
     );
 
-    // Fetch user contributions with purchase data
+    // Fetch contributions for this view (either global or per-user) within history range
     const contributions = await prisma.userContribution.findMany({
-      where: {
-        userId: targetUserId,
-        createdAt: {
-          gte: historyStart,
-        },
-      },
+      where: targetUserId
+        ? {
+            userId: targetUserId,
+            createdAt: {
+              gte: historyStart,
+            },
+          }
+        : {
+            createdAt: {
+              gte: historyStart,
+            },
+          },
       include: {
         purchase: true,
         user: {
@@ -200,20 +211,24 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Calculate personal summary (all time) - user specific
+    // Calculate all-time contributions for scope (global vs user)
     const allTimeContributions = await prisma.userContribution.findMany({
-      where: { userId: targetUserId },
+      where: targetUserId ? { userId: targetUserId } : undefined,
       include: { purchase: true },
+      orderBy: { createdAt: 'desc' },
     });
 
     const personalSummary = calculateUserTrueCost(
       allTimeContributions as Contribution[]
     );
+    // Calculate the personal account balance (per-user overpayment running balance)
+    const personalAccountBalance = await calculateAccountBalance(allTimeContributions);
     const lastContribution = allTimeContributions[0];
 
     // Calculate GLOBAL totals for Quick Stats (all users, all time)
     const globalContributions = await prisma.userContribution.findMany({
       include: { purchase: true },
+      orderBy: { createdAt: 'desc' },
     });
 
     const globalSummary = calculateUserTrueCost(
@@ -370,13 +385,14 @@ export async function GET(request: NextRequest) {
       emergencyRate: emergencyTokens > 0 ? emergencyCosts / emergencyTokens : 0,
     };
 
+    const isGlobalView = canViewAllDashboards && !userId;
+
     const response: DashboardResponse = {
       personalSummary: {
-        // Use GLOBAL totals for Quick Stats display
-        ...globalSummary,
-        contributionCount: globalContributions.length,
-        lastContributionDate: lastContribution?.createdAt.toISOString() || null,
-        accountBalance: globalAccountBalance,
+        ...(isGlobalView ? globalSummary : personalSummary),
+        contributionCount: isGlobalView ? globalContributions.length : allTimeContributions.length,
+        lastContributionDate: lastContribution?.createdAt ? lastContribution.createdAt.toISOString() : null,
+        accountBalance: isGlobalView ? globalAccountBalance : personalAccountBalance,
       },
       currentMonth: {
         tokensUsed: currentMonthMetrics.totalTokensUsed,

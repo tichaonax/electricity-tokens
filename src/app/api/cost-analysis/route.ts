@@ -7,6 +7,7 @@ import {
   calculateUserTrueCost,
   generateCostRecommendations,
   calculateOptimalContribution,
+  calculatePurchaseComparison,
   type Purchase,
   type Contribution,
 } from '@/lib/cost-calculations';
@@ -18,11 +19,11 @@ import {
 import { z } from 'zod';
 
 const costAnalysisQuerySchema = z.object({
-  userId: z.string().cuid().optional(),
+  userId: z.string().optional(),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   analysisType: z
-    .enum(['user', 'period', 'recommendations', 'optimal'])
+    .enum(['user', 'period', 'recommendations', 'optimal', 'comparison'])
     .default('user'),
 });
 
@@ -57,24 +58,48 @@ export async function GET(request: NextRequest) {
         userId?: string;
         startDate?: string;
         endDate?: string;
-        analysisType: 'user' | 'period' | 'recommendations' | 'optimal';
+        analysisType: 'user' | 'period' | 'recommendations' | 'optimal' | 'comparison';
       };
     };
 
     const { userId, startDate, endDate, analysisType } = query;
+    console.log('cost-analysis query params:', { userId, startDate, endDate, analysisType });
 
-    // Determine target user ID
-    const targetUserId = userId || permissionCheck.user!.id;
+    // For global reports, userId is optional
+    // If userId is provided, validate it and check permissions
+    let targetUserId: string | undefined = userId;
 
-    // Check if user can access the requested data
-    if (
-      targetUserId !== permissionCheck.user!.id &&
-      permissionCheck.user!.role !== 'ADMIN'
-    ) {
-      return NextResponse.json(
-        { message: 'Access denied: insufficient permissions' },
-        { status: 403 }
-      );
+    const userPermissions = permissionCheck.user!.permissions as Record<string, unknown> | null;
+    const canViewAllCostAnalysis =
+      permissionCheck.user!.role === 'ADMIN' ||
+      userPermissions?.canViewCostAnalysis === true ||
+      userPermissions?.canViewUsageReports === true ||
+      userPermissions?.canViewDualCurrencyAnalysis === true;
+
+    if (targetUserId) {
+      // Validate that the target user exists
+      const targetUser = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: { id: true, isActive: true },
+      });
+
+      if (!targetUser || !targetUser.isActive) {
+        return NextResponse.json(
+          { message: 'Invalid user ID' },
+          { status: 400 }
+        );
+      }
+
+      // Check if user can access specific user data
+      if (
+        targetUserId !== permissionCheck.user!.id &&
+        !canViewAllCostAnalysis
+      ) {
+        return NextResponse.json(
+          { message: 'Access denied: insufficient permissions' },
+          { status: 403 }
+        );
+      }
     }
 
     // Parse dates
@@ -84,11 +109,11 @@ export async function GET(request: NextRequest) {
     // Fetch data based on analysis type
     switch (analysisType) {
       case 'user': {
-        // Get user's contribution with purchase data
+        // Get all contributions (global) or user-specific if userId provided
         // Use purchase date for filtering and ordering, not createdAt
         const contribution = await prisma.userContribution.findMany({
           where: {
-            userId: targetUserId,
+            ...(targetUserId && { userId: targetUserId }),
             ...(start && {
               purchase: { purchaseDate: { gte: start } },
             }),
@@ -116,9 +141,15 @@ export async function GET(request: NextRequest) {
           contribution as Contribution[]
         );
 
+        console.log('COST-ANALYSIS: comparison query', { userId: targetUserId, start, end, contributions: contribution.length });
+        const purchaseComparison = calculatePurchaseComparison(
+          contribution as Contribution[]
+        );
+
         return NextResponse.json({
-          userId: targetUserId,
+          userId: targetUserId || 'global',
           costBreakdown,
+          purchaseComparison,
           contribution: contribution.length,
           period: { start, end },
         });
@@ -178,10 +209,10 @@ export async function GET(request: NextRequest) {
       }
 
       case 'recommendations': {
-        // Get user's data and generate recommendations
+        // Get all contributions (global) or user-specific if userId provided
         const contribution = await prisma.userContribution.findMany({
           where: {
-            userId: targetUserId,
+            ...(targetUserId && { userId: targetUserId }),
             ...(start && { createdAt: { gte: start } }),
             ...(end && { createdAt: { lte: end } }),
           },
@@ -198,9 +229,11 @@ export async function GET(request: NextRequest) {
 
         const purchases = await prisma.tokenPurchase.findMany({
           where: {
-            contribution: {
-              userId: targetUserId,
-            },
+            ...(targetUserId && {
+              contribution: {
+                some: { userId: targetUserId },
+              },
+            }),
           },
           include: {
             contribution: {
@@ -222,8 +255,8 @@ export async function GET(request: NextRequest) {
         );
 
         const userSummary = {
-          userId: targetUserId,
-          userName: contribution[0]?.user?.name,
+          userId: targetUserId || 'global',
+          userName: contribution[0]?.user?.name || 'All Users',
           contribution: contribution as Contribution[],
           purchases: purchases as Purchase[],
           ...costBreakdown,
@@ -239,31 +272,41 @@ export async function GET(request: NextRequest) {
       }
 
       case 'optimal': {
-        // Calculate optimal contribution for recent purchases
+        // Calculate optimal contribution for recent contributions (global or user-specific)
         // Use purchase date, not createdAt (which gets reset on backup restore)
-        const recentPurchases = await prisma.tokenPurchase.findMany({
+        const recentContributions = await prisma.userContribution.findMany({
           where: {
-            purchaseDate: {
-              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-            },
-            contribution: {
-              userId: targetUserId,
+            ...(targetUserId && { userId: targetUserId }),
+            purchase: {
+              purchaseDate: {
+                gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+              },
             },
           },
           include: {
-            contribution: true,
+            purchase: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
-          orderBy: { purchaseDate: 'desc' },
-          take: 10,
+          orderBy: {
+            purchase: {
+              purchaseDate: 'desc',
+            },
+          },
+          take: 50, // Get more contributions for global view
         });
 
-        const optimalContributions = recentPurchases
-          .map((purchase) => {
-            const userContribution = purchase.contribution;
-            if (!userContribution) return null;
+        const optimalContributions = recentContributions
+          .map((contribution) => {
+            const purchase = contribution.purchase;
+            if (!purchase) return null;
 
             const optimal = calculateOptimalContribution(
-              userContribution.tokensConsumed,
+              contribution.tokensConsumed,
               purchase as Purchase
             );
 
@@ -271,18 +314,18 @@ export async function GET(request: NextRequest) {
               purchaseId: purchase.id,
               purchaseDate: purchase.purchaseDate,
               isEmergency: purchase.isEmergency,
-              actualContribution: userContribution.contributionAmount,
-              tokensConsumed: userContribution.tokensConsumed,
+              actualContribution: contribution.contributionAmount,
+              tokensConsumed: contribution.tokensConsumed,
               ...optimal,
               difference:
-                userContribution.contributionAmount -
+                contribution.contributionAmount -
                 optimal.totalOptimalContribution,
             };
           })
           .filter(Boolean);
 
         return NextResponse.json({
-          userId: targetUserId,
+          userId: targetUserId || 'global',
           optimalContributions,
           summary: {
             totalPurchases: optimalContributions.length,
@@ -290,7 +333,60 @@ export async function GET(request: NextRequest) {
               optimalContributions.reduce(
                 (sum, oc) => sum + (oc?.difference || 0),
                 0
-              ) / optimalContributions.length,
+              ) / (optimalContributions.length || 1),
+          },
+        });
+      }
+
+      case 'comparison': {
+        // Get all contributions (global) or user-specific if userId provided.
+        // To ensure date filtering is robust, fetch purchase IDs in the date range first, then query contributions by those purchase IDs.
+        let purchaseIds: string[] | undefined;
+        if (start || end) {
+          const purchases = await prisma.tokenPurchase.findMany({
+            where: {
+              ...(start && { purchaseDate: { gte: start } }),
+              ...(end && { purchaseDate: { lte: end } }),
+            },
+            select: { id: true },
+          });
+          purchaseIds = purchases.map((p) => p.id);
+          console.log('COST-ANALYSIS: filtered purchases', { count: purchaseIds.length, ids: purchaseIds.slice(0, 20) });
+        }
+
+        const contribution = await prisma.userContribution.findMany({
+          where: {
+            ...(targetUserId && { userId: targetUserId }),
+            ...(purchaseIds && { purchaseId: { in: purchaseIds } }),
+          },
+          include: {
+            purchase: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            purchase: {
+              purchaseDate: 'desc',
+            },
+          },
+        });
+        console.log('COST-ANALYSIS: contributions found', { count: contribution.length, sample: contribution.slice(0, 10).map(c => ({ id: c.id, purchaseId: c.purchaseId, purchaseDate: c.purchase?.purchaseDate })) });
+
+        const purchaseComparison = calculatePurchaseComparison(
+          contribution as Contribution[]
+        );
+
+        return NextResponse.json({
+          userId: targetUserId || 'global',
+          purchaseComparison,
+          debug: {
+            purchaseIdsCount: purchaseIds ? purchaseIds.length : undefined,
+            samplePurchaseIds: purchaseIds ? purchaseIds.slice(0, 20) : undefined,
+            contributionsReturned: contribution.length,
           },
         });
       }

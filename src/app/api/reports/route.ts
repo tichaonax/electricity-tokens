@@ -61,6 +61,16 @@ export async function GET(request: NextRequest) {
           }
         : {};
 
+    const userPermissions = permissionCheck.user!.permissions as Record<string, unknown> | null;
+    const canViewAllReports =
+      permissionCheck.user!.role === 'ADMIN' ||
+      userPermissions?.canViewUsageReports === true ||
+      userPermissions?.canViewFinancialReports === true ||
+      userPermissions?.canViewEfficiencyReports === true ||
+      userPermissions?.canViewCostAnalysis === true ||
+      userPermissions?.canViewDualCurrencyAnalysis === true ||
+      userPermissions?.canViewPurchaseHistory === true;
+
     switch (reportType) {
       case 'summary':
         return await getSummaryReport(dateFilter);
@@ -70,20 +80,20 @@ export async function GET(request: NextRequest) {
           dateFilter,
           userId || null,
           permissionCheck.user!.id,
-          permissionCheck.user!.role
+          canViewAllReports
         );
 
       case 'monthly-trends':
         return await getMonthlyTrendsReport(
           permissionCheck.user!.id,
-          permissionCheck.user!.role
+          canViewAllReports
         );
 
       case 'efficiency':
         return await getEfficiencyReport(
           dateFilter,
           permissionCheck.user!.id,
-          permissionCheck.user!.role
+          canViewAllReports
         );
 
       default:
@@ -162,16 +172,16 @@ async function getUserBreakdownReport(
   dateFilter: PurchaseWhereInput,
   targetUserId: string | null,
   currentUserId: string,
-  userRole: string
+  canViewAllReports: boolean
 ) {
   // Build user filter based on permissions and request
   let userFilter: { userId?: string } = {};
 
-  if (userRole !== 'ADMIN') {
-    // Non-admin users can only see their own data
+  if (!canViewAllReports) {
+    // Non-privileged users only see their own data
     userFilter = { userId: currentUserId };
   } else if (targetUserId) {
-    // Admin requesting specific user
+    // Privileged users can still filter by specific user
     userFilter = { userId: targetUserId };
   }
 
@@ -250,7 +260,7 @@ async function getUserBreakdownReport(
   return NextResponse.json({ userBreakdown: result });
 }
 
-async function getMonthlyTrendsReport(currentUserId: string, userRole: string) {
+async function getMonthlyTrendsReport(currentUserId: string, canViewAllReports: boolean) {
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -262,11 +272,11 @@ async function getMonthlyTrendsReport(currentUserId: string, userRole: string) {
     },
     include: {
       contributions:
-        userRole === 'ADMIN'
-          ? true
-          : {
-              where: { userId: currentUserId },
-            },
+          canViewAllReports
+            ? true
+            : {
+                where: { userId: currentUserId },
+              },
     },
     orderBy: { purchaseDate: 'asc' },
   });
@@ -328,9 +338,9 @@ async function getMonthlyTrendsReport(currentUserId: string, userRole: string) {
 async function getEfficiencyReport(
   dateFilter: PurchaseWhereInput,
   currentUserId: string,
-  userRole: string
+  canViewAllReports: boolean
 ) {
-  const userFilter = userRole === 'ADMIN' ? {} : { userId: currentUserId };
+  const userFilter = canViewAllReports ? {} : { userId: currentUserId };
 
   const contributions = await prisma.userContribution.findMany({
     where: {

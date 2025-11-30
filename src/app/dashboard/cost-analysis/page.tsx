@@ -29,6 +29,10 @@ export default function CostAnalysisPage() {
     return null;
   }
 
+  const isAdmin = session.user?.role === 'ADMIN';
+  const userPermissions = session.user?.permissions as Record<string, unknown> | undefined;
+  const canViewAllCostAnalysis = isAdmin || userPermissions?.canViewCostAnalysis === true;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <nav className="bg-white shadow dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
@@ -60,7 +64,7 @@ export default function CostAnalysisPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <CostAnalysis
-            userId={session.user?.id}
+            userId={canViewAllCostAnalysis ? undefined : session.user?.id}
             isAdmin={session.user?.role === 'ADMIN'}
             showRecommendations={true}
             showOptimalContributions={true}

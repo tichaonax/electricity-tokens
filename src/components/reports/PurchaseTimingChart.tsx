@@ -178,13 +178,25 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
       },
       title: {
         display: true,
         text: 'Purchase Patterns by Day of Week',
+        color: 'rgb(209, 213, 219)', // gray-300
       },
     },
     scales: {
+      x: {
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
+        },
+      },
       y: {
         type: 'linear' as const,
         display: true,
@@ -192,6 +204,13 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
         title: {
           display: true,
           text: 'Emergency Rate (%)',
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
         },
       },
       y1: {
@@ -201,6 +220,10 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
         title: {
           display: true,
           text: 'Average Tokens',
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
         },
         grid: {
           drawOnChartArea: false,
@@ -214,18 +237,37 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
       },
       title: {
         display: true,
         text: 'Monthly Utilization and Emergency Trends',
+        color: 'rgb(209, 213, 219)', // gray-300
       },
     },
     scales: {
+      x: {
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
+        },
+      },
       y: {
         beginAtZero: true,
         title: {
           display: true,
           text: 'Percentage (%)',
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        ticks: {
+          color: 'rgb(156, 163, 175)', // gray-400
+        },
+        grid: {
+          color: 'rgb(75, 85, 99)', // gray-600
         },
       },
     },
@@ -245,7 +287,7 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Best Purchase Day</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Best Purchase Day</CardTitle>
             <Calendar className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -260,7 +302,7 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Consumption</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Monthly Consumption</CardTitle>
             <TrendingUp className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -275,7 +317,7 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Purchase Frequency</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Purchase Frequency</CardTitle>
             <Clock className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -290,7 +332,7 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Seasonal Variation</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Seasonal Variation</CardTitle>
             <TrendingUp className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
@@ -308,8 +350,8 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Weekly Purchase Patterns</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-gray-900 dark:text-gray-100">Weekly Purchase Patterns</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
               Emergency rates and average tokens by day of week
             </CardDescription>
           </CardHeader>
@@ -320,8 +362,8 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
 
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Trends</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-gray-900 dark:text-gray-100">Monthly Trends</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
               Utilization rates and emergency purchases over time
             </CardDescription>
           </CardHeader>
@@ -334,11 +376,11 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
       {/* Recommendations */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
             <Lightbulb className="h-5 w-5 text-yellow-500" />
             Optimization Recommendations
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Data-driven suggestions to improve your purchase timing
           </CardDescription>
         </CardHeader>
@@ -349,16 +391,16 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold">{rec.title}</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">{rec.title}</h4>
                       <Badge variant={getPriorityColor(rec.priority) as any}>
                         {rec.priority}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{rec.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{rec.description}</p>
                   </div>
                 </div>
-                <div className="bg-muted p-2 rounded text-sm">
-                  <strong>Impact:</strong> {rec.impact}
+                <div className="bg-muted p-2 rounded text-sm text-gray-900 dark:text-gray-100">
+                  <strong className="text-gray-900 dark:text-gray-100">Impact:</strong> {rec.impact}
                 </div>
               </div>
             ))}
@@ -369,8 +411,8 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
       {/* Day-by-Day Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle>Weekly Purchase Analysis</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900 dark:text-gray-100">Weekly Purchase Analysis</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
             Detailed breakdown of purchase patterns by day of week
           </CardDescription>
         </CardHeader>
