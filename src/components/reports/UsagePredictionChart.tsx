@@ -1,11 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brain, TrendingUp, Users, Activity, AlertTriangle } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Brain,
+  TrendingUp,
+  Users,
+  Activity,
+  AlertTriangle,
+} from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -68,17 +86,16 @@ interface PredictionData {
   };
 }
 
-export default function UsagePredictionChart({ startDate, endDate }: UsagePredictionChartProps) {
+export default function UsagePredictionChart({
+  startDate,
+  endDate,
+}: UsagePredictionChartProps) {
   const [data, setData] = useState<PredictionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<string>('all');
 
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -100,7 +117,11 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -114,7 +135,9 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>Error loading usage prediction data: {error}</AlertDescription>
+        <AlertDescription>
+          Error loading usage prediction data: {error}
+        </AlertDescription>
       </Alert>
     );
   }
@@ -122,7 +145,9 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
   if (!data) {
     return (
       <Alert>
-        <AlertDescription>No usage prediction data available for the selected period.</AlertDescription>
+        <AlertDescription>
+          No usage prediction data available for the selected period.
+        </AlertDescription>
       </Alert>
     );
   }
@@ -133,7 +158,10 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
     datasets: [
       {
         label: 'Usage (Tokens)',
-        data: [data.systemPrediction.totalAverageUsage, data.systemPrediction.totalPredictedUsage],
+        data: [
+          data.systemPrediction.totalAverageUsage,
+          data.systemPrediction.totalPredictedUsage,
+        ],
         backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)'],
         borderColor: ['rgba(59, 130, 246, 1)', 'rgba(16, 185, 129, 1)'],
         borderWidth: 2,
@@ -142,18 +170,18 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
   };
 
   const userComparisonData = {
-    labels: data.userPredictions.map(user => user.userName),
+    labels: data.userPredictions.map((user) => user.userName),
     datasets: [
       {
         label: 'Historical Average',
-        data: data.userPredictions.map(user => user.averageMonthlyUsage),
+        data: data.userPredictions.map((user) => user.averageMonthlyUsage),
         backgroundColor: 'rgba(59, 130, 246, 0.7)',
         borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 1,
       },
       {
         label: 'Predicted Next Month',
-        data: data.userPredictions.map(user => user.predictedNextMonth),
+        data: data.userPredictions.map((user) => user.predictedNextMonth),
         backgroundColor: 'rgba(16, 185, 129, 0.7)',
         borderColor: 'rgba(16, 185, 129, 1)',
         borderWidth: 1,
@@ -164,35 +192,49 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
   // Individual user trend data
   const getSelectedUserData = () => {
     if (selectedUser === 'all') return null;
-    return data.userPredictions.find(user => user.userId === selectedUser);
+    return data.userPredictions.find((user) => user.userId === selectedUser);
   };
 
   const selectedUserData = getSelectedUserData();
-  const userTrendData = selectedUserData ? {
-    labels: [...selectedUserData.monthlyUsage.map(m => {
-      const date = new Date(m.month + '-01');
-      return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
-    }), 'Predicted'],
-    datasets: [
-      {
-        label: 'Historical Usage',
-        data: [...selectedUserData.monthlyUsage.map(m => m.tokensConsumed), null],
-        borderColor: 'rgba(59, 130, 246, 1)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-      },
-      {
-        label: 'Predicted Usage',
-        data: [...selectedUserData.monthlyUsage.map(() => null), selectedUserData.predictedNextMonth],
-        borderColor: 'rgba(16, 185, 129, 1)',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        borderWidth: 2,
-        borderDash: [5, 5],
-        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
-      },
-    ],
-  } : null;
+  const userTrendData = selectedUserData
+    ? {
+        labels: [
+          ...selectedUserData.monthlyUsage.map((m) => {
+            const date = new Date(m.month + '-01');
+            return date.toLocaleDateString('en-GB', {
+              month: 'short',
+              year: 'numeric',
+            });
+          }),
+          'Predicted',
+        ],
+        datasets: [
+          {
+            label: 'Historical Usage',
+            data: [
+              ...selectedUserData.monthlyUsage.map((m) => m.tokensConsumed),
+              null,
+            ],
+            borderColor: 'rgba(59, 130, 246, 1)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+          },
+          {
+            label: 'Predicted Usage',
+            data: [
+              ...selectedUserData.monthlyUsage.map(() => null),
+              selectedUserData.predictedNextMonth,
+            ],
+            borderColor: 'rgba(16, 185, 129, 1)',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+          },
+        ],
+      }
+    : null;
 
   const chartOptions = {
     responsive: true,
@@ -235,62 +277,31 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
     },
   };
 
-  const userTrendOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          color: 'rgb(156, 163, 175)', // gray-400
-        },
-      },
-      title: {
-        display: true,
-        text: `${selectedUserData?.userName || 'User'} Usage Trend`,
-        color: 'rgb(209, 213, 219)', // gray-300
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: 'rgb(156, 163, 175)', // gray-400
-        },
-        grid: {
-          color: 'rgb(75, 85, 99)', // gray-600
-        },
-      },
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Tokens',
-          color: 'rgb(156, 163, 175)', // gray-400
-        },
-        ticks: {
-          color: 'rgb(156, 163, 175)', // gray-400
-        },
-        grid: {
-          color: 'rgb(75, 85, 99)', // gray-600
-        },
-      },
-    },
-  };
-
-  const getConfidenceColor = (level: string) => {
+  const getConfidenceColor = (
+    level: string
+  ): 'default' | 'secondary' | 'outline' | 'destructive' => {
     switch (level) {
-      case 'high': return 'default';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
-      default: return 'destructive';
+      case 'high':
+        return 'default';
+      case 'medium':
+        return 'secondary';
+      case 'low':
+        return 'outline';
+      default:
+        return 'destructive';
     }
   };
 
   const getConfidenceText = (level: string) => {
     switch (level) {
-      case 'high': return 'High Confidence';
-      case 'medium': return 'Medium Confidence';
-      case 'low': return 'Low Confidence';
-      default: return 'Very Low Confidence';
+      case 'high':
+        return 'High Confidence';
+      case 'medium':
+        return 'Medium Confidence';
+      case 'low':
+        return 'Low Confidence';
+      default:
+        return 'Very Low Confidence';
     }
   };
 
@@ -300,22 +311,24 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Predicted Total Usage</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Predicted Total Usage
+            </CardTitle>
             <Brain className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
               {data.systemPrediction.totalPredictedUsage}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Tokens next month
-            </p>
+            <p className="text-xs text-muted-foreground">Tokens next month</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Recommended Purchase</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Recommended Purchase
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -330,25 +343,33 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">System Trend</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              System Trend
+            </CardTitle>
             <Activity className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${
-              data.systemPrediction.systemTrend > 0 ? 'text-orange-600' : 
-              data.systemPrediction.systemTrend < 0 ? 'text-green-600' : 'text-gray-600'
-            }`}>
-              {data.systemPrediction.systemTrend > 0 ? '+' : ''}{data.systemPrediction.systemTrend.toFixed(1)}
+            <div
+              className={`text-2xl font-bold ${
+                data.systemPrediction.systemTrend > 0
+                  ? 'text-orange-600'
+                  : data.systemPrediction.systemTrend < 0
+                    ? 'text-green-600'
+                    : 'text-gray-600'
+              }`}
+            >
+              {data.systemPrediction.systemTrend > 0 ? '+' : ''}
+              {data.systemPrediction.systemTrend.toFixed(1)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Tokens/month change
-            </p>
+            <p className="text-xs text-muted-foreground">Tokens/month change</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">High Confidence Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              High Confidence Users
+            </CardTitle>
             <Users className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
@@ -366,7 +387,9 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-gray-100">System Usage Prediction</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-gray-100">
+              System Usage Prediction
+            </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
               Overall system usage prediction vs historical average
             </CardDescription>
@@ -378,7 +401,9 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-gray-100">User Comparison</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-gray-100">
+              User Comparison
+            </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
               Historical vs predicted usage by user
             </CardDescription>
@@ -392,21 +417,25 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
       {/* Individual User Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-gray-900 dark:text-gray-100">Individual User Trend Analysis</CardTitle>
+          <CardTitle className="text-gray-900 dark:text-gray-100">
+            Individual User Trend Analysis
+          </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-400">
             Detailed prediction analysis for specific users
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Select User</label>
+            <label className="text-sm font-medium mb-2 block">
+              Select User
+            </label>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
               <SelectTrigger className="w-64">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Users Summary</SelectItem>
-                {data.userPredictions.map(user => (
+                {data.userPredictions.map((user) => (
                   <SelectItem key={user.userId} value={user.userId}>
                     {user.userName}
                   </SelectItem>
@@ -431,16 +460,28 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
                   {data.userPredictions.map((user, index) => (
                     <tr key={index} className="border-b hover:bg-muted/50">
                       <td className="p-2 font-medium">{user.userName}</td>
-                      <td className="text-right p-2">{user.averageMonthlyUsage}</td>
-                      <td className="text-right p-2 font-medium">{user.predictedNextMonth}</td>
-                      <td className={`text-right p-2 font-medium ${
-                        user.usageTrend > 0 ? 'text-orange-600' : 
-                        user.usageTrend < 0 ? 'text-green-600' : 'text-gray-600'
-                      }`}>
-                        {user.usageTrend > 0 ? '+' : ''}{user.usageTrend.toFixed(1)}
+                      <td className="text-right p-2">
+                        {user.averageMonthlyUsage}
+                      </td>
+                      <td className="text-right p-2 font-medium">
+                        {user.predictedNextMonth}
+                      </td>
+                      <td
+                        className={`text-right p-2 font-medium ${
+                          user.usageTrend > 0
+                            ? 'text-orange-600'
+                            : user.usageTrend < 0
+                              ? 'text-green-600'
+                              : 'text-gray-600'
+                        }`}
+                      >
+                        {user.usageTrend > 0 ? '+' : ''}
+                        {user.usageTrend.toFixed(1)}
                       </td>
                       <td className="text-center p-2">
-                        <Badge variant={getConfidenceColor(user.confidenceLevel) as any}>
+                        <Badge
+                          variant={getConfidenceColor(user.confidenceLevel)}
+                        >
                           {getConfidenceText(user.confidenceLevel)}
                         </Badge>
                       </td>
@@ -453,39 +494,63 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{selectedUserData.averageMonthlyUsage}</div>
-                  <div className="text-sm text-muted-foreground">Historical Average</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{selectedUserData.predictedNextMonth}</div>
-                  <div className="text-sm text-muted-foreground">Predicted Next Month</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-2xl font-bold ${
-                    selectedUserData.usageTrend > 0 ? 'text-orange-600' : 
-                    selectedUserData.usageTrend < 0 ? 'text-green-600' : 'text-gray-600'
-                  }`}>
-                    {selectedUserData.usageTrend > 0 ? '+' : ''}{selectedUserData.usageTrend.toFixed(1)}
+                  <div className="text-2xl font-bold text-blue-600">
+                    {selectedUserData.averageMonthlyUsage}
                   </div>
-                  <div className="text-sm text-muted-foreground">Monthly Trend</div>
+                  <div className="text-sm text-muted-foreground">
+                    Historical Average
+                  </div>
                 </div>
                 <div className="text-center">
-                  <Badge variant={getConfidenceColor(selectedUserData.confidenceLevel) as any} className="text-sm">
+                  <div className="text-2xl font-bold text-green-600">
+                    {selectedUserData.predictedNextMonth}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Predicted Next Month
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div
+                    className={`text-2xl font-bold ${
+                      selectedUserData.usageTrend > 0
+                        ? 'text-orange-600'
+                        : selectedUserData.usageTrend < 0
+                          ? 'text-green-600'
+                          : 'text-gray-600'
+                    }`}
+                  >
+                    {selectedUserData.usageTrend > 0 ? '+' : ''}
+                    {selectedUserData.usageTrend.toFixed(1)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Monthly Trend
+                  </div>
+                </div>
+                <div className="text-center">
+                  <Badge
+                    variant={getConfidenceColor(
+                      selectedUserData.confidenceLevel
+                    )}
+                    className="text-sm"
+                  >
                     {getConfidenceText(selectedUserData.confidenceLevel)}
                   </Badge>
                 </div>
               </div>
               <div className="h-64">
-                <Line data={userTrendData} options={{
-                  ...chartOptions,
-                  plugins: {
-                    ...chartOptions.plugins,
-                    title: {
-                      display: true,
-                      text: `${selectedUserData.userName} - Usage Trend & Prediction`,
+                <Line
+                  data={userTrendData}
+                  options={{
+                    ...chartOptions,
+                    plugins: {
+                      ...chartOptions.plugins,
+                      title: {
+                        display: true,
+                        text: `${selectedUserData.userName} - Usage Trend & Prediction`,
+                      },
                     },
-                  },
-                }} />
+                  }}
+                />
               </div>
             </div>
           ) : null}
@@ -505,10 +570,27 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
                 Model Performance
               </h4>
               <div className="space-y-1 text-sm">
-                <p>Most predictable user: <strong>{data.insights.mostPredictableUser}</strong></p>
-                <p>Highest growth user: <strong>{data.insights.highestGrowthUser}</strong></p>
-                <p>Average confidence: <strong>{(data.insights.avgConfidenceLevel * 25).toFixed(0)}%</strong></p>
-                <p>Users with reliable predictions: <strong>{data.systemPrediction.highConfidenceUsers} of {data.insights.totalUsers}</strong></p>
+                <p>
+                  Most predictable user:{' '}
+                  <strong>{data.insights.mostPredictableUser}</strong>
+                </p>
+                <p>
+                  Highest growth user:{' '}
+                  <strong>{data.insights.highestGrowthUser}</strong>
+                </p>
+                <p>
+                  Average confidence:{' '}
+                  <strong>
+                    {(data.insights.avgConfidenceLevel * 25).toFixed(0)}%
+                  </strong>
+                </p>
+                <p>
+                  Users with reliable predictions:{' '}
+                  <strong>
+                    {data.systemPrediction.highConfidenceUsers} of{' '}
+                    {data.insights.totalUsers}
+                  </strong>
+                </p>
               </div>
             </div>
 
@@ -518,13 +600,29 @@ export default function UsagePredictionChart({ startDate, endDate }: UsagePredic
                 Recommendations
               </h4>
               <div className="space-y-1 text-sm">
-                <p>Recommended purchase: <strong>{data.systemPrediction.recommendedPurchaseAmount} tokens</strong></p>
-                <p>Expected usage: <strong>{data.systemPrediction.totalPredictedUsage} tokens</strong></p>
-                <p>Safety buffer: <strong>{data.systemPrediction.recommendedPurchaseAmount - data.systemPrediction.totalPredictedUsage} tokens (15%)</strong></p>
+                <p>
+                  Recommended purchase:{' '}
+                  <strong>
+                    {data.systemPrediction.recommendedPurchaseAmount} tokens
+                  </strong>
+                </p>
+                <p>
+                  Expected usage:{' '}
+                  <strong>
+                    {data.systemPrediction.totalPredictedUsage} tokens
+                  </strong>
+                </p>
+                <p>
+                  Safety buffer:{' '}
+                  <strong>
+                    {data.systemPrediction.recommendedPurchaseAmount -
+                      data.systemPrediction.totalPredictedUsage}{' '}
+                    tokens (15%)
+                  </strong>
+                </p>
                 <p className="pt-2 text-xs text-muted-foreground">
-                  {data.systemPrediction.lowConfidenceUsers > 0 && (
-                    `Note: ${data.systemPrediction.lowConfidenceUsers} users have low prediction confidence - consider larger buffer.`
-                  )}
+                  {data.systemPrediction.lowConfidenceUsers > 0 &&
+                    `Note: ${data.systemPrediction.lowConfidenceUsers} users have low prediction confidence - consider larger buffer.`}
                 </p>
               </div>
             </div>

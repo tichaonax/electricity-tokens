@@ -1,10 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, TrendingUp, Clock, Lightbulb, AlertTriangle } from 'lucide-react';
+import {
+  Calendar,
+  TrendingUp,
+  Clock,
+  Lightbulb,
+  AlertTriangle,
+} from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -70,16 +82,15 @@ interface TimingData {
   };
 }
 
-export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimingChartProps) {
+export default function PurchaseTimingChart({
+  startDate,
+  endDate,
+}: PurchaseTimingChartProps) {
   const [data, setData] = useState<TimingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -101,7 +112,11 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -115,7 +130,9 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>Error loading purchase timing data: {error}</AlertDescription>
+        <AlertDescription>
+          Error loading purchase timing data: {error}
+        </AlertDescription>
       </Alert>
     );
   }
@@ -123,25 +140,27 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
   if (!data) {
     return (
       <Alert>
-        <AlertDescription>No purchase timing data available for the selected period.</AlertDescription>
+        <AlertDescription>
+          No purchase timing data available for the selected period.
+        </AlertDescription>
       </Alert>
     );
   }
 
   // Prepare weekly chart data
   const weeklyChartData = {
-    labels: data.weeklyAnalysis.map(item => item.dayName),
+    labels: data.weeklyAnalysis.map((item) => item.dayName),
     datasets: [
       {
         label: 'Emergency Rate (%)',
-        data: data.weeklyAnalysis.map(item => item.emergencyRate),
+        data: data.weeklyAnalysis.map((item) => item.emergencyRate),
         backgroundColor: 'rgba(239, 68, 68, 0.7)',
         borderColor: 'rgba(239, 68, 68, 1)',
         borderWidth: 1,
       },
       {
         label: 'Average Tokens',
-        data: data.weeklyAnalysis.map(item => item.avgTokens),
+        data: data.weeklyAnalysis.map((item) => item.avgTokens),
         backgroundColor: 'rgba(59, 130, 246, 0.7)',
         borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 1,
@@ -151,21 +170,24 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
   };
 
   const monthlyChartData = {
-    labels: data.monthlyAnalysis.map(item => {
+    labels: data.monthlyAnalysis.map((item) => {
       const date = new Date(item.month + '-01');
-      return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+      return date.toLocaleDateString('en-GB', {
+        month: 'short',
+        year: 'numeric',
+      });
     }),
     datasets: [
       {
         label: 'Utilization Rate (%)',
-        data: data.monthlyAnalysis.map(item => item.avgUtilization),
+        data: data.monthlyAnalysis.map((item) => item.avgUtilization),
         backgroundColor: 'rgba(34, 197, 94, 0.7)',
         borderColor: 'rgba(34, 197, 94, 1)',
         borderWidth: 1,
       },
       {
         label: 'Emergency Rate (%)',
-        data: data.monthlyAnalysis.map(item => item.emergencyRate),
+        data: data.monthlyAnalysis.map((item) => item.emergencyRate),
         backgroundColor: 'rgba(239, 68, 68, 0.7)',
         borderColor: 'rgba(239, 68, 68, 1)',
         borderWidth: 1,
@@ -273,11 +295,16 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
     },
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (
+    priority: string
+  ): 'destructive' | 'default' | 'secondary' => {
     switch (priority) {
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      default: return 'secondary';
+      case 'high':
+        return 'destructive';
+      case 'medium':
+        return 'default';
+      default:
+        return 'secondary';
     }
   };
 
@@ -287,7 +314,9 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Best Purchase Day</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Best Purchase Day
+            </CardTitle>
             <Calendar className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -302,7 +331,9 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Monthly Consumption</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Monthly Consumption
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -317,31 +348,31 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Purchase Frequency</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Purchase Frequency
+            </CardTitle>
             <Clock className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
               {data.insights.avgPurchaseFrequency.toFixed(1)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Purchases per month
-            </p>
+            <p className="text-xs text-muted-foreground">Purchases per month</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Seasonal Variation</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Seasonal Variation
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
               {data.insights.seasonalVariation}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Token usage range
-            </p>
+            <p className="text-xs text-muted-foreground">Token usage range</p>
           </CardContent>
         </Card>
       </div>
@@ -350,7 +381,9 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-gray-100">Weekly Purchase Patterns</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-gray-100">
+              Weekly Purchase Patterns
+            </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
               Emergency rates and average tokens by day of week
             </CardDescription>
@@ -362,7 +395,9 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-gray-100">Monthly Trends</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-gray-100">
+              Monthly Trends
+            </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
               Utilization rates and emergency purchases over time
             </CardDescription>
@@ -391,16 +426,23 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">{rec.title}</h4>
-                      <Badge variant={getPriorityColor(rec.priority) as any}>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {rec.title}
+                      </h4>
+                      <Badge variant={getPriorityColor(rec.priority)}>
                         {rec.priority}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{rec.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {rec.description}
+                    </p>
                   </div>
                 </div>
                 <div className="bg-muted p-2 rounded text-sm text-gray-900 dark:text-gray-100">
-                  <strong className="text-gray-900 dark:text-gray-100">Impact:</strong> {rec.impact}
+                  <strong className="text-gray-900 dark:text-gray-100">
+                    Impact:
+                  </strong>{' '}
+                  {rec.impact}
                 </div>
               </div>
             ))}
@@ -411,7 +453,9 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
       {/* Day-by-Day Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-gray-900 dark:text-gray-100">Weekly Purchase Analysis</CardTitle>
+          <CardTitle className="text-gray-900 dark:text-gray-100">
+            Weekly Purchase Analysis
+          </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-400">
             Detailed breakdown of purchase patterns by day of week
           </CardDescription>
@@ -434,19 +478,28 @@ export default function PurchaseTimingChart({ startDate, endDate }: PurchaseTimi
                     <td className="p-2 font-medium">
                       {day.dayName}
                       {day.dayName === data.insights.bestPurchaseDay && (
-                        <Badge className="ml-2" variant="secondary">Best</Badge>
+                        <Badge className="ml-2" variant="secondary">
+                          Best
+                        </Badge>
                       )}
                       {day.dayName === data.insights.worstPurchaseDay && (
-                        <Badge className="ml-2" variant="destructive">Worst</Badge>
+                        <Badge className="ml-2" variant="destructive">
+                          Worst
+                        </Badge>
                       )}
                     </td>
                     <td className="text-right p-2">{day.purchases}</td>
                     <td className="text-right p-2">{day.emergencyPurchases}</td>
                     <td className="text-right p-2">
-                      <span className={`font-medium ${
-                        day.emergencyRate > 30 ? 'text-red-600' : 
-                        day.emergencyRate > 15 ? 'text-orange-600' : 'text-green-600'
-                      }`}>
+                      <span
+                        className={`font-medium ${
+                          day.emergencyRate > 30
+                            ? 'text-red-600'
+                            : day.emergencyRate > 15
+                              ? 'text-orange-600'
+                              : 'text-green-600'
+                        }`}
+                      >
                         {day.emergencyRate.toFixed(1)}%
                       </span>
                     </td>

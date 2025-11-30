@@ -7,69 +7,7 @@ import {
   calculateProportionalCost,
   type Contribution,
 } from '@/lib/cost-calculations';
-import {
-  validateRequest,
-  createValidationErrorResponse,
-  checkPermissions,
-} from '@/lib/validation-middleware';
-import { z } from 'zod';
-
-const dashboardQuerySchema = z.object({
-  userId: z.string().cuid().optional(),
-  monthsBack: z
-    .string()
-    .regex(/^\d+$/, 'Must be a positive integer')
-    .transform(Number)
-    .refine((n) => n >= 1 && n <= 12, 'Must be between 1 and 12')
-    .optional()
-    .default('6'),
-});
-
-async function calculateAccountBalance(contributions: any[]): Promise<number> {
-  try {
-    if (contributions.length === 0) {
-      return 0;
-    }
-
-    // Get the earliest purchase date to determine what counts as "first purchase"
-    const earliestPurchase = await prisma.tokenPurchase.findFirst({
-      orderBy: { purchaseDate: 'asc' },
-    });
-
-    // Sort contributions by purchase date
-    const sortedContributions = contributions.sort(
-      (a, b) => new Date(a.purchase.purchaseDate).getTime() - new Date(b.purchase.purchaseDate).getTime()
-    );
-
-    let runningBalance = 0;
-
-    for (let i = 0; i < sortedContributions.length; i++) {
-      const contribution = sortedContributions[i];
-
-      // Check if this is the first purchase globally
-      const isFirstPurchase =
-        earliestPurchase &&
-        contribution.purchase.purchaseDate.getTime() ===
-          earliestPurchase.purchaseDate.getTime();
-
-      // For the first purchase, no tokens were consumed before it
-      const effectiveTokensConsumed = isFirstPurchase
-        ? 0
-        : contribution.tokensConsumed;
-
-      const fairShare =
-        (effectiveTokensConsumed / contribution.purchase.totalTokens) *
-        contribution.purchase.totalPayment;
-      const balanceChange = contribution.contributionAmount - fairShare;
-      runningBalance += balanceChange;
-    }
-
-    return runningBalance;
-  } catch (error) {
-    console.error('Error calculating account balance:', error);
-    return 0;
-  }
-}
+import { checkPermissions } from '@/lib/validation-middleware';
 
 interface MonthlyData {
   month: string;
@@ -152,9 +90,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Check permissions for global dashboard access
-    const userPermissions = session.user.permissions as Record<string, unknown> | null;
-    const canViewAllDashboards = 
-      session.user.role === 'ADMIN' || 
+    const userPermissions = session.user.permissions as Record<
+      string,
+      unknown
+    > | null;
+    const canViewAllDashboards =
+      session.user.role === 'ADMIN' ||
       userPermissions?.canViewDashboards === true;
 
     // Determine target user ID based on permissions
@@ -164,7 +105,9 @@ export async function GET(request: NextRequest) {
       // If specific user requested, check global permissions
       if (!canViewAllDashboards) {
         return NextResponse.json(
-          { message: "Insufficient permissions to view other users' dashboards" },
+          {
+            message: "Insufficient permissions to view other users' dashboards",
+          },
           { status: 403 }
         );
       }
@@ -222,7 +165,8 @@ export async function GET(request: NextRequest) {
       allTimeContributions as Contribution[]
     );
     // Calculate the personal account balance (per-user overpayment running balance)
-    const personalAccountBalance = await calculateAccountBalance(allTimeContributions);
+    const personalAccountBalance =
+      await calculateAccountBalance(allTimeContributions);
     const lastContribution = allTimeContributions[0];
 
     // Calculate GLOBAL totals for Quick Stats (all users, all time)
@@ -236,7 +180,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Calculate global account balance
-    const globalAccountBalance = await calculateAccountBalance(globalContributions);
+    const globalAccountBalance =
+      await calculateAccountBalance(globalContributions);
 
     // Calculate current month metrics
     const currentMonthContributions = contributions.filter(
@@ -390,9 +335,15 @@ export async function GET(request: NextRequest) {
     const response: DashboardResponse = {
       personalSummary: {
         ...(isGlobalView ? globalSummary : personalSummary),
-        contributionCount: isGlobalView ? globalContributions.length : allTimeContributions.length,
-        lastContributionDate: lastContribution?.createdAt ? lastContribution.createdAt.toISOString() : null,
-        accountBalance: isGlobalView ? globalAccountBalance : personalAccountBalance,
+        contributionCount: isGlobalView
+          ? globalContributions.length
+          : allTimeContributions.length,
+        lastContributionDate: lastContribution?.createdAt
+          ? lastContribution.createdAt.toISOString()
+          : null,
+        accountBalance: isGlobalView
+          ? globalAccountBalance
+          : personalAccountBalance,
       },
       currentMonth: {
         tokensUsed: currentMonthMetrics.totalTokensUsed,

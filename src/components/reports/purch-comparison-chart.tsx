@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  TooltipProps,
 } from 'recharts';
 import { format } from 'date-fns';
 
@@ -39,21 +40,28 @@ interface PurchaseComparisonChartProps {
   };
 }
 
-export function PurchaseComparisonChart({ data }: PurchaseComparisonChartProps) {
+export function PurchaseComparisonChart({
+  data,
+}: PurchaseComparisonChartProps) {
   const chartData = useMemo(() => {
-    return data.purchases.map((purchase) => ({
-      date: format(new Date(purchase.purchaseDate), 'MMM dd'),
-      fullDate: purchase.purchaseDate,
-      contribution: purchase.contributionAmount,
-      trueCost: purchase.trueCost,
-      totalElectricityCost: purchase.totalElectricityCost,
-      difference: purchase.difference,
-      isEmergency: purchase.isEmergency,
-      efficiency: purchase.trueCost > 0 ? (purchase.trueCost / purchase.contributionAmount) * 100 : 0,
-    })).reverse(); // Reverse to show chronological order
+    return data.purchases
+      .map((purchase) => ({
+        date: format(new Date(purchase.purchaseDate), 'MMM dd'),
+        fullDate: purchase.purchaseDate,
+        contribution: purchase.contributionAmount,
+        trueCost: purchase.trueCost,
+        totalElectricityCost: purchase.totalElectricityCost,
+        difference: purchase.difference,
+        isEmergency: purchase.isEmergency,
+        efficiency:
+          purchase.trueCost > 0
+            ? (purchase.trueCost / purchase.contributionAmount) * 100
+            : 0,
+      }))
+      .reverse(); // Reverse to show chronological order
   }, [data.purchases]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -70,11 +78,13 @@ export function PurchaseComparisonChart({ data }: PurchaseComparisonChartProps) 
           <p className="text-sm text-red-600 dark:text-red-400">
             Total Electricity Cost: ${data.totalElectricityCost.toFixed(2)}
           </p>
-          <p className={`text-sm ${
-            data.difference >= 0
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
-          }`}>
+          <p
+            className={`text-sm ${
+              data.difference >= 0
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            }`}
+          >
             Difference: ${Math.abs(data.difference).toFixed(2)}
             {data.difference >= 0 ? ' surplus' : ' deficit'}
           </p>
@@ -113,7 +123,10 @@ export function PurchaseComparisonChart({ data }: PurchaseComparisonChartProps) 
               bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-700" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-slate-200 dark:stroke-slate-700"
+            />
             <XAxis
               dataKey="date"
               className="text-slate-600 dark:text-slate-400"
@@ -122,7 +135,11 @@ export function PurchaseComparisonChart({ data }: PurchaseComparisonChartProps) 
             <YAxis
               className="text-slate-600 dark:text-slate-400"
               fontSize={12}
-              label={{ value: 'Amount ($)', angle: -90, position: 'insideLeft' }}
+              label={{
+                value: 'Amount ($)',
+                angle: -90,
+                position: 'insideLeft',
+              }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
@@ -147,19 +164,27 @@ export function PurchaseComparisonChart({ data }: PurchaseComparisonChartProps) 
           </BarChart>
         </ResponsiveContainer>
       </div>
-      
+
       <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
         <p>
-          <strong className="text-blue-600 dark:text-blue-400">Blue bars:</strong> Amount you contributed for each purchase
+          <strong className="text-blue-600 dark:text-blue-400">
+            Blue bars:
+          </strong>{' '}
+          Amount you contributed for each purchase
         </p>
         <p>
-          <strong className="text-green-600 dark:text-green-400">Green bars:</strong> Actual electricity cost for the tokens you used (your true cost)
+          <strong className="text-green-600 dark:text-green-400">
+            Green bars:
+          </strong>{' '}
+          Actual electricity cost for the tokens you used (your true cost)
         </p>
         <p>
-          <strong className="text-red-600 dark:text-red-400">Red bars:</strong> Total electricity purchase price (what the entire purchase cost)
+          <strong className="text-red-600 dark:text-red-400">Red bars:</strong>{' '}
+          Total electricity purchase price (what the entire purchase cost)
         </p>
         <p className="mt-2 italic">
-          The red bar shows the total cost of each electricity purchase, while the green bar shows your proportional share based on usage.
+          The red bar shows the total cost of each electricity purchase, while
+          the green bar shows your proportional share based on usage.
         </p>
       </div>
     </div>

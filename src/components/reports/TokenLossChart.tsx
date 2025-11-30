@@ -1,7 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { TrendingDown, DollarSign, AlertTriangle, Target } from 'lucide-react';
@@ -69,16 +75,15 @@ interface TokenLossData {
   };
 }
 
-export default function TokenLossChart({ startDate, endDate }: TokenLossChartProps) {
+export default function TokenLossChart({
+  startDate,
+  endDate,
+}: TokenLossChartProps) {
   const [data, setData] = useState<TokenLossData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -100,7 +105,11 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -114,7 +123,9 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>Error loading token loss data: {error}</AlertDescription>
+        <AlertDescription>
+          Error loading token loss data: {error}
+        </AlertDescription>
       </Alert>
     );
   }
@@ -122,28 +133,33 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
   if (!data) {
     return (
       <Alert>
-        <AlertDescription>No token loss data available for the selected period.</AlertDescription>
+        <AlertDescription>
+          No token loss data available for the selected period.
+        </AlertDescription>
       </Alert>
     );
   }
 
   // Prepare chart data
   const monthlyChartData = {
-    labels: data.monthlyBreakdown.map(item => {
+    labels: data.monthlyBreakdown.map((item) => {
       const date = new Date(item.month + '-01');
-      return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+      return date.toLocaleDateString('en-GB', {
+        month: 'short',
+        year: 'numeric',
+      });
     }),
     datasets: [
       {
         label: 'Potential Savings',
-        data: data.monthlyBreakdown.map(item => item.potentialSavings),
+        data: data.monthlyBreakdown.map((item) => item.potentialSavings),
         backgroundColor: 'rgba(239, 68, 68, 0.7)',
         borderColor: 'rgba(239, 68, 68, 1)',
         borderWidth: 1,
       },
       {
         label: 'Loss Percentage',
-        data: data.monthlyBreakdown.map(item => item.lossPercentage),
+        data: data.monthlyBreakdown.map((item) => item.lossPercentage),
         backgroundColor: 'rgba(251, 146, 60, 0.7)',
         borderColor: 'rgba(251, 146, 60, 1)',
         borderWidth: 1,
@@ -246,7 +262,9 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Total Loss Percentage</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Total Loss Percentage
+            </CardTitle>
             <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -261,7 +279,9 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Potential Savings</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Potential Savings
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -276,31 +296,31 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Emergency Premium</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Emergency Premium
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
               ${data.summary.emergencyPremium.toFixed(4)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Per token premium
-            </p>
+            <p className="text-xs text-muted-foreground">Per token premium</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">Emergency Frequency</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Emergency Frequency
+            </CardTitle>
             <Target className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
               {data.insights.emergencyFrequency.toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground">
-              Of all purchases
-            </p>
+            <p className="text-xs text-muted-foreground">Of all purchases</p>
           </CardContent>
         </Card>
       </div>
@@ -310,7 +330,9 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-gray-100">Monthly Loss Analysis</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-gray-100">
+                Monthly Loss Analysis
+              </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
                 Track potential savings and loss percentage over time
               </CardDescription>
@@ -324,13 +346,18 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
         <div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-gray-100">Spending Distribution</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-gray-100">
+                Spending Distribution
+              </CardTitle>
               <CardDescription className="text-gray-600 dark:text-gray-400">
                 Regular vs emergency purchase spending
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Doughnut data={distributionChartData} options={distributionOptions} />
+              <Doughnut
+                data={distributionChartData}
+                options={distributionOptions}
+              />
             </CardContent>
           </Card>
         </div>
@@ -339,7 +366,9 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
       {/* Insights */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-gray-900 dark:text-gray-100">Key Insights & Recommendations</CardTitle>
+          <CardTitle className="text-gray-900 dark:text-gray-100">
+            Key Insights & Recommendations
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -349,9 +378,21 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
                 Impact Analysis
               </h4>
               <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                <p>Emergency purchases: {data.insights.totalEmergencyPurchases} of {data.insights.totalEmergencyPurchases + data.insights.totalRegularPurchases} total</p>
-                <p>Average loss per emergency: ${data.insights.averageSavingsPerEmergency.toFixed(2)}</p>
-                <p>Emergency tokens: {data.summary.emergencyTokens.toFixed(2)} of {data.summary.totalTokens.toFixed(2)} total</p>
+                <p>
+                  Emergency purchases: {data.insights.totalEmergencyPurchases}{' '}
+                  of{' '}
+                  {data.insights.totalEmergencyPurchases +
+                    data.insights.totalRegularPurchases}{' '}
+                  total
+                </p>
+                <p>
+                  Average loss per emergency: $
+                  {data.insights.averageSavingsPerEmergency.toFixed(2)}
+                </p>
+                <p>
+                  Emergency tokens: {data.summary.emergencyTokens.toFixed(2)} of{' '}
+                  {data.summary.totalTokens.toFixed(2)} total
+                </p>
               </div>
             </div>
 
@@ -363,15 +404,21 @@ export default function TokenLossChart({ startDate, endDate }: TokenLossChartPro
               <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                 <div className="flex justify-between">
                   <span>Regular rate:</span>
-                  <Badge variant="secondary">${data.summary.avgRegularRate.toFixed(4)}/token</Badge>
+                  <Badge variant="secondary">
+                    ${data.summary.avgRegularRate.toFixed(4)}/token
+                  </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span>Emergency rate:</span>
-                  <Badge variant="destructive">${data.summary.avgEmergencyRate.toFixed(4)}/token</Badge>
+                  <Badge variant="destructive">
+                    ${data.summary.avgEmergencyRate.toFixed(4)}/token
+                  </Badge>
                 </div>
                 <p className="pt-2 text-xs text-gray-600 dark:text-gray-400">
-                  Reducing emergency purchases could save ${data.summary.potentialSavings.toFixed(2)} 
-                  ({data.summary.tokenLossPercentage.toFixed(1)}% efficiency gain)
+                  Reducing emergency purchases could save $
+                  {data.summary.potentialSavings.toFixed(2)}(
+                  {data.summary.tokenLossPercentage.toFixed(1)}% efficiency
+                  gain)
                 </p>
               </div>
             </div>
