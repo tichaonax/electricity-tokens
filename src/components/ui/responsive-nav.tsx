@@ -7,12 +7,14 @@ import { ThemeToggleCompact } from './theme-toggle-compact';
 import { User, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { NavigationFormButton } from './navigation-form-button';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   navigateToDashboard,
   navigateToAdmin,
   navigateToUserManagement,
   navigateToHelp,
   navigateToProfile,
+  navigateToDataManagement,
 } from '@/app/actions/navigation';
 
 interface ResponsiveNavProps {
@@ -41,11 +43,16 @@ export function ResponsiveNav({
   dashboardText = 'Back to Dashboard',
 }: ResponsiveNavProps) {
   const { data: session } = useSession();
+  const { checkPermission } = usePermissions();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [version, setVersion] = useState<string>('');
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = session?.user?.role === 'ADMIN';
+  const hasDataManagementAccess =
+    checkPermission('canExportData') ||
+    checkPermission('canImportData') ||
+    checkPermission('canCreateBackup');
 
   // Fetch version info
   useEffect(() => {
@@ -196,6 +203,15 @@ export function ResponsiveNav({
                     >
                       Profile & Settings
                     </NavigationFormButton>
+
+                    {hasDataManagementAccess && (
+                      <NavigationFormButton
+                        action={navigateToDataManagement}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200 hover:pl-6"
+                      >
+                        Data Management
+                      </NavigationFormButton>
+                    )}
 
                     {isAdmin && (
                       <>
