@@ -185,19 +185,24 @@ export async function GET() {
       });
     }
 
-    // Find maximum daily consumption
+    // Calculate date ranges
+    const last3Months = subMonths(now, 3);
+
+    // Find maximum daily consumption (from last 3 months)
     let maxDailyAmount = 0;
     let maxDailyDate = today.toISOString();
 
-    console.log('🔍 Finding maximum daily consumption from entries:');
+    console.log('🔍 Finding maximum daily consumption from last 3 months:');
     for (const [date, amount] of dailyConsumption.entries()) {
-      console.log(`  ${date.split('T')[0]}: ${amount} kWh`);
-      if (amount > maxDailyAmount) {
-        console.log(
-          `    ✅ New maximum: ${amount} kWh on ${date.split('T')[0]} (was ${maxDailyAmount})`
-        );
-        maxDailyAmount = amount;
-        maxDailyDate = date;
+      if (new Date(date) >= last3Months) {
+        console.log(`  ${date.split('T')[0]}: ${amount} kWh`);
+        if (amount > maxDailyAmount) {
+          console.log(
+            `    ✅ New maximum: ${amount} kWh on ${date.split('T')[0]} (was ${maxDailyAmount})`
+          );
+          maxDailyAmount = amount;
+          maxDailyDate = date;
+        }
       }
     }
 
@@ -206,7 +211,6 @@ export async function GET() {
     );
 
     // Calculate averages from consumption data (last 3 months for overall average)
-    const last3Months = subMonths(now, 3);
     const consumptionValues = Array.from(dailyConsumption.entries())
       .filter(([date]) => new Date(date) >= last3Months)
       .map(([, amount]) => amount);
