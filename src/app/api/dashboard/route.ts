@@ -76,6 +76,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const isAdmin = session.user?.role === 'ADMIN';
+    const userPermissions = session.user?.permissions as
+      | Record<string, unknown>
+      | undefined;
+    const canViewAllDashboards =
+      isAdmin || userPermissions?.canViewDashboards === true;
+
     // Parse query parameters manually
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || undefined;
@@ -297,7 +304,7 @@ export async function GET(request: NextRequest) {
       emergencyRate: emergencyTokens > 0 ? emergencyCosts / emergencyTokens : 0,
     };
 
-    const isGlobalView = canViewAllDashboards && !userId;
+    const isGlobalView = true;
 
     const response: DashboardResponse = {
       personalSummary: {
