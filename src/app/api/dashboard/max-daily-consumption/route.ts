@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import {
   startOfDay,
   subDays,
+  subMonths,
   isWeekend,
   format,
   startOfMonth,
@@ -204,14 +205,19 @@ export async function GET() {
       `🎯 Final maximum: ${maxDailyAmount} kWh on ${maxDailyDate.split('T')[0]}`
     );
 
-    // Calculate averages from actual consumption data
-    console.log('📊 Average Calculations Debug:');
-    const consumptionValues = Array.from(dailyConsumption.values());
+    // Calculate averages from consumption data (last 3 months for overall average)
+    const last3Months = subMonths(now, 3);
+    const consumptionValues = Array.from(dailyConsumption.entries())
+      .filter(([date]) => new Date(date) >= last3Months)
+      .map(([, amount]) => amount);
     const totalConsumption = consumptionValues.reduce(
       (sum, amount) => sum + amount,
       0
     );
-    const averageDailyConsumption = totalConsumption / consumptionValues.length;
+    const averageDailyConsumption =
+      consumptionValues.length > 0
+        ? totalConsumption / consumptionValues.length
+        : 0;
 
     // Last 7 days average (global)
     const last7DaysConsumption = Array.from(dailyConsumption.entries())
@@ -238,7 +244,7 @@ export async function GET() {
         : averageDailyConsumption; // Fallback to current month if insufficient data
 
     console.log(
-      `  Overall average: ${averageDailyConsumption} kWh (${consumptionValues.length} days)`
+      `  Overall average (last 3 months): ${averageDailyConsumption} kWh (${consumptionValues.length} days)`
     );
     console.log(
       `  7-day average: ${last7DaysAverage} kWh (${last7DaysConsumption.length} days)`
