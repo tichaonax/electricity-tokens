@@ -24,25 +24,19 @@ export async function GET() {
     const yesterday = startOfDay(subDays(now, 1));
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
-    
+
     console.log('Date range debug:', {
       now: now.toISOString(),
       currentMonthStart: currentMonthStart.toISOString(),
       currentMonthEnd: currentMonthEnd.toISOString(),
       today: today.toISOString(),
-      yesterday: yesterday.toISOString()
+      yesterday: yesterday.toISOString(),
     });
     const last7Days = subDays(now, 7);
 
-    // Get meter readings for current month and a bit before for calculation context
-    const contextStart = startOfDay(subDays(currentMonthStart, 1)); // One day before current month for calculation
+    // Get all meter readings for calculation context
     const meterReadings = await prisma.meterReading.findMany({
-      where: {
-        readingDate: {
-          gte: contextStart,
-          lte: currentMonthEnd,
-        },
-      },
+      where: {},
       select: {
         reading: true,
         readingDate: true,
@@ -54,89 +48,98 @@ export async function GET() {
       'Max Daily Consumption API - Found meter readings:',
       meterReadings.length
     );
-    console.log('Raw meter readings:', meterReadings.map(r => ({
-      date: r.readingDate.toISOString().split('T')[0],
-      reading: r.reading
-    })));
+    console.log(
+      'Raw meter readings:',
+      meterReadings.map((r) => ({
+        date: r.readingDate.toISOString().split('T')[0],
+        reading: r.reading,
+      }))
+    );
 
     // Calculate daily consumption from consecutive meter readings
     const dailyConsumption = new Map<string, number>();
     const weekdayConsumption: number[] = [];
     const weekendConsumption: number[] = [];
 
-    // Process consecutive meter readings to calculate daily usage (CURRENT MONTH ONLY)
+    // Process consecutive meter readings to calculate daily usage (GLOBAL)
     for (let i = 1; i < meterReadings.length; i++) {
       const currentReading = meterReadings[i];
       const previousReading = meterReadings[i - 1];
 
-      console.log(`Processing reading ${i}: current=${currentReading.reading} on ${currentReading.readingDate.toISOString().split('T')[0]}, previous=${previousReading.reading} on ${previousReading.readingDate.toISOString().split('T')[0]}`);
+      console.log(
+        `Processing reading ${i}: current=${currentReading.reading} on ${currentReading.readingDate.toISOString().split('T')[0]}, previous=${previousReading.reading} on ${previousReading.readingDate.toISOString().split('T')[0]}`
+      );
 
-      // Only include consumption for current month
-      if (
-        currentReading.readingDate >= currentMonthStart &&
-        currentReading.readingDate <= currentMonthEnd
-      ) {
-        // Calculate consumption between consecutive readings
-        const consumption = currentReading.reading - previousReading.reading;
-        
-        // Calculate the number of days between readings
-        const previousDate = startOfDay(previousReading.readingDate);
-        const currentDate = startOfDay(currentReading.readingDate);
-        const daysDifference = Math.ceil((currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        console.log(`  Consumption calculation: ${currentReading.reading} - ${previousReading.reading} = ${consumption} over ${daysDifference} days`);
+      // Calculate consumption between consecutive readings
+      const consumption = currentReading.reading - previousReading.reading;
 
-        if (consumption >= 0 && daysDifference > 0) {
-          // Check if this is a single day or multi-day consumption
-          if (daysDifference === 1) {
-            // Single day consumption - assign directly
-            const currentDateStr = currentReading.readingDate.toISOString().split('T')[0];
-            const dayKey = currentDateStr + 'T00:00:00.000Z';
-            
-            const existingConsumption = dailyConsumption.get(dayKey) || 0;
-            dailyConsumption.set(dayKey, existingConsumption + consumption);
+      // Calculate the number of days between readings
+      const previousDate = startOfDay(previousReading.readingDate);
+      const currentDate = startOfDay(currentReading.readingDate);
+      const daysDifference = Math.ceil(
+        (currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
-            console.log(`  Single day consumption: Added ${consumption} to ${dayKey}, total now: ${dailyConsumption.get(dayKey)}`);
+      console.log(
+        `  Consumption calculation: ${currentReading.reading} - ${previousReading.reading} = ${consumption} over ${daysDifference} days`
+      );
 
-            if (isWeekend(currentReading.readingDate)) {
-              weekendConsumption.push(consumption);
-            } else {
-              weekdayConsumption.push(consumption);
-            }
+      if (consumption >= 0 && daysDifference > 0) {
+        // Check if this is a single day or multi-day consumption
+        if (daysDifference === 1) {
+          // Single day consumption - assign directly
+          const currentDateStr = currentReading.readingDate
+            .toISOString()
+            .split('T')[0];
+          const dayKey = currentDateStr + 'T00:00:00.000Z';
+
+          const existingConsumption = dailyConsumption.get(dayKey) || 0;
+          dailyConsumption.set(dayKey, existingConsumption + consumption);
+
+          console.log(
+            `  Single day consumption: Added ${consumption} to ${dayKey}, total now: ${dailyConsumption.get(dayKey)}`
+          );
+
+          if (isWeekend(currentReading.readingDate)) {
+            weekendConsumption.push(consumption);
           } else {
-            // Multi-day consumption - distribute evenly across days
-            const dailyAverage = consumption / daysDifference;
-            console.log(`  Multi-day consumption: Distributing ${consumption} over ${daysDifference} days = ${dailyAverage} per day`);
-            
-            // Distribute consumption across all days in the range
-            for (let dayOffset = 1; dayOffset <= daysDifference; dayOffset++) {
-              const distributionDate = new Date(previousDate.getTime() + (dayOffset * 24 * 60 * 60 * 1000));
-              
-              // Only include days within current month
-              if (distributionDate >= currentMonthStart && distributionDate <= currentMonthEnd) {
-                const dayKey = distributionDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
-                
-                const existingConsumption = dailyConsumption.get(dayKey) || 0;
-                dailyConsumption.set(dayKey, existingConsumption + dailyAverage);
+            weekdayConsumption.push(consumption);
+          }
+        } else {
+          // Multi-day consumption - distribute evenly across days
+          const dailyAverage = consumption / daysDifference;
+          console.log(
+            `  Multi-day consumption: Distributing ${consumption} over ${daysDifference} days = ${dailyAverage} per day`
+          );
 
-                console.log(`    Distributed ${dailyAverage} to ${dayKey}, total now: ${dailyConsumption.get(dayKey)}`);
+          // Distribute consumption across all days in the range
+          for (let dayOffset = 1; dayOffset <= daysDifference; dayOffset++) {
+            const distributionDate = new Date(
+              previousDate.getTime() + dayOffset * 24 * 60 * 60 * 1000
+            );
 
-                // Add to pattern analysis (using average per day)
-                if (isWeekend(distributionDate)) {
-                  weekendConsumption.push(dailyAverage);
-                } else {
-                  weekdayConsumption.push(dailyAverage);
-                }
-              }
+            const dayKey =
+              distributionDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
+
+            const existingConsumption = dailyConsumption.get(dayKey) || 0;
+            dailyConsumption.set(dayKey, existingConsumption + dailyAverage);
+
+            console.log(
+              `    Distributed ${dailyAverage} to ${dayKey}, total now: ${dailyConsumption.get(dayKey)}`
+            );
+
+            // Add to pattern analysis (using average per day)
+            if (isWeekend(distributionDate)) {
+              weekendConsumption.push(dailyAverage);
+            } else {
+              weekdayConsumption.push(dailyAverage);
             }
           }
-        } else if (consumption < 0) {
-          console.log(`  Skipped negative consumption: ${consumption}`);
-        } else {
-          console.log(`  Skipped zero-day difference`);
         }
+      } else if (consumption < 0) {
+        console.log(`  Skipped negative consumption: ${consumption}`);
       } else {
-        console.log(`  Skipped reading outside current month range`);
+        console.log(`  Skipped zero-day difference`);
       }
     }
 
@@ -144,15 +147,18 @@ export async function GET() {
       'Max Daily Consumption API - Daily consumption entries:',
       dailyConsumption.size
     );
-    console.log('Final daily consumption map:', Array.from(dailyConsumption.entries()).map(([date, amount]) => ({
-      date: date.split('T')[0],
-      consumption: amount
-    })));
+    console.log(
+      'Final daily consumption map:',
+      Array.from(dailyConsumption.entries()).map(([date, amount]) => ({
+        date: date.split('T')[0],
+        consumption: amount,
+      }))
+    );
     console.log('Date ranges:', {
       currentMonthStart: currentMonthStart.toISOString().split('T')[0],
       currentMonthEnd: currentMonthEnd.toISOString().split('T')[0],
       today: today.toISOString().split('T')[0],
-      yesterday: yesterday.toISOString().split('T')[0]
+      yesterday: yesterday.toISOString().split('T')[0],
     });
 
     // Check if we have any consumption data
@@ -174,8 +180,7 @@ export async function GET() {
           weekdays: 0,
           weekends: 0,
         },
-        recommendation:
-          'Add meter readings for the current month to calculate consumption patterns.',
+        recommendation: 'Add meter readings to calculate consumption patterns.',
       });
     }
 
@@ -187,13 +192,17 @@ export async function GET() {
     for (const [date, amount] of dailyConsumption.entries()) {
       console.log(`  ${date.split('T')[0]}: ${amount} kWh`);
       if (amount > maxDailyAmount) {
-        console.log(`    ✅ New maximum: ${amount} kWh on ${date.split('T')[0]} (was ${maxDailyAmount})`);
+        console.log(
+          `    ✅ New maximum: ${amount} kWh on ${date.split('T')[0]} (was ${maxDailyAmount})`
+        );
         maxDailyAmount = amount;
         maxDailyDate = date;
       }
     }
 
-    console.log(`🎯 Final maximum: ${maxDailyAmount} kWh on ${maxDailyDate.split('T')[0]}`);
+    console.log(
+      `🎯 Final maximum: ${maxDailyAmount} kWh on ${maxDailyDate.split('T')[0]}`
+    );
 
     // Calculate averages from actual consumption data
     console.log('📊 Average Calculations Debug:');
@@ -204,12 +213,9 @@ export async function GET() {
     );
     const averageDailyConsumption = totalConsumption / consumptionValues.length;
 
-    // Last 7 days average (within current month)
+    // Last 7 days average (global)
     const last7DaysConsumption = Array.from(dailyConsumption.entries())
-      .filter(
-        ([date]) =>
-          new Date(date) >= last7Days && new Date(date) >= currentMonthStart
-      )
+      .filter(([date]) => new Date(date) >= last7Days)
       .map(([, amount]) => amount);
     const last7DaysTotal = last7DaysConsumption.reduce(
       (sum, amount) => sum + amount,
@@ -227,28 +233,44 @@ export async function GET() {
       .map(([, amount]) => amount);
     const last30DaysAverage =
       last30DaysConsumption.length > 0
-        ? last30DaysConsumption.reduce((sum, amount) => sum + amount, 0) / last30DaysConsumption.length
+        ? last30DaysConsumption.reduce((sum, amount) => sum + amount, 0) /
+          last30DaysConsumption.length
         : averageDailyConsumption; // Fallback to current month if insufficient data
 
-    console.log(`  Overall average: ${averageDailyConsumption} kWh (${consumptionValues.length} days)`);
-    console.log(`  7-day average: ${last7DaysAverage} kWh (${last7DaysConsumption.length} days)`);
-    console.log(`  30-day average: ${last30DaysAverage} kWh (${last30DaysConsumption.length} days)`);
-    console.log(`  Date ranges: 7-day cutoff=${last7Days.toISOString().split('T')[0]}, 30-day cutoff=${last30Days.toISOString().split('T')[0]}`);
+    console.log(
+      `  Overall average: ${averageDailyConsumption} kWh (${consumptionValues.length} days)`
+    );
+    console.log(
+      `  7-day average: ${last7DaysAverage} kWh (${last7DaysConsumption.length} days)`
+    );
+    console.log(
+      `  30-day average: ${last30DaysAverage} kWh (${last30DaysConsumption.length} days)`
+    );
+    console.log(
+      `  Date ranges: 7-day cutoff=${last7Days.toISOString().split('T')[0]}, 30-day cutoff=${last30Days.toISOString().split('T')[0]}`
+    );
 
     // Today's and yesterday's consumption from meter readings
     // FIXED: Use consistent date format matching the consumption map keys
     const todayKey = today.toISOString().split('T')[0] + 'T00:00:00.000Z';
-    const yesterdayKey = yesterday.toISOString().split('T')[0] + 'T00:00:00.000Z';
-    
-    console.log('Looking up consumption with keys:', { todayKey, yesterdayKey });
+    const yesterdayKey =
+      yesterday.toISOString().split('T')[0] + 'T00:00:00.000Z';
+
+    console.log('Looking up consumption with keys:', {
+      todayKey,
+      yesterdayKey,
+    });
     console.log('Available keys in map:', Array.from(dailyConsumption.keys()));
-    
+
     const todayConsumption = dailyConsumption.get(todayKey) || 0;
     const yesterdayConsumption = dailyConsumption.has(yesterdayKey)
       ? dailyConsumption.get(yesterdayKey)!
       : 'Not Available';
-      
-    console.log('Found consumption:', { todayConsumption, yesterdayConsumption });
+
+    console.log('Found consumption:', {
+      todayConsumption,
+      yesterdayConsumption,
+    });
 
     // Check if it's a new record (within current month)
     const currentMonthMax =
@@ -301,7 +323,10 @@ export async function GET() {
 
     console.log('📤 Preparing response with maxDailyDate:', maxDailyDate);
     console.log('📤 Converted to Date object:', new Date(maxDailyDate));
-    console.log('📤 Formatted day of week:', format(new Date(maxDailyDate), 'EEEE'));
+    console.log(
+      '📤 Formatted day of week:',
+      format(new Date(maxDailyDate), 'EEEE')
+    );
 
     const response = {
       maxDailyConsumption: {
