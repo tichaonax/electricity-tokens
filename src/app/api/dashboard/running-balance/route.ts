@@ -2,57 +2,11 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { calculateAccountBalance } from '@/lib/account-balance';
 import { subDays } from 'date-fns';
+import { round2 } from '@/lib/cost-calculations';
 
-// Helper function to round to 2 decimal places
-const round2 = (num: number): number => Math.round(num * 100) / 100;
-
-// Calculate account balance from contributions
-async function calculateAccountBalance(
-  contributions: Array<{
-    contributionAmount: number;
-    tokensConsumed: number;
-    purchase: {
-      totalTokens: number;
-      totalPayment: number;
-      purchaseDate: Date;
-    };
-  }>
-): Promise<number> {
-  if (contributions.length === 0) {
-    return 0;
-  }
-
-  // Get the earliest purchase date to determine what counts as "first purchase"
-  const earliestPurchase = await prisma.tokenPurchase.findFirst({
-    orderBy: { purchaseDate: 'asc' },
-  });
-
-  let runningBalance = 0;
-
-  for (let i = 0; i < contributions.length; i++) {
-    const contribution = contributions[i];
-
-    // Check if this is the first purchase globally
-    const isFirstPurchase =
-      earliestPurchase &&
-      contribution.purchase.purchaseDate.getTime() ===
-        earliestPurchase.purchaseDate.getTime();
-
-    // For the first purchase, no tokens were consumed before it
-    const effectiveTokensConsumed = isFirstPurchase
-      ? 0
-      : contribution.tokensConsumed;
-
-    const fairShare =
-      (effectiveTokensConsumed / contribution.purchase.totalTokens) *
-      contribution.purchase.totalPayment;
-    const balanceChange = contribution.contributionAmount - fairShare;
-    runningBalance += balanceChange;
-  }
-
-  return runningBalance;
-}
+// We use the shared calculateAccountBalance helper imported above
 
 export async function GET() {
   try {

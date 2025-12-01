@@ -7,6 +7,7 @@ import {
   calculateProportionalCost,
   type Contribution,
 } from '@/lib/cost-calculations';
+import { calculateAccountBalance } from '@/lib/account-balance';
 import { checkPermissions } from '@/lib/validation-middleware';
 
 interface MonthlyData {
@@ -89,35 +90,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check permissions for global dashboard access
-    const userPermissions = session.user.permissions as Record<
-      string,
-      unknown
-    > | null;
-    const canViewAllDashboards =
-      session.user.role === 'ADMIN' ||
-      userPermissions?.canViewDashboards === true;
-
-    // Determine target user ID based on permissions
-    let targetUserId: string | undefined = undefined;
-
-    if (userId) {
-      // If specific user requested, check global permissions
-      if (!canViewAllDashboards) {
-        return NextResponse.json(
-          {
-            message: "Insufficient permissions to view other users' dashboards",
-          },
-          { status: 403 }
-        );
-      }
-      targetUserId = userId;
-    } else {
-      // No explicit user requested - if user cannot view all dashboards, default to their own
-      if (!canViewAllDashboards) {
-        targetUserId = session.user.id;
-      }
-    }
+    // NOTE: Dashboard is a GLOBAL view. We intentionally do not filter per-user
+    // to reflect global totals. The previous logic allowed per-user filtering
+    // if a user had permission; that has been intentionally removed.
 
     // Calculate date ranges
     const now = new Date();
@@ -128,20 +103,13 @@ export async function GET(request: NextRequest) {
       1
     );
 
-    // Fetch contributions for this view (either global or per-user) within history range
+    // Fetch global contributions within the requested history range
     const contributions = await prisma.userContribution.findMany({
-      where: targetUserId
-        ? {
-            userId: targetUserId,
-            createdAt: {
-              gte: historyStart,
-            },
-          }
-        : {
-            createdAt: {
-              gte: historyStart,
-            },
-          },
+      where: {
+        createdAt: {
+          gte: historyStart,
+        },
+      },
       include: {
         purchase: true,
         user: {
@@ -154,9 +122,8 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Calculate all-time contributions for scope (global vs user)
+    // Calculate all-time (GLOBAL) contributions
     const allTimeContributions = await prisma.userContribution.findMany({
-      where: targetUserId ? { userId: targetUserId } : undefined,
       include: { purchase: true },
       orderBy: { createdAt: 'desc' },
     });

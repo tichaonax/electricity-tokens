@@ -5,7 +5,7 @@
  */
 
 // Helper function to round to 2 decimal places
-const round2 = (num: number): number => Math.round(num * 100) / 100;
+export const round2 = (num: number): number => Math.round(num * 100) / 100;
 
 export interface Purchase {
   id: string;
@@ -558,12 +558,16 @@ export function calculatePurchaseComparison(contributions: Contribution[]): {
       purchase.totalPayment
     );
 
-    const costPerKwh = contribution.tokensConsumed > 0 ? trueCost / contribution.tokensConsumed : 0;
+    const costPerKwh =
+      contribution.tokensConsumed > 0
+        ? trueCost / contribution.tokensConsumed
+        : 0;
 
     // Handle both Date and string types for purchaseDate
-    const purchaseDateStr = typeof purchase.purchaseDate === 'string'
-      ? purchase.purchaseDate.split('T')[0]
-      : purchase.purchaseDate.toISOString().split('T')[0];
+    const purchaseDateStr =
+      typeof purchase.purchaseDate === 'string'
+        ? purchase.purchaseDate.split('T')[0]
+        : purchase.purchaseDate.toISOString().split('T')[0];
 
     return {
       purchaseId: purchase.id,
@@ -579,11 +583,18 @@ export function calculatePurchaseComparison(contributions: Contribution[]): {
     };
   });
 
-  const totalContributions = purchases.reduce((sum, p) => sum + p.contributionAmount, 0);
+  const totalContributions = purchases.reduce(
+    (sum, p) => sum + p.contributionAmount,
+    0
+  );
   const totalTrueCost = purchases.reduce((sum, p) => sum + p.trueCost, 0);
-  const totalElectricityCost = purchases.reduce((sum, p) => sum + p.totalElectricityCost, 0);
+  const totalElectricityCost = purchases.reduce(
+    (sum, p) => sum + p.totalElectricityCost,
+    0
+  );
   const totalDifference = purchases.reduce((sum, p) => sum + p.difference, 0);
-  const averageEfficiency = totalTrueCost > 0 ? (totalTrueCost / totalContributions) * 100 : 0;
+  const averageEfficiency =
+    totalTrueCost > 0 ? (totalTrueCost / totalContributions) * 100 : 0;
 
   return {
     purchases,
